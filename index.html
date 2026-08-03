@@ -140,6 +140,26 @@ padding: 8px; background: var(--focus-y); border-radius: 8px;
 }
 .especialidade-row label { font-size: 11px; color: #7A4A00; cursor: pointer; }
 .meta-note { font-size: 10px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+.page-tabs { display: flex; gap: 8px; margin: 14px 14px 0; }
+.page-tab {
+flex: 1; font-size: 12px; font-weight: 700; padding: 10px; border-radius: 10px;
+border: 1px solid var(--border); background: var(--card); color: var(--muted); cursor: pointer;
+}
+.page-tab.active { background: var(--vinho); color: #fff; border-color: var(--vinho); }
+
+.tabela-bloco-btn {
+display: inline-block; margin: 4px 6px 0 0; padding: 6px 12px; font-size: 11px; font-weight: 700;
+border-radius: 20px; border: 1px solid var(--border); background: var(--card); color: var(--text); cursor: pointer;
+}
+.tabela-bloco-btn.active { background: var(--vinho); color: #fff; border-color: var(--vinho); }
+.tabela-wrap { margin: 10px 14px 0; border-radius: var(--r); box-shadow: var(--shadow); overflow: auto; max-height: 70vh; background: var(--card); }
+.tabela-check-grid { border-collapse: collapse; font-size: 11px; }
+.tabela-check-grid th, .tabela-check-grid td { border: 1px solid #F0EDE8; padding: 6px 8px; text-align: center; white-space: nowrap; }
+.tabela-check-grid th.item-col, .tabela-check-grid td.item-col { text-align: left; position: sticky; left: 0; background: var(--card); min-width: 220px; white-space: normal; z-index: 1; }
+.tabela-check-grid thead th { background: var(--azul); color: #fff; position: sticky; top: 0; z-index: 2; }
+.tabela-check-grid thead th.item-col { z-index: 3; }
+.tabela-check-grid .grupo-row td { background: #F5F3EF; font-weight: 800; text-transform: uppercase; font-size: 9px; letter-spacing: .5px; color: var(--muted); }
+.tabela-check-grid input[type=checkbox] { width: 16px; height: 16px; cursor: pointer; }
 .reset-btn { display: block; margin: 16px auto 32px; background: none; border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; font-size: 11px; color: var(--muted); cursor: pointer; }
 .reset-btn:hover { border-color: #E74C3C; color: #E74C3C; }
 </style>
@@ -157,6 +177,13 @@ padding: 8px; background: var(--focus-y); border-radius: 8px;
 </div>
 </header>
 
+<nav class="page-tabs">
+<button class="page-tab active" id="tabJovem" onclick="mudarPagina('jovem')">👤 Por jovem</button>
+<button class="page-tab" id="tabTabela" onclick="mudarPagina('tabela')">📊 Por bloco (tabela)</button>
+</nav>
+
+<div id="pagina-jovem">
+
 <div class="alert">
 Toque num jovem para abrir a ficha dele. Dentro de cada bloco, marque as ações fixas (todas são obrigatórias, quando houver)
 e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco fecha ✓ sozinho quando as duas metas forem batidas.
@@ -173,6 +200,17 @@ Salvo automaticamente neste dispositivo — ainda não sincroniza com o Notion.
 </div>
 
 <div class="detail-section" id="detail"></div>
+
+</div>
+
+<div id="pagina-tabela" style="display:none;">
+<div class="roster-section">
+<div class="section-label">Eixos</div>
+<div id="tabelaEixos" class="eixo-grid"></div>
+<div id="tabelaBlocos"></div>
+</div>
+<div id="tabelaContainer"></div>
+</div>
 
 <button class="reset-btn" onclick="confirmReset()">↺ Restaurar dados originais</button>
 
@@ -308,6 +346,7 @@ function iniciarSync() {
       } else {
         renderRoster();
         if (ativo) renderDetail(ativo);
+        if (paginaAtiva === 'tabela') renderPaginaTabela();
       }
     }
 
@@ -553,6 +592,107 @@ window.__openBlocos[b] = !window.__openBlocos[b];
 const card = document.getElementById('card-'+b);
 if (card) card.classList.toggle('open');
 }
+
+// ===== PÁGINA 2: TABELA POR BLOCO =====
+let paginaAtiva = 'jovem';
+let eixoTabela = null;
+let blocoTabela = null;
+
+function mudarPagina(p) {
+paginaAtiva = p;
+document.getElementById('pagina-jovem').style.display = p === 'jovem' ? '' : 'none';
+document.getElementById('pagina-tabela').style.display = p === 'tabela' ? '' : 'none';
+document.getElementById('tabJovem').classList.toggle('active', p === 'jovem');
+document.getElementById('tabTabela').classList.toggle('active', p === 'tabela');
+if (p === 'tabela') renderPaginaTabela();
+}
+
+function selecionarEixoTabela(id) {
+eixoTabela = (eixoTabela === id) ? null : id;
+blocoTabela = null;
+renderPaginaTabela();
+}
+function selecionarBlocoTabela(b) {
+blocoTabela = b;
+renderPaginaTabela();
+}
+
+function renderPaginaTabela() {
+const elEixos = document.getElementById('tabelaEixos');
+elEixos.innerHTML = EIXOS.map(eixo => `
+<button class="eixo-tile${eixoTabela===eixo.id?' active':''}" onclick="selecionarEixoTabela('${eixo.id}')">
+<div class="eixo-tile-box" style="background:${eixo.cor}">
+<div class="eixo-tile-ring">${eixo.icone}</div>
+</div>
+<div class="eixo-tile-label">${eixo.nome}</div>
+</button>`).join('');
+
+const elBlocos = document.getElementById('tabelaBlocos');
+const elTabela = document.getElementById('tabelaContainer');
+const eixo = EIXOS.find(e => e.id === eixoTabela);
+if (!eixo) {
+elBlocos.innerHTML = '';
+elTabela.innerHTML = '<div class="eixo-blocos-hint">Toque num eixo acima para ver os blocos.</div>';
+return;
+}
+elBlocos.innerHTML = '<div class="grupo-label" style="margin-top:12px;">Blocos de ' + eixo.nome + '</div>' +
+eixo.blocos.map(b => `<button class="tabela-bloco-btn${blocoTabela===b?' active':''}" onclick="selecionarBlocoTabela('${b}')">${BLOCOS[b].nome}</button>`).join('');
+
+if (!blocoTabela || !eixo.blocos.includes(blocoTabela)) {
+elTabela.innerHTML = '';
+return;
+}
+elTabela.innerHTML = construirTabelaBloco(blocoTabela);
+}
+
+function construirTabelaBloco(b) {
+const def = BLOCOS[b];
+let h = `<div class="tabela-wrap"><table class="tabela-check-grid"><thead><tr><th class="item-col">${def.nome}</th>`;
+JOVENS.forEach(j => { h += `<th>${JNOMES[j].split(' ')[0]}</th>`; });
+h += `</tr></thead><tbody>`;
+
+if (def.fixas.length) {
+h += `<tr class="grupo-row"><td class="item-col" colspan="${JOVENS.length+1}">Ações fixas (todas obrigatórias)</td></tr>`;
+def.fixas.forEach((txt, i) => {
+h += `<tr><td class="item-col">${txt}</td>`;
+JOVENS.forEach(j => {
+const marcado = S[j][b].fixas[i];
+h += `<td><input type="checkbox" ${marcado?'checked':''} onchange="toggleFixaTabela('${j}','${b}',${i})"></td>`;
+});
+h += `</tr>`;
+});
+}
+
+h += `<tr class="grupo-row"><td class="item-col" colspan="${JOVENS.length+1}">Ações variáveis (mínimo ${def.metaVar} de ${def.variaveis.length})</td></tr>`;
+def.variaveis.forEach((txt, i) => {
+h += `<tr><td class="item-col">${txt}</td>`;
+JOVENS.forEach(j => {
+const marcado = S[j][b].variaveis[i];
+h += `<td><input type="checkbox" ${marcado?'checked':''} onchange="toggleVarTabela('${j}','${b}',${i})"></td>`;
+});
+h += `</tr>`;
+});
+
+h += `<tr class="grupo-row"><td class="item-col">Especialidade/insígnia (substitui variáveis)</td>`;
+JOVENS.forEach(j => {
+const marcado = S[j][b].especialidade;
+h += `<td><input type="checkbox" ${marcado?'checked':''} onchange="toggleEspTabela('${j}','${b}')"></td>`;
+});
+h += `</tr>`;
+
+h += `<tr><td class="item-col" style="font-weight:800;">✓ Bloco concluído</td>`;
+JOVENS.forEach(j => {
+h += `<td style="font-weight:800;">${blocoConcluido(j,b) ? '✅' : '—'}</td>`;
+});
+h += `</tr>`;
+
+h += `</tbody></table></div>`;
+return h;
+}
+
+function toggleFixaTabela(j, b, i) { S[j][b].fixas[i] = S[j][b].fixas[i] ? 0 : 1; saveStateDebounced(); renderPaginaTabela(); }
+function toggleVarTabela(j, b, i) { S[j][b].variaveis[i] = S[j][b].variaveis[i] ? 0 : 1; saveStateDebounced(); renderPaginaTabela(); }
+function toggleEspTabela(j, b) { S[j][b].especialidade = S[j][b].especialidade ? 0 : 1; saveStateDebounced(); renderPaginaTabela(); }
 
 async function iniciar() {
 document.getElementById('roster').innerHTML = '<div style="padding:12px;font-size:12px;color:var(--muted);text-align:center;">Carregando dados compartilhados…</div>';
