@@ -147,9 +147,11 @@ border: 1px solid var(--border); background: var(--card); color: var(--muted); c
 }
 .page-tab.active { background: var(--vinho); color: #fff; border-color: var(--vinho); }
 
+.tabela-bloco-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; margin-top: 12px; }
 .tabela-bloco-btn {
-display: inline-block; margin: 4px 6px 0 0; padding: 6px 12px; font-size: 11px; font-weight: 700;
-border-radius: 20px; border: 1px solid var(--border); background: var(--card); color: var(--text); cursor: pointer;
+display: flex; align-items: center; justify-content: center; text-align: center;
+min-height: 6.5em; padding: 8px; font-size: 11px; font-weight: 700; line-height: 1.3;
+border-radius: 12px; border: 1px solid var(--border); background: var(--card); color: var(--text); cursor: pointer;
 }
 .tabela-bloco-btn.active { background: var(--vinho); color: #fff; border-color: var(--vinho); }
 .tabela-wrap { margin: 10px 14px 0; border-radius: var(--r); box-shadow: var(--shadow); overflow: auto; max-height: 70vh; background: var(--card); }
@@ -160,6 +162,14 @@ border-radius: 20px; border: 1px solid var(--border); background: var(--card); c
 .tabela-check-grid thead th.item-col { z-index: 3; }
 .tabela-check-grid .grupo-row td { background: #F5F3EF; font-weight: 800; text-transform: uppercase; font-size: 9px; letter-spacing: .5px; color: var(--muted); }
 .tabela-check-grid input[type=checkbox] { width: 16px; height: 16px; cursor: pointer; }
+.resumo-row { padding: 10px 14px; cursor: pointer; border-bottom: 1px solid #F2EFEA; }
+.resumo-row:hover { background: #FAFAF8; }
+.resumo-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; gap: 8px; }
+.resumo-nome { font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+.resumo-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.resumo-count { font-size: 11px; font-weight: 800; color: var(--muted); white-space: nowrap; }
+.resumo-track { height: 12px; background: #EEEBE7; border-radius: 20px; overflow: hidden; }
+.resumo-bar { height: 100%; border-radius: 20px; transition: width .4s ease; }
 .reset-btn { display: block; margin: 16px auto 32px; background: none; border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; font-size: 11px; color: var(--muted); cursor: pointer; }
 .reset-btn:hover { border-color: #E74C3C; color: #E74C3C; }
 </style>
@@ -190,12 +200,17 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 Salvo automaticamente neste dispositivo — ainda não sincroniza com o Notion.
 </div>
 
-<div class="roster-section">
-<div class="section-label">Jovens da tropa</div>
+<div class="roster-section" style="padding:0;overflow:hidden;">
+<div class="bloco-head" style="padding:14px;" onclick="toggleRosterSecao()">
+<span class="bloco-name" style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">Jovens da tropa</span>
+<span class="chev" id="chevRoster" style="transform:rotate(180deg);">▾</span>
+</div>
+<div id="rosterBody" style="padding:0 14px 14px;">
 <div id="roster"></div>
 <div class="add-jovem-row">
 <input type="text" id="novoJovemInput" placeholder="Nome do novo jovem" onkeydown="if(event.key==='Enter')addJovem()">
 <button onclick="addJovem()">+ Adicionar</button>
+</div>
 </div>
 </div>
 
@@ -204,6 +219,7 @@ Salvo automaticamente neste dispositivo — ainda não sincroniza com o Notion.
 </div>
 
 <div id="pagina-tabela" style="display:none;">
+<div id="resumoContainer"></div>
 <div class="roster-section">
 <div class="section-label">Eixos</div>
 <div id="tabelaEixos" class="eixo-grid"></div>
@@ -480,6 +496,16 @@ if (n >= 4) return {l:'Trilha', c:'#6A1B9A'};
 return {l:'Pistas', c:'#1A6B3C'};
 }
 
+let rosterAberto = true;
+function aplicarEstadoRoster() {
+document.getElementById('rosterBody').style.display = rosterAberto ? '' : 'none';
+document.getElementById('chevRoster').style.transform = rosterAberto ? 'rotate(180deg)' : 'rotate(0deg)';
+}
+function toggleRosterSecao() {
+rosterAberto = !rosterAberto;
+aplicarEstadoRoster();
+}
+
 function renderRoster() {
 const el = document.getElementById('roster');
 el.innerHTML = '';
@@ -494,7 +520,7 @@ row.innerHTML = `
 <div class="roster-name">${JNOMES[j]}</div>
 <div class="roster-track"><div class="roster-bar" style="width:${Math.round(n/18*100)}%;background:${JCOR[j]}"></div></div>
 <div class="roster-etapa">${n}/18 &middot; ${et.l}</div>`;
-row.onclick = () => { ativo = j; renderRoster(); renderDetail(j); document.getElementById('detail').scrollIntoView({behavior:'smooth', block:'start'}); };
+row.onclick = () => { ativo = j; rosterAberto = false; renderRoster(); aplicarEstadoRoster(); renderDetail(j); document.getElementById('detail').scrollIntoView({behavior:'smooth', block:'start'}); };
 el.appendChild(row);
 });
 }
@@ -616,8 +642,15 @@ function selecionarBlocoTabela(b) {
 blocoTabela = b;
 renderPaginaTabela();
 }
+function abrirBlocoResumo(eixoId, b) {
+eixoTabela = eixoId;
+blocoTabela = b;
+renderPaginaTabela();
+}
 
 function renderPaginaTabela() {
+document.getElementById('resumoContainer').innerHTML = construirResumoBlocos();
+
 const elEixos = document.getElementById('tabelaEixos');
 elEixos.innerHTML = EIXOS.map(eixo => `
 <button class="eixo-tile${eixoTabela===eixo.id?' active':''}" onclick="selecionarEixoTabela('${eixo.id}')">
@@ -632,17 +665,68 @@ const elTabela = document.getElementById('tabelaContainer');
 const eixo = EIXOS.find(e => e.id === eixoTabela);
 if (!eixo) {
 elBlocos.innerHTML = '';
-elTabela.innerHTML = '<div class="eixo-blocos-hint">Toque num eixo acima para ver os blocos.</div>';
+elTabela.innerHTML = '';
 return;
 }
 elBlocos.innerHTML = '<div class="grupo-label" style="margin-top:12px;">Blocos de ' + eixo.nome + '</div>' +
-eixo.blocos.map(b => `<button class="tabela-bloco-btn${blocoTabela===b?' active':''}" onclick="selecionarBlocoTabela('${b}')">${BLOCOS[b].nome}</button>`).join('');
+'<div class="tabela-bloco-grid">' +
+eixo.blocos.map(b => `<button class="tabela-bloco-btn${blocoTabela===b?' active':''}" onclick="selecionarBlocoTabela('${b}')">${BLOCOS[b].nome}</button>`).join('') +
+'</div>';
 
 if (!blocoTabela || !eixo.blocos.includes(blocoTabela)) {
 elTabela.innerHTML = '';
 return;
 }
 elTabela.innerHTML = construirTabelaBloco(blocoTabela);
+}
+
+let resumoAberto = false;
+let resumoEixosAbertos = {};
+function toggleResumo() {
+resumoAberto = !resumoAberto;
+renderPaginaTabela();
+}
+function toggleResumoEixo(id) {
+resumoEixosAbertos[id] = !(resumoEixosAbertos[id] ?? true);
+renderPaginaTabela();
+}
+
+function construirResumoBlocos() {
+let h = `<div class="roster-section" style="padding:0;overflow:hidden;">
+<div class="bloco-head" style="padding:14px;" onclick="toggleResumo()">
+<span class="bloco-name" style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">Resumo — quantos jovens já concluíram cada bloco</span>
+<span class="chev" style="transform:rotate(${resumoAberto?180:0}deg);">▾</span>
+</div>`;
+
+if (resumoAberto) {
+h += `<div class="eixo-blocos-hint" style="text-align:left;padding:0 14px 6px;">
+Dentro de cada eixo, do bloco com menos jovens concluídos (topo, prioridade pra programar) para o com mais (base). Toque num bloco pra abrir a checklist dele.
+</div>`;
+EIXOS.forEach(eixo => {
+const aberto = resumoEixosAbertos[eixo.id] ?? false;
+h += `<div class="bloco-head" style="padding:8px 14px;" onclick="toggleResumoEixo('${eixo.id}')">
+<span class="resumo-dot" style="background:${eixo.cor}"></span>
+<span class="bloco-name" style="font-size:11px;font-weight:800;">${eixo.nome}</span>
+<span class="chev" style="transform:rotate(${aberto?180:0}deg);">▾</span>
+</div>`;
+if (aberto) {
+const blocosEixo = eixo.blocos.map(b => ({ b, concluidos: JOVENS.filter(j => blocoConcluido(j, b)).length }));
+blocosEixo.sort((a, b2) => a.concluidos - b2.concluidos);
+blocosEixo.forEach(({b, concluidos}) => {
+const pct = Math.round(concluidos / JOVENS.length * 100);
+h += `<div class="resumo-row" onclick="abrirBlocoResumo('${eixo.id}','${b}');">
+<div class="resumo-meta">
+<span class="resumo-nome">${BLOCOS[b].nome}</span>
+<span class="resumo-count">${concluidos}/${JOVENS.length}</span>
+</div>
+<div class="resumo-track"><div class="resumo-bar" style="width:${pct}%;background:${eixo.cor}"></div></div>
+</div>`;
+});
+}
+});
+}
+h += `</div>`;
+return h;
 }
 
 function construirTabelaBloco(b) {
