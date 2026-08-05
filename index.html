@@ -162,13 +162,13 @@ border-radius: 12px; border: 2px solid var(--text); background: #F5F3EF; color: 
 }
 .tabela-bloco-btn.active { background: var(--vinho); color: #fff; border-color: var(--vinho); }
 .tabela-wrap { margin: 10px 14px 0; border-radius: var(--r); box-shadow: var(--shadow); overflow: auto; max-height: 70vh; background: var(--card); }
-.tabela-check-grid { border-collapse: collapse; font-size: 11px; }
-.tabela-check-grid th, .tabela-check-grid td { border: 1px solid #F0EDE8; padding: 6px 8px; text-align: center; white-space: nowrap; }
-.tabela-check-grid th.item-col, .tabela-check-grid td.item-col { text-align: left; position: sticky; left: 0; background: var(--card); min-width: 220px; white-space: normal; z-index: 1; }
-.tabela-check-grid thead th { background: var(--azul); color: #fff; position: sticky; top: 0; z-index: 2; }
+.tabela-check-grid { border-collapse: collapse; font-size: 11px; table-layout: fixed; }
+.tabela-check-grid th, .tabela-check-grid td { border: 1px solid #F0EDE8; padding: 8px 4px; text-align: center; white-space: nowrap; width: 52px; }
+.tabela-check-grid th.item-col, .tabela-check-grid td.item-col { text-align: left; position: sticky; left: 0; background: var(--card); width: 220px; min-width: 220px; white-space: normal; z-index: 1; }
+.tabela-check-grid thead th { background: var(--azul); color: #fff; position: sticky; top: 0; z-index: 2; font-size: 10px; overflow: hidden; text-overflow: ellipsis; }
 .tabela-check-grid thead th.item-col { z-index: 3; }
 .tabela-check-grid .grupo-row td { background: #F5F3EF; font-weight: 800; text-transform: uppercase; font-size: 9px; letter-spacing: .5px; color: var(--muted); }
-.tabela-check-grid input[type=checkbox] { width: 16px; height: 16px; cursor: pointer; }
+.tabela-check-grid input[type=checkbox] { width: 24px; height: 24px; cursor: pointer; }
 .resumo-row { padding: 10px 14px; cursor: pointer; border-bottom: 1px solid #F2EFEA; }
 .resumo-row:hover { background: #FAFAF8; }
 .resumo-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; gap: 8px; }
@@ -243,6 +243,10 @@ const JNOMES = {miguel:'Miguel Silva',sabrina:'Sabrina Sigmaringa',pedro:'Pedro 
 let JOVENS = JOVENS_BASE.slice();
 const JCOR = {};
 function corPara(i) { return `hsl(${Math.round(i*137.5)%360},45%,42%)`; }
+function nomeCurto(j) {
+const partes = JNOMES[j].split(' ');
+return partes.length > 1 ? `${partes[0]} ${partes[1][0]}.` : partes[0];
+}
 JOVENS.forEach((j,i) => JCOR[j] = corPara(i));
 
 const ICONE_FOLHA = '<svg viewBox="0 0 24 24" fill="white"><path d="M12 2C6.5 3.5 4 8 4 13c0 4.4 3.6 8 8 8s8-3.6 8-8c0-6-3.5-9.5-8-11z"/><rect x="11.3" y="6" width="1.4" height="13" fill="white" opacity="0.55"/></svg>';
@@ -742,7 +746,7 @@ return h;
 function construirTabelaBloco(b) {
 const def = BLOCOS[b];
 let h = `<div class="tabela-wrap"><table class="tabela-check-grid"><thead><tr><th class="item-col">${def.nome}</th>`;
-JOVENS.forEach(j => { h += `<th>${JNOMES[j].split(' ')[0]}</th>`; });
+JOVENS.forEach(j => { h += `<th>${nomeCurto(j)}</th>`; });
 h += `</tr></thead><tbody>`;
 
 if (def.fixas.length) {
