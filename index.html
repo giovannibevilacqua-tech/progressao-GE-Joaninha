@@ -231,7 +231,7 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 <div id="tabelaContainer"></div>
 </div>
 
-<button class="reset-btn" onclick="confirmReset()">↺ Restaurar dados originais</button>
+<button class="reset-btn" onclick="confirmReset()">↺ LIMPAR MARCAÇÕES</button>
 
 <script>
 const DB_URL = "https://joaninha-progressao-default-rtdb.firebaseio.com";
@@ -337,12 +337,14 @@ const INICIAL = buildInicial();
 let S = {};
 let ativo = null;
 let carregando = true;
+let temAlteracaoLocalPendente = false;
 
 function iniciarSync() {
   return new Promise((resolve) => {
     let primeira = true;
 
     function processar(valor) {
+      if (!primeira && temAlteracaoLocalPendente) return; // evita que um eco atrasado do próprio salvamento sobrescreva cliques mais recentes
       if (valor) {
         try {
           const dados = JSON.parse(valor);
@@ -401,6 +403,7 @@ function iniciarSync() {
 async function saveState() {
   const extras = JOVENS.filter(j => !JOVENS_BASE.includes(j)).map(id => ({id, nome: JNOMES[id]}));
   const payload = JSON.stringify({ S, extraJovens: extras });
+  temAlteracaoLocalPendente = false; // este payload já reflete tudo que foi clicado até agora
   mostrarStatusSalvando('Salvando…');
   for (let tentativa = 1; tentativa <= 2; tentativa++) {
     try {
@@ -472,20 +475,19 @@ document.getElementById('detail').scrollIntoView({behavior:'smooth', block:'star
 }
 function deepCopy(o) { return JSON.parse(JSON.stringify(o)); }
 function confirmReset() {
-const senha = prompt('Ação sensível: restaurar os dados originais apaga as marcações de todo mundo e remove os jovens adicionados manualmente.\n\nDigite a senha para confirmar:');
+const senha = prompt('Ação sensível: isso apaga TODAS as marcações (fixas, variáveis e especialidades) de TODOS os jovens, pra todo mundo que usa este link. A lista de jovens é mantida.\n\nDigite a senha para confirmar:');
 if (senha === null) return;
 if (senha !== '980070') {
 alert('Senha incorreta. Nada foi alterado.');
 return;
 }
-JOVENS = JOVENS_BASE.slice();
-JOVENS.forEach((j,i) => JCOR[j] = corPara(i));
-S = deepCopy(INICIAL);
+JOVENS.forEach(j => { S[j] = blocosEmBranco(); });
 saveState();
 ativo = null;
 renderRoster();
 document.getElementById('detail').innerHTML = '';
-alert('Dados restaurados com sucesso.');
+if (paginaAtiva === 'tabela') renderPaginaTabela();
+alert('Marcações limpas com sucesso.');
 }
 
 function blocoConcluido(j, b) {
@@ -534,9 +536,9 @@ el.appendChild(row);
 });
 }
 
-function toggleFixa(j, b, i) { S[j][b].fixas[i] = S[j][b].fixas[i] ? 0 : 1; saveStateDebounced(); renderRoster(); renderDetail(j); }
-function toggleVar(j, b, i) { S[j][b].variaveis[i] = S[j][b].variaveis[i] ? 0 : 1; saveStateDebounced(); renderRoster(); renderDetail(j); }
-function toggleEsp(j, b) { S[j][b].especialidade = S[j][b].especialidade ? 0 : 1; saveStateDebounced(); renderRoster(); renderDetail(j); }
+function toggleFixa(j, b, i) { S[j][b].fixas[i] = S[j][b].fixas[i] ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); renderRoster(); renderDetail(j); }
+function toggleVar(j, b, i) { S[j][b].variaveis[i] = S[j][b].variaveis[i] ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); renderRoster(); renderDetail(j); }
+function toggleEsp(j, b) { S[j][b].especialidade = S[j][b].especialidade ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); renderRoster(); renderDetail(j); }
 
 function renderDetail(j) {
 const el = document.getElementById('detail');
@@ -782,9 +784,9 @@ h += `</tbody></table></div>`;
 return h;
 }
 
-function toggleFixaTabela(j, b, i) { S[j][b].fixas[i] = S[j][b].fixas[i] ? 0 : 1; saveStateDebounced(); renderPaginaTabela(); }
-function toggleVarTabela(j, b, i) { S[j][b].variaveis[i] = S[j][b].variaveis[i] ? 0 : 1; saveStateDebounced(); renderPaginaTabela(); }
-function toggleEspTabela(j, b) { S[j][b].especialidade = S[j][b].especialidade ? 0 : 1; saveStateDebounced(); renderPaginaTabela(); }
+function toggleFixaTabela(j, b, i) { S[j][b].fixas[i] = S[j][b].fixas[i] ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); renderPaginaTabela(); }
+function toggleVarTabela(j, b, i) { S[j][b].variaveis[i] = S[j][b].variaveis[i] ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); renderPaginaTabela(); }
+function toggleEspTabela(j, b) { S[j][b].especialidade = S[j][b].especialidade ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); renderPaginaTabela(); }
 
 async function iniciar() {
 document.getElementById('roster').innerHTML = '<div style="padding:12px;font-size:12px;color:var(--muted);text-align:center;">Carregando dados compartilhados…</div>';
