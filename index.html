@@ -233,6 +233,22 @@ width: 100%; background: none; color: var(--muted); border: 1px solid var(--bord
 padding: 10px; font-size: 11px; font-weight: 700; cursor: pointer; margin-top: 4px;
 }
 .btn-secundario:hover { border-color: #E74C3C; color: #E74C3C; }
+
+.ciclo-titulo {
+background: linear-gradient(160deg, var(--vinho) 0%, var(--vinho2) 100%); color: #fff;
+font-size: 13px; font-weight: 800; text-align: center; text-transform: uppercase; letter-spacing: 1px;
+padding: 12px; margin: 14px 14px 0; border-radius: var(--r); box-shadow: var(--shadow);
+}
+.ciclo-card { background: var(--card); border-radius: var(--r); box-shadow: var(--shadow); margin: 10px 14px 0; padding: 14px; }
+.ciclo-card-titulo { font-size: 12px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; }
+.ciclo-datas-row { display: flex; gap: 8px; margin-bottom: 12px; }
+.ciclo-datas-row > div { flex: 1; }
+.ciclo-blocos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.ciclo-bloco-select {
+width: 100%; padding: 10px 4px; border-radius: 10px; border: 2px solid var(--text);
+background: #F5F3EF; color: var(--text); font-size: 10px; font-weight: 800; text-align: center;
+text-align-last: center; cursor: pointer; font-family: inherit;
+}
 </style>
 </head>
 <body>
@@ -335,10 +351,8 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 </div>
 
 <div id="pagina-ciclo" style="display:none;">
-<div class="roster-section">
-<div class="section-label">Ciclo de Programa</div>
-<div class="eixo-blocos-hint" style="text-align:left;padding:4px 0 0;">Em construção — em breve dá pra planejar aqui as fases do Ciclo de Programa (Planejar, Fazer, Avaliar).</div>
-</div>
+<div class="ciclo-titulo">Ciclo de 3 Anos</div>
+<div id="listaCiclo"></div>
 </div>
 
 <button class="reset-btn" id="btnLimparMarcacoes" onclick="confirmReset()">↺ LIMPAR MARCAÇÕES</button>
@@ -453,6 +467,10 @@ let ativo = null;
 let carregando = true;
 let temAlteracaoLocalPendente = false;
 let EVENTOS = [];
+let CICLO = [];
+function cicloEmBranco() {
+return Array.from({length:6}, () => ({ ano:'', semestre:'1', blocos:['','',''] }));
+}
 
 function iniciarSync() {
   return new Promise((resolve) => {
@@ -469,12 +487,14 @@ function iniciarSync() {
           JOVENS.forEach((j,i) => JCOR[j] = corPara(i));
           S = dados.S || deepCopy(INICIAL);
           EVENTOS = dados.eventos || [];
+          CICLO = (dados.ciclo && dados.ciclo.length === 6) ? dados.ciclo : cicloEmBranco();
         } catch(e) {
-          if (primeira) { S = deepCopy(INICIAL); EVENTOS = []; }
+          if (primeira) { S = deepCopy(INICIAL); EVENTOS = []; CICLO = cicloEmBranco(); }
         }
       } else if (primeira) {
         S = deepCopy(INICIAL);
         EVENTOS = [];
+        CICLO = cicloEmBranco();
       }
       JOVENS.forEach(j => { if (!S[j]) S[j] = blocosEmBranco(); });
       if (primeira) {
@@ -486,6 +506,7 @@ function iniciarSync() {
         if (ativo) renderDetail(ativo);
         if (paginaAtiva === 'tabela') renderPaginaTabela();
         if (paginaAtiva === 'calendario') renderPaginaCalendario();
+        if (paginaAtiva === 'ciclo') renderPaginaCiclo();
       }
     }
 
@@ -496,7 +517,7 @@ function iniciarSync() {
         processar(val);
       } catch(e) {
         console.error('Erro ao carregar dados:', e);
-        if (primeira) { S = deepCopy(INICIAL); EVENTOS = []; JOVENS.forEach(j => { if (!S[j]) S[j] = blocosEmBranco(); }); primeira = false; carregando = false; resolve(); }
+        if (primeira) { S = deepCopy(INICIAL); EVENTOS = []; CICLO = cicloEmBranco(); JOVENS.forEach(j => { if (!S[j]) S[j] = blocosEmBranco(); }); primeira = false; carregando = false; resolve(); }
       }
     }
 
@@ -520,7 +541,7 @@ function iniciarSync() {
 
 async function saveState() {
   const extras = JOVENS.filter(j => !JOVENS_BASE.includes(j)).map(id => ({id, nome: JNOMES[id]}));
-  const payload = JSON.stringify({ S, extraJovens: extras, eventos: EVENTOS });
+  const payload = JSON.stringify({ S, extraJovens: extras, eventos: EVENTOS, ciclo: CICLO });
   temAlteracaoLocalPendente = false; // este payload já reflete tudo que foi clicado até agora
   mostrarStatusSalvando('Salvando…');
   for (let tentativa = 1; tentativa <= 2; tentativa++) {
@@ -766,6 +787,7 @@ document.getElementById('tabCiclo').classList.toggle('active', p === 'ciclo');
 document.getElementById('btnLimparMarcacoes').style.display = (p === 'jovem' || p === 'tabela') ? '' : 'none';
 if (p === 'tabela') renderPaginaTabela();
 if (p === 'calendario') renderPaginaCalendario();
+if (p === 'ciclo') renderPaginaCiclo();
 }
 
 function selecionarEixoTabela(id) {
@@ -1026,6 +1048,51 @@ ${ev.responsavel ? `<span class="evento-tag">👤 ${ev.responsavel}</span>` : ''
 </div>
 ${ev.descricao ? `<div class="evento-desc">${ev.descricao}</div>` : ''}
 </div>
+</div>`;
+}).join('');
+}
+
+// ===== PÁGINA 4: CICLO DE PROGRAMA =====
+function opcoesBlocosHTML(selecionado) {
+let h = `<option value="">—</option>`;
+EIXOS.forEach(eixo => {
+h += `<optgroup label="${eixo.nome}">`;
+eixo.blocos.forEach(b => {
+h += `<option value="${b}" ${selecionado===b?'selected':''}>${BLOCOS[b].nome}</option>`;
+});
+h += `</optgroup>`;
+});
+return h;
+}
+
+function atualizarCicloAno(i, val) { CICLO[i].ano = val; temAlteracaoLocalPendente = true; saveStateDebounced(); }
+function atualizarCicloSemestre(i, val) { CICLO[i].semestre = val; temAlteracaoLocalPendente = true; saveStateDebounced(); renderPaginaCiclo(); }
+function atualizarCicloBloco(i, j, val) { CICLO[i].blocos[j] = val; temAlteracaoLocalPendente = true; saveStateDebounced(); renderPaginaCiclo(); }
+
+function renderPaginaCiclo() {
+const el = document.getElementById('listaCiclo');
+el.innerHTML = CICLO.map((sem, i) => {
+const blocosHtml = sem.blocos.map((b, j) => {
+const eixo = b ? EIXOS.find(e => e.blocos.includes(b)) : null;
+const estilo = eixo ? `background:${eixo.cor};color:#fff;border-color:${eixo.cor};` : '';
+return `<select class="ciclo-bloco-select" style="${estilo}" onchange="atualizarCicloBloco(${i},${j},this.value)">${opcoesBlocosHTML(b)}</select>`;
+}).join('');
+return `<div class="ciclo-card">
+<div class="ciclo-card-titulo">${i+1}º Semestre do Ciclo</div>
+<div class="ciclo-datas-row">
+<div>
+<label class="campo-label">Ano</label>
+<input type="number" class="campo-input" value="${sem.ano}" placeholder="2026" onchange="atualizarCicloAno(${i},this.value)">
+</div>
+<div>
+<label class="campo-label">Semestre</label>
+<select class="campo-input" onchange="atualizarCicloSemestre(${i},this.value)">
+<option value="1" ${sem.semestre==='1'?'selected':''}>1º Semestre</option>
+<option value="2" ${sem.semestre==='2'?'selected':''}>2º Semestre</option>
+</select>
+</div>
+</div>
+<div class="ciclo-blocos-grid">${blocosHtml}</div>
 </div>`;
 }).join('');
 }
