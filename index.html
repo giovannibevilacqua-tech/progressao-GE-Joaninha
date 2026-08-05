@@ -300,11 +300,11 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 <div id="pagina-calendario" style="display:none;">
 
 <div class="roster-section" style="padding:0;overflow:hidden;">
-<div class="bloco-head aberto cabecalho-secao" id="cabecalhoAddEvento" style="padding:14px;" onclick="toggleAddEvento()">
+<div class="bloco-head cabecalho-secao" id="cabecalhoAddEvento" style="padding:14px;" onclick="toggleAddEvento()">
 <span class="bloco-name" style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">+ Adicionar atividade</span>
-<span class="chev" id="chevAddEvento" style="transform:rotate(180deg);">▾</span>
+<span class="chev" id="chevAddEvento" style="transform:rotate(0deg);">▾</span>
 </div>
-<div id="addEventoBody" style="padding:4px 14px 14px;display:flex;flex-direction:column;gap:10px;">
+<div id="addEventoBody" style="padding:4px 14px 14px;display:none;flex-direction:column;gap:10px;">
 <div>
 <label class="campo-label">Data</label>
 <input type="date" id="eventoData" class="campo-input">
@@ -913,7 +913,7 @@ function toggleVarTabela(j, b, i) { S[j][b].variaveis[i] = S[j][b].variaveis[i] 
 function toggleEspTabela(j, b) { S[j][b].especialidade = S[j][b].especialidade ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); renderPaginaTabela(); }
 
 // ===== PÁGINA 3: CALENDÁRIO =====
-let addEventoAberto = true;
+let addEventoAberto = false;
 let eventoEditandoId = null;
 let eventoMenuAbertoId = null;
 
@@ -933,7 +933,7 @@ document.removeEventListener('click', fechar);
 
 function toggleAddEvento() {
 addEventoAberto = !addEventoAberto;
-document.getElementById('addEventoBody').style.display = addEventoAberto ? '' : 'none';
+document.getElementById('addEventoBody').style.display = addEventoAberto ? 'flex' : 'none';
 document.getElementById('chevAddEvento').style.transform = addEventoAberto ? 'rotate(180deg)' : 'rotate(0deg)';
 }
 
@@ -959,7 +959,7 @@ document.getElementById('eventoDescricao').value = ev.descricao || '';
 document.getElementById('btnSalvarEvento').textContent = '💾 Salvar alterações';
 document.getElementById('btnCancelarEdicaoEvento').style.display = '';
 addEventoAberto = true;
-document.getElementById('addEventoBody').style.display = '';
+document.getElementById('addEventoBody').style.display = 'flex';
 document.getElementById('chevAddEvento').style.transform = 'rotate(180deg)';
 document.getElementById('cabecalhoAddEvento').scrollIntoView({behavior:'smooth', block:'start'});
 renderPaginaCalendario();
