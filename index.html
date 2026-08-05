@@ -199,23 +199,35 @@ padding: 12px; font-size: 12px; font-weight: 800; cursor: pointer; margin-top: 2
 }
 .btn-primario:hover { background: var(--vinho2); }
 
-.evento-card { background: var(--card); border-radius: var(--r); box-shadow: var(--shadow); margin: 0 14px 8px; display: flex; overflow: hidden; }
+.evento-card { background: var(--card); border-radius: var(--r); box-shadow: var(--shadow); margin: 0 14px 8px; display: flex; overflow: visible; position: relative; }
 .evento-strip {
 width: 58px; min-width: 58px; background: var(--vinho); color: #fff;
 display: flex; flex-direction: column; align-items: center; justify-content: center;
-padding: 10px 4px; text-align: center;
+padding: 10px 4px; text-align: center; border-radius: var(--r) 0 0 var(--r);
 }
 .evento-dia { font-size: 19px; font-weight: 900; line-height: 1.1; }
 .evento-mes { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; margin-top: 1px; }
-.evento-body { flex: 1; padding: 10px 12px; min-width: 0; }
+.evento-body { flex: 1; padding: 10px 36px 10px 12px; min-width: 0; }
 .evento-nome { font-size: 13px; font-weight: 800; margin-bottom: 5px; }
 .evento-meta { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
 .evento-tag { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; background: #F5F3EF; color: var(--text); white-space: nowrap; }
 .evento-desc { font-size: 12px; color: #3A3A3A; line-height: 1.5; }
-.evento-acoes { display: flex; gap: 14px; margin-top: 8px; }
-.evento-del, .evento-editar { border: none; background: none; font-size: 10px; font-weight: 700; cursor: pointer; padding: 0; color: var(--muted); }
-.evento-del:hover { color: #E74C3C; }
-.evento-editar:hover { color: var(--vinho); }
+.evento-menu-btn {
+position: absolute; top: 6px; right: 6px; width: 26px; height: 26px;
+border: none; background: none; color: var(--muted); font-size: 16px; font-weight: 900;
+cursor: pointer; border-radius: 6px; line-height: 1;
+}
+.evento-menu-btn:hover { background: #F0EDE8; color: var(--text); }
+.evento-dropdown {
+position: absolute; top: 32px; right: 6px; background: var(--card); border: 1px solid var(--border);
+border-radius: 10px; box-shadow: var(--shadow); overflow: hidden; z-index: 20; min-width: 130px;
+}
+.evento-dropdown button {
+display: block; width: 100%; text-align: left; padding: 10px 12px; font-size: 12px; font-weight: 700;
+border: none; background: var(--card); color: var(--text); cursor: pointer;
+}
+.evento-dropdown button:hover { background: #F5F3EF; }
+.evento-dropdown button.remover { color: #E74C3C; }
 .btn-secundario {
 width: 100%; background: none; color: var(--muted); border: 1px solid var(--border); border-radius: 10px;
 padding: 10px; font-size: 11px; font-weight: 700; cursor: pointer; margin-top: 4px;
@@ -903,6 +915,21 @@ function toggleEspTabela(j, b) { S[j][b].especialidade = S[j][b].especialidade ?
 // ===== PÁGINA 3: CALENDÁRIO =====
 let addEventoAberto = true;
 let eventoEditandoId = null;
+let eventoMenuAbertoId = null;
+
+function toggleEventoMenu(id) {
+eventoMenuAbertoId = (eventoMenuAbertoId === id) ? null : id;
+renderPaginaCalendario();
+if (eventoMenuAbertoId) {
+setTimeout(() => {
+document.addEventListener('click', function fechar() {
+eventoMenuAbertoId = null;
+renderPaginaCalendario();
+document.removeEventListener('click', fechar);
+}, { once: true });
+}, 0);
+}
+}
 
 function toggleAddEvento() {
 addEventoAberto = !addEventoAberto;
@@ -922,6 +949,7 @@ document.getElementById('btnCancelarEdicaoEvento').style.display = 'none';
 function editarEvento(id) {
 const ev = EVENTOS.find(e => e.id === id);
 if (!ev) return;
+eventoMenuAbertoId = null;
 eventoEditandoId = id;
 document.getElementById('eventoData').value = ev.data;
 document.getElementById('eventoNome').value = ev.nome;
@@ -934,6 +962,7 @@ addEventoAberto = true;
 document.getElementById('addEventoBody').style.display = '';
 document.getElementById('chevAddEvento').style.transform = 'rotate(180deg)';
 document.getElementById('cabecalhoAddEvento').scrollIntoView({behavior:'smooth', block:'start'});
+renderPaginaCalendario();
 }
 
 function cancelarEdicaoEvento() {
@@ -963,6 +992,7 @@ renderPaginaCalendario();
 
 function removerEvento(id) {
 if (!confirm('Remover essa atividade do calendário?')) return;
+eventoMenuAbertoId = null;
 EVENTOS = EVENTOS.filter(e => e.id !== id);
 if (eventoEditandoId === id) limparFormularioEvento();
 temAlteracaoLocalPendente = true;
@@ -980,19 +1010,21 @@ const ordenados = [...EVENTOS].sort((a, b) => a.data.localeCompare(b.data));
 el.innerHTML = ordenados.map(ev => {
 const partes = ev.data.split('-');
 const mesTxt = MESES_ABREV[parseInt(partes[1], 10) - 1] || '';
+const menuAberto = eventoMenuAbertoId === ev.id;
 return `<div class="evento-card">
 <div class="evento-strip"><div class="evento-dia">${partes[2]}</div><div class="evento-mes">${mesTxt}</div></div>
 <div class="evento-body">
+<button class="evento-menu-btn" onclick="event.stopPropagation();toggleEventoMenu('${ev.id}')">⋮</button>
+${menuAberto ? `<div class="evento-dropdown" onclick="event.stopPropagation()">
+<button onclick="editarEvento('${ev.id}')">✏️ Editar</button>
+<button class="remover" onclick="removerEvento('${ev.id}')">🗑️ Remover</button>
+</div>` : ''}
 <div class="evento-nome">${ev.nome}</div>
 <div class="evento-meta">
 ${ev.local ? `<span class="evento-tag">📍 ${ev.local}</span>` : ''}
 ${ev.responsavel ? `<span class="evento-tag">👤 ${ev.responsavel}</span>` : ''}
 </div>
 ${ev.descricao ? `<div class="evento-desc">${ev.descricao}</div>` : ''}
-<div class="evento-acoes">
-<button class="evento-editar" onclick="editarEvento('${ev.id}')">✏️ Editar</button>
-<button class="evento-del" onclick="removerEvento('${ev.id}')">🗑 Remover</button>
-</div>
 </div>
 </div>`;
 }).join('');
