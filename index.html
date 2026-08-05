@@ -185,6 +185,35 @@ border-radius: 12px; border: 2px solid var(--text); background: #F5F3EF; color: 
 .resumo-bar { height: 100%; border-radius: 20px; transition: width .4s ease; }
 .reset-btn { display: block; margin: 16px auto 32px; background: none; border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; font-size: 11px; color: var(--muted); cursor: pointer; }
 .reset-btn:hover { border-color: #E74C3C; color: #E74C3C; }
+
+.campo-label { font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; display: block; margin-bottom: 4px; }
+.campo-input {
+width: 100%; font-size: 13px; padding: 9px 10px; border-radius: 8px;
+border: 1px solid var(--border); background: #FAFAF8; font-family: inherit; color: var(--text);
+}
+.campo-input:focus { outline: none; border-color: var(--vinho); background: var(--card); }
+textarea.campo-input { resize: vertical; }
+.btn-primario {
+width: 100%; background: var(--vinho); color: #fff; border: none; border-radius: 10px;
+padding: 12px; font-size: 12px; font-weight: 800; cursor: pointer; margin-top: 2px;
+}
+.btn-primario:hover { background: var(--vinho2); }
+
+.evento-card { background: var(--card); border-radius: var(--r); box-shadow: var(--shadow); margin: 0 14px 8px; display: flex; overflow: hidden; }
+.evento-strip {
+width: 58px; min-width: 58px; background: var(--vinho); color: #fff;
+display: flex; flex-direction: column; align-items: center; justify-content: center;
+padding: 10px 4px; text-align: center;
+}
+.evento-dia { font-size: 19px; font-weight: 900; line-height: 1.1; }
+.evento-mes { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; margin-top: 1px; }
+.evento-body { flex: 1; padding: 10px 12px; min-width: 0; }
+.evento-nome { font-size: 13px; font-weight: 800; margin-bottom: 5px; }
+.evento-meta { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
+.evento-tag { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; background: #F5F3EF; color: var(--text); white-space: nowrap; }
+.evento-desc { font-size: 12px; color: #3A3A3A; line-height: 1.5; }
+.evento-del { border: none; background: none; color: var(--muted); font-size: 10px; font-weight: 700; cursor: pointer; margin-top: 8px; padding: 0; }
+.evento-del:hover { color: #E74C3C; }
 </style>
 </head>
 <body>
@@ -250,10 +279,39 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 </div>
 
 <div id="pagina-calendario" style="display:none;">
-<div class="roster-section">
-<div class="section-label">Calendário</div>
-<div class="eixo-blocos-hint" style="text-align:left;padding:4px 0 0;">Em construção — em breve dá pra cadastrar aqui as atividades e datas do ciclo.</div>
+
+<div class="roster-section" style="padding:0;overflow:hidden;">
+<div class="bloco-head aberto cabecalho-secao" id="cabecalhoAddEvento" style="padding:14px;" onclick="toggleAddEvento()">
+<span class="bloco-name" style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">+ Adicionar atividade</span>
+<span class="chev" id="chevAddEvento" style="transform:rotate(180deg);">▾</span>
 </div>
+<div id="addEventoBody" style="padding:4px 14px 14px;display:flex;flex-direction:column;gap:10px;">
+<div>
+<label class="campo-label">Data</label>
+<input type="date" id="eventoData" class="campo-input">
+</div>
+<div>
+<label class="campo-label">Nome da atividade</label>
+<input type="text" id="eventoNome" class="campo-input" placeholder="Ex: Acampamento de Patrulha">
+</div>
+<div>
+<label class="campo-label">Local</label>
+<input type="text" id="eventoLocal" class="campo-input" placeholder="Ex: Sede do Grupo Escoteiro Joaninha">
+</div>
+<div>
+<label class="campo-label">Responsável</label>
+<input type="text" id="eventoResponsavel" class="campo-input" placeholder="Ex: Chefe João">
+</div>
+<div>
+<label class="campo-label">Descrição</label>
+<textarea id="eventoDescricao" class="campo-input" rows="3" placeholder="Detalhes da atividade..."></textarea>
+</div>
+<button class="btn-primario" onclick="adicionarEvento()">+ Adicionar ao calendário</button>
+</div>
+</div>
+
+<div id="listaEventos" style="margin-top:10px;"></div>
+
 </div>
 
 <div id="pagina-ciclo" style="display:none;">
@@ -374,6 +432,7 @@ let S = {};
 let ativo = null;
 let carregando = true;
 let temAlteracaoLocalPendente = false;
+let EVENTOS = [];
 
 function iniciarSync() {
   return new Promise((resolve) => {
@@ -389,11 +448,13 @@ function iniciarSync() {
           extras.forEach(ex => { JOVENS.push(ex.id); JNOMES[ex.id] = ex.nome; });
           JOVENS.forEach((j,i) => JCOR[j] = corPara(i));
           S = dados.S || deepCopy(INICIAL);
+          EVENTOS = dados.eventos || [];
         } catch(e) {
-          if (primeira) S = deepCopy(INICIAL);
+          if (primeira) { S = deepCopy(INICIAL); EVENTOS = []; }
         }
       } else if (primeira) {
         S = deepCopy(INICIAL);
+        EVENTOS = [];
       }
       JOVENS.forEach(j => { if (!S[j]) S[j] = blocosEmBranco(); });
       if (primeira) {
@@ -404,6 +465,7 @@ function iniciarSync() {
         renderRoster();
         if (ativo) renderDetail(ativo);
         if (paginaAtiva === 'tabela') renderPaginaTabela();
+        if (paginaAtiva === 'calendario') renderPaginaCalendario();
       }
     }
 
@@ -414,7 +476,7 @@ function iniciarSync() {
         processar(val);
       } catch(e) {
         console.error('Erro ao carregar dados:', e);
-        if (primeira) { S = deepCopy(INICIAL); JOVENS.forEach(j => { if (!S[j]) S[j] = blocosEmBranco(); }); primeira = false; carregando = false; resolve(); }
+        if (primeira) { S = deepCopy(INICIAL); EVENTOS = []; JOVENS.forEach(j => { if (!S[j]) S[j] = blocosEmBranco(); }); primeira = false; carregando = false; resolve(); }
       }
     }
 
@@ -438,7 +500,7 @@ function iniciarSync() {
 
 async function saveState() {
   const extras = JOVENS.filter(j => !JOVENS_BASE.includes(j)).map(id => ({id, nome: JNOMES[id]}));
-  const payload = JSON.stringify({ S, extraJovens: extras });
+  const payload = JSON.stringify({ S, extraJovens: extras, eventos: EVENTOS });
   temAlteracaoLocalPendente = false; // este payload já reflete tudo que foi clicado até agora
   mostrarStatusSalvando('Salvando…');
   for (let tentativa = 1; tentativa <= 2; tentativa++) {
@@ -682,6 +744,7 @@ document.getElementById('tabTabela').classList.toggle('active', p === 'tabela');
 document.getElementById('tabCalendario').classList.toggle('active', p === 'calendario');
 document.getElementById('tabCiclo').classList.toggle('active', p === 'ciclo');
 if (p === 'tabela') renderPaginaTabela();
+if (p === 'calendario') renderPaginaCalendario();
 }
 
 function selecionarEixoTabela(id) {
@@ -827,6 +890,64 @@ return h;
 function toggleFixaTabela(j, b, i) { S[j][b].fixas[i] = S[j][b].fixas[i] ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); renderPaginaTabela(); }
 function toggleVarTabela(j, b, i) { S[j][b].variaveis[i] = S[j][b].variaveis[i] ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); renderPaginaTabela(); }
 function toggleEspTabela(j, b) { S[j][b].especialidade = S[j][b].especialidade ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); renderPaginaTabela(); }
+
+// ===== PÁGINA 3: CALENDÁRIO =====
+let addEventoAberto = true;
+function toggleAddEvento() {
+addEventoAberto = !addEventoAberto;
+document.getElementById('addEventoBody').style.display = addEventoAberto ? '' : 'none';
+document.getElementById('chevAddEvento').style.transform = addEventoAberto ? 'rotate(180deg)' : 'rotate(0deg)';
+}
+
+const MESES_ABREV = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+
+function adicionarEvento() {
+const data = document.getElementById('eventoData').value;
+const nome = document.getElementById('eventoNome').value.trim();
+const local = document.getElementById('eventoLocal').value.trim();
+const responsavel = document.getElementById('eventoResponsavel').value.trim();
+const descricao = document.getElementById('eventoDescricao').value.trim();
+if (!data || !nome) { alert('Preencha pelo menos a data e o nome da atividade.'); return; }
+const id = 'ev' + Date.now() + Math.floor(Math.random()*1000);
+EVENTOS.push({ id, data, nome, local, responsavel, descricao });
+temAlteracaoLocalPendente = true;
+saveState();
+['eventoData','eventoNome','eventoLocal','eventoResponsavel','eventoDescricao'].forEach(fid => { document.getElementById(fid).value = ''; });
+renderPaginaCalendario();
+}
+
+function removerEvento(id) {
+if (!confirm('Remover essa atividade do calendário?')) return;
+EVENTOS = EVENTOS.filter(e => e.id !== id);
+temAlteracaoLocalPendente = true;
+saveState();
+renderPaginaCalendario();
+}
+
+function renderPaginaCalendario() {
+const el = document.getElementById('listaEventos');
+if (!EVENTOS.length) {
+el.innerHTML = '<div class="eixo-blocos-hint" style="padding:24px 14px;">Nenhuma atividade cadastrada ainda. Use o formulário acima pra adicionar a primeira.</div>';
+return;
+}
+const ordenados = [...EVENTOS].sort((a, b) => a.data.localeCompare(b.data));
+el.innerHTML = ordenados.map(ev => {
+const partes = ev.data.split('-');
+const mesTxt = MESES_ABREV[parseInt(partes[1], 10) - 1] || '';
+return `<div class="evento-card">
+<div class="evento-strip"><div class="evento-dia">${partes[2]}</div><div class="evento-mes">${mesTxt}</div></div>
+<div class="evento-body">
+<div class="evento-nome">${ev.nome}</div>
+<div class="evento-meta">
+${ev.local ? `<span class="evento-tag">📍 ${ev.local}</span>` : ''}
+${ev.responsavel ? `<span class="evento-tag">👤 ${ev.responsavel}</span>` : ''}
+</div>
+${ev.descricao ? `<div class="evento-desc">${ev.descricao}</div>` : ''}
+<button class="evento-del" onclick="removerEvento('${ev.id}')">🗑 Remover</button>
+</div>
+</div>`;
+}).join('');
+}
 
 async function iniciar() {
 document.getElementById('roster').innerHTML = '<div style="padding:12px;font-size:12px;color:var(--muted);text-align:center;">Carregando dados compartilhados…</div>';
