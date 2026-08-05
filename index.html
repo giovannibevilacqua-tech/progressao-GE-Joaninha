@@ -212,8 +212,15 @@ padding: 10px 4px; text-align: center;
 .evento-meta { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
 .evento-tag { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; background: #F5F3EF; color: var(--text); white-space: nowrap; }
 .evento-desc { font-size: 12px; color: #3A3A3A; line-height: 1.5; }
-.evento-del { border: none; background: none; color: var(--muted); font-size: 10px; font-weight: 700; cursor: pointer; margin-top: 8px; padding: 0; }
+.evento-acoes { display: flex; gap: 14px; margin-top: 8px; }
+.evento-del, .evento-editar { border: none; background: none; font-size: 10px; font-weight: 700; cursor: pointer; padding: 0; color: var(--muted); }
 .evento-del:hover { color: #E74C3C; }
+.evento-editar:hover { color: var(--vinho); }
+.btn-secundario {
+width: 100%; background: none; color: var(--muted); border: 1px solid var(--border); border-radius: 10px;
+padding: 10px; font-size: 11px; font-weight: 700; cursor: pointer; margin-top: 4px;
+}
+.btn-secundario:hover { border-color: #E74C3C; color: #E74C3C; }
 </style>
 </head>
 <body>
@@ -306,7 +313,8 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 <label class="campo-label">Descrição</label>
 <textarea id="eventoDescricao" class="campo-input" rows="3" placeholder="Detalhes da atividade..."></textarea>
 </div>
-<button class="btn-primario" onclick="adicionarEvento()">+ Adicionar ao calendário</button>
+<button class="btn-primario" id="btnSalvarEvento" onclick="adicionarEvento()">+ Adicionar ao calendário</button>
+<button class="btn-secundario" id="btnCancelarEdicaoEvento" style="display:none;" onclick="cancelarEdicaoEvento()">Cancelar edição</button>
 </div>
 </div>
 
@@ -321,7 +329,7 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 </div>
 </div>
 
-<button class="reset-btn" onclick="confirmReset()">↺ LIMPAR MARCAÇÕES</button>
+<button class="reset-btn" id="btnLimparMarcacoes" onclick="confirmReset()">↺ LIMPAR MARCAÇÕES</button>
 
 <script>
 const DB_URL = "https://joaninha-progressao-default-rtdb.firebaseio.com";
@@ -743,6 +751,7 @@ document.getElementById('tabJovem').classList.toggle('active', p === 'jovem');
 document.getElementById('tabTabela').classList.toggle('active', p === 'tabela');
 document.getElementById('tabCalendario').classList.toggle('active', p === 'calendario');
 document.getElementById('tabCiclo').classList.toggle('active', p === 'ciclo');
+document.getElementById('btnLimparMarcacoes').style.display = (p === 'jovem' || p === 'tabela') ? '' : 'none';
 if (p === 'tabela') renderPaginaTabela();
 if (p === 'calendario') renderPaginaCalendario();
 }
@@ -893,6 +902,8 @@ function toggleEspTabela(j, b) { S[j][b].especialidade = S[j][b].especialidade ?
 
 // ===== PÁGINA 3: CALENDÁRIO =====
 let addEventoAberto = true;
+let eventoEditandoId = null;
+
 function toggleAddEvento() {
 addEventoAberto = !addEventoAberto;
 document.getElementById('addEventoBody').style.display = addEventoAberto ? '' : 'none';
@@ -901,6 +912,34 @@ document.getElementById('chevAddEvento').style.transform = addEventoAberto ? 'ro
 
 const MESES_ABREV = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
 
+function limparFormularioEvento() {
+['eventoData','eventoNome','eventoLocal','eventoResponsavel','eventoDescricao'].forEach(fid => { document.getElementById(fid).value = ''; });
+eventoEditandoId = null;
+document.getElementById('btnSalvarEvento').textContent = '+ Adicionar ao calendário';
+document.getElementById('btnCancelarEdicaoEvento').style.display = 'none';
+}
+
+function editarEvento(id) {
+const ev = EVENTOS.find(e => e.id === id);
+if (!ev) return;
+eventoEditandoId = id;
+document.getElementById('eventoData').value = ev.data;
+document.getElementById('eventoNome').value = ev.nome;
+document.getElementById('eventoLocal').value = ev.local || '';
+document.getElementById('eventoResponsavel').value = ev.responsavel || '';
+document.getElementById('eventoDescricao').value = ev.descricao || '';
+document.getElementById('btnSalvarEvento').textContent = '💾 Salvar alterações';
+document.getElementById('btnCancelarEdicaoEvento').style.display = '';
+addEventoAberto = true;
+document.getElementById('addEventoBody').style.display = '';
+document.getElementById('chevAddEvento').style.transform = 'rotate(180deg)';
+document.getElementById('cabecalhoAddEvento').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function cancelarEdicaoEvento() {
+limparFormularioEvento();
+}
+
 function adicionarEvento() {
 const data = document.getElementById('eventoData').value;
 const nome = document.getElementById('eventoNome').value.trim();
@@ -908,17 +947,24 @@ const local = document.getElementById('eventoLocal').value.trim();
 const responsavel = document.getElementById('eventoResponsavel').value.trim();
 const descricao = document.getElementById('eventoDescricao').value.trim();
 if (!data || !nome) { alert('Preencha pelo menos a data e o nome da atividade.'); return; }
+
+if (eventoEditandoId) {
+const ev = EVENTOS.find(e => e.id === eventoEditandoId);
+if (ev) { ev.data = data; ev.nome = nome; ev.local = local; ev.responsavel = responsavel; ev.descricao = descricao; }
+} else {
 const id = 'ev' + Date.now() + Math.floor(Math.random()*1000);
 EVENTOS.push({ id, data, nome, local, responsavel, descricao });
+}
 temAlteracaoLocalPendente = true;
 saveState();
-['eventoData','eventoNome','eventoLocal','eventoResponsavel','eventoDescricao'].forEach(fid => { document.getElementById(fid).value = ''; });
+limparFormularioEvento();
 renderPaginaCalendario();
 }
 
 function removerEvento(id) {
 if (!confirm('Remover essa atividade do calendário?')) return;
 EVENTOS = EVENTOS.filter(e => e.id !== id);
+if (eventoEditandoId === id) limparFormularioEvento();
 temAlteracaoLocalPendente = true;
 saveState();
 renderPaginaCalendario();
@@ -943,7 +989,10 @@ ${ev.local ? `<span class="evento-tag">📍 ${ev.local}</span>` : ''}
 ${ev.responsavel ? `<span class="evento-tag">👤 ${ev.responsavel}</span>` : ''}
 </div>
 ${ev.descricao ? `<div class="evento-desc">${ev.descricao}</div>` : ''}
+<div class="evento-acoes">
+<button class="evento-editar" onclick="editarEvento('${ev.id}')">✏️ Editar</button>
 <button class="evento-del" onclick="removerEvento('${ev.id}')">🗑 Remover</button>
+</div>
 </div>
 </div>`;
 }).join('');
