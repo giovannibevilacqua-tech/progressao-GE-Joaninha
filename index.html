@@ -147,7 +147,13 @@ padding: 8px; background: var(--focus-y); border-radius: 8px;
 }
 .especialidade-row label { font-size: 11px; color: #7A4A00; cursor: pointer; }
 .meta-note { font-size: 10px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
-.page-tabs { display: flex; gap: 8px; margin: 14px 14px 0; }
+.page-groups { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 14px 0; }
+.page-group-label {
+font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;
+color: var(--muted); text-align: center; margin-bottom: 6px;
+}
+.page-group-tabs { display: flex; gap: 4px; align-items: stretch; }
+.page-group-tabs .page-tab { flex: 1; font-size: 10px; padding: 10px 4px; min-height: 46px; white-space: normal; line-height: 1.25; }
 .page-tab {
 flex: 1; font-size: 12px; font-weight: 800; padding: 10px; border-radius: 10px;
 border: 2px solid var(--text); background: #F5F3EF; color: var(--text); cursor: pointer;
@@ -191,10 +197,22 @@ border-radius: 12px; border: 2px solid var(--text); background: #F5F3EF; color: 
 </div>
 </header>
 
-<nav class="page-tabs">
-<button class="page-tab active" id="tabJovem" onclick="mudarPagina('jovem')">👤 Por jovem</button>
-<button class="page-tab" id="tabTabela" onclick="mudarPagina('tabela')">📊 Por bloco</button>
-</nav>
+<div class="page-groups">
+<div class="page-group">
+<div class="page-group-label">Progressão</div>
+<div class="page-group-tabs">
+<button class="page-tab active" id="tabJovem" onclick="mudarPagina('jovem')">👤 Por Jovem</button>
+<button class="page-tab" id="tabTabela" onclick="mudarPagina('tabela')">📊 Por Bloco</button>
+</div>
+</div>
+<div class="page-group">
+<div class="page-group-label">Programação</div>
+<div class="page-group-tabs">
+<button class="page-tab" id="tabCalendario" onclick="mudarPagina('calendario')">📅 Calendário</button>
+<button class="page-tab" id="tabCiclo" onclick="mudarPagina('ciclo')">🔄 Ciclo de Programa</button>
+</div>
+</div>
+</div>
 
 <div id="pagina-jovem">
 
@@ -229,6 +247,20 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 <div id="tabelaBlocos"></div>
 </div>
 <div id="tabelaContainer"></div>
+</div>
+
+<div id="pagina-calendario" style="display:none;">
+<div class="roster-section">
+<div class="section-label">Calendário</div>
+<div class="eixo-blocos-hint" style="text-align:left;padding:4px 0 0;">Em construção — em breve dá pra cadastrar aqui as atividades e datas do ciclo.</div>
+</div>
+</div>
+
+<div id="pagina-ciclo" style="display:none;">
+<div class="roster-section">
+<div class="section-label">Ciclo de Programa</div>
+<div class="eixo-blocos-hint" style="text-align:left;padding:4px 0 0;">Em construção — em breve dá pra planejar aqui as fases do Ciclo de Programa (Planejar, Fazer, Avaliar).</div>
+</div>
 </div>
 
 <button class="reset-btn" onclick="confirmReset()">↺ LIMPAR MARCAÇÕES</button>
@@ -643,8 +675,12 @@ function mudarPagina(p) {
 paginaAtiva = p;
 document.getElementById('pagina-jovem').style.display = p === 'jovem' ? '' : 'none';
 document.getElementById('pagina-tabela').style.display = p === 'tabela' ? '' : 'none';
+document.getElementById('pagina-calendario').style.display = p === 'calendario' ? '' : 'none';
+document.getElementById('pagina-ciclo').style.display = p === 'ciclo' ? '' : 'none';
 document.getElementById('tabJovem').classList.toggle('active', p === 'jovem');
 document.getElementById('tabTabela').classList.toggle('active', p === 'tabela');
+document.getElementById('tabCalendario').classList.toggle('active', p === 'calendario');
+document.getElementById('tabCiclo').classList.toggle('active', p === 'ciclo');
 if (p === 'tabela') renderPaginaTabela();
 }
 
