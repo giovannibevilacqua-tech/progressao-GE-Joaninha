@@ -502,11 +502,16 @@ function iniciarSync() {
         carregando = false;
         resolve();
       } else {
-        renderRoster();
-        if (ativo) renderDetail(ativo);
-        if (paginaAtiva === 'tabela') renderPaginaTabela();
-        if (paginaAtiva === 'calendario') renderPaginaCalendario();
-        if (paginaAtiva === 'ciclo') renderPaginaCiclo();
+        preservarScroll(() => {
+          renderRoster();
+          if (ativo) renderDetail(ativo);
+          if (paginaAtiva === 'tabela') {
+            if (blocoTabela) { atualizarTabelaBloco(); document.getElementById('resumoContainer').innerHTML = construirResumoBlocos(); }
+            else { renderPaginaTabela(); }
+          }
+          if (paginaAtiva === 'calendario') renderPaginaCalendario();
+          if (paginaAtiva === 'ciclo') renderPaginaCiclo();
+        });
       }
     }
 
