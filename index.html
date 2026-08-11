@@ -679,6 +679,8 @@ function preservarScroll(fn) {
 const y = window.scrollY;
 fn();
 window.scrollTo(0, y);
+requestAnimationFrame(() => window.scrollTo(0, y));
+requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo(0, y)));
 }
 function toggleFixa(j, b, i) { S[j][b].fixas[i] = S[j][b].fixas[i] ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); preservarScroll(() => { renderRoster(); renderDetail(j); }); }
 function toggleVar(j, b, i) { S[j][b].variaveis[i] = S[j][b].variaveis[i] ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); preservarScroll(() => { renderRoster(); renderDetail(j); }); }
@@ -941,8 +943,13 @@ const wrapAntigo = document.getElementById('tabelaWrapScroll');
 const scrollTopAntigo = wrapAntigo ? wrapAntigo.scrollTop : 0;
 const scrollLeftAntigo = wrapAntigo ? wrapAntigo.scrollLeft : 0;
 document.getElementById('tabelaContainer').innerHTML = construirTabelaBloco(blocoTabela);
-const wrapNovo = document.getElementById('tabelaWrapScroll');
-if (wrapNovo) { wrapNovo.scrollTop = scrollTopAntigo; wrapNovo.scrollLeft = scrollLeftAntigo; }
+const restaurar = () => {
+const w = document.getElementById('tabelaWrapScroll');
+if (w) { w.scrollTop = scrollTopAntigo; w.scrollLeft = scrollLeftAntigo; }
+};
+restaurar();
+requestAnimationFrame(restaurar);
+requestAnimationFrame(() => requestAnimationFrame(restaurar));
 }
 function toggleFixaTabela(j, b, i) { S[j][b].fixas[i] = S[j][b].fixas[i] ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); preservarScroll(atualizarTabelaBloco); }
 function toggleVarTabela(j, b, i) { S[j][b].variaveis[i] = S[j][b].variaveis[i] ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); preservarScroll(atualizarTabelaBloco); }
