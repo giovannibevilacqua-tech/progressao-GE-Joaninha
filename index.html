@@ -675,9 +675,14 @@ el.appendChild(row);
 });
 }
 
-function toggleFixa(j, b, i) { S[j][b].fixas[i] = S[j][b].fixas[i] ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); renderRoster(); renderDetail(j); }
-function toggleVar(j, b, i) { S[j][b].variaveis[i] = S[j][b].variaveis[i] ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); renderRoster(); renderDetail(j); }
-function toggleEsp(j, b) { S[j][b].especialidade = S[j][b].especialidade ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); renderRoster(); renderDetail(j); }
+function preservarScroll(fn) {
+const y = window.scrollY;
+fn();
+window.scrollTo(0, y);
+}
+function toggleFixa(j, b, i) { S[j][b].fixas[i] = S[j][b].fixas[i] ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); preservarScroll(() => { renderRoster(); renderDetail(j); }); }
+function toggleVar(j, b, i) { S[j][b].variaveis[i] = S[j][b].variaveis[i] ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); preservarScroll(() => { renderRoster(); renderDetail(j); }); }
+function toggleEsp(j, b) { S[j][b].especialidade = S[j][b].especialidade ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); preservarScroll(() => { renderRoster(); renderDetail(j); }); }
 
 function renderDetail(j) {
 const el = document.getElementById('detail');
@@ -930,9 +935,13 @@ h += `</tbody></table></div>`;
 return h;
 }
 
-function toggleFixaTabela(j, b, i) { S[j][b].fixas[i] = S[j][b].fixas[i] ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); renderPaginaTabela(); }
-function toggleVarTabela(j, b, i) { S[j][b].variaveis[i] = S[j][b].variaveis[i] ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); renderPaginaTabela(); }
-function toggleEspTabela(j, b) { S[j][b].especialidade = S[j][b].especialidade ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); renderPaginaTabela(); }
+function atualizarTabelaBloco() {
+if (!blocoTabela) return;
+document.getElementById('tabelaContainer').innerHTML = construirTabelaBloco(blocoTabela);
+}
+function toggleFixaTabela(j, b, i) { S[j][b].fixas[i] = S[j][b].fixas[i] ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); preservarScroll(atualizarTabelaBloco); }
+function toggleVarTabela(j, b, i) { S[j][b].variaveis[i] = S[j][b].variaveis[i] ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); preservarScroll(atualizarTabelaBloco); }
+function toggleEspTabela(j, b) { S[j][b].especialidade = S[j][b].especialidade ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); preservarScroll(atualizarTabelaBloco); }
 
 // ===== PÁGINA 3: CALENDÁRIO =====
 let addEventoAberto = false;
