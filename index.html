@@ -892,7 +892,7 @@ return h;
 
 function construirTabelaBloco(b) {
 const def = BLOCOS[b];
-let h = `<div class="tabela-wrap"><table class="tabela-check-grid"><thead><tr><th class="item-col">${def.nome}</th>`;
+let h = `<div class="tabela-wrap" id="tabelaWrapScroll"><table class="tabela-check-grid"><thead><tr><th class="item-col">${def.nome}</th>`;
 JOVENS.forEach(j => { h += `<th>${nomeCurto(j)}</th>`; });
 h += `</tr></thead><tbody>`;
 
@@ -937,7 +937,12 @@ return h;
 
 function atualizarTabelaBloco() {
 if (!blocoTabela) return;
+const wrapAntigo = document.getElementById('tabelaWrapScroll');
+const scrollTopAntigo = wrapAntigo ? wrapAntigo.scrollTop : 0;
+const scrollLeftAntigo = wrapAntigo ? wrapAntigo.scrollLeft : 0;
 document.getElementById('tabelaContainer').innerHTML = construirTabelaBloco(blocoTabela);
+const wrapNovo = document.getElementById('tabelaWrapScroll');
+if (wrapNovo) { wrapNovo.scrollTop = scrollTopAntigo; wrapNovo.scrollLeft = scrollLeftAntigo; }
 }
 function toggleFixaTabela(j, b, i) { S[j][b].fixas[i] = S[j][b].fixas[i] ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); preservarScroll(atualizarTabelaBloco); }
 function toggleVarTabela(j, b, i) { S[j][b].variaveis[i] = S[j][b].variaveis[i] ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); preservarScroll(atualizarTabelaBloco); }
