@@ -57,13 +57,14 @@ padding: 14px;
 box-shadow: var(--shadow);
 }
 .roster-row {
-display: flex; align-items: center; gap: 10px;
+display: flex; flex-direction: column; gap: 6px;
 padding: 10px; margin-bottom: 6px; border-radius: 10px; cursor: pointer;
 border: 1px solid var(--border); background: #FAFAF8;
 }
 .roster-row:last-child { margin-bottom: 0; }
 .roster-row:hover { background: #F2EFEA; }
 .roster-row.active { background: var(--done-bg); border-color: var(--done); }
+.roster-linha-principal { display: flex; align-items: center; gap: 10px; }
 .roster-avatar {
 width: 26px; height: 26px; border-radius: 50%;
 display: flex; align-items: center; justify-content: center;
@@ -73,6 +74,16 @@ font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0;
 .roster-track { flex: 1.4; height: 6px; background: #EEEBE7; border-radius: 20px; overflow: hidden; }
 .roster-bar { height: 100%; background: var(--vinho); border-radius: 20px; }
 .roster-etapa { font-size: 10px; font-weight: 700; color: var(--muted); width: 78px; text-align: right; }
+.roster-editar-btn { border: none; background: none; color: var(--muted); font-size: 13px; cursor: pointer; padding: 2px 4px; flex-shrink: 0; }
+.roster-editar-btn:hover { color: var(--vinho); }
+.roster-linha-idade { display: flex; align-items: center; gap: 8px; padding-left: 36px; }
+.idade-track { position: relative; flex: 1; height: 6px; border-radius: 20px; overflow: hidden; background: #EEEBE7; }
+.idade-fill { height: 100%; border-radius: 20px; }
+.idade-label { font-size: 9px; font-weight: 700; color: var(--muted); white-space: nowrap; }
+.roster-edicao { display: flex; flex-direction: column; gap: 8px; }
+.roster-edicao .btn-primario, .roster-edicao .btn-secundario { margin-top: 0; }
+.roster-edicao-btns { display: flex; gap: 8px; }
+.roster-edicao-btns button { flex: 1; }
 .add-jovem-row { display: flex; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #F2EFEA; }
 .add-jovem-row input {
 flex: 1; font-size: 12px; padding: 8px 10px; border-radius: 8px;
@@ -363,7 +374,8 @@ const REST_URL = DB_URL + "/tropaProgressao/json.json";
 </script>
 <script>
 const JOVENS_BASE = ['miguel','sabrina','pedro','ivan','richard','anita','ashylley','sophiak','felipa','fernando','eduardo','larissa','safira','rafael','thaynara','sophiar','victor','maria','giovanna','sophiad'];
-const JNOMES = {miguel:'Miguel Silva',sabrina:'Sabrina Sigmaringa',pedro:'Pedro Andrade',ivan:'Ivan Moraes',richard:'Richard Fonseca',anita:'Anita Gomes',ashylley:'Ashylley Santos',sophiak:'Sophia Khatuanian',felipa:'Felipa Almeida',fernando:'Fernando Santos',eduardo:'Eduardo Dias',larissa:'Larissa Souza',safira:'Safira Fonseca',rafael:'Rafael Cruz',thaynara:'Thaynara Santos',sophiar:'Sophia Rodrigues',victor:'Victor Silva',maria:'Maria Santos',giovanna:'Giovanna Souza',sophiad:'Sophia Diniz'};
+const JNOMES_PADRAO = {miguel:'Miguel Silva',sabrina:'Sabrina Sigmaringa',pedro:'Pedro Andrade',ivan:'Ivan Moraes',richard:'Richard Fonseca',anita:'Anita Gomes',ashylley:'Ashylley Santos',sophiak:'Sophia Khatuanian',felipa:'Felipa Almeida',fernando:'Fernando Santos',eduardo:'Eduardo Dias',larissa:'Larissa Souza',safira:'Safira Fonseca',rafael:'Rafael Cruz',thaynara:'Thaynara Santos',sophiar:'Sophia Rodrigues',victor:'Victor Silva',maria:'Maria Santos',giovanna:'Giovanna Souza',sophiad:'Sophia Diniz'};
+let JNOMES = Object.assign({}, JNOMES_PADRAO);
 let JOVENS = JOVENS_BASE.slice();
 const JCOR = {};
 function corPara(i) { return `hsl(${Math.round(i*137.5)%360},45%,42%)`; }
@@ -468,6 +480,7 @@ let carregando = true;
 let temAlteracaoLocalPendente = false;
 let EVENTOS = [];
 let CICLO = [];
+let DATAS_NASC = {};
 function cicloEmBranco() {
 return Array.from({length:6}, () => ({ ano:'', semestre:'1', blocos:['','',''] }));
 }
@@ -483,18 +496,23 @@ function iniciarSync() {
           const dados = JSON.parse(valor);
           const extras = dados.extraJovens || [];
           JOVENS = JOVENS_BASE.slice();
+          JNOMES = Object.assign({}, JNOMES_PADRAO);
           extras.forEach(ex => { JOVENS.push(ex.id); JNOMES[ex.id] = ex.nome; });
+          const nomesBase = dados.nomesBase || {};
+          Object.keys(nomesBase).forEach(id => { JNOMES[id] = nomesBase[id]; });
           JOVENS.forEach((j,i) => JCOR[j] = corPara(i));
           S = dados.S || deepCopy(INICIAL);
           EVENTOS = dados.eventos || [];
           CICLO = (dados.ciclo && dados.ciclo.length === 6) ? dados.ciclo : cicloEmBranco();
+          DATAS_NASC = dados.datasNascimento || {};
         } catch(e) {
-          if (primeira) { S = deepCopy(INICIAL); EVENTOS = []; CICLO = cicloEmBranco(); }
+          if (primeira) { S = deepCopy(INICIAL); EVENTOS = []; CICLO = cicloEmBranco(); DATAS_NASC = {}; }
         }
       } else if (primeira) {
         S = deepCopy(INICIAL);
         EVENTOS = [];
         CICLO = cicloEmBranco();
+        DATAS_NASC = {};
       }
       JOVENS.forEach(j => { if (!S[j]) S[j] = blocosEmBranco(); });
       if (primeira) {
@@ -522,7 +540,7 @@ function iniciarSync() {
         processar(val);
       } catch(e) {
         console.error('Erro ao carregar dados:', e);
-        if (primeira) { S = deepCopy(INICIAL); EVENTOS = []; CICLO = cicloEmBranco(); JOVENS.forEach(j => { if (!S[j]) S[j] = blocosEmBranco(); }); primeira = false; carregando = false; resolve(); }
+        if (primeira) { S = deepCopy(INICIAL); EVENTOS = []; CICLO = cicloEmBranco(); DATAS_NASC = {}; JOVENS.forEach(j => { if (!S[j]) S[j] = blocosEmBranco(); }); primeira = false; carregando = false; resolve(); }
       }
     }
 
@@ -546,7 +564,9 @@ function iniciarSync() {
 
 async function saveState() {
   const extras = JOVENS.filter(j => !JOVENS_BASE.includes(j)).map(id => ({id, nome: JNOMES[id]}));
-  const payload = JSON.stringify({ S, extraJovens: extras, eventos: EVENTOS, ciclo: CICLO });
+  const nomesBase = {};
+  JOVENS_BASE.forEach(id => { if (JNOMES[id] !== JNOMES_PADRAO[id]) nomesBase[id] = JNOMES[id]; });
+  const payload = JSON.stringify({ S, extraJovens: extras, eventos: EVENTOS, ciclo: CICLO, nomesBase, datasNascimento: DATAS_NASC });
   temAlteracaoLocalPendente = false; // este payload já reflete tudo que foi clicado até agora
   mostrarStatusSalvando('Salvando…');
   for (let tentativa = 1; tentativa <= 2; tentativa++) {
@@ -661,6 +681,45 @@ rosterAberto = !rosterAberto;
 aplicarEstadoRoster();
 }
 
+let jovemEditandoId = null;
+
+function calcularIdadeInfo(dataNascISO) {
+if (!dataNascISO) return null;
+const nasc = new Date(dataNascISO + 'T00:00:00');
+if (isNaN(nasc.getTime())) return null;
+const hoje = new Date();
+let mesesFaltantes = (nasc.getFullYear() + 14 - hoje.getFullYear()) * 12 + (nasc.getMonth() + 6 - hoje.getMonth());
+if (hoje.getDate() > nasc.getDate()) mesesFaltantes -= 1;
+let idadeMeses = (hoje.getFullYear() - nasc.getFullYear()) * 12 + (hoje.getMonth() - nasc.getMonth());
+if (hoje.getDate() < nasc.getDate()) idadeMeses -= 1;
+const inicioJanela = 132, fimJanela = 174; // 11 anos até 14 anos e 6 meses
+const pct = Math.max(0, Math.min(100, (idadeMeses - inicioJanela) / (fimJanela - inicioJanela) * 100));
+const cor = mesesFaltantes <= 6 ? '#E74C3C' : (mesesFaltantes <= 12 ? '#F39C12' : '#27AE60');
+return { mesesFaltantes, pct, cor };
+}
+
+function abrirEdicaoJovem(id) {
+jovemEditandoId = id;
+renderRoster();
+}
+function cancelarEdicaoJovem() {
+jovemEditandoId = null;
+renderRoster();
+}
+function salvarEdicaoJovem(id) {
+const nome = document.getElementById('editNome_' + id).value.trim();
+const nasc = document.getElementById('editNasc_' + id).value;
+if (!nome) { alert('O nome não pode ficar vazio.'); return; }
+JNOMES[id] = nome;
+DATAS_NASC[id] = nasc;
+JCOR[id] = JCOR[id] || corPara(JOVENS.indexOf(id));
+jovemEditandoId = null;
+temAlteracaoLocalPendente = true;
+saveState();
+renderRoster();
+if (ativo === id) renderDetail(id);
+}
+
 function renderRoster() {
 const el = document.getElementById('roster');
 el.innerHTML = '';
@@ -668,13 +727,44 @@ JOVENS.forEach(j => {
 const n = countConcluidos(j);
 const et = etapa(n);
 const row = document.createElement('div');
+
+if (jovemEditandoId === j) {
+row.className = 'roster-row';
+row.onclick = (e) => e.stopPropagation();
+row.innerHTML = `
+<div class="roster-edicao">
+<div>
+<label class="campo-label">Nome</label>
+<input type="text" class="campo-input" id="editNome_${j}" value="${JNOMES[j]}">
+</div>
+<div>
+<label class="campo-label">Data de nascimento</label>
+<input type="date" class="campo-input" id="editNasc_${j}" value="${DATAS_NASC[j]||''}">
+</div>
+<div class="roster-edicao-btns">
+<button class="btn-primario" onclick="event.stopPropagation();salvarEdicaoJovem('${j}')">💾 Salvar</button>
+<button class="btn-secundario" onclick="event.stopPropagation();cancelarEdicaoJovem()">Cancelar</button>
+</div>
+</div>`;
+el.appendChild(row);
+return;
+}
+
 row.className = 'roster-row' + (ativo === j ? ' active' : '');
 const initials = JNOMES[j].split(' ').map(w=>w[0]).slice(0,2).join('');
+const info = calcularIdadeInfo(DATAS_NASC[j]);
 row.innerHTML = `
+<div class="roster-linha-principal">
 <div class="roster-avatar" style="background:${JCOR[j]}">${initials}</div>
 <div class="roster-name">${JNOMES[j]}</div>
+<button class="roster-editar-btn" onclick="event.stopPropagation();abrirEdicaoJovem('${j}')">✏️</button>
 <div class="roster-track"><div class="roster-bar" style="width:${Math.round(n/18*100)}%;background:${JCOR[j]}"></div></div>
-<div class="roster-etapa">${n}/18 &middot; ${et.l}</div>`;
+<div class="roster-etapa">${n}/18 &middot; ${et.l}</div>
+</div>
+${info ? `<div class="roster-linha-idade">
+<div class="idade-track"><div class="idade-fill" style="width:${info.pct}%;background:${info.cor}"></div></div>
+<div class="idade-label">${info.mesesFaltantes >= 0 ? `${info.mesesFaltantes}m p/ 14a6m` : `${Math.abs(info.mesesFaltantes)}m além de 14a6m`}</div>
+</div>` : ''}`;
 row.onclick = () => { ativo = j; rosterAberto = false; renderRoster(); aplicarEstadoRoster(); renderDetail(j); document.getElementById('detail').scrollIntoView({behavior:'smooth', block:'start'}); };
 el.appendChild(row);
 });
