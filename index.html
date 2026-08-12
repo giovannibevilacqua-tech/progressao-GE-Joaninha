@@ -65,7 +65,7 @@ border: 1px solid var(--border); background: #FAFAF8; position: relative;
 .roster-row:hover { background: #F2EFEA; }
 .roster-row.active { background: var(--done-bg); border-color: var(--done); }
 .roster-linha-principal {
-display: grid; grid-template-columns: 26px 1fr 22px 64px 60px 78px; align-items: center; gap: 8px;
+display: grid; grid-template-columns: 26px 76px 77px 1fr 96px 22px; align-items: center; gap: 8px;
 }
 .roster-avatar {
 width: 26px; height: 26px; border-radius: 50%;
@@ -75,11 +75,14 @@ font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0;
 .roster-name { font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .roster-track { height: 9px; background: #EEEBE7; border-radius: 20px; overflow: hidden; }
 .roster-bar { height: 100%; background: var(--vinho); border-radius: 20px; }
-.roster-etapa { font-size: 10px; font-weight: 700; color: var(--muted); text-align: right; }
+.roster-etapa {
+font-size: 11px; font-weight: 800; text-align: center; white-space: nowrap;
+padding: 4px 6px; border-radius: 20px;
+}
 .roster-menu-btn { border: none; background: none; color: var(--muted); font-size: 16px; font-weight: 900; cursor: pointer; padding: 2px 6px; border-radius: 6px; line-height: 1; justify-self: center; }
 .roster-menu-btn:hover { background: #F0EDE8; color: var(--text); }
 .roster-dropdown {
-position: absolute; top: 38px; left: 34px; background: var(--card); border: 1px solid var(--border);
+position: absolute; top: 38px; right: 10px; background: var(--card); border: 1px solid var(--border);
 border-radius: 10px; box-shadow: var(--shadow); overflow: hidden; z-index: 20; min-width: 130px;
 }
 .roster-dropdown button {
@@ -802,13 +805,13 @@ row.innerHTML = `
 <div class="roster-linha-principal">
 <div class="roster-avatar" style="background:${JCOR[j]}">${initials}</div>
 <div class="roster-name">${JNOMES[j]}</div>
-<button class="roster-menu-btn" onclick="event.stopPropagation();toggleJovemMenu('${j}')">⋮</button>
 ${info ? `<div class="roster-linha-idade">
 <div class="idade-track"><div class="idade-fill" style="width:${info.pct}%;background:${info.cor}"></div></div>
 <div class="idade-label${info.mesesFaltantes <= 0 ? ' caminho' : ''}">${info.mesesFaltantes <= 0 ? 'CAMINHO' : info.mesesFaltantes + ' meses'}</div>
 </div>` : '<div class="roster-linha-idade"></div>'}
 <div class="roster-track"><div class="roster-bar" style="width:${Math.round(n/18*100)}%;background:${JCOR[j]}"></div></div>
-<div class="roster-etapa">${n}/18 &middot; ${et.l}</div>
+<div class="roster-etapa" style="background:${et.c}22;color:${et.c}">${n}/18 &middot; ${et.l}</div>
+<button class="roster-menu-btn" onclick="event.stopPropagation();toggleJovemMenu('${j}')">⋮</button>
 </div>
 ${menuAberto ? `<div class="roster-dropdown" onclick="event.stopPropagation()">
 <button onclick="abrirEdicaoJovem('${j}')">✏️ Editar</button>
