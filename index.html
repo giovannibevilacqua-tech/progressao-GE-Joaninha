@@ -681,11 +681,11 @@ return fixOk && varOk;
 }
 function countConcluidos(j) { return BLOCO_IDS.filter(b => blocoConcluido(j, b)).length; }
 function etapa(n) {
-if (n >= 18) return {l:'🏅 Lis de Ouro', c:'#CC6C00'};
-if (n >= 13) return {l:'Travessia', c:'#1565C0'};
-if (n >= 8) return {l:'Rumo', c:'#2D6E3E'};
-if (n >= 4) return {l:'Trilha', c:'#6A1B9A'};
-return {l:'Pistas', c:'#1A6B3C'};
+if (n >= 18) return {l:'🏅 Lis de Ouro', c:'#D4AF37', bg:'#14532D'};
+if (n >= 13) return {l:'Travessia', c:'#E74C3C'};
+if (n >= 8) return {l:'Rumo', c:'#1565C0'};
+if (n >= 4) return {l:'Trilha', c:'#D4A017'};
+return {l:'Pistas', c:'#27AE60'};
 }
 
 let rosterAberto = true;
@@ -810,7 +810,7 @@ ${info ? `<div class="roster-linha-idade">
 <div class="idade-label${info.mesesFaltantes <= 0 ? ' caminho' : ''}">${info.mesesFaltantes <= 0 ? 'CAMINHO' : info.mesesFaltantes + ' meses'}</div>
 </div>` : '<div class="roster-linha-idade"></div>'}
 <div class="roster-track"><div class="roster-bar" style="width:${Math.round(n/18*100)}%;background:${JCOR[j]}"></div></div>
-<div class="roster-etapa" style="background:${et.c}22;color:${et.c}">${n}/18 &middot; ${et.l}</div>
+<div class="roster-etapa" style="background:${et.bg || et.c+'22'};color:${et.c}">${n}/18 &middot; ${et.l}</div>
 <button class="roster-menu-btn" onclick="event.stopPropagation();toggleJovemMenu('${j}')">⋮</button>
 </div>
 ${menuAberto ? `<div class="roster-dropdown" onclick="event.stopPropagation()">
@@ -840,7 +840,7 @@ const et = etapa(n);
 let html = `
 <div class="detail-head">
 <div class="detail-name">${JNOMES[j]}</div>
-<span class="detail-etapa" style="background:${et.c}22;color:${et.c}">${n}/18 blocos &mdash; ${et.l}</span>
+<span class="detail-etapa" style="background:${et.bg || et.c+'22'};color:${et.c}">${n}/18 blocos &mdash; ${et.l}</span>
 <div class="detail-track"><div class="detail-bar" style="width:${Math.round(n/18*100)}%"></div></div>
 <div class="detail-hint">Pistas: 0-3 &nbsp;|&nbsp; Trilha: 4 &nbsp;|&nbsp; Rumo: 8 &nbsp;|&nbsp; Travessia: 13 &nbsp;|&nbsp; 🏅 Lis de Ouro: 18</div>
 <div class="eixo-grid">`;
