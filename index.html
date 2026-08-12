@@ -59,7 +59,7 @@ box-shadow: var(--shadow);
 .roster-row {
 display: flex; flex-direction: column; gap: 6px;
 padding: 10px; margin-bottom: 6px; border-radius: 10px; cursor: pointer;
-border: 1px solid var(--border); background: #FAFAF8;
+border: 1px solid var(--border); background: #FAFAF8; position: relative;
 }
 .roster-row:last-child { margin-bottom: 0; }
 .roster-row:hover { background: #F2EFEA; }
@@ -70,16 +70,27 @@ width: 26px; height: 26px; border-radius: 50%;
 display: flex; align-items: center; justify-content: center;
 font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0;
 }
-.roster-name { flex: 1; font-size: 12px; font-weight: 700; }
-.roster-track { flex: 1.4; height: 6px; background: #EEEBE7; border-radius: 20px; overflow: hidden; }
+.roster-name { font-size: 12px; font-weight: 700; flex-shrink: 0; }
+.roster-track { flex-shrink: 0; width: 60px; height: 6px; background: #EEEBE7; border-radius: 20px; overflow: hidden; }
 .roster-bar { height: 100%; background: var(--vinho); border-radius: 20px; }
-.roster-etapa { font-size: 10px; font-weight: 700; color: var(--muted); width: 78px; text-align: right; }
-.roster-editar-btn { border: none; background: none; color: var(--muted); font-size: 13px; cursor: pointer; padding: 2px 4px; flex-shrink: 0; }
-.roster-editar-btn:hover { color: var(--vinho); }
-.roster-linha-idade { display: flex; align-items: center; gap: 5px; width: 74px; flex-shrink: 0; }
+.roster-etapa { font-size: 10px; font-weight: 700; color: var(--muted); width: 78px; text-align: right; flex-shrink: 0; }
+.roster-menu-btn { border: none; background: none; color: var(--muted); font-size: 16px; font-weight: 900; cursor: pointer; padding: 2px 6px; border-radius: 6px; flex-shrink: 0; line-height: 1; }
+.roster-menu-btn:hover { background: #F0EDE8; color: var(--text); }
+.roster-dropdown {
+position: absolute; top: 38px; left: 34px; background: var(--card); border: 1px solid var(--border);
+border-radius: 10px; box-shadow: var(--shadow); overflow: hidden; z-index: 20; min-width: 130px;
+}
+.roster-dropdown button {
+display: block; width: 100%; text-align: left; padding: 10px 12px; font-size: 12px; font-weight: 700;
+border: none; background: var(--card); color: var(--text); cursor: pointer;
+}
+.roster-dropdown button:hover { background: #F5F3EF; }
+.roster-dropdown button.remover { color: #E74C3C; }
+.roster-linha-idade { display: flex; align-items: center; gap: 5px; flex: 1; min-width: 30px; }
 .idade-track { position: relative; flex: 1; height: 6px; border-radius: 20px; overflow: hidden; background: #EEEBE7; }
 .idade-fill { height: 100%; border-radius: 20px; }
 .idade-label { font-size: 9px; font-weight: 700; color: var(--muted); white-space: nowrap; }
+.idade-label.caminho { color: #E74C3C; font-weight: 900; }
 .roster-edicao { display: flex; flex-direction: column; gap: 8px; }
 .roster-edicao .btn-primario, .roster-edicao .btn-secundario { margin-top: 0; }
 .roster-edicao-btns { display: flex; gap: 8px; }
@@ -377,6 +388,7 @@ const JOVENS_BASE = ['miguel','sabrina','pedro','ivan','richard','anita','ashyll
 const JNOMES_PADRAO = {miguel:'Miguel Silva',sabrina:'Sabrina Sigmaringa',pedro:'Pedro Andrade',ivan:'Ivan Moraes',richard:'Richard Fonseca',anita:'Anita Gomes',ashylley:'Ashylley Santos',sophiak:'Sophia Khatuanian',felipa:'Felipa Almeida',fernando:'Fernando Santos',eduardo:'Eduardo Dias',larissa:'Larissa Souza',safira:'Safira Fonseca',rafael:'Rafael Cruz',thaynara:'Thaynara Santos',sophiar:'Sophia Rodrigues',victor:'Victor Silva',maria:'Maria Santos',giovanna:'Giovanna Souza',sophiad:'Sophia Diniz'};
 let JNOMES = Object.assign({}, JNOMES_PADRAO);
 let JOVENS = JOVENS_BASE.slice();
+let JOVENS_EXCLUIDOS = [];
 const JCOR = {};
 function corPara(i) { return `hsl(${Math.round(i*137.5)%360},45%,42%)`; }
 function nomeCurto(j) {
@@ -495,7 +507,8 @@ function iniciarSync() {
         try {
           const dados = JSON.parse(valor);
           const extras = dados.extraJovens || [];
-          JOVENS = JOVENS_BASE.slice();
+          JOVENS_EXCLUIDOS = dados.excluidos || [];
+          JOVENS = JOVENS_BASE.filter(id => !JOVENS_EXCLUIDOS.includes(id));
           JNOMES = Object.assign({}, JNOMES_PADRAO);
           extras.forEach(ex => { JOVENS.push(ex.id); JNOMES[ex.id] = ex.nome; });
           const nomesBase = dados.nomesBase || {};
@@ -566,7 +579,7 @@ async function saveState() {
   const extras = JOVENS.filter(j => !JOVENS_BASE.includes(j)).map(id => ({id, nome: JNOMES[id]}));
   const nomesBase = {};
   JOVENS_BASE.forEach(id => { if (JNOMES[id] !== JNOMES_PADRAO[id]) nomesBase[id] = JNOMES[id]; });
-  const payload = JSON.stringify({ S, extraJovens: extras, eventos: EVENTOS, ciclo: CICLO, nomesBase, datasNascimento: DATAS_NASC });
+  const payload = JSON.stringify({ S, extraJovens: extras, eventos: EVENTOS, ciclo: CICLO, nomesBase, datasNascimento: DATAS_NASC, excluidos: JOVENS_EXCLUIDOS });
   temAlteracaoLocalPendente = false; // este payload já reflete tudo que foi clicado até agora
   mostrarStatusSalvando('Salvando…');
   for (let tentativa = 1; tentativa <= 2; tentativa++) {
@@ -682,6 +695,7 @@ aplicarEstadoRoster();
 }
 
 let jovemEditandoId = null;
+let jovemMenuAbertoId = null;
 
 function calcularIdadeInfo(dataNascISO) {
 if (!dataNascISO) return null;
@@ -698,7 +712,22 @@ const cor = mesesFaltantes <= 6 ? '#E74C3C' : (mesesFaltantes <= 12 ? '#F39C12' 
 return { mesesFaltantes, pct, cor };
 }
 
+function toggleJovemMenu(id) {
+jovemMenuAbertoId = (jovemMenuAbertoId === id) ? null : id;
+renderRoster();
+if (jovemMenuAbertoId) {
+setTimeout(() => {
+document.addEventListener('click', function fechar() {
+jovemMenuAbertoId = null;
+renderRoster();
+document.removeEventListener('click', fechar);
+}, { once: true });
+}, 0);
+}
+}
+
 function abrirEdicaoJovem(id) {
+jovemMenuAbertoId = null;
 jovemEditandoId = id;
 renderRoster();
 }
@@ -718,6 +747,19 @@ temAlteracaoLocalPendente = true;
 saveState();
 renderRoster();
 if (ativo === id) renderDetail(id);
+}
+
+function excluirJovem(id) {
+jovemMenuAbertoId = null;
+if (!confirm(`Excluir o perfil de ${JNOMES[id]}? Isso apaga também todas as marcações dele(a). Essa ação não pode ser desfeita.`)) { renderRoster(); return; }
+if (JOVENS_BASE.includes(id)) { if (!JOVENS_EXCLUIDOS.includes(id)) JOVENS_EXCLUIDOS.push(id); }
+JOVENS = JOVENS.filter(x => x !== id);
+delete S[id];
+delete DATAS_NASC[id];
+if (ativo === id) { ativo = null; document.getElementById('detail').innerHTML = ''; }
+temAlteracaoLocalPendente = true;
+saveState();
+renderRoster();
 }
 
 function renderRoster() {
@@ -753,18 +795,23 @@ return;
 row.className = 'roster-row' + (ativo === j ? ' active' : '');
 const initials = JNOMES[j].split(' ').map(w=>w[0]).slice(0,2).join('');
 const info = calcularIdadeInfo(DATAS_NASC[j]);
+const menuAberto = jovemMenuAbertoId === j;
 row.innerHTML = `
 <div class="roster-linha-principal">
 <div class="roster-avatar" style="background:${JCOR[j]}">${initials}</div>
 <div class="roster-name">${JNOMES[j]}</div>
-<button class="roster-editar-btn" onclick="event.stopPropagation();abrirEdicaoJovem('${j}')">✏️</button>
+<button class="roster-menu-btn" onclick="event.stopPropagation();toggleJovemMenu('${j}')">⋮</button>
 ${info ? `<div class="roster-linha-idade">
 <div class="idade-track"><div class="idade-fill" style="width:${info.pct}%;background:${info.cor}"></div></div>
-<div class="idade-label">${info.mesesFaltantes} meses</div>
-</div>` : ''}
+<div class="idade-label${info.mesesFaltantes <= 0 ? ' caminho' : ''}">${info.mesesFaltantes <= 0 ? 'CAMINHO' : info.mesesFaltantes + ' meses'}</div>
+</div>` : '<div class="roster-linha-idade"></div>'}
 <div class="roster-track"><div class="roster-bar" style="width:${Math.round(n/18*100)}%;background:${JCOR[j]}"></div></div>
 <div class="roster-etapa">${n}/18 &middot; ${et.l}</div>
-</div>`;
+</div>
+${menuAberto ? `<div class="roster-dropdown" onclick="event.stopPropagation()">
+<button onclick="abrirEdicaoJovem('${j}')">✏️ Editar</button>
+<button class="remover" onclick="excluirJovem('${j}')">🗑️ Excluir</button>
+</div>` : ''}`;
 row.onclick = () => { ativo = j; rosterAberto = false; renderRoster(); aplicarEstadoRoster(); renderDetail(j); document.getElementById('detail').scrollIntoView({behavior:'smooth', block:'start'}); };
 el.appendChild(row);
 });
