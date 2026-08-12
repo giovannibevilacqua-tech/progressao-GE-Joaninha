@@ -64,17 +64,19 @@ border: 1px solid var(--border); background: #FAFAF8; position: relative;
 .roster-row:last-child { margin-bottom: 0; }
 .roster-row:hover { background: #F2EFEA; }
 .roster-row.active { background: var(--done-bg); border-color: var(--done); }
-.roster-linha-principal { display: flex; align-items: center; gap: 10px; }
+.roster-linha-principal {
+display: grid; grid-template-columns: 26px 1fr 22px 64px 60px 78px; align-items: center; gap: 8px;
+}
 .roster-avatar {
 width: 26px; height: 26px; border-radius: 50%;
 display: flex; align-items: center; justify-content: center;
 font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0;
 }
-.roster-name { font-size: 12px; font-weight: 700; flex-shrink: 0; }
-.roster-track { flex: 1.6; min-width: 50px; height: 6px; background: #EEEBE7; border-radius: 20px; overflow: hidden; }
+.roster-name { font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.roster-track { height: 9px; background: #EEEBE7; border-radius: 20px; overflow: hidden; }
 .roster-bar { height: 100%; background: var(--vinho); border-radius: 20px; }
-.roster-etapa { font-size: 10px; font-weight: 700; color: var(--muted); width: 78px; text-align: right; flex-shrink: 0; }
-.roster-menu-btn { border: none; background: none; color: var(--muted); font-size: 16px; font-weight: 900; cursor: pointer; padding: 2px 6px; border-radius: 6px; flex-shrink: 0; line-height: 1; }
+.roster-etapa { font-size: 10px; font-weight: 700; color: var(--muted); text-align: right; }
+.roster-menu-btn { border: none; background: none; color: var(--muted); font-size: 16px; font-weight: 900; cursor: pointer; padding: 2px 6px; border-radius: 6px; line-height: 1; justify-self: center; }
 .roster-menu-btn:hover { background: #F0EDE8; color: var(--text); }
 .roster-dropdown {
 position: absolute; top: 38px; left: 34px; background: var(--card); border: 1px solid var(--border);
@@ -86,8 +88,8 @@ border: none; background: var(--card); color: var(--text); cursor: pointer;
 }
 .roster-dropdown button:hover { background: #F5F3EF; }
 .roster-dropdown button.remover { color: #E74C3C; }
-.roster-linha-idade { display: flex; align-items: center; gap: 5px; flex: 1; min-width: 30px; }
-.idade-track { position: relative; flex: 1; height: 9px; border-radius: 20px; overflow: hidden; background: #EEEBE7; }
+.roster-linha-idade { display: flex; align-items: center; gap: 4px; }
+.idade-track { position: relative; flex: 1; height: 4px; border-radius: 20px; overflow: hidden; background: #EEEBE7; }
 .idade-fill { height: 100%; border-radius: 20px; }
 .idade-label { font-size: 9px; font-weight: 700; color: var(--muted); white-space: nowrap; }
 .idade-label.caminho { color: #E74C3C; font-weight: 900; }
