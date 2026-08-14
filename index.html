@@ -62,7 +62,7 @@ padding: 10px; margin-bottom: 6px; border-radius: 10px; cursor: pointer;
 border: 1px solid var(--border); background: #FAFAF8; position: relative;
 }
 .roster-row:last-child { margin-bottom: 0; }
-.roster-row:hover { background: #F2EFEA; }
+.roster-row:hover { background: #ECE5D8; box-shadow: inset 3px 0 0 var(--vinho); }
 .roster-row.active { background: var(--done-bg); border-color: var(--done); }
 .roster-linha-principal {
 display: grid; grid-template-columns: 26px 76px 77px 1fr 96px 22px; align-items: center; gap: 8px;
@@ -158,7 +158,9 @@ transition: background .15s ease, border-color .15s ease;
 }
 .bloco-card.open .bloco-head { background: var(--card); border-left-color: transparent; }
 .bloco-head.aberto { background: var(--card); border-left-color: transparent; }
+.bloco-head.aberto:hover { background: #F2EDE3; }
 .bloco-head.cabecalho-secao { background: #F5F3EF; border-left: 2px solid var(--text); }
+.bloco-head.cabecalho-secao:hover { background: #ECE5D8; }
 .bloco-name { flex: 1; font-size: 12px; font-weight: 700; }
 .bloco-badges { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
 .badge { font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 10px; white-space: nowrap; }
@@ -169,7 +171,8 @@ transition: background .15s ease, border-color .15s ease;
 .bloco-card.open .bloco-body { display: block; }
 .bloco-card.open .chev { transform: rotate(180deg); }
 .grupo-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); margin: 10px 0 4px; }
-.item-row { display: flex; align-items: flex-start; gap: 8px; padding: 5px 0; }
+.item-row { display: flex; align-items: flex-start; gap: 8px; padding: 6px 6px; border-radius: 6px; }
+.item-row:hover { background: #ECE5D8; }
 .item-check {
 width: 18px; height: 18px; border-radius: 5px; border: 2px solid #DDD9D4;
 flex-shrink: 0; margin-top: 1px; cursor: pointer;
@@ -212,8 +215,8 @@ border-radius: 12px; border: 2px solid var(--text); background: #F5F3EF; color: 
 .tabela-check-grid thead th.item-col { z-index: 3; }
 .tabela-check-grid .grupo-row td { background: #F5F3EF; font-weight: 800; text-transform: uppercase; font-size: 9px; letter-spacing: .5px; color: var(--muted); }
 .tabela-check-grid input[type=checkbox] { width: 24px; height: 24px; cursor: pointer; }
-.resumo-row { padding: 10px 14px; cursor: pointer; border-bottom: 1px solid #F2EFEA; }
-.resumo-row:hover { background: #FAFAF8; }
+.resumo-row { padding: 10px 14px; cursor: pointer; border-bottom: 1px solid #E3DCCF; }
+.resumo-row:hover { background: #ECE5D8; box-shadow: inset 3px 0 0 var(--vinho); }
 .resumo-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; gap: 8px; }
 .resumo-nome { font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
 .resumo-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
@@ -286,8 +289,9 @@ padding: 6px 10px; border-radius: 20px; cursor: pointer;
 }
 .presenca-toggle:hover { background: #EEEBE7; }
 .presenca-list { display: flex; flex-direction: column; gap: 2px; margin-top: 8px; }
-.presenca-row { display: flex; align-items: center; gap: 8px; padding: 5px 2px; cursor: pointer; border-radius: 6px; }
-.presenca-row:hover { background: #FAFAF8; }
+.presenca-row { display: flex; align-items: center; gap: 8px; padding: 8px 6px; cursor: pointer; border-radius: 6px; border-bottom: 1px solid #E3DCCF; }
+.presenca-list .presenca-row:last-child { border-bottom: none; }
+.presenca-row:hover { background: #ECE5D8; box-shadow: inset 3px 0 0 var(--vinho); }
 .presenca-nome { font-size: 12px; font-weight: 600; flex: 1; }
 .presenca-marcado { font-size: 9px; font-weight: 700; color: var(--done); }
 .presenca-hint { font-size: 10px; color: var(--muted); margin-top: 6px; line-height: 1.4; }
@@ -317,6 +321,7 @@ cursor: pointer; display: flex; justify-content: space-between; align-items: cen
 .eixo-picker-header:first-child { margin-top: 0; }
 .picker-bloco { border: 1px solid var(--border); border-radius: 8px; margin-top: 6px; overflow: hidden; background: var(--card); }
 .picker-bloco-head { display: flex; align-items: center; gap: 8px; padding: 8px 10px; cursor: pointer; font-size: 11px; font-weight: 700; }
+.picker-bloco-head:hover { background: #ECE5D8; }
 .picker-bloco-head .chev { margin-left: auto; }
 .picker-bloco-body { display: none; padding: 2px 10px 10px; }
 .picker-bloco.open .picker-bloco-body { display: block; }
