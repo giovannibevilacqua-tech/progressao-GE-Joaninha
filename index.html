@@ -100,17 +100,27 @@ border: none; background: var(--card); color: var(--text); cursor: pointer;
 .roster-edicao .btn-primario, .roster-edicao .btn-secundario { margin-top: 0; }
 .roster-edicao-btns { display: flex; gap: 8px; }
 .roster-edicao-btns button { flex: 1; }
-.add-jovem-row { display: flex; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #F2EFEA; }
+.add-jovem-wrap { margin-top: 10px; padding-top: 10px; border-top: 1px solid #F2EFEA; }
+.btn-add-jovem {
+width: 100%; font-size: 12px; font-weight: 700; color: #fff; background: var(--vinho);
+border: none; border-radius: 8px; padding: 11px 14px; cursor: pointer;
+}
+.btn-add-jovem:hover { background: var(--vinho2); }
+.add-jovem-row { display: flex; flex-direction: column; gap: 8px; }
 .add-jovem-row input {
-flex: 1; font-size: 12px; padding: 8px 10px; border-radius: 8px;
+width: 100%; font-size: 12px; padding: 8px 10px; border-radius: 8px;
 border: 1px solid var(--border); background: #FAFAF8;
 }
 .add-jovem-row input:focus { outline: none; border-color: var(--vinho); }
-.add-jovem-row button {
-font-size: 11px; font-weight: 700; color: #fff; background: var(--vinho);
-border: none; border-radius: 8px; padding: 0 14px; cursor: pointer; white-space: nowrap;
+.add-jovem-row label.campo-label { font-size: 10px; font-weight: 700; color: var(--muted); margin-bottom: 2px; display: block; }
+.add-jovem-row-btns { display: flex; gap: 8px; }
+.add-jovem-row-btns button {
+flex: 1; font-size: 11px; font-weight: 700; border: none; border-radius: 8px; padding: 9px 14px; cursor: pointer; white-space: nowrap;
 }
-.add-jovem-row button:hover { background: var(--vinho2); }
+.add-jovem-row-btns .btn-confirmar { color: #fff; background: var(--vinho); }
+.add-jovem-row-btns .btn-confirmar:hover { background: var(--vinho2); }
+.add-jovem-row-btns .btn-cancelar { color: var(--text); background: #EEEBE7; }
+.add-jovem-row-btns .btn-cancelar:hover { background: #E3DFD9; }
 
 .detail-section { margin: 14px 14px 0; }
 .detail-head {
@@ -261,6 +271,52 @@ padding: 10px; font-size: 11px; font-weight: 700; cursor: pointer; margin-top: 4
 }
 .btn-secundario:hover { border-color: #E74C3C; color: #E74C3C; }
 
+.chip-select-group { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip-toggle {
+font-size: 11px; font-weight: 700; padding: 7px 12px; border-radius: 20px;
+border: 1px solid var(--border); background: #FAFAF8; color: var(--text); cursor: pointer;
+}
+.chip-toggle:hover { background: #F2EFEA; }
+.chip-toggle.selected { background: var(--vinho); color: #fff; border-color: var(--vinho); }
+.evento-bloco-tag { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; color: #fff; white-space: nowrap; }
+.presenca-section { margin-top: 8px; padding-top: 8px; border-top: 1px solid #F2EFEA; }
+.presenca-toggle {
+border: none; background: #F5F3EF; color: var(--text); font-size: 11px; font-weight: 700;
+padding: 6px 10px; border-radius: 20px; cursor: pointer;
+}
+.presenca-toggle:hover { background: #EEEBE7; }
+.presenca-list { display: flex; flex-direction: column; gap: 2px; margin-top: 8px; }
+.presenca-row { display: flex; align-items: center; gap: 8px; padding: 5px 2px; cursor: pointer; border-radius: 6px; }
+.presenca-row:hover { background: #FAFAF8; }
+.presenca-nome { font-size: 12px; font-weight: 600; flex: 1; }
+.presenca-marcado { font-size: 9px; font-weight: 700; color: var(--done); }
+.presenca-hint { font-size: 10px; color: var(--muted); margin-top: 6px; line-height: 1.4; }
+.justificar-btn {
+margin-left: auto; font-size: 9px; font-weight: 700; padding: 3px 8px; border-radius: 20px;
+border: 1px solid var(--border); background: #fff; color: var(--muted); cursor: pointer; white-space: nowrap; flex-shrink: 0;
+}
+.justificar-btn:hover { border-color: var(--vinho); color: var(--vinho); }
+.justificar-btn.justificado { background: var(--done-bg); color: #1E8449; border-color: var(--done); }
+.flag-ausencia { color: #E74C3C; margin-right: 3px; cursor: help; }
+
+.btn-picker-toggle {
+width: 100%; text-align: left; padding: 10px 12px; border-radius: 8px;
+border: 1px solid var(--border); background: #FAFAF8; font-size: 12px; font-weight: 700; color: var(--text);
+cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 8px;
+}
+.btn-picker-toggle:hover { background: #F2EFEA; }
+.itens-picker-scroll { max-height: 360px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px; padding: 8px; background: #FAFAF8; margin-top: 8px; }
+.eixo-picker-header { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; padding: 7px 10px; border-radius: 8px; color: #fff; margin-top: 8px; }
+.eixo-picker-header:first-child { margin-top: 0; }
+.picker-bloco { border: 1px solid var(--border); border-radius: 8px; margin-top: 6px; overflow: hidden; background: var(--card); }
+.picker-bloco-head { display: flex; align-items: center; gap: 8px; padding: 8px 10px; cursor: pointer; font-size: 11px; font-weight: 700; }
+.picker-bloco-head .chev { margin-left: auto; }
+.picker-bloco-body { display: none; padding: 2px 10px 10px; }
+.picker-bloco.open .picker-bloco-body { display: block; }
+.picker-bloco.open .chev { transform: rotate(180deg); }
+.picker-bloco-count { font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 10px; background: var(--done-bg); color: #1E8449; }
+.item-check.sel { background: var(--vinho); border-color: var(--vinho2); }
+
 .ciclo-titulo {
 background: linear-gradient(160deg, var(--vinho) 0%, var(--vinho2) 100%); color: #fff;
 font-size: 13px; font-weight: 800; text-align: center; text-transform: uppercase; letter-spacing: 1px;
@@ -270,12 +326,8 @@ padding: 12px; margin: 14px 14px 0; border-radius: var(--r); box-shadow: var(--s
 .ciclo-card-titulo { font-size: 12px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; }
 .ciclo-datas-row { display: flex; gap: 8px; margin-bottom: 12px; }
 .ciclo-datas-row > div { flex: 1; }
-.ciclo-blocos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-.ciclo-bloco-select {
-width: 100%; padding: 10px 4px; border-radius: 10px; border: 2px solid var(--text);
-background: #F5F3EF; color: var(--text); font-size: 10px; font-weight: 800; text-align: center;
-text-align-last: center; cursor: pointer; font-family: inherit;
-}
+.ciclo-blocos-grid { display: flex; flex-direction: column; gap: 8px; }
+.ciclo-bloco-btn { text-align: center; justify-content: center; }
 </style>
 </head>
 <body>
@@ -319,9 +371,22 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 </div>
 <div id="rosterBody" style="padding:0 14px 14px;">
 <div id="roster"></div>
-<div class="add-jovem-row">
+<div class="add-jovem-wrap" id="addJovemWrap">
+<button class="btn-add-jovem" id="btnAbrirAddJovem" onclick="toggleAddJovemForm()">+ Adicionar jovem</button>
+<div class="add-jovem-row" id="addJovemForm" style="display:none;">
+<div>
+<label class="campo-label">Nome</label>
 <input type="text" id="novoJovemInput" placeholder="Nome do novo jovem" onkeydown="if(event.key==='Enter')addJovem()">
-<button onclick="addJovem()">+ Adicionar</button>
+</div>
+<div>
+<label class="campo-label">Data de nascimento</label>
+<input type="date" id="novoJovemNasc">
+</div>
+<div class="add-jovem-row-btns">
+<button class="btn-cancelar" onclick="toggleAddJovemForm(false)">Cancelar</button>
+<button class="btn-confirmar" onclick="addJovem()">+ Adicionar</button>
+</div>
+</div>
 </div>
 </div>
 </div>
@@ -361,8 +426,17 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 <input type="text" id="eventoLocal" class="campo-input" placeholder="Ex: Sede do Grupo Escoteiro Joaninha">
 </div>
 <div>
+<label class="campo-label">Itens de progressão trabalhados</label>
+<button type="button" class="btn-picker-toggle" id="btnToggleItensPicker" onclick="toggleEventoItensPicker()">
+<span id="resumoItensPicker">Nenhum item selecionado</span>
+<span class="chev" id="chevItensPicker">▾</span>
+</button>
+<div class="itens-picker-scroll" id="eventoItensPicker" style="display:none;"></div>
+</div>
+<div>
 <label class="campo-label">Responsável</label>
-<input type="text" id="eventoResponsavel" class="campo-input" placeholder="Ex: Chefe João">
+<div class="chip-select-group" id="eventoResponsavelChips"></div>
+<input type="text" id="eventoResponsavelOutroInput" class="campo-input" placeholder="Nome de quem é o 'Outro'" style="display:none;margin-top:8px;">
 </div>
 <div>
 <label class="campo-label">Descrição</label>
@@ -498,6 +572,7 @@ let temAlteracaoLocalPendente = false;
 let EVENTOS = [];
 let CICLO = [];
 let DATAS_NASC = {};
+let JUSTIFICATIVAS = {};
 function cicloEmBranco() {
 return Array.from({length:6}, () => ({ ano:'', semestre:'1', blocos:['','',''] }));
 }
@@ -520,17 +595,19 @@ function iniciarSync() {
           Object.keys(nomesBase).forEach(id => { JNOMES[id] = nomesBase[id]; });
           JOVENS.forEach((j,i) => JCOR[j] = corPara(i));
           S = dados.S || deepCopy(INICIAL);
-          EVENTOS = dados.eventos || [];
+          EVENTOS = (dados.eventos || []).map(normalizarEvento);
           CICLO = (dados.ciclo && dados.ciclo.length === 6) ? dados.ciclo : cicloEmBranco();
           DATAS_NASC = dados.datasNascimento || {};
+          JUSTIFICATIVAS = dados.justificativas || {};
         } catch(e) {
-          if (primeira) { S = deepCopy(INICIAL); EVENTOS = []; CICLO = cicloEmBranco(); DATAS_NASC = {}; }
+          if (primeira) { S = deepCopy(INICIAL); EVENTOS = []; CICLO = cicloEmBranco(); DATAS_NASC = {}; JUSTIFICATIVAS = {}; }
         }
       } else if (primeira) {
         S = deepCopy(INICIAL);
         EVENTOS = [];
         CICLO = cicloEmBranco();
         DATAS_NASC = {};
+        JUSTIFICATIVAS = {};
       }
       JOVENS.forEach(j => { if (!S[j]) S[j] = blocosEmBranco(); });
       if (primeira) {
@@ -558,7 +635,7 @@ function iniciarSync() {
         processar(val);
       } catch(e) {
         console.error('Erro ao carregar dados:', e);
-        if (primeira) { S = deepCopy(INICIAL); EVENTOS = []; CICLO = cicloEmBranco(); DATAS_NASC = {}; JOVENS.forEach(j => { if (!S[j]) S[j] = blocosEmBranco(); }); primeira = false; carregando = false; resolve(); }
+        if (primeira) { S = deepCopy(INICIAL); EVENTOS = []; CICLO = cicloEmBranco(); DATAS_NASC = {}; JUSTIFICATIVAS = {}; JOVENS.forEach(j => { if (!S[j]) S[j] = blocosEmBranco(); }); primeira = false; carregando = false; resolve(); }
       }
     }
 
@@ -584,7 +661,7 @@ async function saveState() {
   const extras = JOVENS.filter(j => !JOVENS_BASE.includes(j)).map(id => ({id, nome: JNOMES[id]}));
   const nomesBase = {};
   JOVENS_BASE.forEach(id => { if (JNOMES[id] !== JNOMES_PADRAO[id]) nomesBase[id] = JNOMES[id]; });
-  const payload = JSON.stringify({ S, extraJovens: extras, eventos: EVENTOS, ciclo: CICLO, nomesBase, datasNascimento: DATAS_NASC, excluidos: JOVENS_EXCLUIDOS });
+  const payload = JSON.stringify({ S, extraJovens: extras, eventos: EVENTOS, ciclo: CICLO, nomesBase, datasNascimento: DATAS_NASC, excluidos: JOVENS_EXCLUIDOS, justificativas: JUSTIFICATIVAS });
   temAlteracaoLocalPendente = false; // este payload já reflete tudo que foi clicado até agora
   mostrarStatusSalvando('Salvando…');
   for (let tentativa = 1; tentativa <= 2; tentativa++) {
@@ -638,17 +715,36 @@ let id = base, n = 1;
 while (JOVENS.includes(id)) { id = base + (++n); }
 return id;
 }
+function toggleAddJovemForm(forcar) {
+const form = document.getElementById('addJovemForm');
+const btn = document.getElementById('btnAbrirAddJovem');
+const abrir = (forcar !== undefined) ? forcar : (form.style.display === 'none');
+form.style.display = abrir ? 'flex' : 'none';
+btn.style.display = abrir ? 'none' : '';
+if (!abrir) {
+document.getElementById('novoJovemInput').value = '';
+document.getElementById('novoJovemNasc').value = '';
+} else {
+document.getElementById('novoJovemInput').focus();
+}
+}
 async function addJovem() {
 const input = document.getElementById('novoJovemInput');
+const nascInput = document.getElementById('novoJovemNasc');
 const nome = input.value.trim();
-if (!nome) return;
+if (!nome) { input.focus(); return; }
+const nasc = nascInput.value;
 const id = slugify(nome);
 JOVENS.push(id);
 JNOMES[id] = nome;
+if (nasc) DATAS_NASC[id] = nasc;
 JCOR[id] = corPara(JOVENS.length - 1);
 S[id] = blocosEmBranco();
+temAlteracaoLocalPendente = true;
 await saveState();
 input.value = '';
+nascInput.value = '';
+toggleAddJovemForm(false);
 ativo = id;
 window.__eixoAtivo = null;
 renderRoster();
@@ -800,11 +896,12 @@ return;
 row.className = 'roster-row' + (ativo === j ? ' active' : '');
 const initials = JNOMES[j].split(' ').map(w=>w[0]).slice(0,2).join('');
 const info = calcularIdadeInfo(DATAS_NASC[j]);
+const flagAusencia = precisaFlagAusencia(j);
 const menuAberto = jovemMenuAbertoId === j;
 row.innerHTML = `
 <div class="roster-linha-principal">
 <div class="roster-avatar" style="background:${JCOR[j]}">${initials}</div>
-<div class="roster-name">${JNOMES[j]}</div>
+<div class="roster-name">${flagAusencia ? `<span class="flag-ausencia" title="3+ faltas seguidas sem justificativa">🚩</span>` : ''}${JNOMES[j]}</div>
 ${info ? `<div class="roster-linha-idade">
 <div class="idade-track"><div class="idade-fill" style="width:${info.pct}%;background:${info.cor}"></div></div>
 <div class="idade-label${info.mesesFaltantes <= 0 ? ' caminho' : ''}">${info.mesesFaltantes <= 0 ? 'CAMINHO' : info.mesesFaltantes + ' meses'}</div>
@@ -1106,6 +1203,34 @@ function toggleEspTabela(j, b) { S[j][b].especialidade = S[j][b].especialidade ?
 let addEventoAberto = false;
 let eventoEditandoId = null;
 let eventoMenuAbertoId = null;
+let presencaAbertaIds = {};
+const RESPONSAVEIS_OPCOES = ['Todos', 'Giovanni', 'João Paulo', 'João Vitor', 'Zósimo', 'Greh', 'Outro'];
+let responsaveisSelecionados = [];
+let eventoItensSelecionados = [];
+let itemPickerBlocosAbertos = {};
+let eventoItensPickerAberto = false;
+
+function parseItemId(itemId) {
+const [blocoId, tipo, idxStr] = itemId.split('|');
+return { blocoId, tipo, idx: parseInt(idxStr, 10) };
+}
+function normalizarEvento(ev) {
+let responsaveis = ev.responsaveis;
+if (!responsaveis) responsaveis = ev.responsavel ? [ev.responsavel] : [];
+let itens = ev.itens;
+if (!itens) {
+itens = [];
+if (ev.blocoId && BLOCOS[ev.blocoId]) {
+BLOCOS[ev.blocoId].fixas.forEach((_, i) => itens.push(`${ev.blocoId}|f|${i}`));
+BLOCOS[ev.blocoId].variaveis.forEach((_, i) => itens.push(`${ev.blocoId}|v|${i}`));
+}
+}
+return Object.assign({}, ev, {
+responsaveis,
+itens,
+presentes: ev.presentes || []
+});
+}
 
 function toggleEventoMenu(id) {
 eventoMenuAbertoId = (eventoMenuAbertoId === id) ? null : id;
@@ -1129,8 +1254,89 @@ document.getElementById('chevAddEvento').style.transform = addEventoAberto ? 'ro
 
 const MESES_ABREV = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
 
+function renderResponsavelChips() {
+const el = document.getElementById('eventoResponsavelChips');
+el.innerHTML = RESPONSAVEIS_OPCOES.map(nome => {
+const sel = responsaveisSelecionados.includes(nome);
+return `<button type="button" class="chip-toggle${sel ? ' selected' : ''}" onclick="toggleResponsavelChip('${nome.replace(/'/g,"\\'")}')">${nome}</button>`;
+}).join('');
+const outroInput = document.getElementById('eventoResponsavelOutroInput');
+outroInput.style.display = responsaveisSelecionados.includes('Outro') ? '' : 'none';
+}
+function toggleResponsavelChip(nome) {
+const idx = responsaveisSelecionados.indexOf(nome);
+if (idx !== -1) responsaveisSelecionados.splice(idx, 1);
+else responsaveisSelecionados.push(nome);
+renderResponsavelChips();
+}
+
+function toggleEventoItensPicker() {
+eventoItensPickerAberto = !eventoItensPickerAberto;
+document.getElementById('eventoItensPicker').style.display = eventoItensPickerAberto ? 'block' : 'none';
+document.getElementById('chevItensPicker').style.transform = eventoItensPickerAberto ? 'rotate(180deg)' : 'rotate(0deg)';
+if (eventoItensPickerAberto) renderEventoItensPicker();
+}
+function togglePickerBloco(blocoId) {
+itemPickerBlocosAbertos[blocoId] = !itemPickerBlocosAbertos[blocoId];
+renderEventoItensPicker();
+}
+function toggleEventoItem(itemId) {
+const idx = eventoItensSelecionados.indexOf(itemId);
+if (idx !== -1) eventoItensSelecionados.splice(idx, 1);
+else eventoItensSelecionados.push(itemId);
+renderEventoItensPicker();
+atualizarResumoItensPicker();
+}
+function atualizarResumoItensPicker() {
+const n = eventoItensSelecionados.length;
+document.getElementById('resumoItensPicker').textContent = n ? `${n} ${n === 1 ? 'item selecionado' : 'itens selecionados'}` : 'Nenhum item selecionado';
+}
+function renderEventoItensPicker() {
+const el = document.getElementById('eventoItensPicker');
+el.innerHTML = EIXOS.map(eixo => {
+const blocosHtml = eixo.blocos.map(b => {
+const def = BLOCOS[b];
+const open = !!itemPickerBlocosAbertos[b];
+const nSel = def.fixas.length + def.variaveis.length > 0
+? [...def.fixas.map((_,i)=>`${b}|f|${i}`), ...def.variaveis.map((_,i)=>`${b}|v|${i}`)].filter(id => eventoItensSelecionados.includes(id)).length
+: 0;
+const fixasHtml = def.fixas.map((txt, i) => {
+const id = `${b}|f|${i}`;
+const sel = eventoItensSelecionados.includes(id);
+return `<div class="item-row"><div class="item-check${sel?' sel':''}" onclick="toggleEventoItem('${id}')">${sel?'✓':''}</div><div class="item-text" onclick="toggleEventoItem('${id}')">${txt}</div></div>`;
+}).join('');
+const variaveisHtml = def.variaveis.map((txt, i) => {
+const id = `${b}|v|${i}`;
+const sel = eventoItensSelecionados.includes(id);
+return `<div class="item-row"><div class="item-check${sel?' sel':''}" onclick="toggleEventoItem('${id}')">${sel?'✓':''}</div><div class="item-text" onclick="toggleEventoItem('${id}')">${txt}</div></div>`;
+}).join('');
+return `<div class="picker-bloco${open?' open':''}">
+<div class="picker-bloco-head" onclick="togglePickerBloco('${b}')">
+<span>${def.nome}</span>
+${nSel ? `<span class="picker-bloco-count">${nSel}</span>` : ''}
+<span class="chev">▾</span>
+</div>
+<div class="picker-bloco-body">
+${def.fixas.length ? `<div class="grupo-label">Ações fixas</div>${fixasHtml}` : ''}
+${def.variaveis.length ? `<div class="grupo-label">Ações variáveis</div>${variaveisHtml}` : ''}
+</div>
+</div>`;
+}).join('');
+return `<div class="eixo-picker-header" style="background:${eixo.cor}">${eixo.nome}</div>${blocosHtml}`;
+}).join('');
+}
+
 function limparFormularioEvento() {
-['eventoData','eventoNome','eventoLocal','eventoResponsavel','eventoDescricao'].forEach(fid => { document.getElementById(fid).value = ''; });
+['eventoData','eventoNome','eventoLocal','eventoDescricao','eventoResponsavelOutroInput'].forEach(fid => { document.getElementById(fid).value = ''; });
+eventoItensSelecionados = [];
+itemPickerBlocosAbertos = {};
+eventoItensPickerAberto = false;
+document.getElementById('eventoItensPicker').style.display = 'none';
+document.getElementById('eventoItensPicker').innerHTML = '';
+document.getElementById('chevItensPicker').style.transform = 'rotate(0deg)';
+atualizarResumoItensPicker();
+responsaveisSelecionados = [];
+renderResponsavelChips();
 eventoEditandoId = null;
 document.getElementById('btnSalvarEvento').textContent = '+ Adicionar ao calendário';
 document.getElementById('btnCancelarEdicaoEvento').style.display = 'none';
@@ -1144,8 +1350,20 @@ eventoEditandoId = id;
 document.getElementById('eventoData').value = ev.data;
 document.getElementById('eventoNome').value = ev.nome;
 document.getElementById('eventoLocal').value = ev.local || '';
-document.getElementById('eventoResponsavel').value = ev.responsavel || '';
 document.getElementById('eventoDescricao').value = ev.descricao || '';
+eventoItensSelecionados = (ev.itens || []).slice();
+itemPickerBlocosAbertos = {};
+eventoItensPickerAberto = false;
+document.getElementById('eventoItensPicker').style.display = 'none';
+document.getElementById('chevItensPicker').style.transform = 'rotate(0deg)';
+atualizarResumoItensPicker();
+responsaveisSelecionados = (ev.responsaveis || []).filter(n => RESPONSAVEIS_OPCOES.includes(n) || n === 'Outro');
+const nomeCustom = (ev.responsaveis || []).find(n => n && !RESPONSAVEIS_OPCOES.includes(n));
+if (nomeCustom) {
+if (!responsaveisSelecionados.includes('Outro')) responsaveisSelecionados.push('Outro');
+document.getElementById('eventoResponsavelOutroInput').value = nomeCustom;
+}
+renderResponsavelChips();
 document.getElementById('btnSalvarEvento').textContent = '💾 Salvar alterações';
 document.getElementById('btnCancelarEdicaoEvento').style.display = '';
 addEventoAberto = true;
@@ -1163,16 +1381,18 @@ function adicionarEvento() {
 const data = document.getElementById('eventoData').value;
 const nome = document.getElementById('eventoNome').value.trim();
 const local = document.getElementById('eventoLocal').value.trim();
-const responsavel = document.getElementById('eventoResponsavel').value.trim();
 const descricao = document.getElementById('eventoDescricao').value.trim();
+const itens = eventoItensSelecionados.slice();
+const outroNome = document.getElementById('eventoResponsavelOutroInput').value.trim();
+const responsaveis = responsaveisSelecionados.map(n => (n === 'Outro' && outroNome) ? outroNome : n);
 if (!data || !nome) { alert('Preencha pelo menos a data e o nome da atividade.'); return; }
 
 if (eventoEditandoId) {
 const ev = EVENTOS.find(e => e.id === eventoEditandoId);
-if (ev) { ev.data = data; ev.nome = nome; ev.local = local; ev.responsavel = responsavel; ev.descricao = descricao; }
+if (ev) { ev.data = data; ev.nome = nome; ev.local = local; ev.descricao = descricao; ev.itens = itens; ev.responsaveis = responsaveis; }
 } else {
 const id = 'ev' + Date.now() + Math.floor(Math.random()*1000);
-EVENTOS.push({ id, data, nome, local, responsavel, descricao });
+EVENTOS.push({ id, data, nome, local, descricao, itens, responsaveis, presentes: [] });
 }
 temAlteracaoLocalPendente = true;
 saveState();
@@ -1190,6 +1410,134 @@ saveState();
 renderPaginaCalendario();
 }
 
+function togglePresencaEvento(id) {
+presencaAbertaIds[id] = !presencaAbertaIds[id];
+renderPaginaCalendario();
+}
+
+function marcarProgressoPorPresenca(jovemId, itens) {
+if (!S[jovemId]) return;
+(itens || []).forEach(itemId => {
+const { blocoId, tipo, idx } = parseItemId(itemId);
+const st = S[jovemId][blocoId];
+if (!st) return;
+if (tipo === 'f' && st.fixas[idx] !== undefined) st.fixas[idx] = 1;
+if (tipo === 'v' && st.variaveis[idx] !== undefined) st.variaveis[idx] = 1;
+});
+}
+
+function marcarPresenca(eventoId, jovemId) {
+const ev = EVENTOS.find(e => e.id === eventoId);
+if (!ev) return;
+ev.presentes = ev.presentes || [];
+const idx = ev.presentes.indexOf(jovemId);
+if (idx !== -1) {
+ev.presentes.splice(idx, 1);
+} else {
+ev.presentes.push(jovemId);
+if (ev.itens && ev.itens.length) marcarProgressoPorPresenca(jovemId, ev.itens);
+}
+temAlteracaoLocalPendente = true;
+saveState();
+renderRoster();
+if (ativo) renderDetail(ativo);
+if (paginaAtiva === 'tabela') {
+if (blocoTabela) { atualizarTabelaBloco(); document.getElementById('resumoContainer').innerHTML = construirResumoBlocos(); }
+else { renderPaginaTabela(); }
+}
+renderPaginaCalendario();
+}
+
+function toggleJustificativa(eventoId, jovemId) {
+JUSTIFICATIVAS[jovemId] = JUSTIFICATIVAS[jovemId] || [];
+const idx = JUSTIFICATIVAS[jovemId].indexOf(eventoId);
+if (idx !== -1) JUSTIFICATIVAS[jovemId].splice(idx, 1);
+else JUSTIFICATIVAS[jovemId].push(eventoId);
+temAlteracaoLocalPendente = true;
+saveState();
+renderRoster();
+renderPaginaCalendario();
+}
+
+function eventosPassadosOrdenados() {
+const hoje = new Date().toISOString().slice(0, 10);
+return EVENTOS.filter(e => e.data && e.data <= hoje).sort((a, b) => a.data.localeCompare(b.data));
+}
+
+function faltasConsecutivas(jovemId) {
+const passados = eventosPassadosOrdenados();
+const streak = [];
+for (let k = passados.length - 1; k >= 0; k--) {
+const ev = passados[k];
+const presente = (ev.presentes || []).includes(jovemId);
+if (presente) break;
+streak.push(ev.id);
+}
+return streak;
+}
+
+function precisaFlagAusencia(jovemId) {
+const streak = faltasConsecutivas(jovemId);
+if (streak.length < 3) return false;
+const justificados = JUSTIFICATIVAS[jovemId] || [];
+return !streak.some(id => justificados.includes(id));
+}
+
+function exportarPresenca(eventoId) {
+const ev = EVENTOS.find(e => e.id === eventoId);
+if (!ev) return;
+const presentes = ev.presentes || [];
+const ausentes = JOVENS.filter(j => !presentes.includes(j));
+const partes = (ev.data || '').split('-');
+const dataFmt = partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : (ev.data || '');
+let txt = `LISTA DE PRESENÇA\n`;
+txt += `================\n\n`;
+txt += `Atividade: ${ev.nome}\n`;
+txt += `Data: ${dataFmt}\n`;
+if (ev.local) txt += `Local: ${ev.local}\n`;
+if (ev.responsaveis && ev.responsaveis.length) txt += `Responsável(is): ${ev.responsaveis.join(', ')}\n`;
+if (ev.descricao) txt += `Descrição: ${ev.descricao}\n`;
+
+txt += `\nPRESENTES (${presentes.length}/${JOVENS.length}):\n`;
+if (presentes.length) presentes.forEach(j => { txt += `  [x] ${JNOMES[j] || j}\n`; });
+else txt += `  (nenhum registrado)\n`;
+
+txt += `\nAUSENTES (${ausentes.length}/${JOVENS.length}):\n`;
+if (ausentes.length) ausentes.forEach(j => { txt += `  [ ] ${JNOMES[j] || j}\n`; });
+else txt += `  (nenhum)\n`;
+
+const itens = ev.itens || [];
+if (itens.length) {
+const porBloco = {};
+itens.forEach(itemId => {
+const { blocoId, tipo, idx } = parseItemId(itemId);
+const def = BLOCOS[blocoId];
+if (!def) return;
+const texto = tipo === 'f' ? def.fixas[idx] : def.variaveis[idx];
+if (texto === undefined) return;
+porBloco[blocoId] = porBloco[blocoId] || [];
+porBloco[blocoId].push(texto);
+});
+txt += `\nITENS DE PROGRESSÃO TRABALHADOS:\n`;
+Object.keys(porBloco).forEach(b => {
+txt += `\n${BLOCOS[b].nome}:\n`;
+porBloco[b].forEach(t => { txt += `  • ${t}\n`; });
+});
+}
+
+const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url;
+a.download = `presenca_${ev.data || 'sem-data'}_${(ev.nome || 'atividade').replace(/[^a-zA-Z0-9]+/g, '_')}.txt`;
+document.body.appendChild(a);
+a.click();
+document.body.removeChild(a);
+URL.revokeObjectURL(url);
+eventoMenuAbertoId = null;
+renderPaginaCalendario();
+}
+
 function renderPaginaCalendario() {
 const el = document.getElementById('listaEventos');
 if (!EVENTOS.length) {
@@ -1201,50 +1549,103 @@ el.innerHTML = ordenados.map(ev => {
 const partes = ev.data.split('-');
 const mesTxt = MESES_ABREV[parseInt(partes[1], 10) - 1] || '';
 const menuAberto = eventoMenuAbertoId === ev.id;
+const itens = ev.itens || [];
+const contagemPorBloco = {};
+itens.forEach(itemId => { const { blocoId } = parseItemId(itemId); contagemPorBloco[blocoId] = (contagemPorBloco[blocoId] || 0) + 1; });
+const blocosTocados = Object.keys(contagemPorBloco);
+const presentes = ev.presentes || [];
+const presencaAberta = !!presencaAbertaIds[ev.id];
 return `<div class="evento-card">
 <div class="evento-strip"><div class="evento-dia">${partes[2]}</div><div class="evento-mes">${mesTxt}</div></div>
 <div class="evento-body">
 <button class="evento-menu-btn" onclick="event.stopPropagation();toggleEventoMenu('${ev.id}')">⋮</button>
 ${menuAberto ? `<div class="evento-dropdown" onclick="event.stopPropagation()">
 <button onclick="editarEvento('${ev.id}')">✏️ Editar</button>
+<button onclick="exportarPresenca('${ev.id}')">📄 Exportar presença</button>
 <button class="remover" onclick="removerEvento('${ev.id}')">🗑️ Remover</button>
 </div>` : ''}
 <div class="evento-nome">${ev.nome}</div>
 <div class="evento-meta">
 ${ev.local ? `<span class="evento-tag">📍 ${ev.local}</span>` : ''}
-${ev.responsavel ? `<span class="evento-tag">👤 ${ev.responsavel}</span>` : ''}
+${(ev.responsaveis && ev.responsaveis.length) ? `<span class="evento-tag">👤 ${ev.responsaveis.join(', ')}</span>` : ''}
+${blocosTocados.map(b => { const eixo = EIXOS.find(e => e.blocos.includes(b)); return `<span class="evento-bloco-tag" style="background:${eixo?eixo.cor:'#666'};">📘 ${BLOCOS[b].nome} · ${contagemPorBloco[b]} ${contagemPorBloco[b]===1?'item':'itens'}</span>`; }).join('')}
 </div>
 ${ev.descricao ? `<div class="evento-desc">${ev.descricao}</div>` : ''}
+<div class="presenca-section">
+<button class="presenca-toggle" onclick="togglePresencaEvento('${ev.id}')">📋 Presença (${presentes.length}/${JOVENS.length}) ${presencaAberta ? '▾' : '▸'}</button>
+${presencaAberta ? `<div class="presenca-list">
+${JOVENS.map(j => {
+const presente = presentes.includes(j);
+const justificado = (JUSTIFICATIVAS[j] || []).includes(ev.id);
+return `<div class="presenca-row" onclick="marcarPresenca('${ev.id}','${j}')">
+<div class="item-check${presente ? ' done' : ''}">${presente ? '✓' : ''}</div>
+<div class="presenca-nome">${JNOMES[j]}</div>
+${presente && itens.length ? '<span class="presenca-marcado">✓ itens marcados</span>' : ''}
+${!presente ? `<button class="justificar-btn${justificado ? ' justificado' : ''}" onclick="event.stopPropagation();toggleJustificativa('${ev.id}','${j}')">${justificado ? '✓ Justificada' : 'Justificar falta'}</button>` : ''}
+</div>`;
+}).join('')}
+${!itens.length ? '<div class="presenca-hint">Nenhum item de progressão vinculado a esta atividade — a presença é registrada, mas a progressão dos jovens não é marcada automaticamente. Edite a atividade para selecionar itens.</div>' : ''}
+</div>` : ''}
+</div>
 </div>
 </div>`;
 }).join('');
 }
 
 // ===== PÁGINA 4: CICLO DE PROGRAMA =====
-function opcoesBlocosHTML(selecionado) {
-let h = `<option value="">—</option>`;
-EIXOS.forEach(eixo => {
-h += `<optgroup label="${eixo.nome}">`;
-eixo.blocos.forEach(b => {
-h += `<option value="${b}" ${selecionado===b?'selected':''}>${BLOCOS[b].nome}</option>`;
-});
-h += `</optgroup>`;
-});
-return h;
+let cicloPickerAbertoKey = null;
+
+function toggleCicloPicker(i, j) {
+const key = i + '_' + j;
+cicloPickerAbertoKey = (cicloPickerAbertoKey === key) ? null : key;
+renderPaginaCiclo();
+}
+function selecionarCicloBloco(i, j, blocoId) {
+CICLO[i].blocos[j] = blocoId;
+cicloPickerAbertoKey = null;
+temAlteracaoLocalPendente = true;
+saveStateDebounced();
+renderPaginaCiclo();
 }
 
 function atualizarCicloAno(i, val) { CICLO[i].ano = val; temAlteracaoLocalPendente = true; saveStateDebounced(); }
 function atualizarCicloSemestre(i, val) { CICLO[i].semestre = val; temAlteracaoLocalPendente = true; saveStateDebounced(); renderPaginaCiclo(); }
-function atualizarCicloBloco(i, j, val) { CICLO[i].blocos[j] = val; temAlteracaoLocalPendente = true; saveStateDebounced(); renderPaginaCiclo(); }
+
+function construirCicloBlocoPicker(i, j, blocoSel) {
+const eixoSel = blocoSel ? EIXOS.find(e => e.blocos.includes(blocoSel)) : null;
+const key = i + '_' + j;
+const aberto = cicloPickerAbertoKey === key;
+const estiloBtn = eixoSel ? `background:${eixoSel.cor};color:#fff;border-color:${eixoSel.cor};` : '';
+let painel = '';
+if (aberto) {
+painel = `<div class="itens-picker-scroll" style="display:block;">` + EIXOS.map(eixo => {
+const blocosHtml = eixo.blocos.map(b => {
+const sel = b === blocoSel;
+return `<div class="picker-bloco" style="${sel?`border-color:${eixo.cor};`:''}">
+<div class="picker-bloco-head" onclick="selecionarCicloBloco(${i},${j},'${b}')">
+<span>${BLOCOS[b].nome}</span>
+${sel ? `<span class="picker-bloco-count" style="background:${eixo.cor}22;color:${eixo.cor};">✓ selecionado</span>` : ''}
+</div>
+</div>`;
+}).join('');
+return `<div class="eixo-picker-header" style="background:${eixo.cor}">${eixo.nome}</div>${blocosHtml}`;
+}).join('') + `<div class="picker-bloco" onclick="selecionarCicloBloco(${i},${j},'')" style="cursor:pointer;">
+<div class="picker-bloco-head"><span>— Limpar seleção</span></div>
+</div></div>`;
+}
+return `<div>
+<button type="button" class="btn-picker-toggle ciclo-bloco-btn" style="${estiloBtn}" onclick="toggleCicloPicker(${i},${j})">
+<span>${blocoSel ? BLOCOS[blocoSel].nome : 'Selecionar bloco'}</span>
+<span class="chev" style="transform:rotate(${aberto?180:0}deg);${eixoSel?'color:#fff;':''}">▾</span>
+</button>
+${painel}
+</div>`;
+}
 
 function renderPaginaCiclo() {
 const el = document.getElementById('listaCiclo');
 el.innerHTML = CICLO.map((sem, i) => {
-const blocosHtml = sem.blocos.map((b, j) => {
-const eixo = b ? EIXOS.find(e => e.blocos.includes(b)) : null;
-const estilo = eixo ? `background:${eixo.cor};color:#fff;border-color:${eixo.cor};` : '';
-return `<select class="ciclo-bloco-select" style="${estilo}" onchange="atualizarCicloBloco(${i},${j},this.value)">${opcoesBlocosHTML(b)}</select>`;
-}).join('');
+const blocosHtml = sem.blocos.map((b, j) => construirCicloBlocoPicker(i, j, b)).join('');
 return `<div class="ciclo-card">
 <div class="ciclo-card-titulo">${i+1}º Semestre do Ciclo</div>
 <div class="ciclo-datas-row">
@@ -1267,6 +1668,8 @@ return `<div class="ciclo-card">
 
 async function iniciar() {
 document.getElementById('roster').innerHTML = '<div style="padding:12px;font-size:12px;color:var(--muted);text-align:center;">Carregando dados compartilhados…</div>';
+atualizarResumoItensPicker();
+renderResponsavelChips();
 await iniciarSync();
 renderRoster();
 }
