@@ -1467,7 +1467,19 @@ document.getElementById('ramo-escoteira').style.display = r === 'escoteira' ? ''
 document.getElementById('pagina-senior').style.display = r === 'senior' ? '' : 'none';
 document.getElementById('ramoBtnEscoteira').classList.toggle('active', r === 'escoteira');
 document.getElementById('ramoBtnSenior').classList.toggle('active', r === 'senior');
-if (r === 'senior' && !seniorCarregado) { seniorCarregado = true; iniciarSenior(); }
+if (r === 'senior' && !seniorCarregado) {
+seniorCarregado = true;
+const aviso = document.createElement('div');
+aviso.id = 'senior-carregando-aviso';
+aviso.style.cssText = 'padding:18px;text-align:center;color:#666;font-size:12px;';
+aviso.textContent = 'Carregando dados da Tropa Sênior…';
+const paginaSr = document.getElementById('pagina-senior');
+paginaSr.insertBefore(aviso, paginaSr.firstChild);
+iniciarSenior().then(() => {
+const el = document.getElementById('senior-carregando-aviso');
+if (el) el.remove();
+});
+}
 window.scrollTo(0, 0);
 }
 
@@ -2523,7 +2535,10 @@ const REST_URL_SR = DB_URL + "/tropaSenior/json.json";
 let carregandoSr = true;
 async function loadStateSr(){
   try{
-    const r = await fetch(REST_URL_SR);
+    const r = await Promise.race([
+      fetch(REST_URL_SR),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Tempo limite ao buscar dados da Tropa Sênior')), 4000))
+    ]);
     const val = await r.json();
     if (val) {
       const dados = JSON.parse(val);
@@ -2536,7 +2551,7 @@ async function loadStateSr(){
     } else {
       S_SR = deepCopySr(INICIAL_SR);
     }
-  }catch(e){ S_SR=deepCopySr(INICIAL_SR); }
+  }catch(e){ S_SR=deepCopySr(INICIAL_SR); console.error('Tropa Sênior: usando dados padrão (falha ou demora ao buscar do banco):', e); }
   carregandoSr = false;
 }
 async function saveStateSr(){
