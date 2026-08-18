@@ -100,6 +100,43 @@ border: none; background: var(--card); color: var(--text); cursor: pointer;
 .roster-edicao .btn-primario, .roster-edicao .btn-secundario { margin-top: 0; }
 .roster-edicao-btns { display: flex; gap: 8px; }
 .roster-edicao-btns button { flex: 1; }
+
+.patrulha-form { display: flex; flex-direction: column; gap: 8px; padding: 10px; border: 1px dashed var(--border); border-radius: 10px; }
+.patrulha-form-row { display: flex; gap: 8px; align-items: center; }
+.patrulha-form-row input[type=color] { width: 44px; height: 38px; border-radius: 8px; border: 1px solid var(--border); padding: 2px; cursor: pointer; background: none; }
+.patrulha-form-row .campo-input { flex: 1; }
+
+.patrulhas-grid { display: flex; flex-direction: column; }
+.patrulha-secao { margin: 10px 14px 0; position: relative; }
+@media (min-width: 640px) {
+.patrulhas-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0; max-width: 1120px; margin: 0 auto; }
+.patrulhas-grid .patrulha-secao { margin: 10px 7px 0; }
+}
+.patrulha-secao-header {
+display: flex; align-items: center; justify-content: space-between; padding: 9px 12px;
+border-radius: 10px 10px 0 0; color: #fff; font-size: 11px; font-weight: 800;
+}
+.patrulha-secao-header-direita { display: flex; align-items: center; gap: 4px; }
+.patrulha-secao-count { background: rgba(255,255,255,.28); padding: 1px 9px; border-radius: 20px; font-size: 10px; font-weight: 800; }
+.patrulha-menu-btn { border: none; background: none; color: #fff; font-size: 15px; font-weight: 900; cursor: pointer; padding: 1px 5px; border-radius: 6px; line-height: 1; }
+.patrulha-menu-btn:hover { background: rgba(255,255,255,.25); }
+.patrulha-dropdown {
+position: absolute; top: 38px; right: 0; background: var(--card); border: 1px solid var(--border);
+border-radius: 10px; box-shadow: var(--shadow); overflow: hidden; z-index: 20; min-width: 130px;
+}
+.patrulha-dropdown button {
+display: block; width: 100%; text-align: left; padding: 10px 12px; font-size: 12px; font-weight: 700;
+border: none; background: var(--card); color: var(--text); cursor: pointer;
+}
+.patrulha-dropdown button:hover { background: #F5F3EF; }
+.patrulha-dropdown button.remover { color: #E74C3C; }
+.patrulha-drop-zone {
+background: #FAFAF8; border: 1px dashed var(--border); border-top: none;
+border-radius: 0 0 10px 10px; padding: 6px; min-height: 46px; transition: background .15s ease, border-color .15s ease;
+}
+.patrulha-drop-zone.drag-over { background: var(--done-bg); border-color: var(--done); }
+.patrulha-vazia { font-size: 11px; color: var(--muted); text-align: center; padding: 14px; }
+
 .add-jovem-wrap { margin-top: 10px; padding-top: 10px; border-top: 1px solid #F2EFEA; }
 .btn-add-jovem {
 width: 100%; font-size: 12px; font-weight: 700; color: #fff; background: var(--vinho);
@@ -377,6 +414,16 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 </div>
 
 <div class="roster-section" style="padding:0;overflow:hidden;">
+<div class="bloco-head aberto cabecalho-secao" id="cabecalhoPatrulhas" style="padding:14px;" onclick="togglePatrulhasSecao()">
+<span class="bloco-name" style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">🏕️ Patrulhas</span>
+<span class="chev" id="chevPatrulhas" style="transform:rotate(180deg);">▾</span>
+</div>
+<div id="patrulhasSecaoBody" style="padding:0 14px 14px;">
+<div id="patrulhasContainer"></div>
+</div>
+</div>
+
+<div class="roster-section" style="padding:0;overflow:hidden;">
 <div class="bloco-head aberto cabecalho-secao" id="cabecalhoRoster" style="padding:14px;" onclick="toggleRosterSecao()">
 <span class="bloco-name" style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">Jovens da tropa</span>
 <span class="chev" id="chevRoster" style="transform:rotate(180deg);">▾</span>
@@ -480,6 +527,8 @@ const JNOMES_PADRAO = {miguel:'Miguel Silva',sabrina:'Sabrina Sigmaringa',pedro:
 let JNOMES = Object.assign({}, JNOMES_PADRAO);
 let JOVENS = JOVENS_BASE.slice();
 let JOVENS_EXCLUIDOS = [];
+let PATRULHAS = [];
+let PATRULHA_DE = {};
 const JCOR = {};
 function corPara(i) { return `hsl(${Math.round(i*137.5)%360},45%,42%)`; }
 function nomeCurto(j) {
@@ -611,6 +660,8 @@ function iniciarSync() {
           CICLO = (dados.ciclo && dados.ciclo.length === 6) ? dados.ciclo : cicloEmBranco();
           DATAS_NASC = dados.datasNascimento || {};
           JUSTIFICATIVAS = dados.justificativas || {};
+          PATRULHAS = dados.patrulhas || [];
+          PATRULHA_DE = dados.patrulhaDe || {};
         } catch(e) {
           if (primeira) { S = deepCopy(INICIAL); EVENTOS = []; CICLO = cicloEmBranco(); DATAS_NASC = {}; JUSTIFICATIVAS = {}; }
         }
@@ -673,7 +724,7 @@ async function saveState() {
   const extras = JOVENS.filter(j => !JOVENS_BASE.includes(j)).map(id => ({id, nome: JNOMES[id]}));
   const nomesBase = {};
   JOVENS_BASE.forEach(id => { if (JNOMES[id] !== JNOMES_PADRAO[id]) nomesBase[id] = JNOMES[id]; });
-  const payload = JSON.stringify({ S, extraJovens: extras, eventos: EVENTOS, ciclo: CICLO, nomesBase, datasNascimento: DATAS_NASC, excluidos: JOVENS_EXCLUIDOS, justificativas: JUSTIFICATIVAS });
+  const payload = JSON.stringify({ S, extraJovens: extras, eventos: EVENTOS, ciclo: CICLO, nomesBase, datasNascimento: DATAS_NASC, excluidos: JOVENS_EXCLUIDOS, justificativas: JUSTIFICATIVAS, patrulhas: PATRULHAS, patrulhaDe: PATRULHA_DE });
   temAlteracaoLocalPendente = false; // este payload já reflete tudo que foi clicado até agora
   mostrarStatusSalvando('Salvando…');
   for (let tentativa = 1; tentativa <= 2; tentativa++) {
@@ -807,8 +858,18 @@ rosterAberto = !rosterAberto;
 aplicarEstadoRoster();
 }
 
+let patrulhasSecaoAberta = true;
+function togglePatrulhasSecao() {
+patrulhasSecaoAberta = !patrulhasSecaoAberta;
+document.getElementById('patrulhasSecaoBody').style.display = patrulhasSecaoAberta ? '' : 'none';
+document.getElementById('chevPatrulhas').style.transform = patrulhasSecaoAberta ? 'rotate(180deg)' : 'rotate(0deg)';
+document.getElementById('cabecalhoPatrulhas').classList.toggle('aberto', patrulhasSecaoAberta);
+}
+
 let jovemEditandoId = null;
 let jovemMenuAbertoId = null;
+let patrulhaEditandoId = null;
+let jovemArrastado = null;
 
 function calcularIdadeInfo(dataNascISO) {
 if (!dataNascISO) return null;
@@ -869,24 +930,110 @@ if (JOVENS_BASE.includes(id)) { if (!JOVENS_EXCLUIDOS.includes(id)) JOVENS_EXCLU
 JOVENS = JOVENS.filter(x => x !== id);
 delete S[id];
 delete DATAS_NASC[id];
+delete PATRULHA_DE[id];
 if (ativo === id) { ativo = null; document.getElementById('detail').innerHTML = ''; }
 temAlteracaoLocalPendente = true;
 saveState();
 renderRoster();
 }
 
-function renderRoster() {
-const el = document.getElementById('roster');
-el.innerHTML = '';
-JOVENS.forEach(j => {
+function abrirNovaPatrulha() { patrulhaEditandoId = 'nova'; renderRoster(); }
+function abrirEdicaoPatrulha(id) { patrulhaEditandoId = id; renderRoster(); }
+function cancelarEdicaoPatrulha() { patrulhaEditandoId = null; renderRoster(); }
+
+function salvarPatrulha(id) {
+const nome = document.getElementById('patNome_' + id).value.trim();
+const cor = document.getElementById('patCor_' + id).value;
+const icone = document.getElementById('patIcone_' + id).value.trim() || '🏕️';
+if (!nome) { alert('Dê um nome pra patrulha.'); return; }
+if (id === 'nova') {
+const novoId = 'pat' + Date.now() + Math.floor(Math.random() * 1000);
+PATRULHAS.push({ id: novoId, nome, cor, icone });
+} else {
+const p = PATRULHAS.find(p => p.id === id);
+if (p) { p.nome = nome; p.cor = cor; p.icone = icone; }
+}
+patrulhaEditandoId = null;
+temAlteracaoLocalPendente = true;
+saveState();
+renderRoster();
+}
+
+function excluirPatrulha(id) {
+if (!confirm('Excluir essa patrulha? Os jovens dela voltam para "Sem patrulha".')) return;
+PATRULHAS = PATRULHAS.filter(p => p.id !== id);
+Object.keys(PATRULHA_DE).forEach(j => { if (PATRULHA_DE[j] === id) delete PATRULHA_DE[j]; });
+patrulhaEditandoId = null;
+temAlteracaoLocalPendente = true;
+saveState();
+renderRoster();
+}
+
+function dragJovemStart(e, j) {
+jovemArrastado = j;
+if (e.dataTransfer) {
+e.dataTransfer.effectAllowed = 'move';
+e.dataTransfer.setData('text/plain', j);
+}
+}
+
+function dropJovemEm(e, patrulhaId) {
+if (e.preventDefault) e.preventDefault();
+const j = (e.dataTransfer && e.dataTransfer.getData('text/plain')) || jovemArrastado;
+jovemArrastado = null;
+if (!j) return;
+if (patrulhaId) PATRULHA_DE[j] = patrulhaId;
+else delete PATRULHA_DE[j];
+temAlteracaoLocalPendente = true;
+saveState();
+renderRoster();
+}
+
+function selecionarJovem(j) {
+ativo = j;
+rosterAberto = false;
+renderRoster();
+aplicarEstadoRoster();
+renderDetail(j);
+document.getElementById('detail').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function construirFormPatrulha(p) {
+const id = p ? p.id : 'nova';
+return `<div class="patrulha-form" onclick="event.stopPropagation()">
+<input type="text" class="campo-input" id="patNome_${id}" placeholder="Nome da patrulha" value="${p ? p.nome : ''}">
+<div class="patrulha-form-row">
+<input type="color" id="patCor_${id}" value="${p ? p.cor : '#1B3B6F'}">
+<input type="text" class="campo-input" id="patIcone_${id}" placeholder="Ícone (emoji)" value="${p ? p.icone : '🏕️'}" maxlength="4">
+</div>
+<div class="roster-edicao-btns">
+<button class="btn-primario" onclick="salvarPatrulha('${id}')">💾 Salvar</button>
+<button class="btn-secundario" onclick="cancelarEdicaoPatrulha()">Cancelar</button>
+</div>
+</div>`;
+}
+
+let patrulhaMenuAbertoId = null;
+function togglePatrulhaMenu(id) {
+patrulhaMenuAbertoId = (patrulhaMenuAbertoId === id) ? null : id;
+renderRoster();
+if (patrulhaMenuAbertoId) {
+setTimeout(() => {
+document.addEventListener('click', function fechar() {
+patrulhaMenuAbertoId = null;
+renderRoster();
+document.removeEventListener('click', fechar);
+}, { once: true });
+}, 0);
+}
+}
+
+function construirCardJovem(j) {
 const n = countConcluidos(j);
 const et = etapa(n);
-const row = document.createElement('div');
 
 if (jovemEditandoId === j) {
-row.className = 'roster-row';
-row.onclick = (e) => e.stopPropagation();
-row.innerHTML = `
+return `<div class="roster-row" onclick="event.stopPropagation()">
 <div class="roster-edicao">
 <div>
 <label class="campo-label">Nome</label>
@@ -900,17 +1047,15 @@ row.innerHTML = `
 <button class="btn-primario" onclick="event.stopPropagation();salvarEdicaoJovem('${j}')">💾 Salvar</button>
 <button class="btn-secundario" onclick="event.stopPropagation();cancelarEdicaoJovem()">Cancelar</button>
 </div>
+</div>
 </div>`;
-el.appendChild(row);
-return;
 }
 
-row.className = 'roster-row' + (ativo === j ? ' active' : '');
 const initials = JNOMES[j].split(' ').map(w=>w[0]).slice(0,2).join('');
 const info = calcularIdadeInfo(DATAS_NASC[j]);
 const flagAusencia = precisaFlagAusencia(j);
 const menuAberto = jovemMenuAbertoId === j;
-row.innerHTML = `
+return `<div class="roster-row${ativo === j ? ' active' : ''}" draggable="true" ondragstart="dragJovemStart(event,'${j}')" onclick="selecionarJovem('${j}')">
 <div class="roster-linha-principal">
 <div class="roster-avatar" style="background:${JCOR[j]}">${initials}</div>
 <div class="roster-name">${flagAusencia ? `<span class="flag-ausencia" title="3+ faltas seguidas sem justificativa">🚩</span>` : ''}${JNOMES[j]}</div>
@@ -925,10 +1070,61 @@ ${info ? `<div class="roster-linha-idade">
 ${menuAberto ? `<div class="roster-dropdown" onclick="event.stopPropagation()">
 <button onclick="abrirEdicaoJovem('${j}')">✏️ Editar</button>
 <button class="remover" onclick="excluirJovem('${j}')">🗑️ Excluir</button>
+</div>` : ''}
+</div>`;
+}
+
+function construirSecaoPatrulha(patrulha, membros) {
+const cor = patrulha ? patrulha.cor : '#8A94A3';
+const nome = patrulha ? patrulha.nome : 'Sem patrulha';
+const icone = patrulha ? patrulha.icone : '❔';
+const dropId = patrulha ? patrulha.id : '';
+const editando = patrulha && patrulhaEditandoId === patrulha.id;
+const menuAberto = patrulha && patrulhaMenuAbertoId === patrulha.id;
+
+let h = `<div class="patrulha-secao">`;
+if (editando) {
+h += construirFormPatrulha(patrulha);
+} else {
+h += `<div class="patrulha-secao-header" style="background:${cor}">
+<span>${icone} ${nome}</span>
+<span class="patrulha-secao-header-direita">
+<span class="patrulha-secao-count">${membros.length}</span>
+${patrulha ? `<button class="patrulha-menu-btn" onclick="event.stopPropagation();togglePatrulhaMenu('${patrulha.id}')">⋮</button>` : ''}
+</span>
+</div>
+${menuAberto ? `<div class="patrulha-dropdown" onclick="event.stopPropagation()">
+<button onclick="abrirEdicaoPatrulha('${patrulha.id}')">✏️ Editar</button>
+<button class="remover" onclick="excluirPatrulha('${patrulha.id}')">🗑️ Excluir</button>
 </div>` : ''}`;
-row.onclick = () => { ativo = j; rosterAberto = false; renderRoster(); aplicarEstadoRoster(); renderDetail(j); document.getElementById('detail').scrollIntoView({behavior:'smooth', block:'start'}); };
-el.appendChild(row);
-});
+}
+h += `<div class="patrulha-drop-zone" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="this.classList.remove('drag-over');dropJovemEm(event,'${dropId}')">`;
+if (!membros.length) {
+h += `<div class="patrulha-vazia">Arraste jovens pra cá</div>`;
+} else {
+membros.forEach(j => { h += construirCardJovem(j); });
+}
+h += `</div></div>`;
+return h;
+}
+
+function renderRoster() {
+const elPatrulhas = document.getElementById('patrulhasContainer');
+let htmlP = '';
+if (PATRULHAS.length) {
+htmlP += '<div class="patrulhas-grid">' + PATRULHAS.map(p => {
+const membros = JOVENS.filter(j => PATRULHA_DE[j] === p.id);
+return construirSecaoPatrulha(p, membros);
+}).join('') + '</div>';
+} else if (patrulhaEditandoId !== 'nova') {
+htmlP += '<div class="eixo-blocos-hint" style="text-align:left;padding:4px 0 0;">Nenhuma patrulha criada ainda. Use o botão abaixo pra começar.</div>';
+}
+htmlP += patrulhaEditandoId === 'nova' ? construirFormPatrulha(null) : `<button class="btn-secundario" style="border-style:dashed;margin-top:10px;" onclick="abrirNovaPatrulha()">+ Nova patrulha</button>`;
+elPatrulhas.innerHTML = htmlP;
+
+const idsValidas = PATRULHAS.map(p => p.id);
+const semPatrulha = JOVENS.filter(j => !idsValidas.includes(PATRULHA_DE[j]));
+document.getElementById('roster').innerHTML = construirSecaoPatrulha(null, semPatrulha);
 }
 
 function preservarScroll(fn) {
