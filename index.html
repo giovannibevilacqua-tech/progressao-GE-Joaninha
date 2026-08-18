@@ -65,21 +65,22 @@ border: 1px solid var(--border); background: #FAFAF8; position: relative;
 .roster-row:hover { background: #ECE5D8; box-shadow: inset 3px 0 0 var(--vinho); }
 .roster-row.active { background: var(--done-bg); border-color: var(--done); }
 .roster-linha-principal {
-display: grid; grid-template-columns: 26px 76px 77px 1fr 96px 22px; align-items: center; gap: 8px;
+display: flex; align-items: center; gap: 8px;
 }
 .roster-avatar {
 width: 26px; height: 26px; border-radius: 50%;
 display: flex; align-items: center; justify-content: center;
 font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0;
 }
-.roster-name { font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-.roster-track { height: 9px; background: #EEEBE7; border-radius: 20px; overflow: hidden; }
+.roster-name { flex: 1; font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.roster-track { flex: 1; height: 9px; background: #EEEBE7; border-radius: 20px; overflow: hidden; }
 .roster-bar { height: 100%; background: var(--vinho); border-radius: 20px; }
+.roster-linha-progresso { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
 .roster-etapa {
 font-size: 11px; font-weight: 800; text-align: center; white-space: nowrap;
-padding: 4px 6px; border-radius: 20px;
+padding: 4px 8px; border-radius: 20px; flex-shrink: 0;
 }
-.roster-menu-btn { border: none; background: none; color: var(--muted); font-size: 16px; font-weight: 900; cursor: pointer; padding: 2px 6px; border-radius: 6px; line-height: 1; justify-self: center; }
+.roster-menu-btn { border: none; background: none; color: var(--muted); font-size: 16px; font-weight: 900; cursor: pointer; padding: 2px 6px; border-radius: 6px; line-height: 1; flex-shrink: 0; }
 .roster-menu-btn:hover { background: #F0EDE8; color: var(--text); }
 .roster-dropdown {
 position: absolute; top: 38px; right: 10px; background: var(--card); border: 1px solid var(--border);
@@ -91,10 +92,10 @@ border: none; background: var(--card); color: var(--text); cursor: pointer;
 }
 .roster-dropdown button:hover { background: #F5F3EF; }
 .roster-dropdown button.remover { color: #E74C3C; }
-.roster-linha-idade { display: flex; align-items: center; gap: 4px; }
+.roster-linha-idade { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
 .idade-track { position: relative; flex: 1; height: 4px; border-radius: 20px; overflow: hidden; background: #EEEBE7; }
 .idade-fill { height: 100%; border-radius: 20px; }
-.idade-label { font-size: 9px; font-weight: 700; color: var(--muted); white-space: nowrap; }
+.idade-label { font-size: 9px; font-weight: 700; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
 .idade-label.caminho { color: #E74C3C; font-weight: 900; }
 .roster-edicao { display: flex; flex-direction: column; gap: 8px; }
 .roster-edicao .btn-primario, .roster-edicao .btn-secundario { margin-top: 0; }
@@ -1059,13 +1060,15 @@ return `<div class="roster-row${ativo === j ? ' active' : ''}" draggable="true" 
 <div class="roster-linha-principal">
 <div class="roster-avatar" style="background:${JCOR[j]}">${initials}</div>
 <div class="roster-name">${flagAusencia ? `<span class="flag-ausencia" title="3+ faltas seguidas sem justificativa">🚩</span>` : ''}${JNOMES[j]}</div>
+<button class="roster-menu-btn" onclick="event.stopPropagation();toggleJovemMenu('${j}')">⋮</button>
+</div>
 ${info ? `<div class="roster-linha-idade">
 <div class="idade-track"><div class="idade-fill" style="width:${info.pct}%;background:${info.cor}"></div></div>
 <div class="idade-label${info.mesesFaltantes <= 0 ? ' caminho' : ''}">${info.mesesFaltantes <= 0 ? 'CAMINHO' : info.mesesFaltantes + ' meses'}</div>
-</div>` : '<div class="roster-linha-idade"></div>'}
+</div>` : ''}
+<div class="roster-linha-progresso">
 <div class="roster-track"><div class="roster-bar" style="width:${Math.round(n/18*100)}%;background:${JCOR[j]}"></div></div>
 <div class="roster-etapa" style="background:${et.bg || et.c+'22'};color:${et.c}">${n}/18 &middot; ${et.l}</div>
-<button class="roster-menu-btn" onclick="event.stopPropagation();toggleJovemMenu('${j}')">⋮</button>
 </div>
 ${menuAberto ? `<div class="roster-dropdown" onclick="event.stopPropagation()">
 <button onclick="abrirEdicaoJovem('${j}')">✏️ Editar</button>
@@ -1902,6 +1905,20 @@ return `<div class="ciclo-card">
 </div>`;
 }).join('');
 }
+
+let scrollAutoIntervalo = null;
+document.addEventListener('dragover', function(e) {
+const margem = 90;
+const velocidade = 14;
+clearInterval(scrollAutoIntervalo);
+if (e.clientY < margem) {
+scrollAutoIntervalo = setInterval(() => window.scrollBy(0, -velocidade), 16);
+} else if (e.clientY > window.innerHeight - margem) {
+scrollAutoIntervalo = setInterval(() => window.scrollBy(0, velocidade), 16);
+}
+});
+document.addEventListener('dragend', function() { clearInterval(scrollAutoIntervalo); });
+document.addEventListener('drop', function() { clearInterval(scrollAutoIntervalo); });
 
 async function iniciar() {
 document.getElementById('roster').innerHTML = '<div style="padding:12px;font-size:12px;color:var(--muted);text-align:center;">Carregando dados compartilhados…</div>';
