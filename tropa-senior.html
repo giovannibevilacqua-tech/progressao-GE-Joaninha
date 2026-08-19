@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ciclo de Programa 2S2026/1S2027 — GE Joaninha (Tropa Sênior)</title>
+<style>
+:root{
+  --vinho:#6D1026;--vinho2:#9C1B3A;--azul:#1B3B6F;--azul2:#2A5298;
+  --hv:#F8D7E3;--hv-b:#9C1B6E;--hv-t:#5A0035;
+  --ma:#D7EDD9;--ma-b:#2D7A3A;--ma-t:#174A1E;
+  --pd:#D3E8FA;--pd-b:#1B5FAA;--pd-t:#0A2F5A;
+  --sb:#FDEED7;--sb-b:#CC6C00;--sb-t:#7A3800;
+  --done:#27AE60;--done-bg:#D5F5E3;--done-dark:#1E8449;
+  --focus-y:#FFFBEA;--focus-b:#F39C12;
+  --bg:#F0EDE8;--card:#FFF;--text:#1A1A1A;--muted:#666;
+  --border:#E0D8D0;--r:10px;--shadow:0 2px 8px rgba(0,0,0,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* HEADER */
+.header{background:linear-gradient(160deg,var(--vinho) 0%,var(--vinho2) 60%,#B03050 100%);color:#fff;padding:20px 16px 16px;text-align:center;}
+.header-flor{font-size:26px;margin-bottom:4px;}
+.header h1{font-size:16px;font-weight:800;letter-spacing:.5px;line-height:1.3;}
+.header .sub{font-size:11px;opacity:.82;margin-top:3px;}
+.header-chips{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-top:9px;}
+.chip{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:20px;font-size:10px;font-weight:600;padding:3px 9px;}
+
+/* TABS */
+.tabs{display:flex;background:#fff;border-bottom:2px solid var(--border);position:sticky;top:0;z-index:200;box-shadow:0 2px 6px rgba(0,0,0,.1);overflow-x:auto;}
+.tab-btn{flex:1;min-width:80px;padding:12px 6px;border:none;background:transparent;font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;position:relative;transition:color .2s;white-space:nowrap;}
+.tab-btn.active{color:var(--vinho);}
+.tab-btn.active::after{content:'';position:absolute;bottom:-2px;left:0;right:0;height:2px;background:var(--vinho);}
+.tab-content{display:none;padding-bottom:32px;}
+.tab-content.active{display:block;}
+
+/* ALERTS */
+.alert{margin:12px 12px 0;background:var(--focus-y);border-left:4px solid var(--focus-b);border-radius:0 var(--r) var(--r) 0;padding:9px 11px;font-size:11px;color:#7A4A00;line-height:1.5;}
+
+/* PROGRESS BARS */
+.progress-section{margin:12px 12px 0;background:var(--card);border-radius:var(--r);padding:13px 13px 9px;box-shadow:var(--shadow);}
+.section-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:11px;}
+.prog-row{margin-bottom:9px;}
+.prog-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+.prog-name{font-size:12px;font-weight:700;}
+.prog-etapa{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;}
+.prog-track{background:#EEEBE7;border-radius:20px;height:9px;overflow:hidden;}
+.prog-bar{height:100%;border-radius:20px;transition:width .5s ease;}
+.prog-hint{font-size:10px;color:var(--muted);margin-top:7px;line-height:1.5;border-top:1px solid var(--border);padding-top:7px;}
+
+/* EIXO HEADER */
+.eixo-hdr{display:flex;align-items:center;gap:7px;margin:14px 12px 6px;padding:9px 11px;border-radius:var(--r);font-size:12px;font-weight:800;letter-spacing:.3px;border-left:4px solid;}
+.eixo-icon{font-size:14px;}
+.eixo-stats{font-size:10px;font-weight:600;margin-left:auto;opacity:.7;}
+
+/* ACCORDION BLOCKS */
+.block-list{margin:0 12px;display:flex;flex-direction:column;gap:6px;}
+.block-item{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;}
+.block-item[open] .block-arrow{transform:rotate(90deg);}
+.block-summary{display:flex;align-items:center;gap:8px;padding:11px 12px;cursor:pointer;list-style:none;user-select:none;-webkit-user-select:none;}
+.block-summary::-webkit-details-marker{display:none;}
+.block-arrow{font-size:10px;color:var(--muted);transition:transform .2s;flex-shrink:0;}
+.block-info{flex:1;min-width:0;}
+.block-title{font-size:12px;font-weight:700;line-height:1.3;}
+.block-meta{font-size:10px;color:var(--muted);margin-top:2px;}
+.block-badges{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto;flex-shrink:0;}
+.b-badge{width:20px;height:20px;border-radius:50%;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.b-done{background:var(--done);color:#fff;}
+.b-part{background:#F39C12;color:#fff;}
+.b-none{background:#E0E0E0;color:#999;}
+.focus-tag{display:inline-block;background:var(--focus-b);color:#fff;font-size:8px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;vertical-align:middle;}
+.semester-tag{display:inline-block;font-size:8px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:3px;vertical-align:middle;}
+.sem1-tag{background:#E8F5E9;color:#2D6E3E;}
+.sem2-tag{background:#E3F2FD;color:#1B5FAA;}
+
+/* BLOCK BODY */
+.block-body{padding:0 12px 12px;border-top:1px solid #F5F2EE;}
+.actions-section{margin-top:10px;}
+.actions-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.fixed-label{color:#C0392B;}
+.var-label{color:var(--azul);}
+.actions-table-wrap{overflow-x:auto;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.08);}
+.actions-table{width:100%;border-collapse:collapse;min-width:360px;background:var(--card);}
+.actions-table th{background:var(--azul);color:#fff;padding:6px 5px;font-size:10px;font-weight:700;text-align:center;white-space:nowrap;}
+.actions-table th.act-col{text-align:left;padding-left:8px;min-width:130px;}
+.actions-table td{padding:6px 5px;border-bottom:1px solid #F0EDE8;font-size:10px;vertical-align:middle;text-align:center;}
+.actions-table td.act-col{text-align:left;padding-left:8px;line-height:1.4;font-weight:500;}
+.actions-table tr:last-child td{border-bottom:none;}
+.actions-table tr:nth-child(even){background:#FAFAF8;}
+.actions-table tr.fixed-row{background:#FFF5F5;}
+.cb{width:26px;height:26px;border-radius:7px;margin:auto;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;border:2px solid transparent;font-size:14px;font-weight:700;user-select:none;-webkit-user-select:none;}
+.cb.done{background:var(--done);color:#fff;border-color:var(--done-dark);}
+.cb.pending{background:#EDEBE8;color:#C0BCB7;border-color:#DDD9D4;}
+.cb.pending:hover{background:var(--done-bg);border-color:var(--done);color:var(--done);}
+.cb.done:hover{background:#E74C3C;border-color:#C0392B;}
+.cb.camp-only{background:#E3F2FD;color:#1565C0;border-color:#BBDEFB;cursor:default;}
+
+/* RESET BTN */
+.reset-btn{display:block;margin:14px auto 0;background:none;border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:11px;color:var(--muted);cursor:pointer;}
+.reset-btn:hover{border-color:#E74C3C;color:#E74C3C;}
+
+/* CALENDAR */
+.cal-section-hdr{margin:14px 12px 8px;font-size:13px;font-weight:800;color:var(--vinho);display:flex;align-items:center;gap:8px;}
+.cal-section-hdr::after{content:'';flex:1;height:1px;background:var(--border);}
+.cal-list{padding:0 12px;display:flex;flex-direction:column;gap:8px;}
+.cal-card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);display:flex;overflow:hidden;}
+.cal-strip{width:55px;min-width:55px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px;color:#fff;text-align:center;}
+.strip-idx{font-size:8px;font-weight:700;opacity:.65;letter-spacing:.5px;}
+.strip-day{font-size:18px;font-weight:900;line-height:1.1;}
+.strip-mon{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-top:1px;}
+.cal-body{flex:1;padding:10px 11px;}
+.cal-meta{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;}
+.fmt-badge{font-size:9px;font-weight:800;padding:2px 7px;border-radius:20px;letter-spacing:.5px;}
+.fmt-T{background:#EBF5FB;color:#1565C0;}
+.fmt-P{background:#F4ECF7;color:#6A1B9A;}
+.fmt-PN{background:#D6EAF8;color:#0D47A1;}
+.fmt-Av{background:#EAFAF1;color:#1A7434;}
+.fmt-Esp{background:#FFF9C4;color:#7A4A00;}
+.bloco-tag{font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--focus-y);color:#7A4800;border:1px solid #F5CBA7;}
+.comp-tag{font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;background:#F9EAF0;color:#7A1030;border:1px solid #F1A7BD;}
+.special-banner{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:900;padding:2px 7px;border-radius:4px;margin-bottom:4px;letter-spacing:.5px;}
+.banner-camp{background:#2D6E3E;color:#fff;}
+.banner-enduro{background:#C96A00;color:#fff;}
+.banner-sem{background:#E74C3C;color:#fff;}
+.cal-text{font-size:11px;color:#3A3A3A;line-height:1.55;}
+.cal-text em{color:var(--muted);font-style:normal;font-size:10px;}
+.strip-normal{background:var(--vinho);}
+.strip-leve{background:#78909C;}
+.strip-pernoite{background:#1565C0;}
+.strip-planejar{background:#6A1B9A;}
+.strip-avaliar{background:#1A7434;}
+.strip-sem{background:#B0BEC5;}
+
+/* LEGENDA CAL */
+.cal-legend{margin:12px 12px 0;background:var(--card);border-radius:var(--r);padding:11px 13px;box-shadow:var(--shadow);}
+.legend-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:10px;}
+.legend-dot{width:11px;height:11px;border-radius:3px;flex-shrink:0;}
+
+/* SEMESTRES TAB */
+.sem-section{margin:14px 12px 0;}
+.sem-header{background:linear-gradient(135deg,var(--vinho) 0%,var(--vinho2) 100%);color:#fff;border-radius:var(--r) var(--r) 0 0;padding:12px 14px;}
+.sem-header h3{font-size:14px;font-weight:800;margin-bottom:2px;}
+.sem-header .period{font-size:11px;opacity:.85;}
+.sem-body{background:var(--card);border-radius:0 0 var(--r) var(--r);padding:12px 14px;box-shadow:var(--shadow);}
+.sem-blocks{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}
+.sem-block-row{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;font-size:11px;}
+.sem-block-num{font-size:10px;font-weight:800;color:var(--muted);width:18px;flex-shrink:0;}
+.sem-block-name{font-weight:600;flex:1;}
+.sem-eixo-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.sem-special{margin-top:10px;border-top:1px solid var(--border);padding-top:10px;}
+.sem-special-item{display:flex;align-items:flex-start;gap:6px;font-size:11px;margin-bottom:6px;}
+.sem-special-icon{font-size:14px;flex-shrink:0;}
+.milestone-box{margin-top:10px;border-top:1px solid var(--border);padding-top:10px;}
+.milestone-item{display:flex;align-items:center;gap:6px;margin-bottom:5px;font-size:11px;}
+.milestone-star{font-size:16px;}
+.milestone-text{font-weight:600;}
+.milestone-sub{font-size:10px;color:var(--muted);}
+.prog-overview{margin-top:10px;border-top:1px solid var(--border);padding-top:10px;}
+.prog-overview-title{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:8px;}
+.prog-mini-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.prog-mini-name{font-size:11px;font-weight:700;width:70px;flex-shrink:0;}
+.prog-mini-track{flex:1;background:#EEEBE7;border-radius:20px;height:7px;overflow:hidden;}
+.prog-mini-bar{height:100%;border-radius:20px;}
+.prog-mini-label{font-size:10px;color:var(--muted);width:60px;text-align:right;flex-shrink:0;}
+</style>
+</head>
+<body>
+
+
+<header class="header">
+  <div class="header-flor">⚜</div>
+  <h1>CICLO DE PROGRAMA OFICIAL<br>2S2026 / 1S2027</h1>
+  <div class="sub">Ramo Sênior — Grupo Escoteiro Joaninha — Diadema/SP</div>
+  <div class="header-chips">
+    <span class="chip">Ago/26 → Jun/27</span>
+    <span class="chip">11 blocos</span>
+    <span class="chip">5 jovens</span>
+    <span class="chip">Paulo e Thauany: Reconhecimento</span>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab-btn active" onclick="showTab('prog',this)">⚡ Progressão</button>
+  <button class="tab-btn" onclick="showTab('cal',this)">📅 Calendário</button>
+  <button class="tab-btn" onclick="showTab('sem',this)">🗓 Semestres</button>
+  <button class="tab-btn" onclick="showTab('jovens',this)">👥 Jovens</button>
+</nav>
+
+<!-- ═══ TAB: PROGRESSÃO ═══════════════════════════════ -->
+<div id="prog" class="tab-content active">
+<div id="carregando-aviso" style="padding:18px;text-align:center;color:#666;font-size:12px;">Carregando dados da Tropa Sênior…</div>
+  <div class="alert">
+    Toque em ▶ para expandir um bloco e ver os sub-itens. Toque no ✓ para marcar ou desmarcar cada ação por jovem. Salvo automaticamente.
+  </div>
+  <div class="progress-section">
+    <div class="section-label">Progresso por Jovem</div>
+    <div id="pbars"></div>
+    <div class="prog-hint">
+      Escalada: 0–5 ✓ &nbsp;|&nbsp; Conquista: 6–11 ✓ &nbsp;|&nbsp; Azimute: 12–17 ✓ &nbsp;|&nbsp; Reconhecimento Escoteiro da Pátria: 18 ✓
+    </div>
+  </div>
+
+  <div class="eixo-hdr" style="background:var(--hv);border-color:var(--hv-b);color:var(--hv-t);">
+    <span class="eixo-icon">⚙</span><span>Habilidades para a Vida</span>
+    <span class="eixo-stats" id="stats-hv"></span>
+  </div>
+  <div class="block-list" id="bl-hv"></div>
+
+  <div class="eixo-hdr" style="background:var(--ma);border-color:var(--ma-b);color:var(--ma-t);">
+    <span class="eixo-icon">🌿</span><span>Meio Ambiente</span>
+    <span class="eixo-stats" id="stats-ma"></span>
+  </div>
+  <div class="block-list" id="bl-ma"></div>
+
+  <div class="eixo-hdr" style="background:var(--pd);border-color:var(--pd-b);color:var(--pd-t);">
+    <span class="eixo-icon">🕊</span><span>Paz e Desenvolvimento</span>
+    <span class="eixo-stats" id="stats-pd"></span>
+  </div>
+  <div class="block-list" id="bl-pd"></div>
+
+  <div class="eixo-hdr" style="background:var(--sb);border-color:var(--sb-b);color:var(--sb-t);">
+    <span class="eixo-icon">💪</span><span>Saúde e Bem-estar</span>
+    <span class="eixo-stats" id="stats-sb"></span>
+  </div>
+  <div class="block-list" id="bl-sb"></div>
+
+  <button class="reset-btn" onclick="confirmReset()">↺ Restaurar dados iniciais</button>
+</div>
+
+<!-- ═══ TAB: CALENDÁRIO ═══════════════════════════════ -->
+<div id="cal" class="tab-content">
+  <div style="margin-top:12px;">
+
+    <!-- Resumo de Presenças -->
+    <div style="margin:0 12px 12px;background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;">
+      <div style="background:var(--azul);padding:10px 13px;display:flex;align-items:center;justify-content:space-between;">
+        <span style="color:#fff;font-size:12px;font-weight:800;">📋 Resumo de Presenças</span>
+        <span style="color:rgba(255,255,255,.7);font-size:10px;">3 faltas = inscrição reavaliada</span>
+      </div>
+      <div id="presenca-summary" style="padding:8px 13px 10px;"></div>
+    </div>
+
+    <div class="cal-legend" style="margin-top:0;">
+      <div class="section-label">Legenda</div>
+      <div class="legend-grid">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--vinho)"></div>Tropa (T)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#6A1B9A"></div>Patrulha (P)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#1565C0"></div>Pernoite (PN)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#1A7434"></div>Avaliação (Av)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#78909C"></div>Atividade Leve</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#B0BEC5"></div>Sem atividade</div>
+      </div>
+    </div>
+
+    <div class="cal-section-hdr">📅 2º Semestre 2026</div>
+    <div class="cal-list" id="cal-2s26"></div>
+
+    <div class="cal-section-hdr" style="margin-top:20px;">📅 1º Semestre 2027</div>
+    <div class="cal-list" id="cal-1s27"></div>
+  </div>
+</div>
+
+<!-- ═══ TAB: SEMESTRES ═══════════════════════════════ -->
+<div id="sem" class="tab-content">
+  <div id="sem-content" style="padding-bottom:8px;"></div>
+</div>
+
+<!-- ═══ TAB: JOVENS ══════════════════════════════ -->
+<div id="jovens" class="tab-content">
+  <div class="alert" style="margin-top:12px;">
+    As cores vão do <strong style="color:#27AE60">verde</strong> (mais tempo no ramo) ao <strong style="color:#E74C3C">vermelho</strong> (menos tempo). Clique em <strong>Atualizar</strong> para recalcular com a data de hoje.
+  </div>
+  <div style="margin:12px 12px 0;display:flex;justify-content:space-between;align-items:center;">
+    <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">
+      Calculado em: <span id="calc-date" style="color:var(--text);font-weight:800;">—</span>
+    </div>
+    <button onclick="renderJovens()" style="background:var(--vinho);color:#fff;border:none;border-radius:20px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 2px 6px rgba(109,16,38,.3);">↺ Atualizar</button>
+  </div>
+  <div id="jovens-cards" style="padding:12px;display:flex;flex-direction:column;gap:10px;"></div>
+</div>
+
+
+<script>
+// ╔═══════════════════════════════════════════════════╗
+// ║                    DADOS                          ║
+// ╚═══════════════════════════════════════════════════╝
+let JOVENS = ['paulo','thauany','clara','matheus','wesley'];
+let JNOMES = ['Paulo','Thauany','Clara','Matheus','Wesley'];
+let JCORES = ['#6D1026','#1B3B6F','#2D6E3E','#6A1B9A','#CC6C00'];
+
+// Blocos: id, name, eixo, focus(bool), semester(0=nao foco,1=2S26,2=1S27), campoOnly(bool)
+// fixed: [{id,name}], variable: [{id,name}]
+const BLOCKS = [
+  // ─── HABILIDADES PARA A VIDA ───
+  {id:'aprendizagem',name:'Aprendizagem Contínua e Des. Vocacional',eixo:'hv',focus:false,semester:0,
+   fixed:[{id:'f1',name:'Conquistar especialidade de novo interesse no Ramo Sênior'}],
+   variable:[
+     {id:'v1',name:'Explorar áreas profissionais em Feira de Profissões ou entrevistas'},
+     {id:'v2',name:'Engajar em voluntariado ou estágio em instituição de interesse'},
+     {id:'v3',name:'Participar de palestras de orientação vocacional ou planejamento'},
+     {id:'v4',name:'Participar de feiras, mostras ou eventos científicos/escolares'},
+     {id:'v5',name:'Organizar atividade vocacional para a patrulha ou tropa'},
+     {id:'v6',name:'Organizar oficina, curso ou palestra para a tropa sobre tema de interesse'},
+   ]},
+  {id:'autonomia',name:'Autonomia e Liderança',eixo:'hv',focus:false,semester:0,
+   fixed:[{id:'f1',name:'Ação fixa de liderança (conforme mAPPa)'}],
+   variable:[
+     {id:'v1',name:'Ações variáveis de liderança e autonomia (5 de 7 concluídas — verificar mAPPa)'},
+     {id:'v2',name:'Implementar estratégia financeira para a patrulha ou tropa'},
+     {id:'v3',name:'Captação de recursos para a patrulha ou tropa'},
+   ]},
+  {id:'criatividade',name:'Criatividade e Inovação',eixo:'hv',focus:true,semester:1,
+   fixed:[{id:'f1',name:'Ação fixa de criatividade/inovação (conforme mAPPa)'}],
+   variable:[
+     {id:'v1',name:'Noite cultural da patrulha ou tropa'},
+     {id:'v2',name:'Produção de vídeo criativo sobre tema de interesse'},
+     {id:'v3',name:'Participação em concursos culturais ou de inovação'},
+     {id:'v4',name:'Fogo de Conselho com tema criativo'},
+     {id:'v5',name:'Apresentação artística individual ou coletiva'},
+     {id:'v6',name:'Mostra de interesse pessoal para a tropa'},
+     {id:'v7',name:'Atividade "Horizonte" simplificada'},
+   ]},
+  {id:'inteligencia',name:'Inteligência Emocional',eixo:'hv',focus:false,semester:0,
+   fixed:[{id:'f1',name:'Ação fixa 1 de inteligência emocional (concluída)'},
+          {id:'f2',name:'Ação fixa 2 de inteligência emocional (concluída)'}],
+   variable:[
+     {id:'v1',name:'Todas as ações variáveis concluídas (verificar mAPPa)'},
+   ]},
+
+  // ─── MEIO AMBIENTE ───
+  {id:'consumo',name:'Consumo Responsável',eixo:'ma',focus:true,semester:1,
+   fixed:[],
+   variable:[
+     {id:'v1',name:'Organizar brechó beneficente'},
+     {id:'v2',name:'Liderar separação de resíduos na patrulha ou comunidade'},
+     {id:'v3',name:'Visitar estação de tratamento de resíduos'},
+     {id:'v4',name:'Desenvolver projeto de descarte eletrônico responsável'},
+     {id:'v5',name:'Organizar oficina ou debate sobre consumo consciente'},
+     {id:'v6',name:'Preparar receita com cascas e aproveitamento alimentar'},
+     {id:'v7',name:'Visitar cooperativa de reciclagem'},
+   ]},
+  {id:'mudancas',name:'Mudanças Climáticas',eixo:'ma',focus:true,semester:2,
+   fixed:[],
+   variable:[
+     {id:'v1',name:'Usar ferramentas meteorológicas para análise climática'},
+     {id:'v2',name:'Desenvolver projeto sobre mudanças climáticas'},
+     {id:'v3',name:'Participar de clubes ou grupos de sustentabilidade'},
+     {id:'v4',name:'Organizar atividade ecológica urbana'},
+     {id:'v5',name:'Usar transporte coletivo ou energia renovável de forma consciente'},
+     {id:'v6',name:'Projeto comunitário de reaproveitamento de recursos'},
+   ]},
+  {id:'preservacao',name:'Preservação da Biodiversidade',eixo:'ma',focus:true,semester:2,
+   fixed:[{id:'f1',name:'Participar de atividade em Área de Proteção Ambiental (APA)'}],
+   variable:[
+     {id:'v1',name:'Colaborar com ONG ou projeto ambiental'},
+     {id:'v2',name:'Coletar dados de espécies ou qualidade da água'},
+     {id:'v3',name:'Usar transporte coletivo em atividade ambiental'},
+     {id:'v4',name:'Participar de eventos de biodiversidade'},
+     {id:'v5',name:'Desenvolver projeto sobre fauna local'},
+     {id:'v6',name:'Realizar plantio de árvores ou jardim'},
+     {id:'v7',name:'Organizar campanha de conscientização ambiental'},
+     {id:'v8',name:'Palestras sobre biodiversidade para a tropa ou comunidade'},
+   ]},
+  {id:'vida_ar',name:'Vida ao Ar Livre',eixo:'ma',focus:true,semester:1,campOnly:true,
+   fixed:[
+     {id:'f1',name:'Montar campo de patrulha completo'},
+     {id:'f2',name:'Escolher e preparar local de barraca'},
+     {id:'f3',name:'Manusear ferramentas de corte com segurança'},
+     {id:'f4',name:'Preparar fogueiras (acender, manter, apagar)'},
+     {id:'f5',name:'Planejar e executar excursão de patrulha'},
+     {id:'f6',name:'Aplicar nós e amarras escoteiros'},
+     {id:'f7',name:'Planejar acampamento de patrulha (logística completa)'},
+     {id:'f8',name:'Orientar-se com carta/mapa e bússola'},
+   ],
+   variable:[
+     {id:'v1',name:'Selecionar materiais e equipamentos de campo'},
+     {id:'v2',name:'Construir pioneiria funcional'},
+     {id:'v3',name:'Técnicas de ancoragem'},
+     {id:'v4',name:'Usar transporte coletivo em atividade ao ar livre'},
+     {id:'v5',name:'Acampamento volante'},
+     {id:'v6',name:'Acondicionamento e conservação de alimentos em campo'},
+     {id:'v7',name:'Pernoite em acampamento ou atividade aventureira'},
+     {id:'v8',name:'Rafting, canoagem ou atividade embarcada'},
+     {id:'v9',name:'Atividades aquáticas em geral'},
+     {id:'v10',name:'Acampamento comunitário com outras patrulhas ou grupos'},
+   ]},
+
+  // ─── PAZ E DESENVOLVIMENTO ───
+  {id:'comunidade',name:'Comunidade',eixo:'pd',focus:true,semester:1,
+   fixed:[
+     {id:'f1',name:'Realizar 1ª atividade comunitária estruturada'},
+     {id:'f2',name:'Realizar 2ª atividade comunitária estruturada'},
+   ],
+   variable:[
+     {id:'v1',name:'Levantar necessidades da comunidade local'},
+     {id:'v2',name:'Planejar e executar ação comunitária coletiva'},
+     {id:'v3',name:'Apresentar resultados da ação à tropa ou comunidade'},
+     {id:'v4',name:'Articular parceria com instituição ou organização local'},
+     {id:'v5',name:'Participar de iniciativa ou evento comunitário externo'},
+     {id:'v6',name:'Desenvolver projeto de impacto social na comunidade'},
+   ]},
+  {id:'democracia',name:'Democracia',eixo:'pd',focus:true,semester:2,
+   fixed:[
+     {id:'f1',name:'Conselho de Patrulha democrático'},
+     {id:'f2',name:'Assembleia de Tropa com pauta e votação'},
+     {id:'f3',name:'Eleição de monitor da patrulha'},
+   ],
+   variable:[
+     {id:'v1',name:'Atividade democrática da seção'},
+     {id:'v2',name:'Dinâmicas de mediação de conflitos'},
+     {id:'v3',name:'Visitar audiência pública ou câmara de vereadores'},
+     {id:'v4',name:'Obter ou planejar obtenção do título de eleitor'},
+     {id:'v5',name:'Organizar campanha educativa democrática'},
+     {id:'v6',name:'Assembleia do grupo escoteiro'},
+     {id:'v7',name:'Fórum de jovens do grupo'},
+     {id:'v8',name:'Participar de grêmio estudantil ou similar'},
+   ]},
+  {id:'heranca',name:'Herança Cultural',eixo:'pd',focus:true,semester:1,
+   fixed:[{id:'f1',name:'Participar de cerimônia de abertura cultural'}],
+   variable:[
+     {id:'v1',name:'Identificar núcleos culturais da região'},
+     {id:'v2',name:'Expedição cultural a sítio ou evento histórico'},
+     {id:'v3',name:'Recepção de membros do movimento de outras regiões'},
+     {id:'v4',name:'Tour histórico pela região'},
+     {id:'v5',name:'Expressão artística ligada à herança cultural'},
+     {id:'v6',name:'Participar ou organizar festival cultural'},
+     {id:'v7',name:'Peça teatral ou performance cultural'},
+     {id:'v8',name:'Apresentação em evento regional escoteiro'},
+   ]},
+  {id:'paz',name:'Promoção da Paz',eixo:'pd',focus:true,semester:1,
+   fixed:[{id:'f1',name:'Participar de ação colaborativa sobre cultura de paz e diferenças'}],
+   variable:[
+     {id:'v1',name:'Organizar mesa redonda sobre temas de paz e diversidade'},
+     {id:'v2',name:'Participar de atividades ligadas à promoção da paz'},
+     {id:'v3',name:'Atividade com a patrulha sobre paz e convivência'},
+     {id:'v4',name:'Simulação da ONU ou Parlamento Jovem'},
+     {id:'v5',name:'Atividade conjunta com outra unidade escoteira'},
+     {id:'v6',name:'Jantar internacional com culinária de diferentes culturas'},
+     {id:'v7',name:'Momento inter-religioso de respeito e diálogo'},
+     {id:'v8',name:'Uso consciente de transporte coletivo em atividade de paz'},
+   ]},
+  {id:'valores',name:'Valores',eixo:'pd',focus:false,semester:0,
+   fixed:[{id:'f1',name:'Avaliar vivência pessoal da Promessa e Lei Escoteira'}],
+   variable:[
+     {id:'v1',name:'Avaliação da progressão pessoal com escotista'},
+     {id:'v2',name:'Explicar Lei e Promessa para novos membros'},
+     {id:'v3',name:'Auxiliar companheiro em momento de dificuldade'},
+     {id:'v4',name:'Debate sobre notícias e valores cidadãos'},
+   ]},
+
+  // ─── SAÚDE E BEM-ESTAR ───
+  {id:'cuidado',name:'Cuidado com o Corpo',eixo:'sb',focus:false,semester:0,
+   fixed:[{id:'f1',name:'Ação fixa 1 cuidado físico (concluída por Paulo/Thauany)'},
+          {id:'f2',name:'Ação fixa 2 cuidado físico (concluída por Paulo/Thauany)'}],
+   variable:[
+     {id:'v1',name:'Atividades físicas variadas e reflexão'},
+     {id:'v2',name:'Oficinas inclusivas de habilidades físicas'},
+     {id:'v3',name:'Workshop ou palestra sobre saúde'},
+     {id:'v4',name:'Materiais e técnicas de primeiros socorros'},
+     {id:'v5',name:'Pesquisa sobre saúde física e mental'},
+     {id:'v6',name:'Outros (verificar mAPPa)'},
+   ]},
+  {id:'espiritualidade',name:'Espiritualidade',eixo:'sb',focus:true,semester:1,
+   fixed:[],
+   variable:[
+     {id:'v1',name:'Participar de projetos de conexão espiritual'},
+     {id:'v2',name:'Momentos de silêncio, oração ou meditação'},
+     {id:'v3',name:'Celebrações religiosas ou espirituais diversas'},
+     {id:'v4',name:'Momento de reflexão sobre sentido da vida'},
+   ]},
+  {id:'habitos',name:'Hábitos Saudáveis',eixo:'sb',focus:true,semester:2,
+   fixed:[
+     {id:'f1',name:'Praticar atividades físicas regulares e registrar'},
+     {id:'f2',name:'Planejar cardápio saudável para atividade de campo'},
+   ],
+   variable:[
+     {id:'v1',name:'Manter canto da patrulha organizado e limpo'},
+     {id:'v2',name:'Preparar almoço equilibrado em atividade'},
+     {id:'v3',name:'Manter rotina de higiene em expedições e acampamentos'},
+     {id:'v4',name:'Praticar meditação, yoga ou técnica de relaxamento'},
+     {id:'v5',name:'Elaborar plano pessoal de hábitos saudáveis'},
+   ]},
+  {id:'saude_mental',name:'Saúde Mental',eixo:'sb',focus:false,semester:0,
+   fixed:[{id:'f1',name:'Ação fixa 1 saúde mental (concluída por Paulo/Thauany/Clara/Matheus)'},
+          {id:'f2',name:'Ação fixa 2 saúde mental (concluída por Paulo/Thauany/Clara/Matheus)'}],
+   variable:[
+     {id:'v1',name:'Atividade em patrulha sobre bem-estar mental'},
+     {id:'v2',name:'Hábitos para aliviar tensão e promover equilíbrio'},
+     {id:'v3',name:'Técnicas de autoexpressão e comunicação'},
+     {id:'v4',name:'Convidar profissionais de saúde mental para falar'},
+     {id:'v5',name:'Organizar rotina mensal de bem-estar'},
+   ]},
+  {id:'vinculos',name:'Vínculos Saudáveis',eixo:'sb',focus:false,semester:0,
+   fixed:[{id:'f1',name:'Ação fixa de vínculos saudáveis (concluída)'}],
+   variable:[
+     {id:'v1',name:'Encontro social da patrulha'},
+     {id:'v2',name:'Equipe de interesse com vínculos afetivos'},
+     {id:'v3',name:'Reuniões regulares com escuta e apoio'},
+     {id:'v4',name:'Responsabilidades familiares e diálogo respeitoso'},
+     {id:'v5',name:'Roda de conversa sobre relacionamentos saudáveis'},
+     {id:'v6',name:'Convidar colega de fora do movimento'},
+   ]},
+];
+
+// [paulo, thauany, clara, matheus, wesley]  1=feito, 0=não feito
+const INICIAL = {
+  aprendizagem:{concluded:[1,1,1,1,0],
+    f:{f1:[1,1,1,1,0]},
+    v:{v1:[1,1,1,0,0],v2:[1,1,0,0,0],v3:[1,1,0,0,0],v4:[1,1,1,0,0],v5:[0,0,0,0,0],v6:[0,0,0,0,0]}},
+  autonomia:{concluded:[1,1,1,1,0],
+    f:{f1:[1,1,1,1,0]},
+    v:{v1:[1,1,1,1,0],v2:[0,0,0,0,0],v3:[0,0,0,0,0]}},
+  criatividade:{concluded:[1,0,0,0,0],
+    f:{f1:[1,0,0,0,0]},
+    v:{v1:[1,0,0,0,0],v2:[1,1,0,0,0],v3:[1,0,0,0,0],v4:[0,0,0,0,0],v5:[0,0,0,0,0],v6:[0,0,0,0,0],v7:[0,0,0,0,0]}},
+  inteligencia:{concluded:[1,1,1,1,0],
+    f:{f1:[1,1,1,1,0],f2:[1,1,1,1,0]},
+    v:{v1:[1,1,1,1,0]}},
+  consumo:{concluded:[0,0,0,0,0],
+    f:{},
+    v:{v1:[1,1,0,1,0],v2:[0,0,1,0,0],v3:[0,0,0,0,0],v4:[0,0,1,0,0],v5:[0,0,0,0,0],v6:[0,0,0,0,0],v7:[0,0,0,0,0]}},
+  mudancas:{concluded:[1,0,0,0,0],
+    f:{},
+    v:{v1:[1,1,1,1,0],v2:[0,0,0,0,0],v3:[1,0,0,0,0],v4:[1,1,1,1,0],v5:[1,1,1,1,0],v6:[0,0,0,0,0]}},
+  preservacao:{concluded:[1,0,0,0,0],
+    f:{f1:[1,0,0,0,0]},
+    v:{v1:[1,1,1,1,0],v2:[1,1,0,0,0],v3:[1,0,0,0,0],v4:[0,0,0,0,0],v5:[0,0,0,0,0],v6:[0,0,1,1,0],v7:[0,0,0,0,0],v8:[0,0,0,0,0]}},
+  vida_ar:{concluded:[0,0,0,0,0],
+    f:{f1:[1,1,1,1,0],f2:[1,1,1,1,0],f3:[1,1,1,1,0],f4:[1,1,1,1,0],f5:[1,0,0,0,0],f6:[0,0,0,0,0],f7:[0,0,0,0,0],f8:[0,0,0,0,0]},
+    v:{v1:[1,0,1,0,0],v2:[1,0,0,0,0],v3:[1,0,1,0,0],v4:[1,1,0,0,0],v5:[0,0,0,0,0],v6:[0,0,0,0,0],v7:[0,0,0,0,0],v8:[0,0,0,0,0],v9:[0,0,0,0,0],v10:[0,0,0,0,0]}},
+  comunidade:{concluded:[0,0,0,0,0],
+    f:{f1:[1,0,0,1,0],f2:[0,0,0,0,0]},
+    v:{v1:[0,0,0,0,0],v2:[0,0,0,0,0],v3:[0,0,0,0,0],v4:[0,0,0,0,0],v5:[0,0,0,0,0],v6:[0,0,0,0,0]}},
+  democracia:{concluded:[0,1,0,0,0],
+    f:{f1:[1,1,1,1,0],f2:[1,1,1,1,0],f3:[1,1,1,1,0]},
+    v:{v1:[1,1,1,1,0],v2:[1,1,1,1,0],v3:[0,0,0,0,0],v4:[0,1,0,0,0],v5:[0,1,1,0,0],v6:[0,0,0,0,0],v7:[0,0,0,0,0],v8:[0,1,1,0,0]}},
+  heranca:{concluded:[0,0,0,0,0],
+    f:{f1:[0,0,0,0,0]},
+    v:{v1:[1,1,1,1,0],v2:[0,0,0,0,0],v3:[0,0,0,0,0],v4:[0,1,0,0,0],v5:[0,0,0,0,0],v6:[0,0,0,0,0],v7:[0,1,0,1,0],v8:[0,0,0,0,0]}},
+  paz:{concluded:[0,0,0,0,0],
+    f:{f1:[1,0,0,0,0]},
+    v:{v1:[0,1,0,1,0],v2:[1,1,1,0,0],v3:[1,1,1,0,0],v4:[0,1,0,0,0],v5:[0,0,0,0,0],v6:[0,0,0,0,0],v7:[0,0,0,0,0],v8:[1,0,0,0,0]}},
+  valores:{concluded:[1,1,0,0,0],
+    f:{f1:[1,1,0,0,0]},
+    v:{v1:[1,1,1,1,0],v2:[1,1,1,0,0],v3:[0,0,0,0,0],v4:[0,0,0,0,0]}},
+  cuidado:{concluded:[1,1,0,0,0],
+    f:{f1:[1,1,1,0,0],f2:[1,1,0,0,0]},
+    v:{v1:[1,1,0,0,0],v2:[1,1,0,0,0],v3:[1,1,0,0,0],v4:[1,1,0,0,0],v5:[0,0,0,0,0],v6:[0,0,1,1,0]}},
+  espiritualidade:{concluded:[0,0,0,1,0],
+    f:{},
+    v:{v1:[1,1,1,1,0],v2:[0,0,0,1,0],v3:[0,1,0,1,0],v4:[0,0,0,1,0]}},
+  habitos:{concluded:[0,0,0,0,0],
+    f:{f1:[1,0,0,0,0],f2:[0,0,0,0,0]},
+    v:{v1:[1,1,0,0,0],v2:[1,1,0,0,0],v3:[1,1,0,0,0],v4:[0,0,0,0,0],v5:[0,0,0,0,0]}},
+  saude_mental:{concluded:[1,1,1,1,0],
+    f:{f1:[1,1,1,1,0],f2:[1,1,1,1,0]},
+    v:{v1:[1,1,0,0,0],v2:[1,0,0,0,0],v3:[1,0,0,0,0],v4:[0,0,0,0,0],v5:[0,0,0,0,0]}},
+  vinculos:{concluded:[1,1,1,1,0],
+    f:{f1:[1,1,1,1,0]},
+    v:{v1:[1,1,0,0,0],v2:[1,1,0,0,0],v3:[1,1,0,0,0],v4:[1,1,1,0,0],v5:[0,0,0,0,0],v6:[0,0,0,0,0]}},
+};
+
+const EIXOS = {
+  hv:{label:'Habilidades para a Vida',icon:'⚙',color:'--hv',border:'--hv-b',text:'--hv-t',blockIds:['aprendizagem','autonomia','criatividade','inteligencia']},
+  ma:{label:'Meio Ambiente',icon:'🌿',color:'--ma',border:'--ma-b',text:'--ma-t',blockIds:['consumo','mudancas','preservacao','vida_ar']},
+  pd:{label:'Paz e Desenvolvimento',icon:'🕊',color:'--pd',border:'--pd-b',text:'--pd-t',blockIds:['comunidade','democracia','heranca','paz','valores']},
+  sb:{label:'Saúde e Bem-estar',icon:'💪',color:'--sb',border:'--sb-b',text:'--sb-t',blockIds:['cuidado','espiritualidade','habitos','saude_mental','vinculos']},
+};
+
+const CAL_2S26 = [
+  {n:1,dia:'01',mes:'AGO',tipo:'planejar',fmt:'T',blocos:'',comp:'',
+   txt:'Boas-vindas e abertura do ciclo: apresentação do plano de 1 ano, ratificação dos blocos-foco, distribuição de encargos. Cerimônia de Passagem da Isis <em>(a definir — antes de 06/08)</em>.',special:''},
+  {n:2,dia:'08',mes:'AGO',tipo:'normal',fmt:'T',blocos:'Consumo Responsável',comp:'1º Compromisso Sênior',
+   txt:'Bloco 1 — Consumo Responsável: brechó beneficente + debate sobre descarte e reciclagem.',special:''},
+  {n:3,dia:'15',mes:'AGO',tipo:'leve',fmt:'T',blocos:'Consumo Responsável',comp:'2º Compromisso Sênior',
+   txt:'Bloco 1 — Consumo Responsável (leve): visita virtual ou dinâmica sobre estação de tratamento. Revisão das ações do bloco.',special:''},
+  {n:4,dia:'22–23',mes:'AGO',tipo:'pernoite',fmt:'PN',blocos:'',comp:'3º Compromisso Sênior',
+   txt:'Enduro Distrital Sênior: atividade de aventura e resistência com outras unidades do distrito.',special:'enduro'},
+  {n:5,dia:'29',mes:'AGO',tipo:'normal',fmt:'P',blocos:'Comunidade',comp:'4º Compromisso Sênior',
+   txt:'Bloco 2 — Comunidade: levantamento de necessidades da comunidade local. Planejamento da ação comunitária.',special:''},
+  {n:6,dia:'05',mes:'SET',tipo:'normal',fmt:'T',blocos:'Comunidade',comp:'5º Compromisso Sênior',
+   txt:'Bloco 2 — Comunidade: continuação do planejamento. Articulação com parceiros locais.',special:''},
+  {n:7,dia:'12',mes:'SET',tipo:'leve',fmt:'T',blocos:'Comunidade',comp:'',
+   txt:'Bloco 2 — Comunidade: execução da 1ª ação comunitária. Atividade leve <em>(semana próxima a 15/09)</em>.',special:''},
+  {n:8,dia:'19',mes:'SET',tipo:'normal',fmt:'T',blocos:'Herança Cultural',comp:'',
+   txt:'Bloco 3 — Herança Cultural: identificação de núcleos culturais da região. Tour histórico ou expedição cultural.',special:''},
+  {n:9,dia:'26',mes:'SET',tipo:'normal',fmt:'T',blocos:'Herança Cultural',comp:'',
+   txt:'Bloco 3 — Herança Cultural: cerimônia de abertura cultural + expressão artística ou peça teatral.',special:''},
+  {n:10,dia:'03',mes:'OUT',tipo:'normal',fmt:'T',blocos:'Promoção da Paz',comp:'',
+   txt:'Bloco 4 — Promoção da Paz: ação colaborativa sobre cultura de paz + mesa redonda.',special:''},
+  {n:11,dia:'10',mes:'OUT',tipo:'normal',fmt:'T',blocos:'Promoção da Paz',comp:'',
+   txt:'Bloco 4 — Promoção da Paz: atividade com outra unidade escoteira e/ou simulação ONU.',special:''},
+  {n:12,dia:'17',mes:'OUT',tipo:'normal',fmt:'T',blocos:'Espiritualidade',comp:'',
+   txt:'Bloco 5 — Espiritualidade: momentos de reflexão, silêncio e conexão espiritual.',special:''},
+  {n:13,dia:'24',mes:'OUT',tipo:'normal',fmt:'T',blocos:'Espiritualidade + Criatividade e Inovação',comp:'',
+   txt:'Bloco 5 — Espiritualidade: celebração inter-espiritual. Início do Bloco 6 — Criatividade: vídeo criativo.',special:''},
+  {n:'—',dia:'31',mes:'OUT',tipo:'sem',fmt:'',blocos:'',comp:'',
+   txt:'Sem atividade — chefia em curso (30/10/2026).',special:'sem'},
+  {n:14,dia:'07',mes:'NOV',tipo:'normal',fmt:'T',blocos:'Criatividade e Inovação',comp:'',
+   txt:'Bloco 6 — Criatividade e Inovação: noite cultural + concurso criativo.',special:''},
+  {n:15,dia:'14',mes:'NOV',tipo:'normal',fmt:'T',blocos:'Criatividade e Inovação',comp:'',
+   txt:'Bloco 6 — Criatividade e Inovação: mostra de interesse + fogo de conselho criativo. Preparação final para o acampamento.',special:''},
+  {n:'⛺',dia:'20–22',mes:'NOV',tipo:'pernoite',fmt:'PN',blocos:'Vida ao Ar Livre',comp:'',
+   txt:'Acampamento de Grupo: Bloco 7 — Vida ao Ar Livre concluído integralmente. Todas as ações fixas e variáveis do bloco serão realizadas neste acampamento de 3 dias.',special:'camp'},
+  {n:16,dia:'28',mes:'NOV',tipo:'avaliar',fmt:'Av',blocos:'',comp:'',
+   txt:'Avaliação do 2S2026: o que funcionou, o que melhorar. Celebração das conquistas do semestre. Insumos para o 1S2027.',special:''},
+];
+
+const CAL_1S27 = [
+  {n:1,dia:'06',mes:'FEV',tipo:'planejar',fmt:'T',blocos:'',comp:'',
+   txt:'Abertura do 1S2027: revisão das conquistas do semestre anterior, planejamento do ciclo e distribuição de encargos.',special:''},
+  {n:2,dia:'13',mes:'FEV',tipo:'normal',fmt:'T',blocos:'Mudanças Climáticas',comp:'',
+   txt:'Bloco 8 — Mudanças Climáticas: ferramentas meteorológicas + debate sobre impactos climáticos.',special:''},
+  {n:3,dia:'20',mes:'FEV',tipo:'normal',fmt:'T',blocos:'Mudanças Climáticas',comp:'',
+   txt:'Bloco 8 — Mudanças Climáticas: atividade ecológica urbana + projeto de reaproveitamento.',special:''},
+  {n:4,dia:'27',mes:'FEV',tipo:'normal',fmt:'T',blocos:'Preservação da Biodiversidade',comp:'',
+   txt:'Bloco 9 — Preservação da Biodiversidade: colaboração com ONG ambiental + coleta de dados.',special:''},
+  {n:5,dia:'06',mes:'MAR',tipo:'normal',fmt:'T',blocos:'Preservação da Biodiversidade',comp:'',
+   txt:'Bloco 9 — Preservação da Biodiversidade: visita à APA (Ação Fixa) + plantio de árvores.',special:''},
+  {n:6,dia:'13',mes:'MAR',tipo:'normal',fmt:'T',blocos:'Preservação da Biodiversidade',comp:'',
+   txt:'Bloco 9 — Preservação da Biodiversidade: campanha de conscientização ou palestra.',special:''},
+  {n:7,dia:'20',mes:'MAR',tipo:'normal',fmt:'T',blocos:'Democracia',comp:'',
+   txt:'Bloco 10 — Democracia: debate democrático + atividade sobre participação cidadã.',special:''},
+  {n:8,dia:'27',mes:'MAR',tipo:'normal',fmt:'T',blocos:'Democracia',comp:'',
+   txt:'Bloco 10 — Democracia: campanha educativa + visita a espaço de representação pública.',special:''},
+  {n:9,dia:'03',mes:'ABR',tipo:'normal',fmt:'T',blocos:'Hábitos Saudáveis',comp:'',
+   txt:'Bloco 11 — Hábitos Saudáveis: Primeiros Socorros + planejamento de cardápio saudável (Ação Fixa).',special:''},
+  {n:10,dia:'10',mes:'ABR',tipo:'normal',fmt:'T',blocos:'Hábitos Saudáveis',comp:'',
+   txt:'Bloco 11 — Hábitos Saudáveis: circuito físico (Ação Fixa) + meditação e plano de hábitos.',special:''},
+  {n:11,dia:'17',mes:'ABR',tipo:'normal',fmt:'T',blocos:'Hábitos Saudáveis',comp:'',
+   txt:'Bloco 11 — Hábitos Saudáveis: atividades físicas variadas + higiene em campo.',special:''},
+  {n:12,dia:'24',mes:'ABR',tipo:'leve',fmt:'T',blocos:'',comp:'',
+   txt:'Atividade leve de patrulha: Conselho de Patrulha + revisão de pendências dos blocos do ciclo.',special:''},
+  {n:13,dia:'01',mes:'MAI',tipo:'normal',fmt:'T',blocos:'',comp:'',
+   txt:'Semana de finalização de pendências: ações variáveis que faltam para completar blocos de Paulo e Thauany.',special:''},
+  {n:14,dia:'08',mes:'MAI',tipo:'normal',fmt:'T',blocos:'',comp:'',
+   txt:'Avaliação individual de progressão + autoavaliação de Paulo e Thauany com a Corte de Honra.',special:''},
+  {n:15,dia:'15',mes:'MAI',tipo:'normal',fmt:'T',blocos:'',comp:'',
+   txt:'Atividade de patrulha + preparação da Cerimônia de Passagem de Paulo e Thauany.',special:''},
+  {n:'🏆',dia:'MAI/',mes:'JUN',tipo:'avaliar',fmt:'Esp',blocos:'',comp:'',
+   txt:'CERIMÔNIA DE PASSAGEM — Paulo e Thauany: Reconhecimento de Escoteiro da Pátria + passagem para o Ramo Pioneiro. Data exata a definir conforme conclusão dos 18 blocos.',special:'cerimonia'},
+  {n:16,dia:'JUN',mes:'2027',tipo:'avaliar',fmt:'Av',blocos:'',comp:'',
+   txt:'Avaliação final do 1S2027 + encerramento do ciclo de 1 ano. Planejamento do 2S2027.',special:''},
+];
+
+// ╔═══════════════════════════════════════════════════╗
+// ║                   ESTADO                         ║
+// ╚═══════════════════════════════════════════════════╝
+let S = {};
+
+const DB_URL = "https://joaninha-progressao-default-rtdb.firebaseio.com";
+const REST_URL_SR = DB_URL + "/tropaSenior/json.json";
+
+async function loadState(){
+  try{
+    const r = await Promise.race([
+      fetch(REST_URL_SR),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 4000))
+    ]);
+    const val = await r.json();
+    if (val) {
+      const dados = JSON.parse(val);
+      S = dados.S || deepCopy(INICIAL);
+      if (dados.JOVENS) JOVENS = dados.JOVENS;
+      if (dados.JNOMES) JNOMES = dados.JNOMES;
+      if (dados.JCORES) JCORES = dados.JCORES;
+      PRESENCA = dados.PRESENCA || {};
+      if (dados.YOUTH_DATA) YOUTH_DATA = dados.YOUTH_DATA;
+    } else {
+      S = deepCopy(INICIAL);
+    }
+  }catch(e){ S = deepCopy(INICIAL); console.error('Tropa Sênior: usando dados padrão (falha/demora ao buscar):', e); }
+}
+async function saveState(){
+  const payload = JSON.stringify({ S, JOVENS, JNOMES, JCORES, PRESENCA, YOUTH_DATA });
+  try {
+    await fetch(REST_URL_SR, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+  } catch(e) { console.error('Não foi possível salvar dados da Tropa Sênior:', e); }
+}
+function deepCopy(o){return JSON.parse(JSON.stringify(o));}
+function confirmReset(){
+  const senha = prompt('Ação sensível: isso apaga os registros de progressão feitos durante o ciclo, pra todo mundo.\n\nDigite a senha para confirmar:');
+  if (senha === null) return;
+  if (senha !== '980070') { alert('Senha incorreta. Nada foi alterado.'); return; }
+  S=deepCopy(INICIAL);saveState();renderAll();
+  alert('Dados da Tropa Sênior restaurados.');
+}
+
+// ╔═══════════════════════════════════════════════════╗
+// ║                  PROGRESSÃO                      ║
+// ╚═══════════════════════════════════════════════════╝
+function getBlockData(blockId){
+  return BLOCKS.find(b=>b.id===blockId);
+}
+function isBlockConcluded(blockId,jovemIdx){
+  return S[blockId]?.concluded?.[jovemIdx]===1;
+}
+function getTotalConcluded(jovemIdx){
+  return BLOCKS.filter(b=>isBlockConcluded(b.id,jovemIdx)).length;
+}
+function etapa(n){
+  if(n>=18)return{l:'Reconhecimento 🏆',c:'#6A1B9A'};
+  if(n>=12)return{l:'Azimute ⭐',c:'#1565C0'};
+  if(n>=6)return{l:'Conquista',c:'#2D6E3E'};
+  return{l:'Escalada',c:'#CC6C00'};
+}
+function getActionDone(blockId,type,actionId,jovemIdx){
+  return S[blockId]?.[type]?.[actionId]?.[jovemIdx]===1;
+}
+function countActionsDone(blockId,type,jovemIdx){
+  const bl=S[blockId]?.[type]||{};
+  return Object.values(bl).filter(arr=>arr[jovemIdx]===1).length;
+}
+
+function toggle(blockId,type,actionId,jovemIdx){
+  if(!S[blockId]) S[blockId]=deepCopy(INICIAL[blockId]||{concluded:[0,0,0,0,0],f:{},v:{}});
+  if(!S[blockId][type]) S[blockId][type]={};
+  if(!S[blockId][type][actionId]) S[blockId][type][actionId]=[0,0,0,0,0];
+  S[blockId][type][actionId][jovemIdx] ^= 1;
+  saveState();
+  renderAll();
+}
+function toggleConcluded(blockId,jovemIdx){
+  if(!S[blockId]) S[blockId]=deepCopy(INICIAL[blockId]||{concluded:[0,0,0,0,0],f:{},v:{}});
+  if(!S[blockId].concluded) S[blockId].concluded=[0,0,0,0,0];
+  S[blockId].concluded[jovemIdx] ^= 1;
+  saveState();
+  renderAll();
+}
+
+function renderProgressBars(){
+  const c=document.getElementById('pbars');
+  c.innerHTML='';
+  JOVENS.forEach((j,i)=>{
+    const n=getTotalConcluded(i);
+    const pct=Math.round(n/18*100);
+    const et=etapa(n);
+    const div=document.createElement('div');
+    div.className='prog-row';
+    div.innerHTML=`<div class="prog-meta">
+      <span class="prog-name">${JNOMES[i]}</span>
+      <span class="prog-etapa" style="background:${et.c}22;color:${et.c}">${n}/18 — ${et.l}</span>
+    </div>
+    <div class="prog-track"><div class="prog-bar" style="width:${pct}%;background:${JCORES[i]};"></div></div>`;
+    c.appendChild(div);
+  });
+}
+
+function renderEixo(eixoId){
+  const eixo=EIXOS[eixoId];
+  const container=document.getElementById('bl-'+eixoId);
+  container.innerHTML='';
+  let totalDone=0,totalBlocks=eixo.blockIds.length*5;
+  eixo.blockIds.forEach(bid=>{JOVENS.forEach((j,i)=>{if(isBlockConcluded(bid,i))totalDone++;});});
+  document.getElementById('stats-'+eixoId).textContent=`${totalDone}/${totalBlocks} concluídos`;
+
+  eixo.blockIds.forEach(bid=>{
+    const bl=getBlockData(bid);
+    if(!bl)return;
+    const allActions=[...bl.fixed.map(a=>({...a,type:'f'})),...bl.variable.map(a=>({...a,type:'v'}))];
+
+    // Badge per youth
+    const badges=JOVENS.map((j,i)=>{
+      const done=isBlockConcluded(bid,i);
+      const fDone=countActionsDone(bid,'f',i);
+      const vDone=countActionsDone(bid,'v',i);
+      const total=bl.fixed.length+bl.variable.length;
+      const partDone=fDone+vDone;
+      let cls='b-none';
+      if(done) cls='b-done';
+      else if(partDone>0) cls='b-part';
+      return `<div class="${'b-badge '+cls}" title="${JNOMES[i]}: ${done?'Concluído':partDone+'/'+total+' ações'}">${JNOMES[i][0]}</div>`;
+    }).join('');
+
+    // Focus/semester tags
+    let focusTag='';
+    if(bl.focus){
+      const semLabel=bl.semester===1?'2S26':'1S27';
+      focusTag=`<span class="focus-tag">FOCO</span><span class="semester-tag ${bl.semester===1?'sem1-tag':'sem2-tag'}">${semLabel}</span>`;
+    }
+    if(bl.campOnly) focusTag+=`<span class="semester-tag sem1-tag">⛺ ACAMPAMENTO</span>`;
+
+    // Camp-only note
+    const campNote=bl.campOnly?'<div style="background:#E3F2FD;border-radius:6px;padding:8px 10px;font-size:11px;color:#1565C0;margin-bottom:8px;">⛺ Este bloco será concluído integralmente no <strong>Acampamento de Grupo (20-22/nov/2026)</strong>. Use os checkboxes abaixo para registrar o que já foi feito antes do acampamento.</div>':'';
+
+    // Concluded block toggle per youth
+    const concludedRow=`<div class="actions-section">
+      <div class="actions-label"><span style="color:#27AE60;font-weight:800;">✓ STATUS DO BLOCO</span></div>
+      <div class="actions-table-wrap"><table class="actions-table">
+        <thead><tr><th class="act-col">Marcar bloco como concluído</th>${JOVENS.map((j,i)=>`<th>${JNOMES[i].split(' ')[0]}</th>`).join('')}</tr></thead>
+        <tbody><tr><td class="act-col">Bloco ${bl.name} — CONCLUÍDO</td>
+          ${JOVENS.map((j,i)=>{
+            const done=isBlockConcluded(bid,i);
+            return `<td><div class="cb ${done?'done':'pending'}" onclick="toggleConcluded('${bid}',${i})">${done?'✓':'·'}</div></td>`;
+          }).join('')}
+        </tr></tbody>
+      </table></div>
+    </div>`;
+
+    // Fixed actions section
+    let fixedSection='';
+    if(bl.fixed.length>0){
+      const rows=bl.fixed.map(a=>{
+        const cells=JOVENS.map((j,i)=>{
+          const done=getActionDone(bid,'f',a.id,i);
+          return `<td><div class="cb ${done?'done':'pending'}" onclick="toggle('${bid}','f','${a.id}',${i})">${done?'✓':'·'}</div></td>`;
+        }).join('');
+        return `<tr class="fixed-row"><td class="act-col">📌 ${a.name}</td>${cells}</tr>`;
+      }).join('');
+      fixedSection=`<div class="actions-section">
+        <div class="actions-label fixed-label">📌 Ações Fixas (obrigatórias)</div>
+        <div class="actions-table-wrap"><table class="actions-table">
+          <thead><tr><th class="act-col">Ação</th>${JOVENS.map((j,i)=>`<th>${JNOMES[i].split(' ')[0]}</th>`).join('')}</tr></thead>
+          <tbody>${rows}</tbody>
+        </table></div>
+      </div>`;
+    }
+
+    // Variable actions section
+    let varSection='';
+    if(bl.variable.length>0){
+      const rows=bl.variable.map(a=>{
+        const cells=JOVENS.map((j,i)=>{
+          const done=getActionDone(bid,'v',a.id,i);
+          return `<td><div class="cb ${done?'done':'pending'}" onclick="toggle('${bid}','v','${a.id}',${i})">${done?'✓':'·'}</div></td>`;
+        }).join('');
+        return `<tr><td class="act-col">${a.name}</td>${cells}</tr>`;
+      }).join('');
+      varSection=`<div class="actions-section">
+        <div class="actions-label var-label">☑ Ações Variáveis</div>
+        <div class="actions-table-wrap"><table class="actions-table">
+          <thead><tr><th class="act-col">Ação</th>${JOVENS.map((j,i)=>`<th>${JNOMES[i].split(' ')[0]}</th>`).join('')}</tr></thead>
+          <tbody>${rows}</tbody>
+        </table></div>
+      </div>`;
+    }
+
+    const blockEl=document.createElement('details');
+    blockEl.className='block-item';
+    blockEl.innerHTML=`
+      <summary class="block-summary">
+        <span class="block-arrow">▶</span>
+        <div class="block-info">
+          <div class="block-title">${bl.name}${focusTag}</div>
+          <div class="block-meta">${bl.fixed.length} fixas · ${bl.variable.length} variáveis</div>
+        </div>
+        <div class="block-badges">${badges}</div>
+      </summary>
+      <div class="block-body">
+        ${campNote}
+        ${concludedRow}
+        ${fixedSection}
+        ${varSection}
+      </div>`;
+    container.appendChild(blockEl);
+  });
+}
+
+// ╔═══════════════════════════════════════════════════╗
+// ║                  CALENDÁRIO                      ║
+// ╚═══════════════════════════════════════════════════╝
+// ╔═══════════════════════════════════════════════════╗
+// ║                   PRESENÇA                       ║
+// ╚═══════════════════════════════════════════════════╝
+let PRESENCA = {};
+
+function loadPresenca(){ /* já carregado junto em loadState() */ }
+function savePresenca(){ saveState(); }
+function countAbsences(jovemIdx){
+  return Object.values(PRESENCA).filter(ev=>ev[jovemIdx]===0).length;
+}
+function renderPresencaSummary(){
+  const c=document.getElementById('presenca-summary');
+  if(!c) return;
+  let html='';
+  JOVENS.forEach((j,i)=>{
+    const abs=countAbsences(i);
+    const fg=abs>=3?'#E74C3C':abs===2?'#E67E22':'#27AE60';
+    const note=abs>=3?' &nbsp;<span style="background:#E74C3C;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:20px;">⚠ INSCRIÇÃO EM REVISÃO</span>':abs===2?' &nbsp;<span style="background:#E67E22;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:20px;">atenção</span>':'';
+    const pres=Object.values(PRESENCA).filter(ev=>ev[i]===1).length;
+    const total=Object.values(PRESENCA).filter(ev=>ev[i]!==undefined).length;
+    html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #F0EDE8;">
+      <span style="font-size:12px;font-weight:700;">${JNOMES[i]}</span>
+      <div style="display:flex;align-items:center;gap:5px;">
+        <span style="font-size:11px;color:#666;">${pres}/${total} pres.</span>
+        <span style="font-size:11px;font-weight:800;color:${fg};">${abs} falta${abs!==1?'s':''}${note}</span>
+      </div>
+    </div>`;
+  });
+  html+=`<div style="font-size:10px;color:var(--muted);margin-top:6px;padding-top:4px;">⓪ Cinza = pendente &nbsp; ✓ Verde = presente &nbsp; ✗ Vermelho = faltou</div>`;
+  c.innerHTML=html;
+}
+function togglePresenca(eid,jovemIdx){
+  if(!PRESENCA[eid]) PRESENCA[eid]={};
+  const cur=PRESENCA[eid][jovemIdx];
+  if(cur===undefined||cur===null) PRESENCA[eid][jovemIdx]=1;   // pendente → presente
+  else if(cur===1)                 PRESENCA[eid][jovemIdx]=0;   // presente → ausente
+  else                             delete PRESENCA[eid][jovemIdx]; // ausente → pendente
+  savePresenca();
+  fillPresencaGrid(eid);
+  renderPresencaSummary();
+}
+function fillPresencaGrid(eid){
+  const grid=document.getElementById('pg-'+eid);
+  const badge=document.getElementById('pb-'+eid);
+  if(!grid) return;
+  grid.innerHTML='';
+  let presentes=0,marcados=0;
+  JOVENS.forEach((j,i)=>{
+    const val=PRESENCA[eid]?.[i];
+    let bg,fg,lbl,title;
+    if(val===1){bg='#27AE60';fg='#fff';lbl='✓';presentes++;marcados++;title='Presente — clique para marcar ausente';}
+    else if(val===0){bg='#E74C3C';fg='#fff';lbl='✗';marcados++;title='Ausente — clique para limpar';}
+    else{bg='#E8E5E0';fg='#999';lbl='·';title='Não registrado — clique para marcar presente';}
+    const absencias=countAbsences(i);
+    const alerta=absencias>=3&&val===0?'outline:2px solid #C0392B;':'';
+    const btn=document.createElement('div');
+    btn.style.cssText=`background:${bg};color:${fg};border-radius:8px;padding:6px 9px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;flex:1;min-width:60px;${alerta}`;
+    btn.title=title;
+    btn.innerHTML=`<span style="flex:1;">${JNOMES[i].split(' ')[0]}</span><span>${lbl}</span>`;
+    btn.onclick=()=>togglePresenca(eid,i);
+    grid.appendChild(btn);
+  });
+  if(badge){
+    if(marcados===0) badge.textContent='';
+    else{
+      const cor=presentes===5?'#27AE60':presentes<3?'#E74C3C':'#E67E22';
+      badge.innerHTML=`<span style="color:${cor};font-weight:800;font-size:9px;">${presentes}/5 presentes</span>`;
+    }
+  }
+}
+
+function renderCal(events, containerId, pfx){
+  const list=document.getElementById(containerId);
+  list.innerHTML='';
+  const tipoColor={normal:'strip-normal',leve:'strip-leve',pernoite:'strip-pernoite',planejar:'strip-planejar',avaliar:'strip-avaliar',sem:'strip-sem'};
+  events.forEach((ev,idx)=>{
+    const eid=`${pfx}_${idx}`;
+    if(ev.special==='sem'){
+      const card=document.createElement('div');
+      card.className='cal-card';
+      card.innerHTML=`<div class="cal-strip strip-sem" style="background:#B0BEC5;">
+        <div class="strip-idx">${ev.n}</div>
+        <div class="strip-day">31</div>
+        <div class="strip-mon">OUT</div>
+      </div>
+      <div class="cal-body">
+        <div class="cal-meta"><span class="fmt-badge" style="background:#F5F5F5;color:#999;">—</span>
+        <span class="special-banner banner-sem">⚠ SEM ATIVIDADE</span></div>
+        <div class="cal-text">${ev.txt}</div>
+      </div>`;
+      list.appendChild(card);
+      return;
+    }
+    const card=document.createElement('div');
+    card.className='cal-card';
+    card.style.flexDirection='column';
+    let metaHtml=`<div class="cal-meta">`;
+    if(ev.fmt) metaHtml+=`<span class="fmt-badge fmt-${ev.fmt}">${ev.fmt}</span>`;
+    if(ev.blocos) ev.blocos.split(' + ').forEach(b=>{metaHtml+=`<span class="bloco-tag">📌 ${b}</span>`;});
+    if(ev.comp) metaHtml+=`<span class="comp-tag">⚜ ${ev.comp}</span>`;
+    metaHtml+='</div>';
+    let specialHtml='';
+    if(ev.special==='camp') specialHtml=`<div><span class="special-banner banner-camp">⛺ ACAMPAMENTO DE GRUPO — VIDA AO AR LIVRE COMPLETO</span></div>`;
+    if(ev.special==='enduro') specialHtml=`<div><span class="special-banner banner-enduro">⚡ ENDURO DISTRITAL SÊNIOR</span></div>`;
+    if(ev.special==='cerimonia') specialHtml=`<div><span class="special-banner" style="background:#6A1B9A;">🏆 CERIMÔNIA DE PASSAGEM</span></div>`;
+    const stripColor=(tipoColor[ev.tipo])||'strip-normal';
+    // Main card row (strip + body)
+    const mainRow=document.createElement('div');
+    mainRow.style.cssText='display:flex;';
+    mainRow.innerHTML=`<div class="cal-strip ${stripColor}">
+      <div class="strip-idx">${ev.n}</div>
+      <div class="strip-day" style="font-size:${ev.dia.length>2?'13px':'18px'}">${ev.dia}</div>
+      <div class="strip-mon">${ev.mes}</div>
+    </div>
+    <div class="cal-body">${metaHtml}${specialHtml}<div class="cal-text">${ev.txt}</div></div>`;
+    card.appendChild(mainRow);
+    // Attendance section
+    const det=document.createElement('details');
+    det.style.cssText='border-top:1px solid #F0EDE8;';
+    det.innerHTML=`<summary style="cursor:pointer;padding:7px 11px;font-size:10px;font-weight:700;color:var(--muted);list-style:none;display:flex;align-items:center;gap:6px;-webkit-user-select:none;user-select:none;">
+      <span>📋 Lista de Presença</span>
+      <span id="pb-${eid}" style="margin-left:auto;"></span>
+      <span style="font-size:9px;">▼</span>
+    </summary>
+    <div style="padding:6px 11px 10px;">
+      <div style="display:flex;gap:5px;flex-wrap:wrap;" id="pg-${eid}"></div>
+    </div>`;
+    card.appendChild(det);
+    list.appendChild(card);
+    // Fill initial attendance state
+    fillPresencaGrid(eid);
+  });
+  renderPresencaSummary();
+}
+
+// ╔═══════════════════════════════════════════════════╗
+// ║                  SEMESTRES                       ║
+// ╚═══════════════════════════════════════════════════╝
+const EIXO_COLORS={hv:'var(--hv-b)',ma:'var(--ma-b)',pd:'var(--pd-b)',sb:'var(--sb-b)'};
+const EIXO_BG={hv:'var(--hv)',ma:'var(--ma)',pd:'var(--pd)',sb:'var(--sb)'};
+
+function renderSemestres(){
+  const c=document.getElementById('sem-content');
+  const blks1=BLOCKS.filter(b=>b.focus&&b.semester===1);
+  const blks2=BLOCKS.filter(b=>b.focus&&b.semester===2);
+
+  function blockRows(blks){
+    return blks.map((b,i)=>
+      `<div class="sem-block-row" style="background:${EIXO_BG[b.eixo]}44;">
+        <span class="sem-block-num">${i+1}.</span>
+        <div class="sem-eixo-dot" style="background:${EIXO_COLORS[b.eixo]};"></div>
+        <span class="sem-block-name">${b.name}${b.campOnly?' <em style=font-size:10px>(⛺ Acampamento)</em>':''}</span>
+      </div>`
+    ).join('');
+  }
+
+  function progRows(semIdx){
+    const semBlocks=BLOCKS.filter(b=>b.focus&&b.semester===semIdx);
+    return JOVENS.map((j,i)=>{
+      const baseDone=getTotalConcluded(i);
+      const gains=semBlocks.filter(b=>!isBlockConcluded(b.id,i)).length;
+      const expected=Math.min(18,baseDone+gains);
+      const pct=Math.round(expected/18*100);
+      const et=etapa(expected);
+      return `<div class="prog-mini-row">
+        <span class="prog-mini-name">${JNOMES[i]}</span>
+        <div class="prog-mini-track"><div class="prog-mini-bar" style="width:${pct}%;background:${JCORES[i]};"></div></div>
+        <span class="prog-mini-label" style="color:${et.c}">${expected}/18</span>
+      </div>`;
+    }).join('');
+  }
+
+  c.innerHTML=`
+  <div class="sem-section">
+    <div class="sem-header">
+      <h3>📅 2º Semestre 2026</h3>
+      <div class="period">01/08/2026 → 28/11/2026 · 7 blocos</div>
+    </div>
+    <div class="sem-body">
+      <div class="sem-blocks">${blockRows(blks1)}</div>
+      <div class="sem-special">
+        <div class="sem-special-item"><span class="sem-special-icon">⚡</span><div><strong>22-23/ago:</strong> Enduro Distrital Sênior</div></div>
+        <div class="sem-special-item"><span class="sem-special-icon">⚠</span><div><strong>31/out:</strong> Sem atividade (chefia em curso 30/10)</div></div>
+        <div class="sem-special-item"><span class="sem-special-icon">⛺</span><div><strong>20-22/nov:</strong> Acampamento de Grupo — Bloco 7 (Vida ao Ar Livre) concluído integralmente</div></div>
+      </div>
+      <div class="milestone-box">
+        <div class="section-label" style="margin-bottom:7px;">Milestones esperados ao final do 2S2026</div>
+        <div class="milestone-item"><span class="milestone-star">⭐</span><div><span class="milestone-text">Paulo:</span> alcança <strong>Azimute</strong> <span class="milestone-sub">(blocos 11→12: Consumo + Comunidade)</span></div></div>
+        <div class="milestone-item"><span class="milestone-star">⭐</span><div><span class="milestone-text">Thauany:</span> alcança <strong>Azimute</strong> <span class="milestone-sub">(blocos 12→15)</span></div></div>
+      </div>
+      <div class="prog-overview">
+        <div class="prog-overview-title">Previsão de blocos ao final do 2S2026</div>
+        ${progRows(1)}
+      </div>
+    </div>
+  </div>
+
+  <div class="sem-section" style="margin-top:14px;">
+    <div class="sem-header" style="background:linear-gradient(135deg,#1B3B6F,#2A5298)">
+      <h3>📅 1º Semestre 2027</h3>
+      <div class="period">fev/2027 → jun/2027 · 4 blocos + Cerimônia</div>
+    </div>
+    <div class="sem-body">
+      <div class="sem-blocks">${blockRows(blks2)}</div>
+      <div class="sem-special">
+        <div class="sem-special-item"><span class="sem-special-icon">🏆</span><div><strong>Mai/Jun 2027:</strong> Cerimônia de Passagem de Paulo e Thauany — Reconhecimento de Escoteiro da Pátria + passagem para o Ramo Pioneiro</div></div>
+      </div>
+      <div class="milestone-box">
+        <div class="section-label" style="margin-bottom:7px;">Milestones ao final do 1S2027</div>
+        <div class="milestone-item"><span class="milestone-star">🏆</span><div><span class="milestone-text">Paulo:</span> <strong>18 blocos</strong> — Reconhecimento de Escoteiro da Pátria</div></div>
+        <div class="milestone-item"><span class="milestone-star">🏆</span><div><span class="milestone-text">Thauany:</span> <strong>18 blocos</strong> — Reconhecimento de Escoteiro da Pátria</div></div>
+      </div>
+      <div class="prog-overview">
+        <div class="prog-overview-title">Previsão de blocos ao final do 1S2027</div>
+        ${progRows(2)}
+      </div>
+    </div>
+  </div>`;
+}
+
+// ╔═══════════════════════════════════════════════════╗
+// ║                    TABS                          ║
+// ╚═══════════════════════════════════════════════════╝
+function showTab(id,btn){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(btn) btn.classList.add('active');
+}
+
+// ╔═══════════════════════════════════════════════════╗
+// ║                   RENDER ALL                     ║
+// ╚═══════════════════════════════════════════════════╝
+function renderAll(){
+  renderProgressBars();
+  Object.keys(EIXOS).forEach(renderEixo);
+  renderSemestres();
+}
+
+renderCal(CAL_2S26,'cal-2s26','2s26');
+renderCal(CAL_1S27,'cal-1s27','1s27');
+
+async function iniciarApp(){
+  await loadState();
+  renderAll();
+  renderJovens();
+  const aviso = document.getElementById('carregando-aviso');
+  if (aviso) aviso.remove();
+}
+iniciarApp();
+
+function corParaIdx(i) { return `hsl(${Math.round(i*137.5)%360},45%,42%)`; }
+
+window.addEventListener('message', async function(ev){
+  const msg = ev.data;
+  if (!msg || msg.tipo !== 'transferirJovem') return;
+  const nome = msg.nome;
+  const idNovo = 'j' + Date.now().toString(36) + Math.floor(Math.random()*1000);
+  JOVENS.push(idNovo);
+  JNOMES.push(nome);
+  JCORES.push(corParaIdx(JOVENS.length - 1));
+  const novoIdx = JOVENS.length - 1;
+  BLOCKS.forEach(b => {
+    if (!S[b.id]) S[b.id] = { concluded: [], f: {}, v: {} };
+    const entry = S[b.id];
+    while (entry.concluded.length < novoIdx) entry.concluded.push(0);
+    entry.concluded.push(0);
+    (b.fixed || []).forEach(fa => {
+      if (!entry.f[fa.id]) entry.f[fa.id] = [];
+      while (entry.f[fa.id].length < novoIdx) entry.f[fa.id].push(0);
+      entry.f[fa.id].push(0);
+    });
+    (b.variable || []).forEach(va => {
+      if (!entry.v[va.id]) entry.v[va.id] = [];
+      while (entry.v[va.id].length < novoIdx) entry.v[va.id].push(0);
+      entry.v[va.id].push(0);
+    });
+  });
+  if (msg.nascimento) {
+    YOUTH_DATA.push({ name: nome, born: msg.nascimento, role: '' });
+  }
+  await saveState();
+  renderAll();
+  renderJovens();
+});
+
+// ╔═══════════════════════════════════════════════════╗
+// ║                    JOVENS                        ║
+// ╚═══════════════════════════════════════════════════╝
+let YOUTH_DATA = [
+  {name:'Paulo Soares Semedo dos Santos',    born:'2009-07-28', role:''},
+  {name:'Isis Oliveira Cavalcante do Nascimento', born:'2008-08-06', role:'Fora do ciclo'},
+  {name:'Clara Garcia Santos',              born:'2010-02-15', role:''},
+  {name:'Wesley Ruan Marques de Souza',     born:'2009-09-27', role:''},
+  {name:'Thauany Nascimento',               born:'2009-05-24', role:'Monitora'},
+  {name:'Matheus Gomes dos Reis',           born:'2010-09-13', role:'Submonitor'},
+];
+
+function calcAge(bornStr, today){
+  const b=new Date(bornStr);
+  let y=today.getFullYear()-b.getFullYear();
+  let m=today.getMonth()-b.getMonth();
+  let d=today.getDate()-b.getDate();
+  if(d<0) m--;
+  if(m<0){y--;m+=12;}
+  return {years:y,months:m};
+}
+
+function turn18(bornStr){
+  const b=new Date(bornStr);
+  return new Date(b.getFullYear()+18,b.getMonth(),b.getDate());
+}
+
+function daysLeft(bornStr,today){
+  const t=turn18(bornStr);
+  return Math.ceil((t-today)/(1000*60*60*24));
+}
+
+function fmtDate(d){
+  return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});
+}
+
+function timeStr(days){
+  if(days<=0) return 'Já passou para o Pioneiro';
+  const totalMonths=Math.floor(days/30.44);
+  const years=Math.floor(totalMonths/12);
+  const months=totalMonths%12;
+  const remDays=days-Math.floor(totalMonths*30.44);
+  if(years>0&&months>0) return `${years} ano${years>1?'s':''} e ${months} mês${months!==1?'es':''}`;
+  if(years>0) return `${years} ano${years>1?'s':''}`;
+  if(months>0) return `${months} mês${months!==1?'es':''} e ${Math.max(0,remDays)} dia${remDays!==1?'s':''}`;
+  return `${days} dia${days!==1?'s':''}`;
+}
+
+// Cor: hue 120 (verde) → 0 (vermelho) proporcional ao tempo
+function timeColor(days, maxDays){
+  if(days<=0) return {fg:'#95A5A6',bg:'#F5F5F5',border:'#CCCCCC'};
+  const ratio=Math.min(1,Math.max(0,days/maxDays));
+  const hue=Math.round(ratio*120);
+  return {
+    fg:`hsl(${hue},65%,38%)`,
+    bg:`hsl(${hue},60%,95%)`,
+    border:`hsl(${hue},55%,60%)`,
+  };
+}
+
+function initials(name){
+  return name.split(' ').filter(w=>w.length>2).slice(0,2).map(w=>w[0]).join('');
+}
+
+function renderJovens(){
+  const today=new Date();
+  document.getElementById('calc-date').textContent=fmtDate(today);
+
+  const entries=YOUTH_DATA.map(y=>{
+    const days=daysLeft(y.born,today);
+    const age=calcAge(y.born,today);
+    const t18=turn18(y.born);
+    return{...y,days,age,t18};
+  });
+
+  // Max days among those still in ramo
+  const maxDays=Math.max(...entries.filter(e=>e.days>0).map(e=>e.days),1);
+
+  // Sort: least time first (most red first)
+  entries.sort((a,b)=>a.days-b.days);
+
+  const container=document.getElementById('jovens-cards');
+  container.innerHTML='';
+
+  entries.forEach(e=>{
+    const c=timeColor(e.days,maxDays);
+    const passed=e.days<=0;
+    const urgent=!passed&&e.days<=180;
+    const pct=passed?0:Math.min(100,Math.max(2,(e.days/maxDays)*100));
+
+    const card=document.createElement('div');
+    card.style.cssText=`background:${c.bg};border-left:5px solid ${c.border};border-radius:10px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.09);`;
+
+    card.innerHTML=`
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:11px;">
+        <div style="width:42px;height:42px;border-radius:50%;background:${c.fg};color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;flex-shrink:0;">${initials(e.name)}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:800;color:#1A1A1A;line-height:1.2;">${e.name}</div>
+          <div style="font-size:10px;color:${c.fg};font-weight:700;margin-top:2px;">
+            ${e.age.years} anos e ${e.age.months} meses
+            ${e.role?` &nbsp;·&nbsp; ${e.role}`:''}
+          </div>
+        </div>
+        <div style="flex-shrink:0;text-align:right;">
+          ${passed?`<span style="background:#95A5A6;color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;">✓ PASSOU</span>`:
+            urgent?`<span style="background:#E74C3C;color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;">⚠ URGENTE</span>`:
+            `<span style="background:${c.fg};color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;">⏱ NO RAMO</span>`}
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:${passed?'0':'10px'};">
+        <div style="background:rgba(255,255,255,.75);border-radius:8px;padding:8px 10px;">
+          <div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#999;margin-bottom:2px;">Data de passagem</div>
+          <div style="font-size:12px;font-weight:700;color:#1A1A1A;">${fmtDate(e.t18)}</div>
+        </div>
+        <div style="background:rgba(255,255,255,.75);border-radius:8px;padding:8px 10px;">
+          <div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#999;margin-bottom:2px;">Tempo restante</div>
+          <div style="font-size:11px;font-weight:800;color:${c.fg};">${timeStr(e.days)}</div>
+        </div>
+      </div>
+
+      ${!passed?`
+      <div style="background:rgba(255,255,255,.5);border-radius:20px;height:7px;overflow:hidden;">
+        <div style="width:${pct}%;height:100%;border-radius:20px;background:${c.fg};"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:3px;">
+        <span style="font-size:9px;color:#999;">Hoje — ${fmtDate(today)}</span>
+        <span style="font-size:9px;color:#999;">${fmtDate(e.t18)}</span>
+      </div>`:''}
+    `;
+    container.appendChild(card);
+  });
+}
+
+// Render Jovens on load
+</script>
+</body>
+</html>
