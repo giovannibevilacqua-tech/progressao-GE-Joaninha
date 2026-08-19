@@ -232,6 +232,15 @@ background: #F5F3EF; color: var(--text); font-size: 13px; font-weight: 800; curs
 text-align: center;
 }
 .ramo-btn.active { background: var(--vinho); color: #fff; border-color: var(--vinho); }
+
+.tabs-linha { display: flex; background: var(--card); border-bottom: 2px solid var(--border); position: sticky; top: 0; z-index: 200; box-shadow: 0 2px 6px rgba(0,0,0,.1); overflow-x: auto; margin-top: 14px; }
+.tabs-linha .tab-btn-linha {
+flex: 1; min-width: 80px; padding: 12px 6px; border: none; background: transparent;
+font-size: 11px; font-weight: 700; color: var(--muted); cursor: pointer; position: relative;
+transition: color .2s; white-space: nowrap;
+}
+.tabs-linha .tab-btn-linha.active { color: var(--vinho); }
+.tabs-linha .tab-btn-linha.active::after { content: ''; position: absolute; bottom: -2px; left: 0; right: 0; height: 2px; background: var(--vinho); }
 .page-groups { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 14px 0; }
 .page-group-label {
 font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;
@@ -406,22 +415,12 @@ padding: 12px; margin: 14px 14px 0; border-radius: var(--r); box-shadow: var(--s
 
 <div id="ramo-escoteira">
 
-<div class="page-groups">
-<div class="page-group">
-<div class="page-group-label">Progressão</div>
-<div class="page-group-tabs">
-<button class="page-tab active" id="tabJovem" onclick="mudarPagina('jovem')">👤 Por Jovem</button>
-<button class="page-tab" id="tabTabela" onclick="mudarPagina('tabela')">📊 Por Bloco</button>
-</div>
-</div>
-<div class="page-group">
-<div class="page-group-label">Programação</div>
-<div class="page-group-tabs">
-<button class="page-tab" id="tabCalendario" onclick="mudarPagina('calendario')">📅 Calendário</button>
-<button class="page-tab" id="tabCiclo" onclick="mudarPagina('ciclo')">🔄 Ciclo de Programa</button>
-</div>
-</div>
-</div>
+<nav class="tabs-linha">
+<button class="tab-btn-linha active" id="tabJovem" onclick="mudarPagina('jovem')">👤 Por Jovem</button>
+<button class="tab-btn-linha" id="tabTabela" onclick="mudarPagina('tabela')">📊 Por Bloco</button>
+<button class="tab-btn-linha" id="tabCalendario" onclick="mudarPagina('calendario')">📅 Calendário</button>
+<button class="tab-btn-linha" id="tabCiclo" onclick="mudarPagina('ciclo')">🔄 Ciclo de Programa</button>
+</nav>
 
 <div id="pagina-jovem">
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ciclo de Programa 2S2026/1S2027 — GE Joaninha (Tropa Sênior)</title>
+<title>Ciclo de Programa 2S2026/1S2027 — GE Joaninha</title>
 <style>
 :root{
   --vinho:#6D1026;--vinho2:#9C1B3A;--azul:#1B3B6F;--azul2:#2A5298;
@@ -164,33 +164,66 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .prog-mini-track{flex:1;background:#EEEBE7;border-radius:20px;height:7px;overflow:hidden;}
 .prog-mini-bar{height:100%;border-radius:20px;}
 .prog-mini-label{font-size:10px;color:var(--muted);width:60px;text-align:right;flex-shrink:0;}
+
+/* MODAL */
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:flex-end;justify-content:center;}
+.modal-ov.open{display:flex;}
+.modal-box{background:#fff;border-radius:16px 16px 0 0;padding:20px 16px 28px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;}
+.modal-ttl{font-size:16px;font-weight:800;color:var(--vinho);margin-bottom:16px;}
+.f-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;display:block;}
+.f-input{width:100%;padding:10px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;outline:none;font-family:inherit;color:var(--text);}
+.f-input:focus{border-color:var(--vinho);}
+.f-field{margin-bottom:12px;}
+.f-row{display:flex;gap:8px;margin-top:14px;}
+.btn-prim{background:var(--vinho);color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;flex:2;}
+.btn-sec{background:var(--border);color:var(--text);border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;flex:1;}
+.btn-ic{background:none;border:1px solid var(--border);border-radius:7px;padding:4px 8px;font-size:11px;cursor:pointer;color:var(--muted);white-space:nowrap;}
+.btn-ic:hover{background:var(--bg);}
+.arch-section{margin:0 12px;background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;margin-top:10px;}
+
+/* SAVE BAR */
+.save-bar{position:fixed;bottom:0;left:0;right:0;background:var(--azul);color:#fff;
+  padding:9px 14px;display:flex;align-items:center;gap:8px;z-index:600;
+  box-shadow:0 -2px 10px rgba(0,0,0,.25);}
+.save-bar-status{flex:1;font-size:11px;font-weight:600;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sbar-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;
+  border-radius:16px;padding:5px 11px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.sbar-btn:hover{background:rgba(255,255,255,.25);}
+.sbar-btn.prim{background:rgba(255,255,255,.92);color:var(--azul);}
+.sbar-btn.prim:hover{background:#fff;}
+body{padding-bottom:50px;}
+
+/* ESCOTEIRO DA PÁTRIA */
+.ep-pillar{background:var(--card);margin:10px 12px 0;border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;}
+.ep-ph{padding:12px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #F0EDE8;}
+.ep-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:900;color:#fff;flex-shrink:0;}
+.ep-pb{padding:10px 14px 14px;}
+.ep-fl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:8px 0 5px;display:block;}
+.ep-sel{width:100%;padding:9px 10px;border:2px solid var(--border);border-radius:8px;font-size:13px;
+  font-weight:600;background:var(--card);outline:none;cursor:pointer;font-family:inherit;}
+.ep-sel:focus{border-color:var(--vinho);}
+.ep-ta{width:100%;padding:9px 10px;border:2px solid var(--border);border-radius:8px;font-size:12px;
+  resize:vertical;min-height:70px;outline:none;font-family:inherit;}
+.ep-ta:focus{border-color:var(--vinho);}
+.ep-di{width:100%;padding:8px 10px;border:2px solid var(--border);border-radius:8px;
+  font-size:12px;outline:none;font-family:inherit;}
+.ep-di:focus{border-color:var(--vinho);}
+.ep-sub{background:#FAFAF8;border-radius:8px;padding:10px 12px;margin-bottom:8px;}
 </style>
 </head>
 <body>
-
-
-<header class="header">
-  <div class="header-flor">⚜</div>
-  <h1>CICLO DE PROGRAMA OFICIAL<br>2S2026 / 1S2027</h1>
-  <div class="sub">Ramo Sênior — Grupo Escoteiro Joaninha — Diadema/SP</div>
-  <div class="header-chips">
-    <span class="chip">Ago/26 → Jun/27</span>
-    <span class="chip">11 blocos</span>
-    <span class="chip">5 jovens</span>
-    <span class="chip">Paulo e Thauany: Reconhecimento</span>
-  </div>
-</header>
 
 <nav class="tabs">
   <button class="tab-btn active" onclick="showTab('prog',this)">⚡ Progressão</button>
   <button class="tab-btn" onclick="showTab('cal',this)">📅 Calendário</button>
   <button class="tab-btn" onclick="showTab('sem',this)">🗓 Semestres</button>
   <button class="tab-btn" onclick="showTab('jovens',this)">👥 Jovens</button>
+  <button class="tab-btn" onclick="showTab('ep',this);renderEP();">🏆 Escoteiro da Pátria</button>
 </nav>
 
 <!-- ═══ TAB: PROGRESSÃO ═══════════════════════════════ -->
 <div id="prog" class="tab-content active">
-<div id="carregando-aviso" style="padding:18px;text-align:center;color:#666;font-size:12px;">Carregando dados da Tropa Sênior…</div>
   <div class="alert">
     Toque em ▶ para expandir um bloco e ver os sub-itens. Toque no ✓ para marcar ou desmarcar cada ação por jovem. Salvo automaticamente.
   </div>
@@ -281,14 +314,65 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   <div id="jovens-cards" style="padding:12px;display:flex;flex-direction:column;gap:10px;"></div>
 </div>
 
-
 <script>
 // ╔═══════════════════════════════════════════════════╗
 // ║                    DADOS                          ║
 // ╚═══════════════════════════════════════════════════╝
-let JOVENS = ['paulo','thauany','clara','matheus','wesley'];
-let JNOMES = ['Paulo','Thauany','Clara','Matheus','Wesley'];
-let JCORES = ['#6D1026','#1B3B6F','#2D6E3E','#6A1B9A','#CC6C00'];
+let JOVENS = ['paulo','thauany','clara','matheus'];
+let JNOMES = ['Paulo Soares','Thauany Nascimento','Clara Garcia','Matheus Gomes'];
+let JCORES = ['#6D1026','#1B3B6F','#2D6E3E','#6A1B9A'];
+const COLOR_PALETTE = ['#6D1026','#1B3B6F','#2D6E3E','#6A1B9A','#1A7434','#7D3C98','#1F618D','#CA6F1E','#1ABC9C','#E67E22','#16A085','#8E44AD'];
+
+// Sincroniza JOVENS/JNOMES/JCORES com YOUTH_DATA (add-only — mantém índices estáveis)
+function syncJovens(){
+  var active=YOUTH_DATA.filter(function(y){return !y.archived && y.id!=='isis';});
+  active.forEach(function(y){
+    var idx=JOVENS.indexOf(y.id);
+    var firstName=y.name.trim().split(' ')[0];
+    var secondName=y.name.trim().split(' ')[1]||'';
+    var displayName=firstName+(secondName?' '+secondName:'');
+    if(idx===-1){
+      // Novo jovem — adicionar ao final
+      var col=y.color||COLOR_PALETTE[JOVENS.length%COLOR_PALETTE.length];
+      if(!y.color){y.color=col;}
+      JOVENS.push(y.id);
+      JNOMES.push(displayName);
+      JCORES.push(col);
+    } else {
+      // Jovem existente — atualizar nome e cor
+      JNOMES[idx]=displayName;
+      JCORES[idx]=y.color||COLOR_PALETTE[idx%COLOR_PALETTE.length];
+    }
+  });
+}
+
+
+// Retorna apenas jovens ATIVOS (não arquivados) com índice original preservado
+function actJ(){
+  try{
+    if(typeof YOUTH_DATA!=='undefined'&&YOUTH_DATA&&YOUTH_DATA.length){
+      return JOVENS
+        .map(function(yid,i){return {yid:yid,i:i};})
+        .filter(function(item){
+          var y=YOUTH_DATA.find(function(y){return y.id===item.yid;});
+          return !y||!y.archived;
+        });
+    }
+  }catch(e){}
+  // YOUTH_DATA ainda não disponível — retorna todos como ativos
+  return JOVENS.map(function(yid,i){return {yid:yid,i:i};});
+}
+
+// Re-renderiza TODAS as abas (usado após adicionar/editar jovem)
+function renderAllTabs(){
+  renderAll();
+  renderJovens();
+  renderEP();
+  renderCal(CAL_2S26,'cal-2s26','2s26');
+  renderCal(CAL_1S27,'cal-1s27','1s27');
+  renderPresencaSummary();
+}
+
 
 // Blocos: id, name, eixo, focus(bool), semester(0=nao foco,1=2S26,2=1S27), campoOnly(bool)
 // fixed: [{id,name}], variable: [{id,name}]
@@ -504,62 +588,62 @@ const BLOCKS = [
    ]},
 ];
 
-// [paulo, thauany, clara, matheus, wesley]  1=feito, 0=não feito
+// [paulo, thauany, clara, matheus]  1=feito, 0=não feito
 const INICIAL = {
-  aprendizagem:{concluded:[1,1,1,1,0],
-    f:{f1:[1,1,1,1,0]},
-    v:{v1:[1,1,1,0,0],v2:[1,1,0,0,0],v3:[1,1,0,0,0],v4:[1,1,1,0,0],v5:[0,0,0,0,0],v6:[0,0,0,0,0]}},
-  autonomia:{concluded:[1,1,1,1,0],
-    f:{f1:[1,1,1,1,0]},
-    v:{v1:[1,1,1,1,0],v2:[0,0,0,0,0],v3:[0,0,0,0,0]}},
-  criatividade:{concluded:[1,0,0,0,0],
-    f:{f1:[1,0,0,0,0]},
-    v:{v1:[1,0,0,0,0],v2:[1,1,0,0,0],v3:[1,0,0,0,0],v4:[0,0,0,0,0],v5:[0,0,0,0,0],v6:[0,0,0,0,0],v7:[0,0,0,0,0]}},
-  inteligencia:{concluded:[1,1,1,1,0],
-    f:{f1:[1,1,1,1,0],f2:[1,1,1,1,0]},
-    v:{v1:[1,1,1,1,0]}},
-  consumo:{concluded:[0,0,0,0,0],
+  aprendizagem:{concluded:[1,1,1,1],
+    f:{f1:[1,1,1,1]},
+    v:{v1:[1,1,1,0],v2:[1,1,0,0],v3:[1,1,0,0],v4:[1,1,1,0],v5:[0,0,0,0],v6:[0,0,0,0]}},
+  autonomia:{concluded:[1,1,1,1],
+    f:{f1:[1,1,1,1]},
+    v:{v1:[1,1,1,1],v2:[0,0,0,0],v3:[0,0,0,0]}},
+  criatividade:{concluded:[1,0,0,0],
+    f:{f1:[1,0,0,0]},
+    v:{v1:[1,0,0,0],v2:[1,1,0,0],v3:[1,0,0,0],v4:[0,0,0,0],v5:[0,0,0,0],v6:[0,0,0,0],v7:[0,0,0,0]}},
+  inteligencia:{concluded:[1,1,1,1],
+    f:{f1:[1,1,1,1],f2:[1,1,1,1]},
+    v:{v1:[1,1,1,1]}},
+  consumo:{concluded:[0,0,0,0],
     f:{},
-    v:{v1:[1,1,0,1,0],v2:[0,0,1,0,0],v3:[0,0,0,0,0],v4:[0,0,1,0,0],v5:[0,0,0,0,0],v6:[0,0,0,0,0],v7:[0,0,0,0,0]}},
-  mudancas:{concluded:[1,0,0,0,0],
+    v:{v1:[1,1,0,1],v2:[0,0,1,0],v3:[0,0,0,0],v4:[0,0,1,0],v5:[0,0,0,0],v6:[0,0,0,0],v7:[0,0,0,0]}},
+  mudancas:{concluded:[1,0,0,0],
     f:{},
-    v:{v1:[1,1,1,1,0],v2:[0,0,0,0,0],v3:[1,0,0,0,0],v4:[1,1,1,1,0],v5:[1,1,1,1,0],v6:[0,0,0,0,0]}},
-  preservacao:{concluded:[1,0,0,0,0],
-    f:{f1:[1,0,0,0,0]},
-    v:{v1:[1,1,1,1,0],v2:[1,1,0,0,0],v3:[1,0,0,0,0],v4:[0,0,0,0,0],v5:[0,0,0,0,0],v6:[0,0,1,1,0],v7:[0,0,0,0,0],v8:[0,0,0,0,0]}},
-  vida_ar:{concluded:[0,0,0,0,0],
-    f:{f1:[1,1,1,1,0],f2:[1,1,1,1,0],f3:[1,1,1,1,0],f4:[1,1,1,1,0],f5:[1,0,0,0,0],f6:[0,0,0,0,0],f7:[0,0,0,0,0],f8:[0,0,0,0,0]},
-    v:{v1:[1,0,1,0,0],v2:[1,0,0,0,0],v3:[1,0,1,0,0],v4:[1,1,0,0,0],v5:[0,0,0,0,0],v6:[0,0,0,0,0],v7:[0,0,0,0,0],v8:[0,0,0,0,0],v9:[0,0,0,0,0],v10:[0,0,0,0,0]}},
-  comunidade:{concluded:[0,0,0,0,0],
-    f:{f1:[1,0,0,1,0],f2:[0,0,0,0,0]},
-    v:{v1:[0,0,0,0,0],v2:[0,0,0,0,0],v3:[0,0,0,0,0],v4:[0,0,0,0,0],v5:[0,0,0,0,0],v6:[0,0,0,0,0]}},
-  democracia:{concluded:[0,1,0,0,0],
-    f:{f1:[1,1,1,1,0],f2:[1,1,1,1,0],f3:[1,1,1,1,0]},
-    v:{v1:[1,1,1,1,0],v2:[1,1,1,1,0],v3:[0,0,0,0,0],v4:[0,1,0,0,0],v5:[0,1,1,0,0],v6:[0,0,0,0,0],v7:[0,0,0,0,0],v8:[0,1,1,0,0]}},
-  heranca:{concluded:[0,0,0,0,0],
-    f:{f1:[0,0,0,0,0]},
-    v:{v1:[1,1,1,1,0],v2:[0,0,0,0,0],v3:[0,0,0,0,0],v4:[0,1,0,0,0],v5:[0,0,0,0,0],v6:[0,0,0,0,0],v7:[0,1,0,1,0],v8:[0,0,0,0,0]}},
-  paz:{concluded:[0,0,0,0,0],
-    f:{f1:[1,0,0,0,0]},
-    v:{v1:[0,1,0,1,0],v2:[1,1,1,0,0],v3:[1,1,1,0,0],v4:[0,1,0,0,0],v5:[0,0,0,0,0],v6:[0,0,0,0,0],v7:[0,0,0,0,0],v8:[1,0,0,0,0]}},
-  valores:{concluded:[1,1,0,0,0],
-    f:{f1:[1,1,0,0,0]},
-    v:{v1:[1,1,1,1,0],v2:[1,1,1,0,0],v3:[0,0,0,0,0],v4:[0,0,0,0,0]}},
-  cuidado:{concluded:[1,1,0,0,0],
-    f:{f1:[1,1,1,0,0],f2:[1,1,0,0,0]},
-    v:{v1:[1,1,0,0,0],v2:[1,1,0,0,0],v3:[1,1,0,0,0],v4:[1,1,0,0,0],v5:[0,0,0,0,0],v6:[0,0,1,1,0]}},
-  espiritualidade:{concluded:[0,0,0,1,0],
+    v:{v1:[1,1,1,1],v2:[0,0,0,0],v3:[1,0,0,0],v4:[1,1,1,1],v5:[1,1,1,1],v6:[0,0,0,0]}},
+  preservacao:{concluded:[1,0,0,0],
+    f:{f1:[1,0,0,0]},
+    v:{v1:[1,1,1,1],v2:[1,1,0,0],v3:[1,0,0,0],v4:[0,0,0,0],v5:[0,0,0,0],v6:[0,0,1,1],v7:[0,0,0,0],v8:[0,0,0,0]}},
+  vida_ar:{concluded:[0,0,0,0],
+    f:{f1:[1,1,1,1],f2:[1,1,1,1],f3:[1,1,1,1],f4:[1,1,1,1],f5:[1,0,0,0],f6:[0,0,0,0],f7:[0,0,0,0],f8:[0,0,0,0]},
+    v:{v1:[1,0,1,0],v2:[1,0,0,0],v3:[1,0,1,0],v4:[1,1,0,0],v5:[0,0,0,0],v6:[0,0,0,0],v7:[0,0,0,0],v8:[0,0,0,0],v9:[0,0,0,0],v10:[0,0,0,0]}},
+  comunidade:{concluded:[0,0,0,0],
+    f:{f1:[1,0,0,1],f2:[0,0,0,0]},
+    v:{v1:[0,0,0,0],v2:[0,0,0,0],v3:[0,0,0,0],v4:[0,0,0,0],v5:[0,0,0,0],v6:[0,0,0,0]}},
+  democracia:{concluded:[0,1,0,0],
+    f:{f1:[1,1,1,1],f2:[1,1,1,1],f3:[1,1,1,1]},
+    v:{v1:[1,1,1,1],v2:[1,1,1,1],v3:[0,0,0,0],v4:[0,1,0,0],v5:[0,1,1,0],v6:[0,0,0,0],v7:[0,0,0,0],v8:[0,1,1,0]}},
+  heranca:{concluded:[0,0,0,0],
+    f:{f1:[0,0,0,0]},
+    v:{v1:[1,1,1,1],v2:[0,0,0,0],v3:[0,0,0,0],v4:[0,1,0,0],v5:[0,0,0,0],v6:[0,0,0,0],v7:[0,1,0,1],v8:[0,0,0,0]}},
+  paz:{concluded:[0,0,0,0],
+    f:{f1:[1,0,0,0]},
+    v:{v1:[0,1,0,1],v2:[1,1,1,0],v3:[1,1,1,0],v4:[0,1,0,0],v5:[0,0,0,0],v6:[0,0,0,0],v7:[0,0,0,0],v8:[1,0,0,0]}},
+  valores:{concluded:[1,1,0,0],
+    f:{f1:[1,1,0,0]},
+    v:{v1:[1,1,1,1],v2:[1,1,1,0],v3:[0,0,0,0],v4:[0,0,0,0]}},
+  cuidado:{concluded:[1,1,0,0],
+    f:{f1:[1,1,1,0],f2:[1,1,0,0]},
+    v:{v1:[1,1,0,0],v2:[1,1,0,0],v3:[1,1,0,0],v4:[1,1,0,0],v5:[0,0,0,0],v6:[0,0,1,1]}},
+  espiritualidade:{concluded:[0,0,0,1],
     f:{},
-    v:{v1:[1,1,1,1,0],v2:[0,0,0,1,0],v3:[0,1,0,1,0],v4:[0,0,0,1,0]}},
-  habitos:{concluded:[0,0,0,0,0],
-    f:{f1:[1,0,0,0,0],f2:[0,0,0,0,0]},
-    v:{v1:[1,1,0,0,0],v2:[1,1,0,0,0],v3:[1,1,0,0,0],v4:[0,0,0,0,0],v5:[0,0,0,0,0]}},
-  saude_mental:{concluded:[1,1,1,1,0],
-    f:{f1:[1,1,1,1,0],f2:[1,1,1,1,0]},
-    v:{v1:[1,1,0,0,0],v2:[1,0,0,0,0],v3:[1,0,0,0,0],v4:[0,0,0,0,0],v5:[0,0,0,0,0]}},
-  vinculos:{concluded:[1,1,1,1,0],
-    f:{f1:[1,1,1,1,0]},
-    v:{v1:[1,1,0,0,0],v2:[1,1,0,0,0],v3:[1,1,0,0,0],v4:[1,1,1,0,0],v5:[0,0,0,0,0],v6:[0,0,0,0,0]}},
+    v:{v1:[1,1,1,1],v2:[0,0,0,1],v3:[0,1,0,1],v4:[0,0,0,1]}},
+  habitos:{concluded:[0,0,0,0],
+    f:{f1:[1,0,0,0],f2:[0,0,0,0]},
+    v:{v1:[1,1,0,0],v2:[1,1,0,0],v3:[1,1,0,0],v4:[0,0,0,0],v5:[0,0,0,0]}},
+  saude_mental:{concluded:[1,1,1,1],
+    f:{f1:[1,1,1,1],f2:[1,1,1,1]},
+    v:{v1:[1,1,0,0],v2:[1,0,0,0],v3:[1,0,0,0],v4:[0,0,0,0],v5:[0,0,0,0]}},
+  vinculos:{concluded:[1,1,1,1],
+    f:{f1:[1,1,1,1]},
+    v:{v1:[1,1,0,0],v2:[1,1,0,0],v3:[1,1,0,0],v4:[1,1,1,0],v5:[0,0,0,0],v6:[0,0,0,0]}},
 };
 
 const EIXOS = {
@@ -657,7 +741,7 @@ async function loadState(){
   try{
     const r = await Promise.race([
       fetch(REST_URL_SR),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 4000))
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Tempo limite ao buscar dados da Tropa Sênior')), 4000))
     ]);
     const val = await r.json();
     if (val) {
@@ -668,15 +752,17 @@ async function loadState(){
       if (dados.JCORES) JCORES = dados.JCORES;
       PRESENCA = dados.PRESENCA || {};
       if (dados.YOUTH_DATA) YOUTH_DATA = dados.YOUTH_DATA;
+      if (dados.EP_DATA) EP_DATA = dados.EP_DATA;
     } else {
       S = deepCopy(INICIAL);
     }
-  }catch(e){ S = deepCopy(INICIAL); console.error('Tropa Sênior: usando dados padrão (falha/demora ao buscar):', e); }
+  }catch(e){ S = deepCopy(INICIAL); console.error('Tropa Sênior: usando dados padrão (falha ou demora ao buscar):', e); }
 }
 async function saveState(){
-  const payload = JSON.stringify({ S, JOVENS, JNOMES, JCORES, PRESENCA, YOUTH_DATA });
+  const payload = JSON.stringify({ S, JOVENS, JNOMES, JCORES, PRESENCA, YOUTH_DATA, EP_DATA });
   try {
     await fetch(REST_URL_SR, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    onDataSaved();
   } catch(e) { console.error('Não foi possível salvar dados da Tropa Sênior:', e); }
 }
 function deepCopy(o){return JSON.parse(JSON.stringify(o));}
@@ -715,16 +801,16 @@ function countActionsDone(blockId,type,jovemIdx){
 }
 
 function toggle(blockId,type,actionId,jovemIdx){
-  if(!S[blockId]) S[blockId]=deepCopy(INICIAL[blockId]||{concluded:[0,0,0,0,0],f:{},v:{}});
+  if(!S[blockId]) S[blockId]=deepCopy(INICIAL[blockId]||{concluded:[0,0,0,0],f:{},v:{}});
   if(!S[blockId][type]) S[blockId][type]={};
-  if(!S[blockId][type][actionId]) S[blockId][type][actionId]=[0,0,0,0,0];
+  if(!S[blockId][type][actionId]) S[blockId][type][actionId]=[0,0,0,0];
   S[blockId][type][actionId][jovemIdx] ^= 1;
   saveState();
   renderAll();
 }
 function toggleConcluded(blockId,jovemIdx){
-  if(!S[blockId]) S[blockId]=deepCopy(INICIAL[blockId]||{concluded:[0,0,0,0,0],f:{},v:{}});
-  if(!S[blockId].concluded) S[blockId].concluded=[0,0,0,0,0];
+  if(!S[blockId]) S[blockId]=deepCopy(INICIAL[blockId]||{concluded:[0,0,0,0],f:{},v:{}});
+  if(!S[blockId].concluded) S[blockId].concluded=[0,0,0,0];
   S[blockId].concluded[jovemIdx] ^= 1;
   saveState();
   renderAll();
@@ -733,7 +819,7 @@ function toggleConcluded(blockId,jovemIdx){
 function renderProgressBars(){
   const c=document.getElementById('pbars');
   c.innerHTML='';
-  JOVENS.forEach((j,i)=>{
+  actJ().forEach(function(item){var j=item.yid,i=item.i;
     const n=getTotalConcluded(i);
     const pct=Math.round(n/18*100);
     const et=etapa(n);
@@ -753,7 +839,7 @@ function renderEixo(eixoId){
   const container=document.getElementById('bl-'+eixoId);
   container.innerHTML='';
   let totalDone=0,totalBlocks=eixo.blockIds.length*5;
-  eixo.blockIds.forEach(bid=>{JOVENS.forEach((j,i)=>{if(isBlockConcluded(bid,i))totalDone++;});});
+  eixo.blockIds.forEach(bid=>{actJ().forEach(function(item){if(isBlockConcluded(bid,item.i))totalDone++;});});
   document.getElementById('stats-'+eixoId).textContent=`${totalDone}/${totalBlocks} concluídos`;
 
   eixo.blockIds.forEach(bid=>{
@@ -762,7 +848,7 @@ function renderEixo(eixoId){
     const allActions=[...bl.fixed.map(a=>({...a,type:'f'})),...bl.variable.map(a=>({...a,type:'v'}))];
 
     // Badge per youth
-    const badges=JOVENS.map((j,i)=>{
+    const badges=actJ().map(({yid:j,i})=>{
       const done=isBlockConcluded(bid,i);
       const fDone=countActionsDone(bid,'f',i);
       const vDone=countActionsDone(bid,'v',i);
@@ -789,9 +875,9 @@ function renderEixo(eixoId){
     const concludedRow=`<div class="actions-section">
       <div class="actions-label"><span style="color:#27AE60;font-weight:800;">✓ STATUS DO BLOCO</span></div>
       <div class="actions-table-wrap"><table class="actions-table">
-        <thead><tr><th class="act-col">Marcar bloco como concluído</th>${JOVENS.map((j,i)=>`<th>${JNOMES[i].split(' ')[0]}</th>`).join('')}</tr></thead>
+        <thead><tr><th class="act-col">Marcar bloco como concluído</th>${actJ().map(({yid:j,i})=>`<th>${JNOMES[i].split(' ')[0]}</th>`).join('')}</tr></thead>
         <tbody><tr><td class="act-col">Bloco ${bl.name} — CONCLUÍDO</td>
-          ${JOVENS.map((j,i)=>{
+          ${actJ().map(({yid:j,i})=>{
             const done=isBlockConcluded(bid,i);
             return `<td><div class="cb ${done?'done':'pending'}" onclick="toggleConcluded('${bid}',${i})">${done?'✓':'·'}</div></td>`;
           }).join('')}
@@ -803,7 +889,7 @@ function renderEixo(eixoId){
     let fixedSection='';
     if(bl.fixed.length>0){
       const rows=bl.fixed.map(a=>{
-        const cells=JOVENS.map((j,i)=>{
+        const cells=actJ().map(({yid:j,i})=>{
           const done=getActionDone(bid,'f',a.id,i);
           return `<td><div class="cb ${done?'done':'pending'}" onclick="toggle('${bid}','f','${a.id}',${i})">${done?'✓':'·'}</div></td>`;
         }).join('');
@@ -812,7 +898,7 @@ function renderEixo(eixoId){
       fixedSection=`<div class="actions-section">
         <div class="actions-label fixed-label">📌 Ações Fixas (obrigatórias)</div>
         <div class="actions-table-wrap"><table class="actions-table">
-          <thead><tr><th class="act-col">Ação</th>${JOVENS.map((j,i)=>`<th>${JNOMES[i].split(' ')[0]}</th>`).join('')}</tr></thead>
+          <thead><tr><th class="act-col">Ação</th>${actJ().map(({yid:j,i})=>`<th>${JNOMES[i].split(' ')[0]}</th>`).join('')}</tr></thead>
           <tbody>${rows}</tbody>
         </table></div>
       </div>`;
@@ -822,7 +908,7 @@ function renderEixo(eixoId){
     let varSection='';
     if(bl.variable.length>0){
       const rows=bl.variable.map(a=>{
-        const cells=JOVENS.map((j,i)=>{
+        const cells=actJ().map(({yid:j,i})=>{
           const done=getActionDone(bid,'v',a.id,i);
           return `<td><div class="cb ${done?'done':'pending'}" onclick="toggle('${bid}','v','${a.id}',${i})">${done?'✓':'·'}</div></td>`;
         }).join('');
@@ -831,7 +917,7 @@ function renderEixo(eixoId){
       varSection=`<div class="actions-section">
         <div class="actions-label var-label">☑ Ações Variáveis</div>
         <div class="actions-table-wrap"><table class="actions-table">
-          <thead><tr><th class="act-col">Ação</th>${JOVENS.map((j,i)=>`<th>${JNOMES[i].split(' ')[0]}</th>`).join('')}</tr></thead>
+          <thead><tr><th class="act-col">Ação</th>${actJ().map(({yid:j,i})=>`<th>${JNOMES[i].split(' ')[0]}</th>`).join('')}</tr></thead>
           <tbody>${rows}</tbody>
         </table></div>
       </div>`;
@@ -866,8 +952,12 @@ function renderEixo(eixoId){
 // ╚═══════════════════════════════════════════════════╝
 let PRESENCA = {};
 
-function loadPresenca(){ /* já carregado junto em loadState() */ }
-function savePresenca(){ saveState(); }
+function loadPresenca(){
+  /* PRESENCA já é carregado junto em loadState() */
+}
+function savePresenca(){
+  saveState();
+}
 function countAbsences(jovemIdx){
   return Object.values(PRESENCA).filter(ev=>ev[jovemIdx]===0).length;
 }
@@ -875,21 +965,25 @@ function renderPresencaSummary(){
   const c=document.getElementById('presenca-summary');
   if(!c) return;
   let html='';
-  JOVENS.forEach((j,i)=>{
+  actJ().forEach(function(item){var j=item.yid,i=item.i;
     const abs=countAbsences(i);
+    const consec=hasConsecutiveAbsences(i,3);
     const fg=abs>=3?'#E74C3C':abs===2?'#E67E22':'#27AE60';
-    const note=abs>=3?' &nbsp;<span style="background:#E74C3C;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:20px;">⚠ INSCRIÇÃO EM REVISÃO</span>':abs===2?' &nbsp;<span style="background:#E67E22;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:20px;">atenção</span>':'';
+    const flag=consec?' <span title="3 faltas consecutivas" style="color:#E74C3C;font-size:13px;">🚩</span>':'';
+    let note='';
+    if(abs>=3) note=' &nbsp;<span style="background:#E74C3C;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:20px;">⚠ INSCRIÇÃO EM REVISÃO</span>';
+    else if(abs===2) note=' &nbsp;<span style="background:#E67E22;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:20px;">atenção</span>';
     const pres=Object.values(PRESENCA).filter(ev=>ev[i]===1).length;
     const total=Object.values(PRESENCA).filter(ev=>ev[i]!==undefined).length;
     html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #F0EDE8;">
-      <span style="font-size:12px;font-weight:700;">${JNOMES[i]}</span>
+      <span style="font-size:12px;font-weight:700;">${JNOMES[i]}${flag}</span>
       <div style="display:flex;align-items:center;gap:5px;">
         <span style="font-size:11px;color:#666;">${pres}/${total} pres.</span>
         <span style="font-size:11px;font-weight:800;color:${fg};">${abs} falta${abs!==1?'s':''}${note}</span>
       </div>
     </div>`;
   });
-  html+=`<div style="font-size:10px;color:var(--muted);margin-top:6px;padding-top:4px;">⓪ Cinza = pendente &nbsp; ✓ Verde = presente &nbsp; ✗ Vermelho = faltou</div>`;
+  html+=`<div style="font-size:10px;color:var(--muted);margin-top:6px;padding-top:4px;">⓪ Cinza = pendente &nbsp;·&nbsp; ✓ Verde = presente &nbsp;·&nbsp; ✗ Vermelho = faltou &nbsp;·&nbsp; 🚩 3 faltas consecutivas</div>`;
   c.innerHTML=html;
 }
 function togglePresenca(eid,jovemIdx){
@@ -908,7 +1002,7 @@ function fillPresencaGrid(eid){
   if(!grid) return;
   grid.innerHTML='';
   let presentes=0,marcados=0;
-  JOVENS.forEach((j,i)=>{
+  actJ().forEach(function(item){var j=item.yid,i=item.i;
     const val=PRESENCA[eid]?.[i];
     let bg,fg,lbl,title;
     if(val===1){bg='#27AE60';fg='#fff';lbl='✓';presentes++;marcados++;title='Presente — clique para marcar ausente';}
@@ -1019,7 +1113,7 @@ function renderSemestres(){
 
   function progRows(semIdx){
     const semBlocks=BLOCKS.filter(b=>b.focus&&b.semester===semIdx);
-    return JOVENS.map((j,i)=>{
+    return actJ().map(({yid:j,i})=>{
       const baseDone=getTotalConcluded(i);
       const gains=semBlocks.filter(b=>!isBlockConcluded(b.id,i)).length;
       const expected=Math.min(18,baseDone+gains);
@@ -1100,64 +1194,393 @@ function renderAll(){
   renderSemestres();
 }
 
-renderCal(CAL_2S26,'cal-2s26','2s26');
-renderCal(CAL_1S27,'cal-1s27','1s27');
+// ╔═══════════════════════════════════════════════════╗
+// ║              SALVAR / EXPORTAR                   ║
+// ╚═══════════════════════════════════════════════════╝
+let _savedTimer = null;
 
-async function iniciarApp(){
-  await loadState();
-  renderAll();
-  renderJovens();
-  const aviso = document.getElementById('carregando-aviso');
-  if (aviso) aviso.remove();
+function onDataSaved(){
+  clearTimeout(_savedTimer);
+  const el = document.getElementById('save-status');
+  if(el) el.textContent = '● Salvando…';
+  _savedTimer = setTimeout(()=>{
+    const t = new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    if(el) el.textContent = '✓ Salvo automaticamente às '+t;
+  }, 350);
 }
-iniciarApp();
 
-function corParaIdx(i) { return `hsl(${Math.round(i*137.5)%360},45%,42%)`; }
-
-window.addEventListener('message', async function(ev){
-  const msg = ev.data;
-  if (!msg || msg.tipo !== 'transferirJovem') return;
-  const nome = msg.nome;
-  const idNovo = 'j' + Date.now().toString(36) + Math.floor(Math.random()*1000);
-  JOVENS.push(idNovo);
-  JNOMES.push(nome);
-  JCORES.push(corParaIdx(JOVENS.length - 1));
-  const novoIdx = JOVENS.length - 1;
-  BLOCKS.forEach(b => {
-    if (!S[b.id]) S[b.id] = { concluded: [], f: {}, v: {} };
-    const entry = S[b.id];
-    while (entry.concluded.length < novoIdx) entry.concluded.push(0);
-    entry.concluded.push(0);
-    (b.fixed || []).forEach(fa => {
-      if (!entry.f[fa.id]) entry.f[fa.id] = [];
-      while (entry.f[fa.id].length < novoIdx) entry.f[fa.id].push(0);
-      entry.f[fa.id].push(0);
-    });
-    (b.variable || []).forEach(va => {
-      if (!entry.v[va.id]) entry.v[va.id] = [];
-      while (entry.v[va.id].length < novoIdx) entry.v[va.id].push(0);
-      entry.v[va.id].push(0);
-    });
-  });
-  if (msg.nascimento) {
-    YOUTH_DATA.push({ name: nome, born: msg.nascimento, role: '' });
-  }
+async function saveAll(){
   await saveState();
-  renderAll();
-  renderJovens();
-});
+  const t = new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const el = document.getElementById('save-status');
+  if(el) el.textContent = '✓ Dados salvos às '+t;
+  // Pulsa o botão visualmente
+  const btn = document.getElementById('save-main-btn');
+  if(btn){
+    const orig = btn.textContent;
+    btn.textContent = '✓ Salvo!';
+    btn.style.background = '#27AE60';
+    btn.style.color = '#fff';
+    setTimeout(()=>{btn.textContent=orig;btn.style.background='';btn.style.color='';}, 2000);
+  }
+}
+
+function exportData(){
+  saveAll();
+  const data = {
+    version:'1.1',
+    exportedAt: new Date().toISOString(),
+    exportedBy: 'GE Joaninha — Sistema de Ciclo de Programa',
+    state: S,
+    presenca: PRESENCA,
+    youth: YOUTH_DATA,
+    ep: EP_DATA
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'backup_joaninha_'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  const el = document.getElementById('save-status');
+  if(el) el.textContent = '✓ Backup exportado com sucesso!';
+}
+
+function importData(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async e => {
+    try{
+      const d = JSON.parse(e.target.result);
+      if(!d.version) throw new Error('Arquivo não reconhecido');
+      if(d.state)   S = d.state;
+      if(d.presenca) PRESENCA = d.presenca;
+      if(d.youth)   YOUTH_DATA = d.youth;
+      if(d.ep)      EP_DATA = d.ep;
+      await saveState();
+      alert('✓ Dados importados com sucesso!\nA página será recarregada para aplicar as alterações.');
+      location.reload();
+    }catch(err){
+      alert('Arquivo inválido.\nUtilize apenas backups exportados por este sistema.');
+    }
+  };
+  reader.readAsText(file);
+}
+
+
+// ╔═══════════════════════════════════════════════════╗
+// ║         ESCOTEIRO DA PÁTRIA                      ║
+// ╚═══════════════════════════════════════════════════╝
+var EP_DATA={}, EP_SEL=null;
+
+function loadEPData(){
+  if(!EP_SEL&&JOVENS.length) EP_SEL=JOVENS[0];
+}
+function saveEPData(){
+  saveState();
+}
+function epY(yid){
+  if(!EP_DATA[yid]) EP_DATA[yid]={
+    desafio:{status:'nao',notes:'',date:''},
+    autoval:{status:'nao',date:''},
+    pareval:{status:'nao',date:''}
+  };
+  return EP_DATA[yid];
+}
+function epSv(yid,sec,fld,val){epY(yid)[sec][fld]=val;saveEPData();renderEP();}
+function procDL(bornStr){
+  var t=turn18(bornStr);
+  return new Date(t.getFullYear(),t.getMonth()-6,t.getDate());
+}
+function sLabel(s){return s==='concluido'?'Concluído':s==='andamento'?'Em andamento':'Não iniciado';}
+function sColor(s){return s==='concluido'?'#27AE60':s==='andamento'?'#E67E22':'#95A5A6';}
+function sBadge(s,txt){
+  var t=txt||sLabel(s);
+  return '<span style="background:'+sColor(s)+'22;color:'+sColor(s)+';font-size:9px;font-weight:800;padding:3px 9px;border-radius:20px;">'+t+'</span>';
+}
+
+function renderEP(){
+  var c=document.getElementById('ep-content');
+  if(!c) return;
+  try {
+  // Garantir inicialização completa antes de renderizar
+  if(!EP_SEL&&typeof JOVENS!=='undefined'&&JOVENS.length) EP_SEL=JOVENS[0];
+  if(!EP_SEL||!JOVENS||!JOVENS.length){
+    c.innerHTML='<div class="alert" style="margin-top:12px;">Carregando dados…</div>';return;
+  }
+  c.innerHTML='';
+
+  // ── Seletor de jovem ──────────────────────────────
+  var selDiv=document.createElement('div');
+  selDiv.style.cssText='display:flex;gap:8px;flex-wrap:wrap;padding:14px 12px 0;';
+  actJ().forEach(function(item){var yid=item.yid,i=item.i;
+    var btn=document.createElement('button');
+    btn.textContent=JNOMES[i].split(' ')[0];
+    var sel=yid===EP_SEL;
+    btn.style.cssText='padding:8px 14px;border-radius:20px;border:2px solid '+JCORES[i]+';'
+      +'background:'+(sel?JCORES[i]:'transparent')+';color:'+(sel?'#fff':JCORES[i])+';'
+      +'font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;';
+    btn.onclick=(function(id){return function(){EP_SEL=id;renderEP();};})(yid);
+    selDiv.appendChild(btn);
+  });
+  c.appendChild(selDiv);
+
+  var idx=JOVENS.indexOf(EP_SEL);
+  if(idx<0) return;
+  var yData=YOUTH_DATA.find(function(y){return y.id===EP_SEL;})||{};
+  var born=yData.born||null;
+  var ep=epY(EP_SEL);
+  var blocksDone=getTotalConcluded(idx);
+  var p1OK=blocksDone>=18;
+  var p2OK=ep.desafio.status==='concluido';
+  var p3OK=ep.autoval.status==='concluido'&&ep.pareval.status==='concluido';
+  var allOK=p1OK&&p2OK&&p3OK;
+  var color=JCORES[idx];
+  var name=JNOMES[idx];
+  var today=new Date();
+
+  // ── Header do jovem ───────────────────────────────
+  var h='<div style="margin:12px 12px 0;background:'+color+'18;border-left:5px solid '+color+';border-radius:var(--r);padding:12px 14px;">'
+    +'<div style="font-size:15px;font-weight:800;color:'+color+';">'+name+'</div>';
+  if(born) h+='<div style="font-size:11px;color:var(--muted);margin-top:2px;">Passagem para o Pioneiro: <strong>'+fmtDate(turn18(born))+'</strong></div>';
+  h+='<div style="margin-top:8px;">';
+  if(allOK) h+='<span style="background:#27AE6022;color:#27AE60;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;">🏆 PRONTO PARA O RECONHECIMENTO</span>';
+  else h+='<span style="background:#E67E2222;color:#E67E22;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;">⏳ Em progresso — '
+    +(p1OK?'✓':'○')+' Blocos · '+(p2OK?'✓':'○')+' Desafio · '+(p3OK?'✓':'○')+' Avaliação</span>';
+  h+='</div></div>';
+  c.insertAdjacentHTML('beforeend',h);
+
+  // ── Prazo administrativo ──────────────────────────
+  if(born){
+    var deadline=procDL(born);
+    var daysD=Math.ceil((deadline-today)/(1000*60*60*24));
+    var dColor,dIcon,dMsg,dBg;
+    if(daysD<0){dColor='#7F8C8D';dIcon='⚫';dMsg='Prazo de envio já passou';dBg='#F5F5F5';}
+    else if(daysD<30){dColor='#E74C3C';dIcon='🚨';dMsg='CRÍTICO — enviar imediatamente!';dBg='#FDEDEC';}
+    else if(daysD<90){dColor='#E74C3C';dIcon='⚠️';dMsg='Urgente — preparar com prioridade';dBg='#FDEDEC';}
+    else if(daysD<180){dColor='#E67E22';dIcon='⏳';dMsg='Iniciar preparação do processo administrativo';dBg='#FEF9E7';}
+    else{dColor='#27AE60';dIcon='✅';dMsg='Há tempo suficiente';dBg='#EAFAF1';}
+    var mD=Math.floor(Math.abs(daysD)/30.44);
+    var rD=Math.abs(daysD)%30;
+    var tStr=daysD<0?'passou há '+(mD>0?mD+' mês'+(mD!==1?'es':''):'alguns dias')
+      :daysD<30?daysD+' dia'+(daysD!==1?'s':'')
+      :mD+' mês'+(mD!==1?'es':'')+(rD>0?' e '+rD+' dia'+(rD!==1?'s':''):'');
+    var dl='<div style="margin:10px 12px 0;background:'+dBg+';border-left:5px solid '+dColor+';border-radius:var(--r);padding:12px 14px;">'
+      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">'
+      +'<span style="font-size:20px;">'+dIcon+'</span>'
+      +'<div><div style="font-size:12px;font-weight:800;color:'+dColor+';">Processo Administrativo → UEB</div>'
+      +'<div style="font-size:10px;color:var(--muted);">Enviar 6 meses antes da passagem para o Pioneiro</div></div></div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px;">'
+      +'<div style="background:rgba(255,255,255,.75);border-radius:8px;padding:8px 10px;">'
+      +'<div style="font-size:9px;font-weight:800;text-transform:uppercase;color:#999;margin-bottom:2px;">Prazo de envio</div>'
+      +'<div style="font-size:12px;font-weight:700;">'+fmtDate(deadline)+'</div></div>'
+      +'<div style="background:rgba(255,255,255,.75);border-radius:8px;padding:8px 10px;">'
+      +'<div style="font-size:9px;font-weight:800;text-transform:uppercase;color:#999;margin-bottom:2px;">Tempo '+(daysD<0?'passado':'restante')+'</div>'
+      +'<div style="font-size:12px;font-weight:700;color:'+dColor+';">'+tStr+'</div></div></div>'
+      +'<div style="font-size:11px;font-weight:800;color:'+dColor+';">'+dMsg+'</div></div>';
+    c.insertAdjacentHTML('beforeend',dl);
+  }
+
+  // ── Pilar 1: 18 Blocos (auto-filled) ─────────────
+  var bPct=Math.round(blocksDone/18*100);
+  var p1='<div class="ep-pillar"><div class="ep-ph">'
+    +'<div class="ep-num" style="background:'+(p1OK?'#27AE60':'#E67E22')+';">1</div>'
+    +'<div style="flex:1;font-size:13px;font-weight:800;">Conclusão dos 18 Blocos</div>'
+    +sBadge(p1OK?'concluido':'andamento')+'</div>'
+    +'<div class="ep-pb">'
+    +'<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:5px;">'
+    +'<span>Progresso automático (aba Progressão)</span>'
+    +'<span style="font-weight:800;color:'+color+';">'+blocksDone+'/18</span></div>'
+    +'<div style="background:#EEEBE7;border-radius:20px;height:10px;overflow:hidden;margin-bottom:7px;">'
+    +'<div style="width:'+bPct+'%;height:100%;border-radius:20px;background:'+(p1OK?'#27AE60':color)+';"></div></div>'
+    +(p1OK?'<div style="font-size:11px;color:#27AE60;font-weight:700;">✓ Todos os 18 blocos concluídos!</div>'
+      :'<div style="font-size:11px;color:var(--muted);">Faltam <strong>'+(18-blocksDone)+' bloco'+(18-blocksDone!==1?'s':'')+'</strong> — acompanhe na aba Progressão.</div>')
+    +'</div></div>';
+  c.insertAdjacentHTML('beforeend',p1);
+
+  // ── Pilar 2: Desafio Pessoal ──────────────────────
+  var p2Div=document.createElement('div');
+  p2Div.className='ep-pillar';
+  var p2h='<div class="ep-ph"><div class="ep-num" style="background:'+(p2OK?'#27AE60':'#E67E22')+';">2</div>'
+    +'<div style="flex:1;font-size:13px;font-weight:800;">Desafio Pessoal</div>'+sBadge(ep.desafio.status)+'</div>';
+  p2Div.innerHTML=p2h;
+  var p2b=document.createElement('div');p2b.className='ep-pb';
+  // Status
+  var l1=document.createElement('label');l1.className='ep-fl';l1.textContent='Status';p2b.appendChild(l1);
+  var s2=document.createElement('select');s2.className='ep-sel';s2.style.marginBottom='10px';
+  [['nao','Não iniciado'],['andamento','Em andamento'],['concluido','Concluído']].forEach(function(opt){
+    var o=document.createElement('option');o.value=opt[0];o.textContent=opt[1];
+    if(ep.desafio.status===opt[0]) o.selected=true;s2.appendChild(o);
+  });
+  s2.onchange=function(){epSv(EP_SEL,'desafio','status',s2.value);};p2b.appendChild(s2);
+  // Notes
+  var l2=document.createElement('label');l2.className='ep-fl';l2.textContent='Descrição / Observações';p2b.appendChild(l2);
+  var ta=document.createElement('textarea');ta.className='ep-ta';ta.style.marginBottom='10px';
+  ta.placeholder='Descreva o projeto ou desafio pessoal do jovem…';ta.value=ep.desafio.notes||'';
+  ta.onchange=function(){epSv(EP_SEL,'desafio','notes',ta.value);};p2b.appendChild(ta);
+  // Date (if concluded)
+  if(ep.desafio.status==='concluido'){
+    var l3=document.createElement('label');l3.className='ep-fl';l3.textContent='Data de conclusão';p2b.appendChild(l3);
+    var di=document.createElement('input');di.type='date';di.className='ep-di';di.value=ep.desafio.date||'';
+    di.onchange=function(){epSv(EP_SEL,'desafio','date',di.value);};p2b.appendChild(di);
+  }
+  p2Div.appendChild(p2b);c.appendChild(p2Div);
+
+  // ── Pilar 3: Avaliação ────────────────────────────
+  var p3Val=ep.autoval.status==='concluido'&&ep.pareval.status==='concluido'?'concluido'
+    :ep.autoval.status!=='nao'||ep.pareval.status!=='nao'?'andamento':'nao';
+  var p3Div=document.createElement('div');p3Div.className='ep-pillar';p3Div.style.marginBottom='12px';
+  var p3h='<div class="ep-ph"><div class="ep-num" style="background:'+(p3OK?'#27AE60':'#E67E22')+';">3</div>'
+    +'<div style="flex:1;font-size:13px;font-weight:800;">Avaliação dos Pares e Autoavaliação</div>'+sBadge(p3Val)+'</div>';
+  p3Div.innerHTML=p3h;
+  var p3b=document.createElement('div');p3b.className='ep-pb';
+
+  // 3a: Autoavaliação
+  var sub1=document.createElement('div');sub1.className='ep-sub';
+  sub1.innerHTML='<div style="font-size:12px;font-weight:800;margin-bottom:8px;">3a. Autoavaliação</div>';
+  var sa=document.createElement('select');sa.className='ep-sel';
+  [['nao','Não realizada'],['andamento','Em andamento'],['concluido','Concluída']].forEach(function(opt){
+    var o=document.createElement('option');o.value=opt[0];o.textContent=opt[1];
+    if(ep.autoval.status===opt[0]) o.selected=true;sa.appendChild(o);
+  });
+  sa.onchange=function(){epSv(EP_SEL,'autoval','status',sa.value);};sub1.appendChild(sa);
+  if(ep.autoval.status==='concluido'){
+    var la=document.createElement('label');la.className='ep-fl';la.textContent='Data de realização';sub1.appendChild(la);
+    var da=document.createElement('input');da.type='date';da.className='ep-di';da.style.marginTop='4px';
+    da.value=ep.autoval.date||'';
+    da.onchange=function(){epSv(EP_SEL,'autoval','date',da.value);};sub1.appendChild(da);
+  }
+  p3b.appendChild(sub1);
+
+  // 3b: Avaliação dos pares
+  var sub2=document.createElement('div');sub2.className='ep-sub';
+  sub2.innerHTML='<div style="font-size:12px;font-weight:800;margin-bottom:8px;">3b. Avaliação dos Pares (Patrulha / Tropa)</div>';
+  var sp=document.createElement('select');sp.className='ep-sel';
+  [['nao','Não realizada'],['andamento','Em andamento'],['concluido','Concluída']].forEach(function(opt){
+    var o=document.createElement('option');o.value=opt[0];o.textContent=opt[1];
+    if(ep.pareval.status===opt[0]) o.selected=true;sp.appendChild(o);
+  });
+  sp.onchange=function(){epSv(EP_SEL,'pareval','status',sp.value);};sub2.appendChild(sp);
+  if(ep.pareval.status==='concluido'){
+    var lp=document.createElement('label');lp.className='ep-fl';lp.textContent='Data de realização';sub2.appendChild(lp);
+    var dp=document.createElement('input');dp.type='date';dp.className='ep-di';dp.style.marginTop='4px';
+    dp.value=ep.pareval.date||'';
+    dp.onchange=function(){epSv(EP_SEL,'pareval','date',dp.value);};sub2.appendChild(dp);
+  }
+  p3b.appendChild(sub2);
+  p3Div.appendChild(p3b);c.appendChild(p3Div);
+
+  // ── Resumo final ──────────────────────────────────
+  var ov=document.createElement('div');
+  ov.style.cssText='margin:0 12px 12px;padding:16px;border-radius:var(--r);box-shadow:var(--shadow);text-align:center;'
+    +'background:'+(allOK?'#EAFAF1':'var(--card)')+';border:2px solid '+(allOK?'#27AE60':'var(--border)')+';';
+  if(allOK){
+    ov.innerHTML='<div style="font-size:32px;margin-bottom:6px;">🏆</div>'
+      +'<div style="font-size:15px;font-weight:800;color:#27AE60;">Reconhecimento de Escoteiro da Pátria</div>'
+      +'<div style="font-size:11px;color:var(--muted);margin-top:4px;">Todos os requisitos cumpridos! Parabéns, '+name.split(' ')[0]+'!</div>';
+  } else {
+    var items=[
+      {ok:p1OK,lbl:'18 Blocos ('+blocksDone+'/18)'},
+      {ok:p2OK,lbl:'Desafio Pessoal'},
+      {ok:p3OK,lbl:'Avaliação'}
+    ];
+    var rows=items.map(function(it){
+      return '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #F0EDE8;">'
+        +'<span style="font-size:18px;">'+(it.ok?'✅':'○')+'</span>'
+        +'<span style="font-size:12px;font-weight:700;">'+(it.ok?'<span style="color:#27AE60;">'+it.lbl+'</span>':it.lbl)+'</span>'
+        +'<span style="margin-left:auto;">'+sBadge(it.ok?'concluido':'nao',it.ok?'Concluído':'Pendente')+'</span>'
+        +'</div>';
+    }).join('');
+    ov.innerHTML='<div style="font-size:12px;font-weight:800;color:var(--muted);margin-bottom:10px;text-align:left;">Status dos Requisitos</div>'
+      +rows
+      +'<div style="margin-top:10px;font-size:11px;color:var(--muted);">Complete todos os requisitos para conquistar o Escoteiro da Pátria.</div>';
+    ov.style.textAlign='left';
+  }
+  c.appendChild(ov);
+  } catch(err){
+    c.innerHTML='<div class="alert" style="margin-top:12px;background:#FDEDEC;border-color:#E74C3C;color:#C0392B;">'
+      +'⚠ Erro ao carregar: '+err.message+'<br><small>Tente clicar na aba novamente.</small></div>';
+    console.error('renderEP error:', err);
+  }
+}
 
 // ╔═══════════════════════════════════════════════════╗
 // ║                    JOVENS                        ║
 // ╚═══════════════════════════════════════════════════╝
-let YOUTH_DATA = [
-  {name:'Paulo Soares Semedo dos Santos',    born:'2009-07-28', role:''},
-  {name:'Isis Oliveira Cavalcante do Nascimento', born:'2008-08-06', role:'Fora do ciclo'},
-  {name:'Clara Garcia Santos',              born:'2010-02-15', role:''},
-  {name:'Wesley Ruan Marques de Souza',     born:'2009-09-27', role:''},
-  {name:'Thauany Nascimento',               born:'2009-05-24', role:'Monitora'},
-  {name:'Matheus Gomes dos Reis',           born:'2010-09-13', role:'Submonitor'},
+// ─── GESTÃO DE JOVENS ───────────────────────────────────
+const DEFAULT_YOUTH = [
+  {id:'paulo',   name:'Paulo Soares Semedo dos Santos',             born:'2009-07-28', role:'',             archived:false, color:'#6D1026'},
+  {id:'isis',    name:'Isis Oliveira Cavalcante do Nascimento',     born:'2008-08-06', role:'Fora do ciclo', archived:false, color:'#888888'},
+  {id:'clara',   name:'Clara Garcia Santos',                        born:'2010-02-15', role:'',             archived:false, color:'#2D6E3E'},
+  {id:'thauany', name:'Thauany Nascimento',                         born:'2009-05-24', role:'Monitora',      archived:false, color:'#1B3B6F'},
+  {id:'matheus', name:'Matheus Gomes dos Reis',                     born:'2010-09-13', role:'Submonitor',    archived:false, color:'#6A1B9A'},
 ];
+let YOUTH_DATA = [];
+function loadYouthData(){
+  syncJovens();
+}
+function saveYouthData(){
+  saveState();
+}
+function showModal(yid){
+  document.getElementById('youth-modal').classList.add('open');
+  document.getElementById('edit-id').value=yid||'';
+  if(yid){
+    const y=YOUTH_DATA.find(x=>x.id===yid);
+    document.getElementById('modal-ttl').textContent='Editar Jovem';
+    document.getElementById('inp-name').value=y.name;
+    document.getElementById('inp-born').value=y.born;
+    document.getElementById('inp-role').value=y.role||'';
+  }else{
+    document.getElementById('modal-ttl').textContent='Adicionar Jovem';
+    document.getElementById('inp-name').value='';
+    document.getElementById('inp-born').value='';
+    document.getElementById('inp-role').value='';
+  }
+}
+function hideModal(){document.getElementById('youth-modal').classList.remove('open');}
+function saveYouth(){
+  const name=document.getElementById('inp-name').value.trim();
+  const born=document.getElementById('inp-born').value;
+  const role=document.getElementById('inp-role').value.trim();
+  if(!name||!born){alert('Nome e data de nascimento são obrigatórios.');return;}
+  const eid=document.getElementById('edit-id').value;
+  const isNew=!eid;
+  if(eid){
+    // Edição — atualiza dados
+    const y=YOUTH_DATA.find(x=>x.id===eid);
+    if(y){y.name=name;y.born=born;y.role=role;}
+  } else {
+    // Novo jovem — atribuir cor e adicionar
+    const newId='y_'+Date.now();
+    const newColor=COLOR_PALETTE[JOVENS.length%COLOR_PALETTE.length];
+    YOUTH_DATA.push({id:newId,name,born,role,archived:false,color:newColor});
+  }
+  // Sincronizar arrays JOVENS/JNOMES/JCORES
+  syncJovens();
+  saveYouthData();
+  hideModal();
+  // Re-renderizar TODAS as abas para integração completa
+  renderAllTabs();
+  if(isNew){
+    alert('Jovem adicionado com sucesso!\nEle aparece agora em Progressão, Calendário e Escoteiro da Pátria.');
+  }
+}
+function archiveYouth(yid){
+  if(!confirm('Arquivar este jovem? Você poderá restaurá-lo a qualquer momento.'))return;
+  const y=YOUTH_DATA.find(x=>x.id===yid);
+  if(y){y.archived=true;}
+  saveYouthData();renderAllTabs();
+}
+function unarchiveYouth(yid){
+  const y=YOUTH_DATA.find(x=>x.id===yid);
+  if(y){y.archived=false;}
+  saveYouthData();renderAllTabs();
+}
 
 function calcAge(bornStr, today){
   const b=new Date(bornStr);
@@ -1211,77 +1634,178 @@ function initials(name){
   return name.split(' ').filter(w=>w.length>2).slice(0,2).map(w=>w[0]).join('');
 }
 
+// ─── FALTAS CONSECUTIVAS ─────────────────────────────────
+function hasConsecutiveAbsences(jovemIdx,threshold=3){
+  const allEids=[
+    ...CAL_2S26.map((ev,i)=>({ev,eid:'2s26_'+i})),
+    ...CAL_1S27.map((ev,i)=>({ev,eid:'1s27_'+i}))
+  ].filter(({ev})=>ev.special!=='sem').map(({eid})=>eid);
+  let consec=0;
+  for(const eid of allEids){
+    const val=PRESENCA[eid]?.[jovemIdx];
+    if(val===0){consec++;if(consec>=threshold)return true;}
+    else if(val===1){consec=0;}
+    // undefined = não registrado → ignora sem resetar
+  }
+  return false;
+}
+
+// ─── RENDER JOVENS ───────────────────────────────────────
 function renderJovens(){
   const today=new Date();
   document.getElementById('calc-date').textContent=fmtDate(today);
-
-  const entries=YOUTH_DATA.map(y=>{
-    const days=daysLeft(y.born,today);
-    const age=calcAge(y.born,today);
-    const t18=turn18(y.born);
-    return{...y,days,age,t18};
-  });
-
-  // Max days among those still in ramo
-  const maxDays=Math.max(...entries.filter(e=>e.days>0).map(e=>e.days),1);
-
-  // Sort: least time first (most red first)
-  entries.sort((a,b)=>a.days-b.days);
-
+  const active=YOUTH_DATA.filter(y=>!y.archived);
+  const archived=YOUTH_DATA.filter(y=>y.archived);
+  const maxDays=Math.max(...active.map(y=>daysLeft(y.born,today)).filter(d=>d>0),1);
+  const sorted=[...active].map(y=>({...y,days:daysLeft(y.born,today)})).sort((a,b)=>a.days-b.days);
   const container=document.getElementById('jovens-cards');
   container.innerHTML='';
-
-  entries.forEach(e=>{
-    const c=timeColor(e.days,maxDays);
-    const passed=e.days<=0;
-    const urgent=!passed&&e.days<=180;
-    const pct=passed?0:Math.min(100,Math.max(2,(e.days/maxDays)*100));
-
-    const card=document.createElement('div');
-    card.style.cssText=`background:${c.bg};border-left:5px solid ${c.border};border-radius:10px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.09);`;
-
-    card.innerHTML=`
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:11px;">
-        <div style="width:42px;height:42px;border-radius:50%;background:${c.fg};color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;flex-shrink:0;">${initials(e.name)}</div>
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:13px;font-weight:800;color:#1A1A1A;line-height:1.2;">${e.name}</div>
-          <div style="font-size:10px;color:${c.fg};font-weight:700;margin-top:2px;">
-            ${e.age.years} anos e ${e.age.months} meses
-            ${e.role?` &nbsp;·&nbsp; ${e.role}`:''}
-          </div>
+  sorted.forEach(e=>container.appendChild(makeYouthCard(e,today,maxDays)));
+  // Botão adicionar
+  const addBtn=document.createElement('button');
+  addBtn.style.cssText='width:100%;margin-top:4px;padding:14px;background:var(--card);border:2px dashed var(--border);border-radius:var(--r);font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;';
+  addBtn.textContent='+ Adicionar Jovem';
+  addBtn.onclick=()=>showModal(null);
+  container.appendChild(addBtn);
+  // Arquivados
+  if(archived.length>0){
+    const sec=document.createElement('details');
+    sec.className='arch-section';
+    sec.innerHTML='<summary style="cursor:pointer;padding:11px 13px;font-size:12px;font-weight:700;color:var(--muted);list-style:none;display:flex;align-items:center;justify-content:space-between;"><span>📦 Arquivados ('+archived.length+')</span><span>▼</span></summary>';
+    const body=document.createElement('div');
+    body.style.cssText='padding:0 12px 12px;display:flex;flex-direction:column;gap:7px;';
+    archived.forEach(y=>{
+      const row=document.createElement('div');
+      row.style.cssText='background:#F5F5F5;border-radius:8px;padding:9px 11px;display:flex;align-items:center;gap:8px;';
+      row.innerHTML=`
+        <div style="flex:1;">
+          <div style="font-size:12px;font-weight:700;color:#555;">${y.name}</div>
+          <div style="font-size:10px;color:#999;">${y.role||'Sem cargo'} &nbsp;·&nbsp; Passagem: ${fmtDate(turn18(y.born))}</div>
         </div>
-        <div style="flex-shrink:0;text-align:right;">
-          ${passed?`<span style="background:#95A5A6;color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;">✓ PASSOU</span>`:
-            urgent?`<span style="background:#E74C3C;color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;">⚠ URGENTE</span>`:
-            `<span style="background:${c.fg};color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;">⏱ NO RAMO</span>`}
-        </div>
-      </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:${passed?'0':'10px'};">
-        <div style="background:rgba(255,255,255,.75);border-radius:8px;padding:8px 10px;">
-          <div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#999;margin-bottom:2px;">Data de passagem</div>
-          <div style="font-size:12px;font-weight:700;color:#1A1A1A;">${fmtDate(e.t18)}</div>
-        </div>
-        <div style="background:rgba(255,255,255,.75);border-radius:8px;padding:8px 10px;">
-          <div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#999;margin-bottom:2px;">Tempo restante</div>
-          <div style="font-size:11px;font-weight:800;color:${c.fg};">${timeStr(e.days)}</div>
-        </div>
-      </div>
-
-      ${!passed?`
-      <div style="background:rgba(255,255,255,.5);border-radius:20px;height:7px;overflow:hidden;">
-        <div style="width:${pct}%;height:100%;border-radius:20px;background:${c.fg};"></div>
-      </div>
-      <div style="display:flex;justify-content:space-between;margin-top:3px;">
-        <span style="font-size:9px;color:#999;">Hoje — ${fmtDate(today)}</span>
-        <span style="font-size:9px;color:#999;">${fmtDate(e.t18)}</span>
-      </div>`:''}
-    `;
-    container.appendChild(card);
-  });
+        <button class="btn-ic" onclick="showModal('${y.id}')" style="margin-right:4px;">✏ Editar</button>
+        <button class="btn-ic" onclick="unarchiveYouth('${y.id}')" title="Restaurar">↩ Restaurar</button>`;
+      body.appendChild(row);
+    });
+    sec.appendChild(body);
+    container.appendChild(sec);
+  }
 }
 
-// Render Jovens on load
+function makeYouthCard(e,today,maxDays){
+  const c=timeColor(e.days,maxDays);
+  const passed=e.days<=0;
+  const caminho=!passed&&e.days<=180;
+  const age=calcAge(e.born,today);
+  const t18=turn18(e.born);
+  const pct=passed?0:Math.min(100,Math.max(2,(e.days/maxDays)*100));
+  let badge;
+  if(passed) badge='<span style="background:#95A5A6;color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;">✓ PASSOU</span>';
+  else if(caminho) badge='<span style="background:#E67E22;color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;">🛤 CAMINHO</span>';
+  else badge='<span style="background:'+c.fg+';color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;">⏱ NO RAMO</span>';
+  const card=document.createElement('div');
+  card.style.cssText='background:'+c.bg+';border-left:5px solid '+c.border+';border-radius:10px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.09);';
+  card.innerHTML=`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:11px;">
+      <div style="width:42px;height:42px;border-radius:50%;background:${c.fg};color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;flex-shrink:0;">${initials(e.name)}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:800;color:#1A1A1A;line-height:1.2;">${e.name}</div>
+        <div style="font-size:10px;color:${c.fg};font-weight:700;margin-top:2px;">${age.years} anos e ${age.months} meses${e.role?' &nbsp;·&nbsp; '+e.role:''}</div>
+      </div>
+      <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:5px;">
+        ${badge}
+        <div style="display:flex;gap:4px;">
+          <button class="btn-ic" onclick="showModal('${e.id}')" title="Editar">✏ Editar</button>
+          <button class="btn-ic" style="color:#E74C3C;" onclick="archiveYouth('${e.id}')" title="Arquivar">📦</button>
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:${passed?'0':'10px'};">
+      <div style="background:rgba(255,255,255,.75);border-radius:8px;padding:8px 10px;">
+        <div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#999;margin-bottom:2px;">Data de passagem</div>
+        <div style="font-size:12px;font-weight:700;color:#1A1A1A;">${fmtDate(t18)}</div>
+      </div>
+      <div style="background:rgba(255,255,255,.75);border-radius:8px;padding:8px 10px;">
+        <div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#999;margin-bottom:2px;">Tempo restante</div>
+        <div style="font-size:11px;font-weight:800;color:${c.fg};">${timeStr(e.days)}</div>
+      </div>
+    </div>
+    ${!passed?`<div style="background:rgba(255,255,255,.5);border-radius:20px;height:7px;overflow:hidden;"><div style="width:${pct}%;height:100%;border-radius:20px;background:${c.fg};"></div></div>
+    <div style="display:flex;justify-content:space-between;margin-top:3px;"><span style="font-size:9px;color:#999;">Hoje</span><span style="font-size:9px;color:#999;">${fmtDate(t18)}</span></div>`:''}
+  `;
+  return card;
+}
+
+// ╔═══════════════════════════════════════════════════╗
+// ║          TRANSFERÊNCIA DA TROPA ESCOTEIRA        ║
+// ╚═══════════════════════════════════════════════════╝
+window.addEventListener('message', async function(ev){
+  const msg = ev.data;
+  if (!msg || msg.tipo !== 'transferirJovem') return;
+  const nome = msg.nome;
+  const newId = 'y_' + Date.now();
+  const newColor = COLOR_PALETTE[JOVENS.length % COLOR_PALETTE.length];
+  YOUTH_DATA.push({ id:newId, name:nome, born: msg.nascimento || '2010-01-01', role:'', archived:false, color:newColor });
+  syncJovens();
+  await saveState();
+  renderAllTabs();
+});
+
+// ╔═══════════════════════════════════════════════════╗
+// ║                  INICIALIZAÇÃO                   ║
+// ╚═══════════════════════════════════════════════════╝
+async function iniciarApp(){
+  YOUTH_DATA = deepCopy(DEFAULT_YOUTH);
+  await loadState();
+  syncJovens();
+  renderAll();
+  renderCal(CAL_2S26,'cal-2s26','2s26');
+  renderCal(CAL_1S27,'cal-1s27','1s27');
+  loadEPData();
+  renderJovens();
+  renderEP();
+}
+iniciarApp();
 </script>
+
+<div class="modal-ov" id="youth-modal" onclick="if(event.target===this)hideModal()">
+  <div class="modal-box">
+    <div class="modal-ttl" id="modal-ttl">Adicionar Jovem</div>
+    <input type="hidden" id="edit-id">
+    <div class="f-field">
+      <label class="f-label">Nome completo *</label>
+      <input type="text" class="f-input" id="inp-name" placeholder="Nome do jovem">
+    </div>
+    <div class="f-field">
+      <label class="f-label">Data de nascimento *</label>
+      <input type="date" class="f-input" id="inp-born">
+    </div>
+    <div class="f-field">
+      <label class="f-label">Cargo / Observação</label>
+      <input type="text" class="f-input" id="inp-role" placeholder="Ex: Monitora, Submonitor…">
+    </div>
+    <div class="f-row">
+      <button class="btn-sec" onclick="hideModal()">Cancelar</button>
+      <button class="btn-prim" onclick="saveYouth()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div id="ep" class="tab-content">
+  <div style="margin:12px 12px 0;background:var(--card);border-radius:var(--r);padding:10px 13px;
+    box-shadow:var(--shadow);font-size:11px;color:var(--muted);line-height:1.5;">
+    🏆 <strong style="color:var(--vinho);">Reconhecimento de Escoteiro da Pátria</strong> —
+    Insígnia máxima do Ramo Sênior. Requer: 18 blocos concluídos + Desafio Pessoal + Avaliação dos pares.
+  </div>
+  <div id="ep-content"></div>
+</div>
+<div class="save-bar">
+  <span id="save-status" class="save-bar-status">✓ Sistema carregado</span>
+  <label class="sbar-btn" title="Importar backup">
+    📥
+    <input type="file" accept=".json" onchange="importData(event)" style="display:none;">
+  </label>
+  <button class="sbar-btn" onclick="exportData()" title="Baixar backup em JSON">📤 Exportar</button>
+  <button class="sbar-btn prim" id="save-main-btn" onclick="saveAll()">💾 Salvar</button>
+</div>
 </body>
 </html>
