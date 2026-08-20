@@ -1499,6 +1499,7 @@ let eventoEditandoId = null;
 let eventoAnexoTemp = null;
 let eventoMenuAbertoId = null;
 let presencaAbertaIds = {};
+let extraAbertaIds = {};
 const RESPONSAVEIS_OPCOES = ['Todos', 'Giovanni', 'João Paulo', 'João Vitor', 'Zósimo', 'Greh', 'Outro'];
 let responsaveisSelecionados = [];
 let eventoItensSelecionados = [];
@@ -1778,6 +1779,54 @@ presencaAbertaIds[id] = !presencaAbertaIds[id];
 renderPaginaCalendario();
 }
 
+function toggleExtraEvento(id) {
+extraAbertaIds[id] = !extraAbertaIds[id];
+renderPaginaCalendario();
+}
+
+function salvarLinkEventoCard(id, val) {
+const ev = EVENTOS.find(e => e.id === id);
+if (!ev) return;
+ev.link = val.trim();
+temAlteracaoLocalPendente = true;
+saveState();
+}
+
+function salvarRespostaEventoCard(id, val) {
+const ev = EVENTOS.find(e => e.id === id);
+if (!ev) return;
+ev.resposta = val.trim();
+temAlteracaoLocalPendente = true;
+saveState();
+}
+
+function handleAnexoEventoCard(id, file) {
+if (!file) return;
+const MAX = 3 * 1024 * 1024;
+if (file.size > MAX) { alert('Arquivo muito grande!\nTamanho: ' + fmtBytesEvento(file.size) + '\nLimite máximo: 3MB'); return; }
+const reader = new FileReader();
+reader.onload = (e) => {
+const b64 = e.target.result.split(',')[1];
+const ev = EVENTOS.find(x => x.id === id);
+if (!ev) return;
+ev.anexo = { name: file.name, type: file.type || 'application/octet-stream', size: file.size, data: b64 };
+temAlteracaoLocalPendente = true;
+saveState();
+renderPaginaCalendario();
+};
+reader.onerror = () => alert('Erro ao ler o arquivo. Tente novamente.');
+reader.readAsDataURL(file);
+}
+
+function removerAnexoEventoCard(id) {
+const ev = EVENTOS.find(e => e.id === id);
+if (!ev) return;
+ev.anexo = null;
+temAlteracaoLocalPendente = true;
+saveState();
+renderPaginaCalendario();
+}
+
 function marcarProgressoPorPresenca(jovemId, itens) {
 if (!S[jovemId]) return;
 (itens || []).forEach(itemId => {
@@ -1946,6 +1995,7 @@ itens.forEach(itemId => { const { blocoId } = parseItemId(itemId); contagemPorBl
 const blocosTocados = Object.keys(contagemPorBloco);
 const presentes = ev.presentes || [];
 const presencaAberta = !!presencaAbertaIds[ev.id];
+const extraAberta = !!extraAbertaIds[ev.id];
 return `<div class="evento-card">
 <div class="evento-strip"><div class="evento-dia">${partes[2]}</div><div class="evento-mes">${mesTxt}</div></div>
 <div class="evento-body">
@@ -1962,11 +2012,26 @@ ${(ev.responsaveis && ev.responsaveis.length) ? `<span class="evento-tag">👤 $
 ${blocosTocados.map(b => { const eixo = EIXOS.find(e => e.blocos.includes(b)); return `<span class="evento-bloco-tag" style="background:${eixo?eixo.cor:'#666'};">📘 ${BLOCOS[b].nome} · ${contagemPorBloco[b]} ${contagemPorBloco[b]===1?'item':'itens'}</span>`; }).join('')}
 </div>
 ${ev.descricao ? `<div class="evento-desc">${ev.descricao}</div>` : ''}
-${(ev.link || ev.anexo) ? `<div class="evento-anexo-link">
-${ev.link ? `<a class="evento-link" href="${ev.link}" target="_blank" rel="noopener">🔗 Abrir link</a>` : ''}
-${ev.anexo ? `<button class="anexo-btn" style="background:#EEF2FF;color:var(--vinho);border:1px solid #C0CCF0;" onclick="baixarEventoAnexo('${ev.id}')">📎 ${ev.anexo.name}</button>` : ''}
+<div class="presenca-section">
+<button class="presenca-toggle" onclick="toggleExtraEvento('${ev.id}')">📎 Link, arquivo e avaliação ${(ev.link||ev.anexo||ev.resposta) ? '●' : ''} ${extraAberta ? '▾' : '▸'}</button>
+${extraAberta ? `<div class="presenca-list" onclick="event.stopPropagation()" style="display:flex;flex-direction:column;gap:10px;padding:8px 4px;">
+<div>
+<label class="campo-label">Link (Google Drive, fotos, documento etc.)</label>
+<input type="url" class="campo-input" value="${ev.link||''}" placeholder="https://drive.google.com/..." onchange="salvarLinkEventoCard('${ev.id}',this.value)">
+${ev.link ? `<a class="evento-link" href="${ev.link}" target="_blank" rel="noopener" style="display:inline-block;margin-top:6px;">🔗 Abrir link</a>` : ''}
+</div>
+<div>
+<label class="campo-label">Anexar arquivo (máx. 3MB)</label>
+<div id="anexoCard-${ev.id}">
+${ev.anexo ? `<div class="anexo-arquivo-row"><div class="anexo-arquivo-info"><div class="anexo-arquivo-nome">📎 ${ev.anexo.name}</div><div class="anexo-arquivo-tam">${fmtBytesEvento(ev.anexo.size)}</div></div><button type="button" class="anexo-btn" style="background:var(--azul);color:#fff;" onclick="baixarEventoAnexo('${ev.id}')">⬇</button><button type="button" class="anexo-btn" style="background:#E74C3C;color:#fff;" onclick="removerAnexoEventoCard('${ev.id}')">✕</button></div>` : `<label class="anexo-upload-label"><input type="file" onchange="handleAnexoEventoCard('${ev.id}',this.files[0])"><span style="font-size:16px;">📎</span><span style="font-size:11px;color:var(--muted);">Toque pra anexar</span></label>`}
+</div>
+</div>
+<div>
+<label class="campo-label">Como foi a atividade? Relato e observações</label>
+<textarea class="campo-input" rows="3" placeholder="Escreva aqui..." onchange="salvarRespostaEventoCard('${ev.id}',this.value)">${ev.resposta||''}</textarea>
+</div>
 </div>` : ''}
-${ev.resposta ? `<div class="evento-resposta">💬 ${ev.resposta}</div>` : ''}
+</div>
 <div class="presenca-section">
 <button class="presenca-toggle" onclick="togglePresencaEvento('${ev.id}')">📋 Presença (${presentes.length}/${JOVENS.length}) ${presencaAberta ? '▾' : '▸'}</button>
 ${presencaAberta ? `<div class="presenca-list">
