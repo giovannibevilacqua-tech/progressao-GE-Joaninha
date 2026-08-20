@@ -236,14 +236,13 @@ text-align: center;
 }
 .ramo-btn.active { background: var(--vinho); color: #fff; border-color: var(--vinho); }
 
-.tabs-linha { display: flex; background: var(--card); border-bottom: 2px solid var(--border); position: sticky; top: 0; z-index: 200; box-shadow: 0 2px 6px rgba(0,0,0,.1); overflow-x: auto; margin-top: 14px; }
+.tabs-linha { display: flex; background: var(--card); border-bottom: 2px solid var(--border); position: sticky; top: 0; z-index: 200; box-shadow: 0 2px 6px rgba(0,0,0,.1); overflow-x: auto; overflow-y: hidden; margin-top: 14px; }
 .tabs-linha .tab-btn-linha {
-flex: 1; min-width: 80px; padding: 12px 6px; border: none; background: transparent;
+flex: 1; min-width: 80px; padding: 16px 6px; border: none; border-bottom: 3px solid transparent; background: transparent;
 font-size: 11px; font-weight: 700; color: var(--muted); cursor: pointer; position: relative;
-transition: color .2s; white-space: nowrap;
+transition: color .2s, border-color .2s; white-space: nowrap;
 }
-.tabs-linha .tab-btn-linha.active { color: var(--vinho); }
-.tabs-linha .tab-btn-linha.active::after { content: ''; position: absolute; bottom: -2px; left: 0; right: 0; height: 2px; background: var(--vinho); }
+.tabs-linha .tab-btn-linha.active { color: var(--vinho); border-bottom-color: var(--vinho); }
 .page-groups { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 14px 0; }
 .page-group-label {
 font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;
