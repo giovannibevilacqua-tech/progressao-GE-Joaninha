@@ -73,6 +73,9 @@ display: flex; align-items: center; justify-content: center;
 font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0;
 }
 .roster-name { flex: 1; font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.cargo-badge { display: inline-flex; align-items: center; gap: 2px; padding: 3px 4px; border-radius: 3px; background: #14182B; flex-shrink: 0; }
+.cargo-bar { width: 4px; height: 11px; border-radius: 1px; background: #2A3050; }
+.cargo-bar.on { background: #2ECC71; }
 .roster-track { flex: 1; height: 9px; background: #EEEBE7; border-radius: 20px; overflow: hidden; }
 .roster-bar { height: 100%; background: var(--vinho); border-radius: 20px; }
 .roster-linha-progresso { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
@@ -580,6 +583,7 @@ let JOVENS = JOVENS_BASE.slice();
 let JOVENS_EXCLUIDOS = [];
 let PATRULHAS = [];
 let PATRULHA_DE = {};
+let CARGO_DE = {};
 const JCOR = {};
 function corPara(i) { return `hsl(${Math.round(i*137.5)%360},45%,42%)`; }
 function nomeCurto(j) {
@@ -713,6 +717,7 @@ function iniciarSync() {
           JUSTIFICATIVAS = dados.justificativas || {};
           PATRULHAS = dados.patrulhas || [];
           PATRULHA_DE = dados.patrulhaDe || {};
+          CARGO_DE = dados.cargoDe || {};
         } catch(e) {
           if (primeira) { S = deepCopy(INICIAL); EVENTOS = []; CICLO = cicloEmBranco(); DATAS_NASC = {}; JUSTIFICATIVAS = {}; }
         }
@@ -775,7 +780,7 @@ async function saveState() {
   const extras = JOVENS.filter(j => !JOVENS_BASE.includes(j)).map(id => ({id, nome: JNOMES[id]}));
   const nomesBase = {};
   JOVENS_BASE.forEach(id => { if (JNOMES[id] !== JNOMES_PADRAO[id]) nomesBase[id] = JNOMES[id]; });
-  const payload = JSON.stringify({ S, extraJovens: extras, eventos: EVENTOS, ciclo: CICLO, nomesBase, datasNascimento: DATAS_NASC, excluidos: JOVENS_EXCLUIDOS, justificativas: JUSTIFICATIVAS, patrulhas: PATRULHAS, patrulhaDe: PATRULHA_DE });
+  const payload = JSON.stringify({ S, extraJovens: extras, eventos: EVENTOS, ciclo: CICLO, nomesBase, datasNascimento: DATAS_NASC, excluidos: JOVENS_EXCLUIDOS, justificativas: JUSTIFICATIVAS, patrulhas: PATRULHAS, patrulhaDe: PATRULHA_DE, cargoDe: CARGO_DE });
   temAlteracaoLocalPendente = false; // este payload já reflete tudo que foi clicado até agora
   mostrarStatusSalvando('Salvando…');
   for (let tentativa = 1; tentativa <= 2; tentativa++) {
@@ -963,9 +968,11 @@ renderRoster();
 function salvarEdicaoJovem(id) {
 const nome = document.getElementById('editNome_' + id).value.trim();
 const nasc = document.getElementById('editNasc_' + id).value;
+const cargo = document.getElementById('editCargo_' + id).value;
 if (!nome) { alert('O nome não pode ficar vazio.'); return; }
 JNOMES[id] = nome;
 DATAS_NASC[id] = nasc;
+if (cargo) CARGO_DE[id] = cargo; else delete CARGO_DE[id];
 JCOR[id] = JCOR[id] || corPara(JOVENS.indexOf(id));
 jovemEditandoId = null;
 temAlteracaoLocalPendente = true;
@@ -982,6 +989,7 @@ JOVENS = JOVENS.filter(x => x !== id);
 delete S[id];
 delete DATAS_NASC[id];
 delete PATRULHA_DE[id];
+delete CARGO_DE[id];
 if (ativo === id) { ativo = null; document.getElementById('detail').innerHTML = ''; }
 temAlteracaoLocalPendente = true;
 saveState();
@@ -1003,6 +1011,7 @@ JOVENS = JOVENS.filter(x => x !== id);
 delete S[id];
 delete DATAS_NASC[id];
 delete PATRULHA_DE[id];
+delete CARGO_DE[id];
 if (ativo === id) { ativo = null; document.getElementById('detail').innerHTML = ''; }
 temAlteracaoLocalPendente = true;
 saveState();
@@ -1102,6 +1111,14 @@ document.removeEventListener('click', fechar);
 }
 }
 
+function construirSeloCargo(j) {
+const cargo = CARGO_DE[j];
+if (!cargo) return '';
+const padrao = cargo === 'monitor' ? [0,1,0,1] : [0,1,0];
+const barras = padrao.map(v => `<span class="cargo-bar${v ? ' on' : ''}"></span>`).join('');
+return `<span class="cargo-badge" title="${cargo === 'monitor' ? 'Monitor' : 'Submonitor'}">${barras}</span>`;
+}
+
 function construirCardJovem(j) {
 const n = countConcluidos(j);
 const et = etapa(n);
@@ -1116,6 +1133,14 @@ return `<div class="roster-row" onclick="event.stopPropagation()">
 <div>
 <label class="campo-label">Data de nascimento</label>
 <input type="date" class="campo-input" id="editNasc_${j}" value="${DATAS_NASC[j]||''}">
+</div>
+<div>
+<label class="campo-label">Cargo na patrulha</label>
+<select class="campo-input" id="editCargo_${j}">
+<option value="" ${!CARGO_DE[j] ? 'selected' : ''}>— Nenhum —</option>
+<option value="monitor" ${CARGO_DE[j]==='monitor' ? 'selected' : ''}>Monitor</option>
+<option value="submonitor" ${CARGO_DE[j]==='submonitor' ? 'selected' : ''}>Submonitor</option>
+</select>
 </div>
 <div class="roster-edicao-btns">
 <button class="btn-primario" onclick="event.stopPropagation();salvarEdicaoJovem('${j}')">💾 Salvar</button>
@@ -1132,6 +1157,7 @@ const menuAberto = jovemMenuAbertoId === j;
 return `<div class="roster-row${ativo === j ? ' active' : ''}" draggable="true" ondragstart="dragJovemStart(event,'${j}')" onclick="selecionarJovem('${j}')">
 <div class="roster-linha-principal">
 <div class="roster-avatar" style="background:${JCOR[j]}">${initials}</div>
+${construirSeloCargo(j)}
 <div class="roster-name">${flagAusencia ? `<span class="flag-ausencia" title="3+ faltas seguidas sem justificativa">🚩</span>` : ''}${JNOMES[j]}</div>
 <button class="roster-menu-btn" onclick="event.stopPropagation();toggleJovemMenu('${j}')">⋮</button>
 </div>
