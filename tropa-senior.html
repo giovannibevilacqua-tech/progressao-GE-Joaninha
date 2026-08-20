@@ -125,6 +125,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .banner-sem{background:#E74C3C;color:#fff;}
 .cal-text{font-size:11px;color:#3A3A3A;line-height:1.55;}
 .cal-text em{color:var(--muted);font-style:normal;font-size:10px;}
+.anexo-upload-label{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#FAFAF8;border:2px dashed var(--border);border-radius:8px;cursor:pointer;}
+.anexo-upload-label input[type=file]{display:none;}
+.anexo-arquivo-row{display:flex;align-items:center;gap:6px;padding:8px 10px;background:#EEF2FF;border:1px solid #C0CCF0;border-radius:8px;}
+.anexo-arquivo-info{flex:1;min-width:0;}
+.anexo-arquivo-nome{font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.anexo-arquivo-tam{font-size:9px;color:var(--muted);}
+.anexo-btn{border:none;border-radius:6px;padding:5px 8px;font-size:10px;font-weight:700;cursor:pointer;flex-shrink:0;}
+.extra-link-input,.extra-resposta-input{width:100%;padding:8px 10px;border:2px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;outline:none;}
+.extra-link-input:focus,.extra-resposta-input:focus{border-color:var(--vinho);}
+.evento-link-sr{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--vinho);text-decoration:none;}
 .strip-normal{background:var(--vinho);}
 .strip-leve{background:#78909C;}
 .strip-pernoite{background:#1565C0;}
@@ -753,13 +763,14 @@ async function loadState(){
       PRESENCA = dados.PRESENCA || {};
       if (dados.YOUTH_DATA) YOUTH_DATA = dados.YOUTH_DATA;
       if (dados.EP_DATA) EP_DATA = dados.EP_DATA;
+      if (dados.CAL_EXTRAS) CAL_EXTRAS = dados.CAL_EXTRAS;
     } else {
       S = deepCopy(INICIAL);
     }
   }catch(e){ S = deepCopy(INICIAL); console.error('Tropa Sênior: usando dados padrão (falha ou demora ao buscar):', e); }
 }
 async function saveState(){
-  const payload = JSON.stringify({ S, JOVENS, JNOMES, JCORES, PRESENCA, YOUTH_DATA, EP_DATA });
+  const payload = JSON.stringify({ S, JOVENS, JNOMES, JCORES, PRESENCA, YOUTH_DATA, EP_DATA, CAL_EXTRAS });
   try {
     await fetch(REST_URL_SR, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
     onDataSaved();
@@ -951,6 +962,7 @@ function renderEixo(eixoId){
 // ║                   PRESENÇA                       ║
 // ╚═══════════════════════════════════════════════════╝
 let PRESENCA = {};
+let CAL_EXTRAS = {};
 
 function loadPresenca(){
   /* PRESENCA já é carregado junto em loadState() */
@@ -996,6 +1008,61 @@ function togglePresenca(eid,jovemIdx){
   fillPresencaGrid(eid);
   renderPresencaSummary();
 }
+function getExtra(eid){
+  if(!CAL_EXTRAS[eid]) CAL_EXTRAS[eid]={link:'',resposta:'',anexo:null};
+  return CAL_EXTRAS[eid];
+}
+function fmtBytesSr(b){
+  if(!b||b===0)return '0 B';
+  if(b<1024)return b+' B';
+  if(b<1048576)return (b/1024).toFixed(1)+' KB';
+  return (b/1048576).toFixed(2)+' MB';
+}
+function salvarLinkEvento(eid,val){getExtra(eid).link=val;saveState();}
+function salvarRespostaEvento(eid,val){getExtra(eid).resposta=val;saveState();}
+function handleAnexoEvento(eid,file){
+  if(!file)return;
+  const MAX=3*1024*1024;
+  if(file.size>MAX){alert('Arquivo muito grande!\nTamanho: '+fmtBytesSr(file.size)+'\nLimite máximo: 3MB');return;}
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const b64=e.target.result.split(',')[1];
+    getExtra(eid).anexo={name:file.name,type:file.type||'application/octet-stream',size:file.size,data:b64};
+    saveState();
+    atualizarAnexoUI(eid);
+  };
+  reader.onerror=function(){alert('Erro ao ler o arquivo. Tente novamente.');};
+  reader.readAsDataURL(file);
+}
+function removerAnexoEvento(eid){
+  getExtra(eid).anexo=null;
+  saveState();
+  atualizarAnexoUI(eid);
+}
+function baixarAnexoEvento(eid){
+  const a=getExtra(eid).anexo;
+  if(!a)return;
+  const link=document.createElement('a');
+  link.href='data:'+a.type+';base64,'+a.data;
+  link.download=a.name;
+  document.body.appendChild(link);link.click();document.body.removeChild(link);
+}
+function atualizarAnexoUI(eid){
+  const el=document.getElementById('anexoArea-'+eid);
+  if(!el)return;
+  const ex=getExtra(eid);
+  if(ex.anexo){
+    el.innerHTML='<div class="anexo-arquivo-row"><div class="anexo-arquivo-info">'
+      +'<div class="anexo-arquivo-nome">📎 '+ex.anexo.name+'</div>'
+      +'<div class="anexo-arquivo-tam">'+fmtBytesSr(ex.anexo.size)+'</div></div>'
+      +'<button class="anexo-btn" style="background:var(--azul);color:#fff;" onclick="baixarAnexoEvento(\''+eid+'\')">⬇</button>'
+      +'<button class="anexo-btn" style="background:#E74C3C;color:#fff;" onclick="removerAnexoEvento(\''+eid+'\')">✕</button></div>';
+  } else {
+    el.innerHTML='<label class="anexo-upload-label"><input type="file" onchange="handleAnexoEvento(\''+eid+'\',this.files[0])">'
+      +'<span style="font-size:14px;">📎</span><span style="font-size:10px;color:var(--muted);">Anexar arquivo (máx. 3MB)</span></label>';
+  }
+}
+
 function fillPresencaGrid(eid){
   const grid=document.getElementById('pg-'+eid);
   const badge=document.getElementById('pb-'+eid);
@@ -1083,9 +1150,36 @@ function renderCal(events, containerId, pfx){
       <div style="display:flex;gap:5px;flex-wrap:wrap;" id="pg-${eid}"></div>
     </div>`;
     card.appendChild(det);
+
+    // Anexo / link / avaliação
+    const ex=getExtra(eid);
+    const detExtra=document.createElement('details');
+    detExtra.style.cssText='border-top:1px solid #F0EDE8;';
+    detExtra.innerHTML=`<summary style="cursor:pointer;padding:7px 11px;font-size:10px;font-weight:700;color:var(--muted);list-style:none;display:flex;align-items:center;gap:6px;-webkit-user-select:none;user-select:none;">
+      <span>📎 Anexo, link e avaliação</span>
+      <span style="font-size:9px;margin-left:auto;">▼</span>
+    </summary>
+    <div style="padding:6px 11px 12px;display:flex;flex-direction:column;gap:8px;">
+      <div>
+        <div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px;">Link (Google Drive, fotos, documento etc.)</div>
+        <input type="url" class="extra-link-input" placeholder="https://drive.google.com/..." value="${ex.link||''}" onchange="salvarLinkEvento('${eid}',this.value)">
+        ${ex.link?`<a class="evento-link-sr" href="${ex.link}" target="_blank" rel="noopener" style="display:inline-block;margin-top:4px;">🔗 Abrir link</a>`:''}
+      </div>
+      <div>
+        <div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px;">Anexar arquivo (máx. 3MB)</div>
+        <div id="anexoArea-${eid}"></div>
+      </div>
+      <div>
+        <div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px;">Como foi a atividade? Relato e observações</div>
+        <textarea class="extra-resposta-input" rows="3" placeholder="Escreva aqui..." onchange="salvarRespostaEvento('${eid}',this.value)">${ex.resposta||''}</textarea>
+      </div>
+    </div>`;
+    card.appendChild(detExtra);
+
     list.appendChild(card);
     // Fill initial attendance state
     fillPresencaGrid(eid);
+    atualizarAnexoUI(eid);
   });
   renderPresencaSummary();
 }

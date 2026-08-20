@@ -306,6 +306,23 @@ padding: 10px 4px; text-align: center; border-radius: var(--r) 0 0 var(--r);
 .evento-meta { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
 .evento-tag { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; background: #F5F3EF; color: var(--text); white-space: nowrap; }
 .evento-desc { font-size: 12px; color: #3A3A3A; line-height: 1.5; white-space: pre-line; }
+.anexo-upload-label {
+display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: #FAFAF8;
+border: 2px dashed var(--border); border-radius: 8px; cursor: pointer;
+}
+.anexo-upload-label input[type=file] { display: none; }
+.anexo-arquivo-row {
+display: flex; align-items: center; gap: 8px; padding: 9px 12px; background: #EEF2FF;
+border: 1px solid #C0CCF0; border-radius: 8px;
+}
+.anexo-arquivo-info { flex: 1; min-width: 0; }
+.anexo-arquivo-nome { font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.anexo-arquivo-tam { font-size: 10px; color: var(--muted); }
+.anexo-btn { border: none; border-radius: 7px; padding: 5px 9px; font-size: 11px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
+.evento-link { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; color: var(--vinho); text-decoration: none; margin-top: 6px; }
+.evento-link:hover { text-decoration: underline; }
+.evento-resposta { background: #FAFAF8; border-left: 3px solid var(--vinho); border-radius: 0 8px 8px 0; padding: 8px 10px; font-size: 12px; color: #3A3A3A; margin-top: 8px; line-height: 1.5; white-space: pre-line; }
+.evento-anexo-link { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
 .evento-menu-btn {
 position: absolute; top: 6px; right: 6px; width: 26px; height: 26px;
 border: none; background: none; color: var(--muted); font-size: 16px; font-weight: 900;
@@ -516,6 +533,18 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 <div>
 <label class="campo-label">Descrição</label>
 <textarea id="eventoDescricao" class="campo-input" rows="3" placeholder="Detalhes da atividade..."></textarea>
+</div>
+<div>
+<label class="campo-label">Link (Google Drive, fotos, documento etc.)</label>
+<input type="url" id="eventoLink" class="campo-input" placeholder="https://drive.google.com/...">
+</div>
+<div>
+<label class="campo-label">Anexar arquivo (máx. 3MB)</label>
+<div id="eventoAnexoArea"></div>
+</div>
+<div>
+<label class="campo-label">Como foi a atividade? Relato e observações</label>
+<textarea id="eventoResposta" class="campo-input" rows="3" placeholder="Escreva aqui como a atividade foi conduzida, pontos de atenção, etc."></textarea>
 </div>
 <button class="btn-primario" id="btnSalvarEvento" onclick="adicionarEvento()">+ Adicionar ao calendário</button>
 <button class="btn-secundario" id="btnCancelarEdicaoEvento" style="display:none;" onclick="cancelarEdicaoEvento()">Cancelar edição</button>
@@ -1467,6 +1496,7 @@ function toggleEspTabela(j, b) { S[j][b].especialidade = S[j][b].especialidade ?
 // ===== PÁGINA 3: CALENDÁRIO =====
 let addEventoAberto = false;
 let eventoEditandoId = null;
+let eventoAnexoTemp = null;
 let eventoMenuAbertoId = null;
 let presencaAbertaIds = {};
 const RESPONSAVEIS_OPCOES = ['Todos', 'Giovanni', 'João Paulo', 'João Vitor', 'Zósimo', 'Greh', 'Outro'];
@@ -1592,7 +1622,7 @@ return `<div class="eixo-picker-header" style="background:${eixo.cor}">${eixo.no
 }
 
 function limparFormularioEvento() {
-['eventoData','eventoNome','eventoLocal','eventoDescricao','eventoResponsavelOutroInput'].forEach(fid => { document.getElementById(fid).value = ''; });
+['eventoData','eventoNome','eventoLocal','eventoDescricao','eventoResponsavelOutroInput','eventoLink','eventoResposta'].forEach(fid => { document.getElementById(fid).value = ''; });
 eventoItensSelecionados = [];
 itemPickerBlocosAbertos = {};
 eventoItensPickerAberto = false;
@@ -1603,8 +1633,69 @@ atualizarResumoItensPicker();
 responsaveisSelecionados = [];
 renderResponsavelChips();
 eventoEditandoId = null;
+eventoAnexoTemp = null;
+renderEventoAnexoArea();
 document.getElementById('btnSalvarEvento').textContent = '+ Adicionar ao calendário';
 document.getElementById('btnCancelarEdicaoEvento').style.display = 'none';
+}
+
+function fmtBytesEvento(b) {
+if (!b || b === 0) return '0 B';
+if (b < 1024) return b + ' B';
+if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
+return (b/1048576).toFixed(2) + ' MB';
+}
+
+function renderEventoAnexoArea() {
+const el = document.getElementById('eventoAnexoArea');
+if (!el) return;
+if (eventoAnexoTemp && eventoAnexoTemp.name) {
+const icone = eventoAnexoTemp.type && eventoAnexoTemp.type.includes('image') ? '🖼️' : (eventoAnexoTemp.type && eventoAnexoTemp.type.includes('pdf') ? '📑' : '📎');
+el.innerHTML = `<div class="anexo-arquivo-row">
+<div class="anexo-arquivo-info">
+<div class="anexo-arquivo-nome">${icone} ${eventoAnexoTemp.name}</div>
+<div class="anexo-arquivo-tam">${fmtBytesEvento(eventoAnexoTemp.size)}</div>
+</div>
+<button type="button" class="anexo-btn" style="background:#E74C3C;color:#fff;" onclick="removerEventoAnexo()">✕ Remover</button>
+</div>`;
+} else {
+el.innerHTML = `<label class="anexo-upload-label">
+<input type="file" onchange="handleEventoAnexo(this.files[0])">
+<span style="font-size:16px;">📎</span>
+<div><div style="font-size:12px;font-weight:700;color:var(--muted);">Toque para anexar arquivo</div>
+<div style="font-size:10px;color:var(--muted);">Máximo 3MB — PDF, imagem ou documento</div></div>
+</label>`;
+}
+}
+
+function handleEventoAnexo(file) {
+if (!file) return;
+const MAX = 3 * 1024 * 1024;
+if (file.size > MAX) { alert('Arquivo muito grande!\nTamanho: ' + fmtBytesEvento(file.size) + '\nLimite máximo: 3MB'); return; }
+const reader = new FileReader();
+reader.onload = (e) => {
+const b64 = e.target.result.split(',')[1];
+eventoAnexoTemp = { name: file.name, type: file.type || 'application/octet-stream', size: file.size, data: b64 };
+renderEventoAnexoArea();
+};
+reader.onerror = () => alert('Erro ao ler o arquivo. Tente novamente.');
+reader.readAsDataURL(file);
+}
+
+function removerEventoAnexo() {
+eventoAnexoTemp = null;
+renderEventoAnexoArea();
+}
+
+function baixarEventoAnexo(eventoId) {
+const ev = EVENTOS.find(e => e.id === eventoId);
+if (!ev || !ev.anexo) return;
+const a = document.createElement('a');
+a.href = 'data:' + ev.anexo.type + ';base64,' + ev.anexo.data;
+a.download = ev.anexo.name;
+document.body.appendChild(a);
+a.click();
+document.body.removeChild(a);
 }
 
 function editarEvento(id) {
@@ -1616,6 +1707,10 @@ document.getElementById('eventoData').value = ev.data;
 document.getElementById('eventoNome').value = ev.nome;
 document.getElementById('eventoLocal').value = ev.local || '';
 document.getElementById('eventoDescricao').value = ev.descricao || '';
+document.getElementById('eventoLink').value = ev.link || '';
+document.getElementById('eventoResposta').value = ev.resposta || '';
+eventoAnexoTemp = ev.anexo || null;
+renderEventoAnexoArea();
 eventoItensSelecionados = (ev.itens || []).slice();
 itemPickerBlocosAbertos = {};
 eventoItensPickerAberto = false;
@@ -1647,6 +1742,9 @@ const data = document.getElementById('eventoData').value;
 const nome = document.getElementById('eventoNome').value.trim();
 const local = document.getElementById('eventoLocal').value.trim();
 const descricao = document.getElementById('eventoDescricao').value.trim();
+const link = document.getElementById('eventoLink').value.trim();
+const resposta = document.getElementById('eventoResposta').value.trim();
+const anexo = eventoAnexoTemp;
 const itens = eventoItensSelecionados.slice();
 const outroNome = document.getElementById('eventoResponsavelOutroInput').value.trim();
 const responsaveis = responsaveisSelecionados.map(n => (n === 'Outro' && outroNome) ? outroNome : n);
@@ -1654,10 +1752,10 @@ if (!data || !nome) { alert('Preencha pelo menos a data e o nome da atividade.')
 
 if (eventoEditandoId) {
 const ev = EVENTOS.find(e => e.id === eventoEditandoId);
-if (ev) { ev.data = data; ev.nome = nome; ev.local = local; ev.descricao = descricao; ev.itens = itens; ev.responsaveis = responsaveis; }
+if (ev) { ev.data = data; ev.nome = nome; ev.local = local; ev.descricao = descricao; ev.itens = itens; ev.responsaveis = responsaveis; ev.link = link; ev.resposta = resposta; ev.anexo = anexo; }
 } else {
 const id = 'ev' + Date.now() + Math.floor(Math.random()*1000);
-EVENTOS.push({ id, data, nome, local, descricao, itens, responsaveis, presentes: [] });
+EVENTOS.push({ id, data, nome, local, descricao, itens, responsaveis, presentes: [], link, resposta, anexo });
 }
 temAlteracaoLocalPendente = true;
 saveState();
@@ -1787,6 +1885,9 @@ txt += `Data: ${dataFmt}\n`;
 if (ev.local) txt += `Local: ${ev.local}\n`;
 if (ev.responsaveis && ev.responsaveis.length) txt += `Responsável(is): ${ev.responsaveis.join(', ')}\n`;
 if (ev.descricao) txt += `Descrição: ${ev.descricao}\n`;
+if (ev.link) txt += `Link: ${ev.link}\n`;
+if (ev.anexo) txt += `Anexo: ${ev.anexo.name}\n`;
+if (ev.resposta) txt += `Avaliação da atividade: ${ev.resposta}\n`;
 
 txt += `\nPRESENTES (${presentes.length}/${JOVENS.length}):\n`;
 if (presentes.length) presentes.forEach(j => { txt += `  [x] ${JNOMES[j] || j}\n`; });
@@ -1861,6 +1962,11 @@ ${(ev.responsaveis && ev.responsaveis.length) ? `<span class="evento-tag">👤 $
 ${blocosTocados.map(b => { const eixo = EIXOS.find(e => e.blocos.includes(b)); return `<span class="evento-bloco-tag" style="background:${eixo?eixo.cor:'#666'};">📘 ${BLOCOS[b].nome} · ${contagemPorBloco[b]} ${contagemPorBloco[b]===1?'item':'itens'}</span>`; }).join('')}
 </div>
 ${ev.descricao ? `<div class="evento-desc">${ev.descricao}</div>` : ''}
+${(ev.link || ev.anexo) ? `<div class="evento-anexo-link">
+${ev.link ? `<a class="evento-link" href="${ev.link}" target="_blank" rel="noopener">🔗 Abrir link</a>` : ''}
+${ev.anexo ? `<button class="anexo-btn" style="background:#EEF2FF;color:var(--vinho);border:1px solid #C0CCF0;" onclick="baixarEventoAnexo('${ev.id}')">📎 ${ev.anexo.name}</button>` : ''}
+</div>` : ''}
+${ev.resposta ? `<div class="evento-resposta">💬 ${ev.resposta}</div>` : ''}
 <div class="presenca-section">
 <button class="presenca-toggle" onclick="togglePresencaEvento('${ev.id}')">📋 Presença (${presentes.length}/${JOVENS.length}) ${presencaAberta ? '▾' : '▸'}</button>
 ${presencaAberta ? `<div class="presenca-list">
@@ -1978,6 +2084,7 @@ async function iniciar() {
 document.getElementById('roster').innerHTML = '<div style="padding:12px;font-size:12px;color:var(--muted);text-align:center;">Carregando dados compartilhados…</div>';
 atualizarResumoItensPicker();
 renderResponsavelChips();
+renderEventoAnexoArea();
 await iniciarSync();
 renderRoster();
 }
