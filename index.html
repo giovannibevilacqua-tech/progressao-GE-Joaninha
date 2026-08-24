@@ -95,6 +95,11 @@ border: none; background: var(--card); color: var(--text); cursor: pointer;
 }
 .roster-dropdown button:hover { background: #F5F3EF; }
 .roster-dropdown button.remover { color: #E74C3C; }
+.obs-modal-ov { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1000; align-items: flex-end; justify-content: center; }
+.obs-modal-ov.open { display: flex; }
+.obs-modal-box { background: var(--card); border-radius: 16px 16px 0 0; padding: 20px 18px 26px; width: 100%; max-width: 500px; max-height: 80vh; overflow-y: auto; }
+.obs-modal-titulo { font-size: 15px; font-weight: 800; color: var(--vinho); margin-bottom: 10px; }
+.obs-modal-texto { font-size: 13px; color: var(--text); line-height: 1.6; white-space: pre-line; }
 .roster-linha-idade { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
 .idade-track { position: relative; flex: 1; height: 4px; border-radius: 20px; overflow: hidden; background: #EEEBE7; }
 .idade-fill { height: 100%; border-radius: 20px; }
@@ -148,11 +153,11 @@ border: none; border-radius: 8px; padding: 11px 14px; cursor: pointer;
 }
 .btn-add-jovem:hover { background: var(--vinho2); }
 .add-jovem-row { display: flex; flex-direction: column; gap: 8px; }
-.add-jovem-row input {
+.add-jovem-row input, .add-jovem-row textarea {
 width: 100%; font-size: 12px; padding: 8px 10px; border-radius: 8px;
-border: 1px solid var(--border); background: #FAFAF8;
+border: 1px solid var(--border); background: #FAFAF8; font-family: inherit;
 }
-.add-jovem-row input:focus { outline: none; border-color: var(--vinho); }
+.add-jovem-row input:focus, .add-jovem-row textarea:focus { outline: none; border-color: var(--vinho); }
 .add-jovem-row label.campo-label { font-size: 10px; font-weight: 700; color: var(--muted); margin-bottom: 2px; display: block; }
 .add-jovem-row-btns { display: flex; gap: 8px; }
 .add-jovem-row-btns button {
@@ -476,6 +481,10 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 <label class="campo-label">Data de nascimento</label>
 <input type="date" id="novoJovemNasc">
 </div>
+<div>
+<label class="campo-label">Observação (suporte, restrições alimentares, etc.)</label>
+<textarea id="novoJovemObs" rows="3" placeholder="Ex: alergia a amendoim, acompanhamento com psicólogo, restrição de mobilidade..."></textarea>
+</div>
 <div class="add-jovem-row-btns">
 <button class="btn-cancelar" onclick="toggleAddJovemForm(false)">Cancelar</button>
 <button class="btn-confirmar" onclick="addJovem()">+ Adicionar</button>
@@ -566,6 +575,14 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 
 </div>
 
+<div class="obs-modal-ov" id="obsModalOv" onclick="if(event.target===this)fecharObservacao()">
+<div class="obs-modal-box">
+<div class="obs-modal-titulo" id="obsModalTitulo"></div>
+<div class="obs-modal-texto" id="obsModalTexto"></div>
+<button class="btn-secundario" style="margin-top:14px;" onclick="fecharObservacao()">Fechar</button>
+</div>
+</div>
+
 <div id="pagina-senior" style="display:none;">
 <iframe id="iframeSenior" src="tropa-senior.html" style="width:100%;min-height:100vh;border:none;display:block;" title="Tropa Sênior"></iframe>
 </div>
@@ -583,6 +600,7 @@ let JOVENS_EXCLUIDOS = [];
 let PATRULHAS = [];
 let PATRULHA_DE = {};
 let CARGO_DE = {};
+let OBSERVACOES = {};
 const JCOR = {};
 function corPara(i) { return `hsl(${Math.round(i*137.5)%360},45%,42%)`; }
 function nomeCurto(j) {
@@ -717,6 +735,7 @@ function iniciarSync() {
           PATRULHAS = dados.patrulhas || [];
           PATRULHA_DE = dados.patrulhaDe || {};
           CARGO_DE = dados.cargoDe || {};
+          OBSERVACOES = dados.observacoes || {};
         } catch(e) {
           if (primeira) { S = deepCopy(INICIAL); EVENTOS = []; CICLO = cicloEmBranco(); DATAS_NASC = {}; JUSTIFICATIVAS = {}; }
         }
@@ -779,7 +798,7 @@ async function saveState() {
   const extras = JOVENS.filter(j => !JOVENS_BASE.includes(j)).map(id => ({id, nome: JNOMES[id]}));
   const nomesBase = {};
   JOVENS_BASE.forEach(id => { if (JNOMES[id] !== JNOMES_PADRAO[id]) nomesBase[id] = JNOMES[id]; });
-  const payload = JSON.stringify({ S, extraJovens: extras, eventos: EVENTOS, ciclo: CICLO, nomesBase, datasNascimento: DATAS_NASC, excluidos: JOVENS_EXCLUIDOS, justificativas: JUSTIFICATIVAS, patrulhas: PATRULHAS, patrulhaDe: PATRULHA_DE, cargoDe: CARGO_DE });
+  const payload = JSON.stringify({ S, extraJovens: extras, eventos: EVENTOS, ciclo: CICLO, nomesBase, datasNascimento: DATAS_NASC, excluidos: JOVENS_EXCLUIDOS, justificativas: JUSTIFICATIVAS, patrulhas: PATRULHAS, patrulhaDe: PATRULHA_DE, cargoDe: CARGO_DE, observacoes: OBSERVACOES });
   temAlteracaoLocalPendente = false; // este payload já reflete tudo que foi clicado até agora
   mostrarStatusSalvando('Salvando…');
   for (let tentativa = 1; tentativa <= 2; tentativa++) {
@@ -849,19 +868,23 @@ document.getElementById('novoJovemInput').focus();
 async function addJovem() {
 const input = document.getElementById('novoJovemInput');
 const nascInput = document.getElementById('novoJovemNasc');
+const obsInput = document.getElementById('novoJovemObs');
 const nome = input.value.trim();
 if (!nome) { input.focus(); return; }
 const nasc = nascInput.value;
+const obs = obsInput.value.trim();
 const id = slugify(nome);
 JOVENS.push(id);
 JNOMES[id] = nome;
 if (nasc) DATAS_NASC[id] = nasc;
+if (obs) OBSERVACOES[id] = obs;
 JCOR[id] = corPara(JOVENS.length - 1);
 S[id] = blocosEmBranco();
 temAlteracaoLocalPendente = true;
 await saveState();
 input.value = '';
 nascInput.value = '';
+obsInput.value = '';
 toggleAddJovemForm(false);
 ativo = id;
 window.__eixoAtivo = null;
@@ -968,16 +991,29 @@ function salvarEdicaoJovem(id) {
 const nome = document.getElementById('editNome_' + id).value.trim();
 const nasc = document.getElementById('editNasc_' + id).value;
 const cargo = document.getElementById('editCargo_' + id).value;
+const obs = document.getElementById('editObs_' + id).value.trim();
 if (!nome) { alert('O nome não pode ficar vazio.'); return; }
 JNOMES[id] = nome;
 DATAS_NASC[id] = nasc;
 if (cargo) CARGO_DE[id] = cargo; else delete CARGO_DE[id];
+if (obs) OBSERVACOES[id] = obs; else delete OBSERVACOES[id];
 JCOR[id] = JCOR[id] || corPara(JOVENS.indexOf(id));
 jovemEditandoId = null;
 temAlteracaoLocalPendente = true;
 saveState();
 renderRoster();
 if (ativo === id) renderDetail(id);
+}
+
+function verObservacao(id) {
+jovemMenuAbertoId = null;
+renderRoster();
+document.getElementById('obsModalTitulo').textContent = JNOMES[id];
+document.getElementById('obsModalTexto').textContent = OBSERVACOES[id] || 'Nenhuma observação registrada. Use "✏️ Editar" para adicionar.';
+document.getElementById('obsModalOv').classList.add('open');
+}
+function fecharObservacao() {
+document.getElementById('obsModalOv').classList.remove('open');
 }
 
 function excluirJovem(id) {
@@ -989,6 +1025,7 @@ delete S[id];
 delete DATAS_NASC[id];
 delete PATRULHA_DE[id];
 delete CARGO_DE[id];
+delete OBSERVACOES[id];
 if (ativo === id) { ativo = null; document.getElementById('detail').innerHTML = ''; }
 temAlteracaoLocalPendente = true;
 saveState();
@@ -1011,6 +1048,7 @@ delete S[id];
 delete DATAS_NASC[id];
 delete PATRULHA_DE[id];
 delete CARGO_DE[id];
+delete OBSERVACOES[id];
 if (ativo === id) { ativo = null; document.getElementById('detail').innerHTML = ''; }
 temAlteracaoLocalPendente = true;
 saveState();
@@ -1141,6 +1179,10 @@ return `<div class="roster-row" onclick="event.stopPropagation()">
 <option value="submonitor" ${CARGO_DE[j]==='submonitor' ? 'selected' : ''}>Submonitor</option>
 </select>
 </div>
+<div>
+<label class="campo-label">Observação (suporte, restrições alimentares, etc.)</label>
+<textarea class="campo-input" id="editObs_${j}" rows="3" placeholder="Ex: alergia a amendoim, acompanhamento com psicólogo, restrição de mobilidade...">${OBSERVACOES[j]||''}</textarea>
+</div>
 <div class="roster-edicao-btns">
 <button class="btn-primario" onclick="event.stopPropagation();salvarEdicaoJovem('${j}')">💾 Salvar</button>
 <button class="btn-secundario" onclick="event.stopPropagation();cancelarEdicaoJovem()">Cancelar</button>
@@ -1170,6 +1212,7 @@ ${info ? `<div class="roster-linha-idade">
 </div>
 ${menuAberto ? `<div class="roster-dropdown" onclick="event.stopPropagation()">
 <button onclick="abrirEdicaoJovem('${j}')">✏️ Editar</button>
+<button onclick="verObservacao('${j}')">📋 Observação</button>
 ${info && info.mesesFaltantes <= 0 ? `<button style="color:var(--vinho);" onclick="transferirParaSenior('${j}')">🎓 Transferir p/ Sênior</button>` : ''}
 <button class="remover" onclick="excluirJovem('${j}')">🗑️ Excluir</button>
 </div>` : ''}
