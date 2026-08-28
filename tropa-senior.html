@@ -1674,6 +1674,38 @@ function unarchiveYouth(yid){
   if(y){y.archived=false;}
   saveYouthData();renderAllTabs();
 }
+function excluirJovemSenior(yid){
+  const y=YOUTH_DATA.find(x=>x.id===yid);
+  const nome=y?y.name:yid;
+  if(!confirm('Excluir definitivamente o perfil de '+nome+'? Isso apaga TODAS as marcações de progressão dele(a). Essa ação não pode ser desfeita.'))return;
+  const idx=JOVENS.indexOf(yid);
+  if(idx!==-1){
+    JOVENS.splice(idx,1);
+    JNOMES.splice(idx,1);
+    JCORES.splice(idx,1);
+    Object.keys(S).forEach(function(bid){
+      const bloco=S[bid];
+      if(bloco.concluded) bloco.concluded.splice(idx,1);
+      if(bloco.f) Object.keys(bloco.f).forEach(function(fid){bloco.f[fid].splice(idx,1);});
+      if(bloco.v) Object.keys(bloco.v).forEach(function(vid){bloco.v[vid].splice(idx,1);});
+    });
+    Object.keys(PRESENCA).forEach(function(eid){
+      const antigo=PRESENCA[eid]||{};
+      const novo={};
+      Object.keys(antigo).forEach(function(k){
+        const ki=parseInt(k,10);
+        if(ki>idx) novo[ki-1]=antigo[k];
+        else if(ki<idx) novo[ki]=antigo[k];
+        // ki===idx: descartado (era o jovem excluído)
+      });
+      PRESENCA[eid]=novo;
+    });
+  }
+  YOUTH_DATA=YOUTH_DATA.filter(function(x){return x.id!==yid;});
+  delete EP_DATA[yid];
+  saveYouthData();
+  renderAllTabs();
+}
 
 function calcAge(bornStr, today){
   const b=new Date(bornStr);
@@ -1776,7 +1808,8 @@ function renderJovens(){
           <div style="font-size:10px;color:#999;">${y.role||'Sem cargo'} &nbsp;·&nbsp; Passagem: ${fmtDate(turn18(y.born))}</div>
         </div>
         <button class="btn-ic" onclick="showModal('${y.id}')" style="margin-right:4px;">✏ Editar</button>
-        <button class="btn-ic" onclick="unarchiveYouth('${y.id}')" title="Restaurar">↩ Restaurar</button>`;
+        <button class="btn-ic" onclick="unarchiveYouth('${y.id}')" title="Restaurar" style="margin-right:4px;">↩ Restaurar</button>
+        <button class="btn-ic" style="color:#E74C3C;" onclick="excluirJovemSenior('${y.id}')" title="Excluir definitivamente">🗑️</button>`;
       body.appendChild(row);
     });
     sec.appendChild(body);
@@ -1808,7 +1841,8 @@ function makeYouthCard(e,today,maxDays){
         ${badge}
         <div style="display:flex;gap:4px;">
           <button class="btn-ic" onclick="showModal('${e.id}')" title="Editar">✏ Editar</button>
-          <button class="btn-ic" style="color:#E74C3C;" onclick="archiveYouth('${e.id}')" title="Arquivar">📦</button>
+          <button class="btn-ic" style="color:#E67E22;" onclick="archiveYouth('${e.id}')" title="Arquivar">📦</button>
+          <button class="btn-ic" style="color:#E74C3C;" onclick="excluirJovemSenior('${e.id}')" title="Excluir definitivamente">🗑️</button>
         </div>
       </div>
     </div>

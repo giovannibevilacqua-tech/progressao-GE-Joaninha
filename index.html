@@ -597,6 +597,7 @@ const JNOMES_PADRAO = {miguel:'Miguel Silva',sabrina:'Sabrina Sigmaringa',pedro:
 let JNOMES = Object.assign({}, JNOMES_PADRAO);
 let JOVENS = JOVENS_BASE.slice();
 let JOVENS_EXCLUIDOS = [];
+let JOVENS_ARQUIVADOS = [];
 let PATRULHAS = [];
 let PATRULHA_DE = {};
 let CARGO_DE = {};
@@ -721,9 +722,11 @@ function iniciarSync() {
           const dados = JSON.parse(valor);
           const extras = dados.extraJovens || [];
           JOVENS_EXCLUIDOS = dados.excluidos || [];
+          JOVENS_ARQUIVADOS = dados.arquivados || [];
           JOVENS = JOVENS_BASE.filter(id => !JOVENS_EXCLUIDOS.includes(id));
           JNOMES = Object.assign({}, JNOMES_PADRAO);
           extras.forEach(ex => { JOVENS.push(ex.id); JNOMES[ex.id] = ex.nome; });
+          JOVENS = JOVENS.filter(id => !JOVENS_ARQUIVADOS.includes(id));
           const nomesBase = dados.nomesBase || {};
           Object.keys(nomesBase).forEach(id => { JNOMES[id] = nomesBase[id]; });
           JOVENS.forEach((j,i) => JCOR[j] = corPara(i));
@@ -795,10 +798,11 @@ function iniciarSync() {
 }
 
 async function saveState() {
-  const extras = JOVENS.filter(j => !JOVENS_BASE.includes(j)).map(id => ({id, nome: JNOMES[id]}));
+  const idsExtrasArquivados = JOVENS_ARQUIVADOS.filter(id => !JOVENS_BASE.includes(id));
+  const extras = [...JOVENS, ...idsExtrasArquivados].filter(j => !JOVENS_BASE.includes(j)).map(id => ({id, nome: JNOMES[id]}));
   const nomesBase = {};
   JOVENS_BASE.forEach(id => { if (JNOMES[id] !== JNOMES_PADRAO[id]) nomesBase[id] = JNOMES[id]; });
-  const payload = JSON.stringify({ S, extraJovens: extras, eventos: EVENTOS, ciclo: CICLO, nomesBase, datasNascimento: DATAS_NASC, excluidos: JOVENS_EXCLUIDOS, justificativas: JUSTIFICATIVAS, patrulhas: PATRULHAS, patrulhaDe: PATRULHA_DE, cargoDe: CARGO_DE, observacoes: OBSERVACOES });
+  const payload = JSON.stringify({ S, extraJovens: extras, eventos: EVENTOS, ciclo: CICLO, nomesBase, datasNascimento: DATAS_NASC, excluidos: JOVENS_EXCLUIDOS, arquivados: JOVENS_ARQUIVADOS, justificativas: JUSTIFICATIVAS, patrulhas: PATRULHAS, patrulhaDe: PATRULHA_DE, cargoDe: CARGO_DE, observacoes: OBSERVACOES });
   temAlteracaoLocalPendente = false; // este payload já reflete tudo que foi clicado até agora
   mostrarStatusSalvando('Salvando…');
   for (let tentativa = 1; tentativa <= 2; tentativa++) {
@@ -1021,12 +1025,34 @@ jovemMenuAbertoId = null;
 if (!confirm(`Excluir o perfil de ${JNOMES[id]}? Isso apaga também todas as marcações dele(a). Essa ação não pode ser desfeita.`)) { renderRoster(); return; }
 if (JOVENS_BASE.includes(id)) { if (!JOVENS_EXCLUIDOS.includes(id)) JOVENS_EXCLUIDOS.push(id); }
 JOVENS = JOVENS.filter(x => x !== id);
+JOVENS_ARQUIVADOS = JOVENS_ARQUIVADOS.filter(x => x !== id);
 delete S[id];
 delete DATAS_NASC[id];
 delete PATRULHA_DE[id];
 delete CARGO_DE[id];
 delete OBSERVACOES[id];
 if (ativo === id) { ativo = null; document.getElementById('detail').innerHTML = ''; }
+temAlteracaoLocalPendente = true;
+saveState();
+renderRoster();
+}
+
+function arquivarJovem(id) {
+jovemMenuAbertoId = null;
+if (!confirm(`Arquivar ${JNOMES[id]}? Ele(a) sai das listas ativas (patrulhas, progressão), mas os dados ficam guardados e você pode restaurar quando quiser.`)) { renderRoster(); return; }
+JOVENS = JOVENS.filter(x => x !== id);
+delete PATRULHA_DE[id];
+if (!JOVENS_ARQUIVADOS.includes(id)) JOVENS_ARQUIVADOS.push(id);
+if (ativo === id) { ativo = null; document.getElementById('detail').innerHTML = ''; }
+temAlteracaoLocalPendente = true;
+saveState();
+renderRoster();
+}
+
+function desarquivarJovem(id) {
+JOVENS_ARQUIVADOS = JOVENS_ARQUIVADOS.filter(x => x !== id);
+if (!JOVENS.includes(id)) JOVENS.push(id);
+JOVENS.forEach((j,i) => JCOR[j] = corPara(i));
 temAlteracaoLocalPendente = true;
 saveState();
 renderRoster();
@@ -1214,6 +1240,7 @@ ${menuAberto ? `<div class="roster-dropdown" onclick="event.stopPropagation()">
 <button onclick="abrirEdicaoJovem('${j}')">✏️ Editar</button>
 <button onclick="verObservacao('${j}')">📋 Observação</button>
 ${info && info.mesesFaltantes <= 0 ? `<button style="color:var(--vinho);" onclick="transferirParaSenior('${j}')">🎓 Transferir p/ Sênior</button>` : ''}
+<button onclick="arquivarJovem('${j}')">📦 Arquivar</button>
 <button class="remover" onclick="excluirJovem('${j}')">🗑️ Excluir</button>
 </div>` : ''}
 </div>`;
@@ -1269,7 +1296,38 @@ elPatrulhas.innerHTML = htmlP;
 
 const idsValidas = PATRULHAS.map(p => p.id);
 const semPatrulha = JOVENS.filter(j => !idsValidas.includes(PATRULHA_DE[j]));
-document.getElementById('roster').innerHTML = construirSecaoPatrulha(null, semPatrulha);
+document.getElementById('roster').innerHTML = construirSecaoPatrulha(null, semPatrulha) + construirSecaoArquivados();
+}
+
+let arquivadosAberto = false;
+function toggleArquivados() {
+arquivadosAberto = !arquivadosAberto;
+renderRoster();
+}
+
+function construirSecaoArquivados() {
+if (!JOVENS_ARQUIVADOS.length) return '';
+let h = `<div class="patrulha-secao">
+<div class="bloco-head cabecalho-secao${arquivadosAberto ? ' aberto' : ''}" style="border-radius:10px;cursor:pointer;" onclick="toggleArquivados()">
+<span class="bloco-name" style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">📦 Arquivados (${JOVENS_ARQUIVADOS.length})</span>
+<span class="chev" style="transform:rotate(${arquivadosAberto ? 180 : 0}deg);">▾</span>
+</div>`;
+if (arquivadosAberto) {
+h += `<div class="patrulha-drop-zone" style="border-style:solid;">`;
+JOVENS_ARQUIVADOS.forEach(id => {
+h += `<div class="roster-row" style="cursor:default;">
+<div class="roster-linha-principal">
+<div class="roster-avatar" style="background:#9AA5B1;">${(JNOMES[id]||'?').split(' ').map(w=>w[0]).slice(0,2).join('')}</div>
+<div class="roster-name">${JNOMES[id] || '(sem nome)'}</div>
+<button class="anexo-btn" style="background:var(--done-bg);color:#1E8449;" onclick="desarquivarJovem('${id}')">↩ Restaurar</button>
+<button class="anexo-btn" style="background:#FDECEA;color:#E74C3C;" onclick="excluirJovem('${id}')">🗑️</button>
+</div>
+</div>`;
+});
+h += `</div>`;
+}
+h += `</div>`;
+return h;
 }
 
 function preservarScroll(fn) {
