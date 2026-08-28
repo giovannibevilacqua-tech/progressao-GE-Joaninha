@@ -598,7 +598,7 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 </div>
 
 <div id="pagina-senior" style="display:none;">
-<iframe id="iframeSenior" src="tropa-senior.html" style="width:100%;min-height:100vh;border:none;display:block;" title="Tropa Sênior"></iframe>
+<iframe id="iframeSenior" src="tropa-senior.html" style="width:100%;border:none;display:block;" title="Tropa Sênior"></iframe>
 </div>
 
 <script>
@@ -1534,12 +1534,25 @@ if (p === 'calendario') renderPaginaCalendario();
 if (p === 'ciclo') renderPaginaCiclo();
 }
 
+function ajustarAlturaIframeSenior() {
+const iframe = document.getElementById('iframeSenior');
+if (!iframe || iframe.offsetParent === null) return;
+const topo = iframe.getBoundingClientRect().top;
+const altura = window.innerHeight - topo;
+iframe.style.height = Math.max(altura, 320) + 'px';
+}
+window.addEventListener('resize', ajustarAlturaIframeSenior);
+
 function mudarRamo(r) {
 document.getElementById('ramo-escoteira').style.display = r === 'escoteira' ? '' : 'none';
 document.getElementById('pagina-senior').style.display = r === 'senior' ? '' : 'none';
 document.getElementById('ramoBtnEscoteira').classList.toggle('active', r === 'escoteira');
 document.getElementById('ramoBtnSenior').classList.toggle('active', r === 'senior');
 window.scrollTo(0, 0);
+if (r === 'senior') {
+requestAnimationFrame(ajustarAlturaIframeSenior);
+setTimeout(ajustarAlturaIframeSenior, 50);
+}
 }
 
 function selecionarEixoTabela(id) {
