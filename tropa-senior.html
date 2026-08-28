@@ -219,6 +219,11 @@ body{padding-bottom:50px;}
   font-size:12px;outline:none;font-family:inherit;}
 .ep-di:focus{border-color:var(--vinho);}
 .ep-sub{background:#FAFAF8;border-radius:8px;padding:10px 12px;margin-bottom:8px;}
+.obs-modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:flex-end;justify-content:center;}
+.obs-modal-ov.open{display:flex;}
+.obs-modal-box{background:var(--card);border-radius:16px 16px 0 0;padding:20px 18px 26px;width:100%;max-width:500px;max-height:80vh;overflow-y:auto;}
+.obs-modal-titulo{font-size:15px;font-weight:800;color:var(--vinho);margin-bottom:10px;}
+.obs-modal-texto{font-size:13px;color:var(--text);line-height:1.6;white-space:pre-line;}
 </style>
 </head>
 <body>
@@ -1575,11 +1580,13 @@ function showModal(yid){
     document.getElementById('inp-name').value=y.name;
     document.getElementById('inp-born').value=y.born;
     document.getElementById('inp-role').value=y.role||'';
+    document.getElementById('inp-obs').value=y.observacoes||'';
   }else{
     document.getElementById('modal-ttl').textContent='Adicionar Jovem';
     document.getElementById('inp-name').value='';
     document.getElementById('inp-born').value='';
     document.getElementById('inp-role').value='';
+    document.getElementById('inp-obs').value='';
   }
 }
 function hideModal(){document.getElementById('youth-modal').classList.remove('open');}
@@ -1587,18 +1594,19 @@ function saveYouth(){
   const name=document.getElementById('inp-name').value.trim();
   const born=document.getElementById('inp-born').value;
   const role=document.getElementById('inp-role').value.trim();
+  const observacoes=document.getElementById('inp-obs').value.trim();
   if(!name||!born){alert('Nome e data de nascimento são obrigatórios.');return;}
   const eid=document.getElementById('edit-id').value;
   const isNew=!eid;
   if(eid){
     // Edição — atualiza dados
     const y=YOUTH_DATA.find(x=>x.id===eid);
-    if(y){y.name=name;y.born=born;y.role=role;}
+    if(y){y.name=name;y.born=born;y.role=role;y.observacoes=observacoes;}
   } else {
     // Novo jovem — atribuir cor e adicionar
     const newId='y_'+Date.now();
     const newColor=COLOR_PALETTE[JOVENS.length%COLOR_PALETTE.length];
-    YOUTH_DATA.push({id:newId,name,born,role,archived:false,color:newColor});
+    YOUTH_DATA.push({id:newId,name,born,role,observacoes,archived:false,color:newColor});
   }
   // Sincronizar arrays JOVENS/JNOMES/JCORES
   syncJovens();
@@ -1609,6 +1617,15 @@ function saveYouth(){
   if(isNew){
     alert('Jovem adicionado com sucesso!\nEle aparece agora em Progressão, Calendário e Escoteiro da Pátria.');
   }
+}
+function verObservacaoSenior(yid){
+  const y=YOUTH_DATA.find(x=>x.id===yid);
+  document.getElementById('obsModalTitulo').textContent=y?y.name:'';
+  document.getElementById('obsModalTexto').textContent=(y&&y.observacoes)?y.observacoes:'Nenhuma observação registrada. Use "✏ Editar" para adicionar.';
+  document.getElementById('obsModalOv').classList.add('open');
+}
+function fecharObservacaoSenior(){
+  document.getElementById('obsModalOv').classList.remove('open');
 }
 function archiveYouth(yid){
   if(!confirm('Arquivar este jovem? Você poderá restaurá-lo a qualquer momento.'))return;
@@ -1781,6 +1798,7 @@ function renderJovens(){
           <div style="font-size:10px;color:#999;">${y.role||'Sem cargo'} &nbsp;·&nbsp; Passagem: ${fmtDate(turn18(y.born))}</div>
         </div>
         <button class="btn-ic" onclick="showModal('${y.id}')" style="margin-right:4px;">✏ Editar</button>
+        <button class="btn-ic" onclick="verObservacaoSenior('${y.id}')" title="Observação" style="margin-right:4px;">📋${y.observacoes?' •':''}</button>
         <button class="btn-ic" onclick="unarchiveYouth('${y.id}')" title="Restaurar" style="margin-right:4px;">↩ Restaurar</button>
         <button class="btn-ic" onclick="deleteYouth('${y.id}')" title="Excluir permanentemente"
           style="color:#E74C3C;border-color:#E74C3C;">🗑 Excluir</button>`;
@@ -1815,6 +1833,7 @@ function makeYouthCard(e,today,maxDays){
         ${badge}
         <div style="display:flex;gap:4px;">
           <button class="btn-ic" onclick="showModal('${e.id}')" title="Editar">✏ Editar</button>
+          <button class="btn-ic" onclick="verObservacaoSenior('${e.id}')" title="Observação">📋${e.observacoes?' •':''}</button>
           <button class="btn-ic" style="color:#E74C3C;" onclick="archiveYouth('${e.id}')" title="Arquivar">📦</button>
         </div>
       </div>
@@ -1882,8 +1901,12 @@ iniciarApp();
       <input type="date" class="f-input" id="inp-born">
     </div>
     <div class="f-field">
-      <label class="f-label">Cargo / Observação</label>
+      <label class="f-label">Cargo</label>
       <input type="text" class="f-input" id="inp-role" placeholder="Ex: Monitora, Submonitor…">
+    </div>
+    <div class="f-field">
+      <label class="f-label">Observações (privado — suporte, restrições, etc.)</label>
+      <textarea class="f-input" id="inp-obs" rows="3" style="resize:vertical;" placeholder="Ex: restrição alimentar, necessidade de suporte…"></textarea>
     </div>
     <div class="f-row">
       <button class="btn-sec" onclick="hideModal()">Cancelar</button>
@@ -1909,5 +1932,14 @@ iniciarApp();
   <button class="sbar-btn" onclick="exportData()" title="Baixar backup em JSON">📤 Exportar</button>
   <button class="sbar-btn prim" id="save-main-btn" onclick="saveAll()">💾 Salvar</button>
 </div>
+
+<div class="obs-modal-ov" id="obsModalOv" onclick="if(event.target===this)fecharObservacaoSenior()">
+  <div class="obs-modal-box">
+    <div class="obs-modal-titulo" id="obsModalTitulo"></div>
+    <div class="obs-modal-texto" id="obsModalTexto"></div>
+    <button class="btn-sec" style="width:100%;margin-top:14px;" onclick="fecharObservacaoSenior()">Fechar</button>
+  </div>
+</div>
+
 </body>
 </html>

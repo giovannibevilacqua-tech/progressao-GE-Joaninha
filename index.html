@@ -286,6 +286,12 @@ border-radius: 12px; border: 2px solid var(--text); background: #F5F3EF; color: 
 .resumo-bar { height: 100%; border-radius: 20px; transition: width .4s ease; }
 .reset-btn { display: block; margin: 16px auto 32px; background: none; border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; font-size: 11px; color: var(--muted); cursor: pointer; }
 .reset-btn:hover { border-color: #E74C3C; color: #E74C3C; }
+.backup-row { display: flex; gap: 8px; justify-content: center; margin: -20px auto 32px; padding: 0 14px; }
+.backup-btn {
+flex: 1; max-width: 180px; text-align: center; background: none; border: 1px solid var(--border);
+border-radius: 20px; padding: 7px 12px; font-size: 11px; font-weight: 700; color: var(--muted); cursor: pointer;
+}
+.backup-btn:hover { border-color: var(--vinho); color: var(--vinho); }
 
 .campo-label { font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; display: block; margin-bottom: 4px; }
 .campo-input {
@@ -572,6 +578,14 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 </div>
 
 <button class="reset-btn" id="btnLimparMarcacoes" onclick="confirmReset()">↺ LIMPAR MARCAÇÕES</button>
+
+<div class="backup-row">
+<button class="backup-btn" onclick="exportarBackupEscoteira()">📤 Exportar backup</button>
+<label class="backup-btn">
+📥 Importar backup
+<input type="file" accept=".json" onchange="importarBackupEscoteira(event)" style="display:none;">
+</label>
+</div>
 
 </div>
 
@@ -911,6 +925,73 @@ renderRoster();
 document.getElementById('detail').innerHTML = '';
 if (paginaAtiva === 'tabela') renderPaginaTabela();
 alert('Marcações limpas com sucesso.');
+}
+
+function exportarBackupEscoteira() {
+const idsExtrasArquivados = JOVENS_ARQUIVADOS.filter(id => !JOVENS_BASE.includes(id));
+const extras = [...JOVENS, ...idsExtrasArquivados].filter(j => !JOVENS_BASE.includes(j)).map(id => ({id, nome: JNOMES[id]}));
+const nomesBase = {};
+JOVENS_BASE.forEach(id => { if (JNOMES[id] !== JNOMES_PADRAO[id]) nomesBase[id] = JNOMES[id]; });
+const dados = {
+version: '1.0',
+exportedAt: new Date().toISOString(),
+exportedBy: 'GE Joaninha — Tropa Escoteira',
+S, extraJovens: extras, eventos: EVENTOS, ciclo: CICLO, nomesBase,
+datasNascimento: DATAS_NASC, excluidos: JOVENS_EXCLUIDOS, arquivados: JOVENS_ARQUIVADOS,
+justificativas: JUSTIFICATIVAS, patrulhas: PATRULHAS, patrulhaDe: PATRULHA_DE,
+cargoDe: CARGO_DE, observacoes: OBSERVACOES
+};
+const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url;
+a.download = 'backup_tropa_escoteira_' + new Date().toISOString().slice(0, 10) + '.json';
+document.body.appendChild(a);
+a.click();
+document.body.removeChild(a);
+URL.revokeObjectURL(url);
+}
+
+function importarBackupEscoteira(event) {
+const file = event.target.files[0];
+if (!file) return;
+const reader = new FileReader();
+reader.onload = async (e) => {
+try {
+const d = JSON.parse(e.target.result);
+if (!d.version) throw new Error('Arquivo não reconhecido');
+if (!confirm('Importar esse backup vai substituir TODOS os dados atuais da Tropa Escoteira (progressão, calendário, patrulhas, jovens, etc.) para todo mundo que usa este link.\n\nConfirma a importação?')) { event.target.value = ''; return; }
+
+S = d.S || {};
+EVENTOS = (d.eventos || []).map(normalizarEvento);
+CICLO = (d.ciclo && d.ciclo.length === 6) ? d.ciclo : cicloEmBranco();
+DATAS_NASC = d.datasNascimento || {};
+JOVENS_EXCLUIDOS = d.excluidos || [];
+JOVENS_ARQUIVADOS = d.arquivados || [];
+JUSTIFICATIVAS = d.justificativas || {};
+PATRULHAS = d.patrulhas || [];
+PATRULHA_DE = d.patrulhaDe || {};
+CARGO_DE = d.cargoDe || {};
+OBSERVACOES = d.observacoes || {};
+
+JOVENS = JOVENS_BASE.filter(id => !JOVENS_EXCLUIDOS.includes(id));
+JNOMES = Object.assign({}, JNOMES_PADRAO);
+(d.extraJovens || []).forEach(ex => { JOVENS.push(ex.id); JNOMES[ex.id] = ex.nome; });
+JOVENS = JOVENS.filter(id => !JOVENS_ARQUIVADOS.includes(id));
+const nomesBase = d.nomesBase || {};
+Object.keys(nomesBase).forEach(id => { JNOMES[id] = nomesBase[id]; });
+JOVENS.forEach((j, i) => JCOR[j] = corPara(i));
+
+temAlteracaoLocalPendente = true;
+await saveState();
+alert('✓ Backup importado com sucesso! A página vai recarregar.');
+location.reload();
+} catch (err) {
+alert('Arquivo inválido. Utilize apenas backups exportados por este sistema.\n\n' + err.message);
+event.target.value = '';
+}
+};
+reader.readAsText(file);
 }
 
 function blocoConcluido(j, b) {
