@@ -2815,7 +2815,9 @@ function iniciarObservadorHeaderCompacto() {
   if (!('IntersectionObserver' in window)) return;
   const observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
-      tabs.classList.toggle('compacto', !entry.isIntersecting);
+      const compacto = !entry.isIntersecting;
+      tabs.classList.toggle('compacto', compacto);
+      try { window.parent.postMessage({ tipo: 'headerCompactoSr', compacto: compacto }, '*'); } catch (e) {}
     });
   }, { threshold: 0 });
   observer.observe(sentinela);

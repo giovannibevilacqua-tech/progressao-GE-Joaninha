@@ -3064,6 +3064,13 @@ observer.observe(sentinela);
 }
 iniciarObservadorHeaderCompacto();
 
+window.addEventListener('message', function(ev) {
+const msg = ev.data;
+if (!msg || msg.tipo !== 'headerCompactoSr') return;
+const header = document.querySelector('.header');
+if (header) header.classList.toggle('compacto', !!msg.compacto);
+});
+
 async function iniciar() {
 document.getElementById('roster').innerHTML = '<div style="padding:12px;font-size:12px;color:var(--muted);text-align:center;">Carregando dados compartilhados…</div>';
 atualizarResumoItensPicker();
