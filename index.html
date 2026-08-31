@@ -28,6 +28,7 @@ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica N
 background: var(--bg);
 color: var(--text);
 min-height: 100vh;
+padding-bottom: 40px;
 }
 .header {
 background: linear-gradient(160deg, #C1121F 0%, #9A0D18 60%, #E63946 100%);
@@ -312,6 +313,16 @@ flex: 1; max-width: 180px; text-align: center; background: none; border: 1px sol
 border-radius: 20px; padding: 7px 12px; font-size: 11px; font-weight: 700; color: var(--muted); cursor: pointer;
 }
 .backup-btn:hover { border-color: var(--vinho); color: var(--vinho); }
+
+.backup-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--vinho); color: #fff; z-index: 600; box-shadow: 0 -2px 10px rgba(0,0,0,.25); }
+.backup-bar-handle { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 14px; cursor: pointer; font-size: 11px; font-weight: 700; }
+#chevBackupBar { transition: transform .2s; }
+.backup-bar-body { display: flex; gap: 8px; padding: 0 14px 10px; }
+.sbar-btn {
+flex: 1; text-align: center; background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.25); color: #fff;
+border-radius: 16px; padding: 7px 11px; font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap;
+}
+.sbar-btn:hover { background: rgba(255,255,255,.25); }
 
 .campo-label { font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; display: block; margin-bottom: 4px; }
 .campo-input {
@@ -626,12 +637,18 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 
 <button class="reset-btn" id="btnLimparMarcacoes" onclick="confirmReset()">↺ LIMPAR MARCAÇÕES</button>
 
-<div class="backup-row">
-<button class="backup-btn" onclick="exportarBackupEscoteira()">📤 Exportar backup</button>
-<label class="backup-btn">
+<div class="backup-bar" id="backupBar">
+<div class="backup-bar-handle" onclick="toggleBackupBar()">
+<span>💾 Backup</span>
+<span id="chevBackupBar">▾</span>
+</div>
+<div class="backup-bar-body" id="backupBarBody" style="display:none;">
+<button class="sbar-btn" onclick="exportarBackupEscoteira()">📤 Exportar backup</button>
+<label class="sbar-btn">
 📥 Importar backup
 <input type="file" accept=".json" onchange="importarBackupEscoteira(event)" style="display:none;">
 </label>
+</div>
 </div>
 
 </div>
@@ -984,6 +1001,13 @@ renderRoster();
 document.getElementById('detail').innerHTML = '';
 if (paginaAtiva === 'tabela') renderPaginaTabela();
 alert('Marcações limpas com sucesso.');
+}
+
+function toggleBackupBar() {
+const body = document.getElementById('backupBarBody');
+const aberto = body.style.display !== 'none';
+body.style.display = aberto ? 'none' : 'flex';
+document.getElementById('chevBackupBar').style.transform = aberto ? 'rotate(0deg)' : 'rotate(180deg)';
 }
 
 function exportarBackupEscoteira() {
@@ -2672,6 +2696,106 @@ ${painel}
 </div>`;
 }
 
+// ── Metas/marcos editáveis por semestre do Ciclo de Programa ──
+let metaEditandoCiclo = null;
+let metaFormAbertoCiclo = null;
+
+function metaCicloY(i) {
+if (!CICLO[i].metas) CICLO[i].metas = [];
+return CICLO[i].metas;
+}
+function toggleMetaFormCiclo(i) {
+metaFormAbertoCiclo = (metaFormAbertoCiclo === i) ? null : i;
+metaEditandoCiclo = null;
+renderPaginaCiclo();
+}
+function editarMetaCiclo(i, idx) {
+metaEditandoCiclo = { i, idx };
+metaFormAbertoCiclo = i;
+renderPaginaCiclo();
+}
+function salvarMetaCiclo(i) {
+const icone = document.getElementById('metaIconeCiclo_' + i).value;
+const texto = document.getElementById('metaTextoCiclo_' + i).value.trim();
+if (!texto) { alert('Escreva o texto da meta.'); return; }
+const lista = metaCicloY(i);
+if (metaEditandoCiclo && metaEditandoCiclo.i === i) lista[metaEditandoCiclo.idx] = { icone, texto };
+else lista.push({ icone, texto });
+metaEditandoCiclo = null;
+metaFormAbertoCiclo = null;
+temAlteracaoLocalPendente = true;
+saveState();
+renderPaginaCiclo();
+}
+function removerMetaCiclo(i, idx) {
+if (!confirm('Remover esta meta?')) return;
+metaCicloY(i).splice(idx, 1);
+temAlteracaoLocalPendente = true;
+saveState();
+renderPaginaCiclo();
+}
+function cancelarMetaCiclo() {
+metaEditandoCiclo = null;
+metaFormAbertoCiclo = null;
+renderPaginaCiclo();
+}
+function previsaoBlocosCiclo(semBlocos) {
+if (!JOVENS.length) return '<div style="font-size:11px;color:var(--muted);">Nenhum jovem cadastrado.</div>';
+return JOVENS.map(j => {
+const baseDone = countConcluidos(j);
+const gains = (semBlocos || []).filter(b => b && !blocoConcluido(j, b)).length;
+const expected = Math.min(18, baseDone + gains);
+const pct = Math.round(expected / 18 * 100);
+const et = etapa(expected);
+return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+<span style="font-size:11px;font-weight:700;width:90px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${JNOMES[j]}</span>
+<div style="flex:1;background:#EEEBE7;border-radius:20px;height:7px;overflow:hidden;"><div style="width:${pct}%;height:100%;border-radius:20px;background:${JCOR[j]};"></div></div>
+<span style="font-size:10px;color:${et.c};width:34px;text-align:right;flex-shrink:0;">${expected}/18</span>
+</div>`;
+}).join('');
+}
+function renderMetasBoxCiclo(i) {
+const lista = metaCicloY(i);
+const formAberto = metaFormAbertoCiclo === i;
+const editandoIdx = (metaEditandoCiclo && metaEditandoCiclo.i === i) ? metaEditandoCiclo.idx : null;
+const valIcone = editandoIdx !== null ? lista[editandoIdx].icone : '⭐';
+const valTexto = editandoIdx !== null ? lista[editandoIdx].texto : '';
+let h = `<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+<div class="campo-label" style="margin-bottom:7px;">🎯 Metas e marcos do semestre</div>`;
+lista.forEach((m, idx) => {
+h += `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #F2EFEA;">
+<span style="font-size:15px;">${m.icone}</span>
+<div style="flex:1;font-size:12px;">${m.texto}</div>
+<button class="btn-secundario" style="padding:3px 7px;font-size:11px;" onclick="editarMetaCiclo(${i},${idx})">✏️</button>
+<button class="btn-secundario" style="padding:3px 7px;font-size:11px;color:#E74C3C;" onclick="removerMetaCiclo(${i},${idx})">🗑️</button>
+</div>`;
+});
+if (!lista.length && !formAberto) h += `<div style="font-size:11px;color:var(--muted);padding:4px 0;">Nenhuma meta cadastrada ainda.</div>`;
+if (formAberto) {
+h += `<div style="margin-top:8px;padding:10px;background:#FAFAF8;border-radius:8px;display:flex;flex-direction:column;gap:8px;">
+<select class="campo-input" id="metaIconeCiclo_${i}">
+<option value="⭐" ${valIcone === '⭐' ? 'selected' : ''}>⭐ Marco</option>
+<option value="🏆" ${valIcone === '🏆' ? 'selected' : ''}>🏆 Conquista</option>
+<option value="🎯" ${valIcone === '🎯' ? 'selected' : ''}>🎯 Meta</option>
+<option value="📌" ${valIcone === '📌' ? 'selected' : ''}>📌 Observação</option>
+</select>
+<textarea class="campo-input" id="metaTextoCiclo_${i}" rows="2" placeholder="Ex: Miguel alcança a etapa Rumo">${valTexto}</textarea>
+<div style="display:flex;gap:8px;">
+<button class="btn-primario" style="flex:1;padding:8px;font-size:12px;" onclick="salvarMetaCiclo(${i})">💾 Salvar</button>
+<button class="btn-secundario" style="flex:1;padding:8px;font-size:12px;" onclick="cancelarMetaCiclo()">Cancelar</button>
+</div>
+</div>`;
+} else {
+h += `<button class="btn-secundario" style="margin-top:8px;width:100%;text-align:center;" onclick="toggleMetaFormCiclo(${i})">+ Adicionar meta</button>`;
+}
+h += `<div style="margin-top:12px;">
+<div class="campo-label" style="margin-bottom:7px;">Previsão de blocos ao final do semestre</div>
+${previsaoBlocosCiclo(CICLO[i].blocos)}
+</div>`;
+h += `</div>`;
+return h;
+}
+
 function renderPaginaCiclo() {
 const el = document.getElementById('listaCiclo');
 el.innerHTML = CICLO.map((sem, i) => {
@@ -2692,6 +2816,7 @@ return `<div class="ciclo-card">
 </div>
 </div>
 <div class="ciclo-blocos-grid">${blocosHtml}</div>
+${renderMetasBoxCiclo(i)}
 </div>`;
 }).join('');
 }
