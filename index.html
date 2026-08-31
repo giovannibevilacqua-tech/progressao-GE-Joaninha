@@ -35,11 +35,17 @@ background: linear-gradient(160deg, #C1121F 0%, #9A0D18 60%, #E63946 100%);
 color: #fff;
 padding: 20px 16px 16px;
 text-align: center;
+transition: padding .25s ease;
 }
-.header-flor { font-size: 30px; margin-bottom: 4px; filter: drop-shadow(0 2px 4px rgba(0,0,0,.3)); }
-.header h1 { font-size: 17px; font-weight: 800; letter-spacing: .5px; line-height: 1.3; }
-.header .sub { font-size: 12px; opacity: .82; margin-top: 4px; }
-.header-chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 10px; }
+.header.compacto { padding: 8px 16px; }
+.header-flor { font-size: 30px; margin-bottom: 4px; filter: drop-shadow(0 2px 4px rgba(0,0,0,.3)); transition: opacity .2s ease, max-height .2s ease, margin .2s ease; max-height: 40px; overflow: hidden; }
+.header.compacto .header-flor { opacity: 0; max-height: 0; margin: 0; }
+.header h1 { font-size: 17px; font-weight: 800; letter-spacing: .5px; line-height: 1.3; transition: font-size .2s ease; }
+.header.compacto h1 { font-size: 13px; }
+.header .sub { font-size: 12px; opacity: .82; margin-top: 4px; transition: opacity .2s ease, max-height .2s ease, margin .2s ease; max-height: 30px; overflow: hidden; }
+.header.compacto .sub { opacity: 0; max-height: 0; margin: 0; }
+.header-chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 10px; transition: opacity .2s ease, max-height .2s ease, margin .2s ease; max-height: 40px; overflow: hidden; }
+.header.compacto .header-chips { opacity: 0; max-height: 0; margin: 0; }
 .chip { background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.3); border-radius: 20px; font-size: 11px; font-weight: 600; padding: 3px 10px; }
 .alert {
 margin: 14px 14px 0;
@@ -262,7 +268,7 @@ text-align: center;
 }
 .ramo-btn.active { background: var(--vinho); color: #fff; border-color: var(--vinho); }
 
-.tabs-linha { display: flex; background: var(--card); border-bottom: 2px solid var(--border); position: sticky; top: 0; z-index: 200; box-shadow: 0 2px 6px rgba(0,0,0,.1); overflow-x: auto; overflow-y: hidden; margin-top: 14px; }
+.tabs-linha { display: flex; background: var(--card); border-bottom: 2px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,.1); overflow-x: auto; overflow-y: hidden; }
 .cabecalho-fixo { position: sticky; top: 0; z-index: 310; background: var(--bg); }
 .tabs-linha .tab-btn-linha {
 flex: 1; min-width: 80px; padding: 16px 6px; border: none; border-bottom: 3px solid transparent; background: transparent;
@@ -457,6 +463,16 @@ background: linear-gradient(160deg, var(--vinho) 0%, var(--vinho2) 100%); color:
 font-size: 13px; font-weight: 800; text-align: center; text-transform: uppercase; letter-spacing: 1px;
 padding: 12px; margin: 14px 14px 0; border-radius: var(--r); box-shadow: var(--shadow);
 }
+.ciclo-grupo-header {
+background: linear-gradient(160deg, var(--vinho) 0%, var(--vinho2) 100%); color: #fff;
+display: flex; align-items: center; gap: 10px; justify-content: space-between;
+padding: 13px 16px; border-radius: var(--r); cursor: pointer; box-shadow: var(--shadow);
+}
+.ciclo-grupo-header:hover { filter: brightness(1.08); }
+.ciclo-grupo-header-titulo { font-size: 13px; font-weight: 800; letter-spacing: .2px; }
+.ciclo-grupo-header-sub { font-size: 10px; font-weight: 600; opacity: .85; margin-top: 2px; }
+.ciclo-grupo-header-periodo { font-size: 11px; font-weight: 700; opacity: .9; white-space: nowrap; }
+.ciclo-grupo-header .chev { color: #fff; font-size: 14px; transition: transform .2s; flex-shrink: 0; }
 .ciclo-card { background: var(--card); border-radius: var(--r); box-shadow: var(--shadow); margin: 10px 14px 0; padding: 14px; }
 .ciclo-card-header {
 display: flex; align-items: center; justify-content: space-between; padding: 12px 16px;
@@ -471,7 +487,7 @@ cursor: pointer; color: #fff;
 .ciclo-datas-row { display: flex; gap: 8px; margin-bottom: 12px; }
 .ciclo-datas-row > div { flex: 1; }
 .ciclo-blocos-grid { display: flex; flex-direction: column; gap: 8px; }
-.ciclo-bloco-btn { text-align: center; justify-content: center; }
+.ciclo-bloco-btn { }
 
 
 </style>
@@ -491,9 +507,6 @@ cursor: pointer; color: #fff;
 <button class="ramo-btn active" id="ramoBtnEscoteira" onclick="mudarRamo('escoteira')">🏕️ Tropa Escoteira</button>
 <button class="ramo-btn" id="ramoBtnSenior" onclick="mudarRamo('senior')">🎓 Tropa Sênior</button>
 </div>
-</div>
-
-<div id="ramo-escoteira">
 
 <nav class="tabs-linha" id="tabsLinha">
 <button class="tab-btn-linha active" id="tabJovem" onclick="mudarPagina('jovem')">👤 Por Jovem</button>
@@ -501,6 +514,9 @@ cursor: pointer; color: #fff;
 <button class="tab-btn-linha" id="tabCalendario" onclick="mudarPagina('calendario')">📅 Calendário</button>
 <button class="tab-btn-linha" id="tabCiclo" onclick="mudarPagina('ciclo')">🔄 Ciclo de Programa</button>
 </nav>
+</div>
+
+<div id="ramo-escoteira">
 
 <div id="pagina-jovem">
 
@@ -648,7 +664,6 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 </div>
 
 <div id="pagina-ciclo" style="display:none;">
-<div class="ciclo-titulo">Ciclo de 3 Anos</div>
 <div id="listaCiclo"></div>
 </div>
 
@@ -846,6 +861,7 @@ function iniciarSync() {
           CARGO_DE = dados.cargoDe || {};
           OBSERVACOES = dados.observacoes || {};
           LIS_OURO_DATA = dados.lisOuroDe || {};
+          CICLO_DESTAQUE = dados.cicloDestaque || {};
         } catch(e) {
           if (primeira) { S = deepCopy(INICIAL); EVENTOS = []; CICLO = cicloEmBranco(); DATAS_NASC = {}; JUSTIFICATIVAS = {}; }
         }
@@ -909,7 +925,7 @@ async function saveState() {
   const extras = [...JOVENS, ...idsExtrasArquivados].filter(j => !JOVENS_BASE.includes(j)).map(id => ({id, nome: JNOMES[id]}));
   const nomesBase = {};
   JOVENS_BASE.forEach(id => { if (JNOMES[id] !== JNOMES_PADRAO[id]) nomesBase[id] = JNOMES[id]; });
-  const payload = JSON.stringify({ S, extraJovens: extras, eventos: EVENTOS, ciclo: CICLO, nomesBase, datasNascimento: DATAS_NASC, excluidos: JOVENS_EXCLUIDOS, arquivados: JOVENS_ARQUIVADOS, justificativas: JUSTIFICATIVAS, patrulhas: PATRULHAS, patrulhaDe: PATRULHA_DE, cargoDe: CARGO_DE, observacoes: OBSERVACOES, lisOuroDe: LIS_OURO_DATA });
+  const payload = JSON.stringify({ S, extraJovens: extras, eventos: EVENTOS, ciclo: CICLO, nomesBase, datasNascimento: DATAS_NASC, excluidos: JOVENS_EXCLUIDOS, arquivados: JOVENS_ARQUIVADOS, justificativas: JUSTIFICATIVAS, patrulhas: PATRULHAS, patrulhaDe: PATRULHA_DE, cargoDe: CARGO_DE, observacoes: OBSERVACOES, lisOuroDe: LIS_OURO_DATA, cicloDestaque: CICLO_DESTAQUE });
   temAlteracaoLocalPendente = false; // este payload já reflete tudo que foi clicado até agora
   mostrarStatusSalvando('Salvando…');
   for (let tentativa = 1; tentativa <= 2; tentativa++) {
@@ -1891,14 +1907,13 @@ window.addEventListener('resize', ajustarAlturaIframeSenior);
 function mudarRamo(r) {
 document.getElementById('ramo-escoteira').style.display = r === 'escoteira' ? '' : 'none';
 document.getElementById('pagina-senior').style.display = r === 'senior' ? '' : 'none';
+document.getElementById('tabsLinha').style.display = r === 'escoteira' ? '' : 'none';
 document.getElementById('ramoBtnEscoteira').classList.toggle('active', r === 'escoteira');
 document.getElementById('ramoBtnSenior').classList.toggle('active', r === 'senior');
 window.scrollTo(0, 0);
 if (r === 'senior') {
 requestAnimationFrame(ajustarAlturaIframeSenior);
 setTimeout(ajustarAlturaIframeSenior, 50);
-} else {
-requestAnimationFrame(ajustarTopoTabsLinha);
 }
 }
 
@@ -2723,12 +2738,15 @@ return `<div class="eixo-picker-header" style="background:${eixo.cor}">${eixo.no
 <div class="picker-bloco-head"><span>— Limpar seleção</span></div>
 </div></div>`;
 }
-return `<div>
+return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+<div style="flex:1;">
 <button type="button" class="btn-picker-toggle ciclo-bloco-btn" style="${estiloBtn}" onclick="toggleCicloPicker(${i},${j})">
 <span>${blocoSel ? BLOCOS[blocoSel].nome : 'Selecionar bloco'}</span>
 <span class="chev" style="transform:rotate(${aberto?180:0}deg);${eixoSel?'color:#fff;':''}">▾</span>
 </button>
 ${painel}
+</div>
+<button class="btn-secundario" style="padding:6px 9px;font-size:11px;color:#E74C3C;flex-shrink:0;" onclick="removerBlocoCiclo(${i},${j})" title="Remover este bloco">✕</button>
 </div>`;
 }
 
@@ -2873,30 +2891,25 @@ return h;
 
 function renderPreviewBlocosCiclo(sem) {
 const selecionados = sem.blocos.filter(Boolean);
-if (!selecionados.length) return `<div style="font-size:11px;color:var(--muted);padding:2px 14px 16px;">Nenhum bloco selecionado ainda.</div>`;
+if (!selecionados.length) return `<div style="font-size:11px;color:var(--muted);padding:10px 14px 14px;background:#FAFAF8;">Nenhum bloco selecionado ainda.</div>`;
 const chips = selecionados.map(b => {
 const def = BLOCOS[b];
 if (!def) return '';
 const eixo = EIXOS.find(e => e.blocos.includes(b));
 const cor = eixo ? eixo.cor : '#666';
-return `<div style="background:${cor};border-radius:10px;padding:14px 10px;font-size:12px;font-weight:800;color:#fff;line-height:1.35;min-height:64px;display:flex;align-items:center;justify-content:center;text-align:center;box-shadow:0 2px 5px rgba(0,0,0,.12);">${def.nome}</div>`;
+return `<div style="background:${cor}16;border:1px solid ${cor}50;border-radius:8px;padding:9px 8px;font-size:11px;font-weight:700;color:${cor};line-height:1.3;min-height:50px;display:flex;align-items:center;justify-content:center;text-align:center;">${def.nome}</div>`;
 }).join('');
-return `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:2px 14px 16px;">${chips}</div>`;
+return `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:10px 14px 14px;background:#FAFAF8;">${chips}</div>`;
 }
 
-function renderPaginaCiclo() {
-const el = document.getElementById('listaCiclo');
-el.innerHTML = CICLO.map((sem, i) => {
-const blocosHtml = sem.blocos.map((b, j) => `<div style="display:flex;align-items:center;gap:6px;">
-<div style="flex:1;">${construirCicloBlocoPicker(i, j, b)}</div>
-<button class="btn-secundario" style="padding:6px 9px;font-size:11px;color:#E74C3C;flex-shrink:0;" onclick="removerBlocoCiclo(${i},${j})" title="Remover este bloco">✕</button>
-</div>`).join('');
+function renderSemestreCardCiclo(i, sem) {
+const blocosHtml = sem.blocos.map((b, j) => construirCicloBlocoPicker(i, j, b)).join('');
 const aberto = !!cicloCardsAbertos[i];
 const corCard = corPara(i);
 return `<div class="ciclo-card" style="padding:0;overflow:hidden;">
 <div class="ciclo-card-header" style="background:${corCard};" onclick="toggleCicloCard(${i})">
 <div>
-<div class="ciclo-card-header-titulo">${i+1}º Semestre do Ciclo</div>
+<div class="ciclo-card-header-titulo">${(i%6)+1}º Semestre do Ciclo</div>
 ${sem.ano ? `<div class="ciclo-card-header-periodo">${fmtIntervaloSemestreDisplay(sem)}</div>` : ''}
 </div>
 <span class="chev" style="transform:rotate(${aberto ? 180 : 0}deg);">▾</span>
@@ -2922,13 +2935,100 @@ ${renderMetasBoxCiclo(i)}
 ${renderExternasCiclo(i)}
 </div>` : ''}
 </div>`;
-}).join('');
 }
 
 let cicloCardsAbertos = {};
 function toggleCicloCard(i) {
 cicloCardsAbertos[i] = !cicloCardsAbertos[i];
 renderPaginaCiclo();
+}
+
+// ── Grupos de ciclo (3 anos / 6 semestres cada) ───────────
+let ciclosGrupoAbertos = {};
+let CICLO_DESTAQUE = {};
+
+function toggleCicloGrupo(g) {
+ciclosGrupoAbertos[g] = ciclosGrupoAbertos[g] === undefined ? false : !ciclosGrupoAbertos[g];
+renderPaginaCiclo();
+}
+function adicionarNovoCiclo() {
+for (let k = 0; k < 6; k++) CICLO.push({ ano: '', semestre: (k % 2 === 0 ? '1' : '2'), blocos: ['', '', ''], metas: [] });
+const novoGrupo = Math.floor((CICLO.length - 1) / 6);
+ciclosGrupoAbertos[novoGrupo] = true;
+temAlteracaoLocalPendente = true;
+saveState();
+renderPaginaCiclo();
+}
+function selecionarDestaqueCiclo(g, jovemId) {
+if (jovemId) CICLO_DESTAQUE[g] = jovemId; else delete CICLO_DESTAQUE[g];
+temAlteracaoLocalPendente = true;
+saveState();
+renderPaginaCiclo();
+}
+function sugerirDestaqueCiclo() {
+const candidatos = JOVENS.map(j => {
+const n = countConcluidos(j);
+const faltam = 18 - n;
+const info = calcularIdadeInfo(DATAS_NASC[j]);
+const meses = info ? info.mesesFaltantes : null;
+return { j, faltam, meses };
+}).filter(c => c.faltam > 0 && c.meses !== null && c.meses > 0);
+if (!candidatos.length) return null;
+candidatos.sort((a, b) => (a.faltam / Math.max(1, a.meses)) - (b.faltam / Math.max(1, b.meses)));
+return candidatos[0];
+}
+function renderDestaqueCiclo(g) {
+if (!JOVENS.length) return '';
+const jovemAtual = CICLO_DESTAQUE[g] || '';
+const sugestao = sugerirDestaqueCiclo();
+let h = `<div style="margin:0 0 10px;background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:12px 14px;">
+<div class="campo-label" style="margin-bottom:7px;">🎯 Jovem em destaque do ciclo</div>
+<div style="font-size:10px;color:var(--muted);margin-bottom:8px;">Escolha um jovem como referência — os blocos deste ciclo podem ser planejados com base na progressão dele(a).</div>
+<select class="campo-input" onchange="selecionarDestaqueCiclo(${g}, this.value)">
+<option value="">— Nenhum —</option>
+${JOVENS.map(j => `<option value="${j}" ${jovemAtual === j ? 'selected' : ''}>${JNOMES[j]}</option>`).join('')}
+</select>`;
+if (sugestao) {
+h += `<div style="margin-top:9px;padding-top:9px;border-top:1px solid #F2EFEA;font-size:11px;color:var(--muted);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+<span>💡 Sugestão: <strong style="color:var(--vinho);">${JNOMES[sugestao.j]}</strong> — precisa de ${sugestao.faltam} bloco${sugestao.faltam !== 1 ? 's' : ''} em ${sugestao.meses} ${sugestao.meses === 1 ? 'mês' : 'meses'} até a passagem pra Sênior</span>
+${jovemAtual !== sugestao.j ? `<button class="btn-secundario" style="padding:5px 10px;font-size:10px;flex-shrink:0;" onclick="selecionarDestaqueCiclo(${g},'${sugestao.j}')">Usar sugestão</button>` : ''}
+</div>`;
+}
+h += `</div>`;
+return h;
+}
+
+function renderPaginaCiclo() {
+const el = document.getElementById('listaCiclo');
+const totalGrupos = Math.ceil(CICLO.length / 6) || 1;
+if (!CICLO.length) CICLO = cicloEmBranco();
+let html = '';
+for (let g = 0; g < totalGrupos; g++) {
+const inicioIdx = g * 6;
+const semestresDoGrupo = CICLO.slice(inicioIdx, inicioIdx + 6);
+const grupoAberto = ciclosGrupoAbertos[g] === undefined ? true : ciclosGrupoAbertos[g];
+const primeiroAno = semestresDoGrupo[0] ? semestresDoGrupo[0].ano : '';
+const ultimoAno = semestresDoGrupo[semestresDoGrupo.length - 1] ? semestresDoGrupo[semestresDoGrupo.length - 1].ano : '';
+const resumoPeriodo = primeiroAno ? (ultimoAno && ultimoAno !== primeiroAno ? `${primeiroAno} → ${ultimoAno}` : `${primeiroAno}`) : '';
+html += `<div style="margin:14px 14px 0;">
+<div class="ciclo-grupo-header" onclick="toggleCicloGrupo(${g})">
+<div>
+<div class="ciclo-grupo-header-titulo">📚 Ciclo ${g+1}</div>
+<div class="ciclo-grupo-header-sub">3 anos · 6 semestres</div>
+</div>
+<div style="display:flex;align-items:center;gap:10px;">
+${resumoPeriodo ? `<span class="ciclo-grupo-header-periodo">${resumoPeriodo}</span>` : ''}
+<span class="chev" style="transform:rotate(${grupoAberto ? 180 : 0}deg);">▾</span>
+</div>
+</div>
+${grupoAberto ? `<div style="margin-top:10px;">
+${renderDestaqueCiclo(g)}
+${semestresDoGrupo.map((sem, k) => renderSemestreCardCiclo(inicioIdx + k, sem)).join('<div style="height:10px;"></div>')}
+</div>` : ''}
+</div>`;
+}
+html += `<button class="btn-secundario" style="display:block;width:calc(100% - 28px);margin:16px 14px 24px;padding:12px;font-size:13px;font-weight:700;" onclick="adicionarNovoCiclo()">+ Adicionar novo ciclo (6 semestres)</button>`;
+el.innerHTML = html;
 }
 
 let scrollAutoIntervalo = null;
@@ -2945,24 +3045,22 @@ scrollAutoIntervalo = setInterval(() => window.scrollBy(0, velocidade), 16);
 document.addEventListener('dragend', function() { clearInterval(scrollAutoIntervalo); });
 document.addEventListener('drop', function() { clearInterval(scrollAutoIntervalo); });
 
-function ajustarTopoTabsLinha() {
-const cabecalho = document.getElementById('cabecalhoFixo');
-const tabs = document.getElementById('tabsLinha');
-if (!cabecalho || !tabs) return;
-tabs.style.top = cabecalho.offsetHeight + 'px';
+function ajustarHeaderCompacto() {
+const header = document.querySelector('.header');
+if (!header) return;
+const jaEncolhido = header.classList.contains('compacto');
+if (!jaEncolhido && window.scrollY > 80) header.classList.add('compacto');
+else if (jaEncolhido && window.scrollY < 40) header.classList.remove('compacto');
 }
-window.addEventListener('resize', ajustarTopoTabsLinha);
-requestAnimationFrame(() => requestAnimationFrame(ajustarTopoTabsLinha));
+window.addEventListener('scroll', ajustarHeaderCompacto, { passive: true });
 
 async function iniciar() {
 document.getElementById('roster').innerHTML = '<div style="padding:12px;font-size:12px;color:var(--muted);text-align:center;">Carregando dados compartilhados…</div>';
 atualizarResumoItensPicker();
 renderResponsavelChips();
 renderEventoAnexoArea();
-ajustarTopoTabsLinha();
 await iniciarSync();
 renderRoster();
-ajustarTopoTabsLinha();
 }
 iniciar();
 </script>
