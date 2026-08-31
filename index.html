@@ -100,6 +100,26 @@ border: none; background: var(--card); color: var(--text); cursor: pointer;
 .obs-modal-box { background: var(--card); border-radius: 16px 16px 0 0; padding: 20px 18px 26px; width: 100%; max-width: 500px; max-height: 80vh; overflow-y: auto; }
 .obs-modal-titulo { font-size: 15px; font-weight: 800; color: var(--vinho); margin-bottom: 10px; }
 .obs-modal-texto { font-size: 13px; color: var(--text); line-height: 1.6; white-space: pre-line; }
+
+.lis-modal-ov { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1000; align-items: flex-end; justify-content: center; }
+.lis-modal-ov.open { display: flex; }
+.lis-modal-box { background: var(--bg); border-radius: 16px 16px 0 0; padding: 0; width: 100%; max-width: 560px; max-height: 92vh; overflow-y: auto; }
+.lis-modal-header { position: sticky; top: 0; z-index: 5; background: var(--card); padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.lis-modal-titulo { font-size: 15px; font-weight: 800; color: var(--vinho); }
+.lis-modal-fechar { background: none; border: none; font-size: 20px; color: var(--muted); cursor: pointer; padding: 0 4px; }
+.lis-modal-body { padding: 14px 16px 26px; }
+.ep-pillar { background: var(--card); margin: 0 0 10px; border-radius: var(--r); box-shadow: var(--shadow); overflow: hidden; }
+.ep-ph { padding: 12px 14px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #F0EDE8; }
+.ep-num { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; color: #fff; flex-shrink: 0; }
+.ep-pb { padding: 10px 14px 14px; }
+.ep-fl { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); margin: 8px 0 5px; display: block; }
+.ep-sel { width: 100%; padding: 9px 10px; border: 2px solid var(--border); border-radius: 8px; font-size: 13px; font-weight: 600; background: var(--card); outline: none; cursor: pointer; font-family: inherit; }
+.ep-sel:focus { border-color: var(--vinho); }
+.ep-ta { width: 100%; padding: 9px 10px; border: 2px solid var(--border); border-radius: 8px; font-size: 12px; resize: vertical; min-height: 70px; outline: none; font-family: inherit; }
+.ep-ta:focus { border-color: var(--vinho); }
+.ep-di { width: 100%; padding: 8px 10px; border: 2px solid var(--border); border-radius: 8px; font-size: 12px; outline: none; font-family: inherit; }
+.ep-di:focus { border-color: var(--vinho); }
+.ep-sub { background: #FAFAF8; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
 .roster-linha-idade { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
 .idade-track { position: relative; flex: 1; height: 4px; border-radius: 20px; overflow: hidden; background: #EEEBE7; }
 .idade-fill { height: 100%; border-radius: 20px; }
@@ -624,6 +644,16 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 </div>
 </div>
 
+<div class="lis-modal-ov" id="lisModalOv" onclick="if(event.target===this)fecharLisOuro()">
+<div class="lis-modal-box">
+<div class="lis-modal-header">
+<span class="lis-modal-titulo">🏅 Reconhecimento de Ramo — Lis de Ouro</span>
+<button class="lis-modal-fechar" onclick="fecharLisOuro()">✕</button>
+</div>
+<div class="lis-modal-body" id="lisModalBody"></div>
+</div>
+</div>
+
 <div id="pagina-senior" style="display:none;">
 <iframe id="iframeSenior" src="tropa-senior.html" style="width:100%;border:none;display:block;" title="Tropa Sênior"></iframe>
 </div>
@@ -643,6 +673,7 @@ let PATRULHAS = [];
 let PATRULHA_DE = {};
 let CARGO_DE = {};
 let OBSERVACOES = {};
+let LIS_OURO_DATA = {};
 const JCOR = {};
 function corPara(i) { return `hsl(${Math.round(i*137.5)%360},45%,42%)`; }
 function nomeCurto(j) {
@@ -749,7 +780,7 @@ let CICLO = [];
 let DATAS_NASC = {};
 let JUSTIFICATIVAS = {};
 function cicloEmBranco() {
-return Array.from({length:6}, () => ({ ano:'', semestre:'1', blocos:['','',''] }));
+return Array.from({length:6}, () => ({ ano:'', semestre:'1', blocos:['','',''], metas:[] }));
 }
 
 function iniciarSync() {
@@ -780,6 +811,7 @@ function iniciarSync() {
           PATRULHA_DE = dados.patrulhaDe || {};
           CARGO_DE = dados.cargoDe || {};
           OBSERVACOES = dados.observacoes || {};
+          LIS_OURO_DATA = dados.lisOuroDe || {};
         } catch(e) {
           if (primeira) { S = deepCopy(INICIAL); EVENTOS = []; CICLO = cicloEmBranco(); DATAS_NASC = {}; JUSTIFICATIVAS = {}; }
         }
@@ -843,7 +875,7 @@ async function saveState() {
   const extras = [...JOVENS, ...idsExtrasArquivados].filter(j => !JOVENS_BASE.includes(j)).map(id => ({id, nome: JNOMES[id]}));
   const nomesBase = {};
   JOVENS_BASE.forEach(id => { if (JNOMES[id] !== JNOMES_PADRAO[id]) nomesBase[id] = JNOMES[id]; });
-  const payload = JSON.stringify({ S, extraJovens: extras, eventos: EVENTOS, ciclo: CICLO, nomesBase, datasNascimento: DATAS_NASC, excluidos: JOVENS_EXCLUIDOS, arquivados: JOVENS_ARQUIVADOS, justificativas: JUSTIFICATIVAS, patrulhas: PATRULHAS, patrulhaDe: PATRULHA_DE, cargoDe: CARGO_DE, observacoes: OBSERVACOES });
+  const payload = JSON.stringify({ S, extraJovens: extras, eventos: EVENTOS, ciclo: CICLO, nomesBase, datasNascimento: DATAS_NASC, excluidos: JOVENS_EXCLUIDOS, arquivados: JOVENS_ARQUIVADOS, justificativas: JUSTIFICATIVAS, patrulhas: PATRULHAS, patrulhaDe: PATRULHA_DE, cargoDe: CARGO_DE, observacoes: OBSERVACOES, lisOuroDe: LIS_OURO_DATA });
   temAlteracaoLocalPendente = false; // este payload já reflete tudo que foi clicado até agora
   mostrarStatusSalvando('Salvando…');
   for (let tentativa = 1; tentativa <= 2; tentativa++) {
@@ -966,7 +998,7 @@ exportedBy: 'GE Joaninha — Tropa Escoteira',
 S, extraJovens: extras, eventos: EVENTOS, ciclo: CICLO, nomesBase,
 datasNascimento: DATAS_NASC, excluidos: JOVENS_EXCLUIDOS, arquivados: JOVENS_ARQUIVADOS,
 justificativas: JUSTIFICATIVAS, patrulhas: PATRULHAS, patrulhaDe: PATRULHA_DE,
-cargoDe: CARGO_DE, observacoes: OBSERVACOES
+cargoDe: CARGO_DE, observacoes: OBSERVACOES, lisOuroDe: LIS_OURO_DATA
 };
 const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
 const url = URL.createObjectURL(blob);
@@ -1000,6 +1032,7 @@ PATRULHAS = d.patrulhas || [];
 PATRULHA_DE = d.patrulhaDe || {};
 CARGO_DE = d.cargoDe || {};
 OBSERVACOES = d.observacoes || {};
+LIS_OURO_DATA = d.lisOuroDe || {};
 
 JOVENS = JOVENS_BASE.filter(id => !JOVENS_EXCLUIDOS.includes(id));
 JNOMES = Object.assign({}, JNOMES_PADRAO);
@@ -1128,6 +1161,246 @@ function fecharObservacao() {
 document.getElementById('obsModalOv').classList.remove('open');
 }
 
+// ╔═══════════════════════════════════════════════════╗
+// ║   RECONHECIMENTO DE RAMO — LIS DE OURO           ║
+// ╚═══════════════════════════════════════════════════╝
+function lisOuroY(jovemId) {
+if (!LIS_OURO_DATA[jovemId]) LIS_OURO_DATA[jovemId] = {
+desafio: { status: 'nao', notes: '', date: '', attachment: null },
+autoval: { status: 'nao', date: '', attachment: null },
+pareval: { status: 'nao', date: '', attachment: null }
+};
+return LIS_OURO_DATA[jovemId];
+}
+function lisOuroSv(jovemId, sec, fld, val) {
+lisOuroY(jovemId)[sec][fld] = val;
+temAlteracaoLocalPendente = true;
+saveState();
+renderLisOuroBody(jovemId);
+}
+function calcularPrazoLisOuro(dataNascISO) {
+if (!dataNascISO) return null;
+const nasc = new Date(dataNascISO + 'T00:00:00');
+if (isNaN(nasc.getTime())) return null;
+return new Date(nasc.getFullYear() + 14, nasc.getMonth() + 6, nasc.getDate());
+}
+function fmtDataBR(d) {
+return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+function handleLisOuroAtt(jovemId, sec, file) {
+if (!file) return;
+const MAX = 3 * 1024 * 1024;
+if (file.size > MAX) { alert('Arquivo muito grande!\nTamanho: ' + fmtBytesEvento(file.size) + '\nLimite máximo: 3MB'); return; }
+const reader = new FileReader();
+reader.onload = (e) => {
+const b64 = e.target.result.split(',')[1];
+lisOuroY(jovemId)[sec].attachment = { name: file.name, type: file.type || 'application/octet-stream', size: file.size, data: b64 };
+temAlteracaoLocalPendente = true;
+saveState();
+renderLisOuroBody(jovemId);
+};
+reader.onerror = () => alert('Erro ao ler o arquivo. Tente novamente.');
+reader.readAsDataURL(file);
+}
+function baixarLisOuroAtt(jovemId, sec) {
+const att = lisOuroY(jovemId)[sec].attachment;
+if (!att) return;
+const a = document.createElement('a');
+a.href = 'data:' + att.type + ';base64,' + att.data;
+a.download = att.name;
+document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+function deleteLisOuroAtt(jovemId, sec) {
+lisOuroY(jovemId)[sec].attachment = null;
+temAlteracaoLocalPendente = true;
+saveState();
+renderLisOuroBody(jovemId);
+}
+function makeLisOuroAttHtml(jovemId, sec) {
+const att = lisOuroY(jovemId)[sec].attachment;
+if (att && att.name) {
+const ico = att.type && att.type.includes('image') ? '🖼️' : att.type && att.type.includes('pdf') ? '📑' : '📎';
+return `<div style="margin-top:10px;">
+<div class="ep-fl" style="margin-top:0;">Comprovante / Documento</div>
+<div class="anexo-arquivo-row">
+<div class="anexo-arquivo-info">
+<div class="anexo-arquivo-nome">${ico} ${att.name}</div>
+<div class="anexo-arquivo-tam">${fmtBytesEvento(att.size)}</div>
+</div>
+<button class="anexo-btn" style="background:var(--vinho);color:#fff;" onclick="baixarLisOuroAtt('${jovemId}','${sec}')">⬇ Baixar</button>
+<button class="anexo-btn" style="background:#E74C3C;color:#fff;" onclick="if(confirm('Remover o arquivo anexado?'))deleteLisOuroAtt('${jovemId}','${sec}')">✕</button>
+</div>
+</div>`;
+}
+return `<div style="margin-top:10px;">
+<div class="ep-fl" style="margin-top:0;">Comprovante / Documento</div>
+<label class="anexo-upload-label">
+<input type="file" onchange="handleLisOuroAtt('${jovemId}','${sec}',this.files[0])">
+<span style="font-size:16px;">📎</span>
+<div><div style="font-size:12px;font-weight:700;color:var(--muted);">Anexar arquivo</div>
+<div style="font-size:10px;color:var(--muted);">Máximo 3MB — PDF, imagem ou documento</div></div>
+</label>
+</div>`;
+}
+
+function renderLisOuroBody(jovemId) {
+const el = document.getElementById('lisModalBody');
+if (!el) return;
+const n = countConcluidos(jovemId);
+const p1OK = n >= 18;
+const dado = lisOuroY(jovemId);
+const p2OK = dado.desafio.status === 'concluido';
+const p3OK = dado.autoval.status === 'concluido' && dado.pareval.status === 'concluido';
+const allOK = p1OK && p2OK && p3OK;
+const cor = JCOR[jovemId] || '#1A6B3C';
+const nome = JNOMES[jovemId] || '';
+const hoje = new Date();
+const dataNasc = DATAS_NASC[jovemId];
+
+const sBadge = (ok, txtOk, txtPend) => `<span style="background:${ok ? '#27AE6022' : '#95A5A622'};color:${ok ? '#1E8449' : '#7F8C8D'};font-size:9px;font-weight:800;padding:3px 9px;border-radius:20px;">${ok ? txtOk : txtPend}</span>`;
+
+let h = '';
+
+h += `<div style="background:${cor}18;border-left:5px solid ${cor};border-radius:var(--r);padding:12px 14px;margin-bottom:10px;">
+<div style="font-size:15px;font-weight:800;color:${cor};">${nome}</div>`;
+const deadline = calcularPrazoLisOuro(dataNasc);
+if (deadline) h += `<div style="font-size:11px;color:var(--muted);margin-top:2px;">Transferência para a Tropa Sênior: <strong>${fmtDataBR(deadline)}</strong></div>`;
+h += `<div style="margin-top:8px;">`;
+if (allOK) h += `<span style="background:#27AE6022;color:#1E8449;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;">🏅 PRONTO PARA A LIS DE OURO</span>`;
+else h += `<span style="background:#E67E2222;color:#E67E22;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;">⏳ Em progresso — ${p1OK ? '✓' : '○'} Blocos · ${p2OK ? '✓' : '○'} Desafio · ${p3OK ? '✓' : '○'} Avaliação</span>`;
+h += `</div></div>`;
+
+if (deadline) {
+const daysD = Math.ceil((deadline - hoje) / (1000 * 60 * 60 * 24));
+let dColor, dIcon, dMsg, dBg;
+if (daysD < 0) { dColor = '#7F8C8D'; dIcon = '⚫'; dMsg = 'Prazo já passou'; dBg = '#F5F5F5'; }
+else if (daysD < 30) { dColor = '#E74C3C'; dIcon = '🚨'; dMsg = 'CRÍTICO — providenciar imediatamente!'; dBg = '#FDEDEC'; }
+else if (daysD < 90) { dColor = '#E74C3C'; dIcon = '⚠️'; dMsg = 'Urgente — preparar com prioridade'; dBg = '#FDEDEC'; }
+else if (daysD < 180) { dColor = '#E67E22'; dIcon = '⏳'; dMsg = 'Iniciar preparação do processo administrativo'; dBg = '#FEF9E7'; }
+else { dColor = '#27AE60'; dIcon = '✅'; dMsg = 'Há tempo suficiente'; dBg = '#EAFAF1'; }
+const mD = Math.floor(Math.abs(daysD) / 30.44);
+const rD = Math.abs(daysD) % 30;
+const tStr = daysD < 0 ? 'passou há ' + (mD > 0 ? mD + ' mês' + (mD !== 1 ? 'es' : '') : 'alguns dias')
+: daysD < 30 ? daysD + ' dia' + (daysD !== 1 ? 's' : '')
+: mD + ' mês' + (mD !== 1 ? 'es' : '') + (rD > 0 ? ' e ' + rD + ' dia' + (rD !== 1 ? 's' : '') : '');
+h += `<div style="background:${dBg};border-left:5px solid ${dColor};border-radius:var(--r);padding:12px 14px;margin-bottom:10px;">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+<span style="font-size:20px;">${dIcon}</span>
+<div><div style="font-size:12px;font-weight:800;color:${dColor};">Processo Administrativo — Lis de Ouro</div>
+<div style="font-size:10px;color:var(--muted);">Concluir antes da transferência para a Tropa Sênior</div></div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px;">
+<div style="background:rgba(255,255,255,.75);border-radius:8px;padding:8px 10px;">
+<div style="font-size:9px;font-weight:800;text-transform:uppercase;color:#999;margin-bottom:2px;">Prazo</div>
+<div style="font-size:12px;font-weight:700;">${fmtDataBR(deadline)}</div></div>
+<div style="background:rgba(255,255,255,.75);border-radius:8px;padding:8px 10px;">
+<div style="font-size:9px;font-weight:800;text-transform:uppercase;color:#999;margin-bottom:2px;">Tempo ${daysD < 0 ? 'passado' : 'restante'}</div>
+<div style="font-size:12px;font-weight:700;color:${dColor};">${tStr}</div></div>
+</div>
+<div style="font-size:11px;font-weight:800;color:${dColor};">${dMsg}</div>
+</div>`;
+} else {
+h += `<div style="background:#F5F5F5;border-radius:var(--r);padding:12px 14px;margin-bottom:10px;font-size:11px;color:var(--muted);">Cadastre a data de nascimento do jovem (menu ✏️ Editar) para calcular o prazo do processo administrativo.</div>`;
+}
+
+const bPct = Math.round(n / 18 * 100);
+h += `<div class="ep-pillar"><div class="ep-ph">
+<div class="ep-num" style="background:${p1OK ? '#27AE60' : '#E67E22'};">1</div>
+<div style="flex:1;font-size:13px;font-weight:800;">Conclusão dos 18 Blocos</div>
+${sBadge(p1OK, 'Concluído', 'Em andamento')}</div>
+<div class="ep-pb">
+<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:5px;">
+<span>Progresso automático (abas Por Jovem / Por Bloco)</span>
+<span style="font-weight:800;color:${cor};">${n}/18</span></div>
+<div style="background:#EEEBE7;border-radius:20px;height:10px;overflow:hidden;margin-bottom:7px;">
+<div style="width:${bPct}%;height:100%;border-radius:20px;background:${p1OK ? '#27AE60' : cor};"></div></div>
+${p1OK ? `<div style="font-size:11px;color:#27AE60;font-weight:700;">✓ Todos os 18 blocos concluídos!</div>`
+: `<div style="font-size:11px;color:var(--muted);">Faltam <strong>${18 - n} bloco${18 - n !== 1 ? 's' : ''}</strong> — acompanhe nas abas de progressão.</div>`}
+</div></div>`;
+
+h += `<div class="ep-pillar"><div class="ep-ph">
+<div class="ep-num" style="background:${p2OK ? '#27AE60' : '#E67E22'};">2</div>
+<div style="flex:1;font-size:13px;font-weight:800;">Desafio Pessoal</div>
+${sBadge(dado.desafio.status === 'concluido', 'Concluído', dado.desafio.status === 'andamento' ? 'Em andamento' : 'Não iniciado')}</div>
+<div class="ep-pb">
+<label class="ep-fl">Status</label>
+<select class="ep-sel" onchange="lisOuroSv('${jovemId}','desafio','status',this.value)">
+<option value="nao" ${dado.desafio.status === 'nao' ? 'selected' : ''}>Não iniciado</option>
+<option value="andamento" ${dado.desafio.status === 'andamento' ? 'selected' : ''}>Em andamento</option>
+<option value="concluido" ${dado.desafio.status === 'concluido' ? 'selected' : ''}>Concluído</option>
+</select>
+<label class="ep-fl">Descrição / Observações</label>
+<textarea class="ep-ta" placeholder="Descreva o projeto ou desafio pessoal do jovem…" onchange="lisOuroSv('${jovemId}','desafio','notes',this.value)">${dado.desafio.notes || ''}</textarea>
+${dado.desafio.status === 'concluido' ? `<label class="ep-fl">Data de conclusão</label><input type="date" class="ep-di" value="${dado.desafio.date || ''}" onchange="lisOuroSv('${jovemId}','desafio','date',this.value)">` : ''}
+${makeLisOuroAttHtml(jovemId, 'desafio')}
+</div></div>`;
+
+const p3Val = p3OK ? 'concluido' : (dado.autoval.status !== 'nao' || dado.pareval.status !== 'nao') ? 'andamento' : 'nao';
+h += `<div class="ep-pillar"><div class="ep-ph">
+<div class="ep-num" style="background:${p3OK ? '#27AE60' : '#E67E22'};">3</div>
+<div style="flex:1;font-size:13px;font-weight:800;">Autoavaliação e Avaliação dos Pares</div>
+${sBadge(p3Val === 'concluido', 'Concluído', p3Val === 'andamento' ? 'Em andamento' : 'Não iniciado')}</div>
+<div class="ep-pb">
+<div class="ep-sub">
+<div style="font-size:12px;font-weight:800;margin-bottom:8px;">3a. Autoavaliação</div>
+<select class="ep-sel" onchange="lisOuroSv('${jovemId}','autoval','status',this.value)">
+<option value="nao" ${dado.autoval.status === 'nao' ? 'selected' : ''}>Não realizada</option>
+<option value="andamento" ${dado.autoval.status === 'andamento' ? 'selected' : ''}>Em andamento</option>
+<option value="concluido" ${dado.autoval.status === 'concluido' ? 'selected' : ''}>Concluída</option>
+</select>
+${dado.autoval.status === 'concluido' ? `<label class="ep-fl">Data de realização</label><input type="date" class="ep-di" value="${dado.autoval.date || ''}" onchange="lisOuroSv('${jovemId}','autoval','date',this.value)">` : ''}
+${makeLisOuroAttHtml(jovemId, 'autoval')}
+</div>
+<div class="ep-sub">
+<div style="font-size:12px;font-weight:800;margin-bottom:8px;">3b. Avaliação dos Pares (Patrulha / Tropa)</div>
+<select class="ep-sel" onchange="lisOuroSv('${jovemId}','pareval','status',this.value)">
+<option value="nao" ${dado.pareval.status === 'nao' ? 'selected' : ''}>Não realizada</option>
+<option value="andamento" ${dado.pareval.status === 'andamento' ? 'selected' : ''}>Em andamento</option>
+<option value="concluido" ${dado.pareval.status === 'concluido' ? 'selected' : ''}>Concluída</option>
+</select>
+${dado.pareval.status === 'concluido' ? `<label class="ep-fl">Data de realização</label><input type="date" class="ep-di" value="${dado.pareval.date || ''}" onchange="lisOuroSv('${jovemId}','pareval','date',this.value)">` : ''}
+${makeLisOuroAttHtml(jovemId, 'pareval')}
+</div>
+</div></div>`;
+
+if (allOK) {
+h += `<div style="padding:16px;border-radius:var(--r);box-shadow:var(--shadow);text-align:center;background:#EAFAF1;border:2px solid #27AE60;">
+<div style="font-size:32px;margin-bottom:6px;">🏅</div>
+<div style="font-size:15px;font-weight:800;color:#27AE60;">Lis de Ouro</div>
+<div style="font-size:11px;color:var(--muted);margin-top:4px;">Todos os requisitos cumpridos! Parabéns, ${(nome.split(' ')[0]) || ''}!</div>
+</div>`;
+} else {
+const items = [
+{ ok: p1OK, lbl: `18 Blocos (${n}/18)` },
+{ ok: p2OK, lbl: 'Desafio Pessoal' },
+{ ok: p3OK, lbl: 'Avaliação' }
+];
+const rows = items.map(it => `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #F0EDE8;">
+<span style="font-size:18px;">${it.ok ? '✅' : '○'}</span>
+<span style="font-size:12px;font-weight:700;">${it.ok ? `<span style="color:#27AE60;">${it.lbl}</span>` : it.lbl}</span>
+<span style="margin-left:auto;">${sBadge(it.ok, 'Concluído', 'Pendente')}</span>
+</div>`).join('');
+h += `<div style="padding:16px;border-radius:var(--r);box-shadow:var(--shadow);text-align:left;background:var(--card);border:2px solid var(--border);">
+<div style="font-size:12px;font-weight:800;color:var(--muted);margin-bottom:10px;">Status dos Requisitos</div>
+${rows}
+<div style="margin-top:10px;font-size:11px;color:var(--muted);">Complete todos os requisitos para conquistar a Lis de Ouro.</div>
+</div>`;
+}
+
+el.innerHTML = h;
+}
+
+function abrirLisOuro(jovemId) {
+jovemMenuAbertoId = null;
+renderRoster();
+renderLisOuroBody(jovemId);
+document.getElementById('lisModalOv').classList.add('open');
+}
+function fecharLisOuro() {
+document.getElementById('lisModalOv').classList.remove('open');
+}
+
 function excluirJovem(id) {
 jovemMenuAbertoId = null;
 if (!confirm(`Excluir o perfil de ${JNOMES[id]}? Isso apaga também todas as marcações dele(a). Essa ação não pode ser desfeita.`)) { renderRoster(); return; }
@@ -1139,6 +1412,7 @@ delete DATAS_NASC[id];
 delete PATRULHA_DE[id];
 delete CARGO_DE[id];
 delete OBSERVACOES[id];
+delete LIS_OURO_DATA[id];
 if (ativo === id) { ativo = null; document.getElementById('detail').innerHTML = ''; }
 temAlteracaoLocalPendente = true;
 saveState();
@@ -1183,6 +1457,7 @@ delete DATAS_NASC[id];
 delete PATRULHA_DE[id];
 delete CARGO_DE[id];
 delete OBSERVACOES[id];
+delete LIS_OURO_DATA[id];
 if (ativo === id) { ativo = null; document.getElementById('detail').innerHTML = ''; }
 temAlteracaoLocalPendente = true;
 saveState();
@@ -1244,6 +1519,7 @@ renderRoster();
 }
 
 function selecionarJovem(j) {
+if (countConcluidos(j) >= 18) { abrirLisOuro(j); return; }
 ativo = j;
 rosterAberto = false;
 renderRoster();
@@ -1347,6 +1623,7 @@ ${info ? `<div class="roster-linha-idade">
 ${menuAberto ? `<div class="roster-dropdown" onclick="event.stopPropagation()">
 <button onclick="abrirEdicaoJovem('${j}')">✏️ Editar</button>
 <button onclick="verObservacao('${j}')">📋 Observação</button>
+<button onclick="abrirLisOuro('${j}')">🏅 Reconhecimento de Ramo</button>
 ${info && info.mesesFaltantes <= 0 ? `<button style="color:var(--vinho);" onclick="transferirParaSenior('${j}')">🎓 Transferir p/ Sênior</button>` : ''}
 <button onclick="arquivarJovem('${j}')">📦 Arquivar</button>
 <button class="remover" onclick="excluirJovem('${j}')">🗑️ Excluir</button>
