@@ -667,13 +667,15 @@ async function loadState(){
       if (dados.CICLO_BLOCOS_SR) CICLO_BLOCOS_SR = dados.CICLO_BLOCOS_SR;
       if (dados.PATRULHAS_SR) PATRULHAS_SR = dados.PATRULHAS_SR;
       if (dados.PATRULHA_DE_SR) PATRULHA_DE_SR = dados.PATRULHA_DE_SR;
+      if (dados.SEMESTRES_SR) SEMESTRES_SR = dados.SEMESTRES_SR;
+      if (dados.semAbertoSr) semAbertoSr = dados.semAbertoSr;
     } else {
       S = deepCopy(INICIAL);
     }
   }catch(e){ S = deepCopy(INICIAL); console.error('Tropa Sênior: usando dados padrão (falha ou demora ao buscar):', e); }
 }
 async function saveState(){
-  const payload = JSON.stringify({ S, JOVENS, JNOMES, JCORES, PRESENCA, YOUTH_DATA, EP_DATA, CAL_EXTRAS, CAL_2S26, CAL_1S27, JUSTIFICATIVAS_SR, METAS_SR, CICLO_BLOCOS_SR, PATRULHAS_SR, PATRULHA_DE_SR });
+  const payload = JSON.stringify({ S, JOVENS, JNOMES, JCORES, PRESENCA, YOUTH_DATA, EP_DATA, CAL_EXTRAS, CAL_2S26, CAL_1S27, JUSTIFICATIVAS_SR, METAS_SR, CICLO_BLOCOS_SR, PATRULHAS_SR, PATRULHA_DE_SR, SEMESTRES_SR, semAbertoSr });
   try {
     await fetch(REST_URL_SR, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
     onDataSaved();
@@ -928,6 +930,22 @@ let CICLO_BLOCOS_SR = {
   '1s27': BLOCKS.filter(b => b.focus && b.semester === 2).map(b => b.id)
 };
 let cicloPickerAbertoKeySr = null;
+let SEMESTRES_SR = [
+  { key: '2s26', titulo: '2º Semestre 2026', periodo: '01/08/2026 → 28/11/2026', cor1: '#6D1026', cor2: '#9C1B3A', origem: true,
+    especiais: [
+      { icone: '⚡', destaque: '22-23/ago:', texto: 'Enduro Distrital Sênior' },
+      { icone: '⚠', destaque: '31/out:', texto: 'Sem atividade (chefia em curso 30/10)' },
+      { icone: '⛺', destaque: '20-22/nov:', texto: 'Acampamento de Grupo — Bloco 7 (Vida ao Ar Livre) concluído integralmente' }
+    ]
+  },
+  { key: '1s27', titulo: '1º Semestre 2027', periodo: 'fev/2027 → jun/2027', cor1: '#1B3B6F', cor2: '#2A5298', origem: true,
+    especiais: [
+      { icone: '🏆', destaque: 'Mai/Jun 2027:', texto: 'Cerimônia de Passagem de Paulo e Thauany — Reconhecimento de Escoteiro da Pátria + passagem para o Ramo Pioneiro' }
+    ]
+  }
+];
+let semAbertoSr = { '2s26': true, '1s27': true };
+let semEditandoSr = null;
 let METAS_SR = {
   '2s26': [
     { icone: '⭐', texto: 'Paulo: alcança Azimute (blocos 11→12: Consumo + Comunidade)' },
@@ -1699,67 +1717,133 @@ function blockRowsEditavelSr(sem) {
   return h;
 }
 
-function renderSemestres(){
-  const c=document.getElementById('sem-content');
+function progRowsSemSr(sem){
+  const semBlockIds=blocosCicloSemY(sem).filter(Boolean);
+  return actJ().map(({yid:j,i})=>{
+    const baseDone=getTotalConcluded(i);
+    const gains=semBlockIds.filter(bid=>!isBlockConcluded(bid,i)).length;
+    const expected=Math.min(18,baseDone+gains);
+    const pct=Math.round(expected/18*100);
+    const et=etapa(expected);
+    return `<div class="prog-mini-row">
+      <span class="prog-mini-name">${JNOMES[i]}</span>
+      <div class="prog-mini-track"><div class="prog-mini-bar" style="width:${pct}%;background:${JCORES[i]};"></div></div>
+      <span class="prog-mini-label" style="color:${et.c}">${expected}/18</span>
+    </div>`;
+  }).join('');
+}
 
-  function progRows(sem){
-    const semBlockIds=blocosCicloSemY(sem).filter(Boolean);
-    return actJ().map(({yid:j,i})=>{
-      const baseDone=getTotalConcluded(i);
-      const gains=semBlockIds.filter(bid=>!isBlockConcluded(bid,i)).length;
-      const expected=Math.min(18,baseDone+gains);
-      const pct=Math.round(expected/18*100);
-      const et=etapa(expected);
-      return `<div class="prog-mini-row">
-        <span class="prog-mini-name">${JNOMES[i]}</span>
-        <div class="prog-mini-track"><div class="prog-mini-bar" style="width:${pct}%;background:${JCORES[i]};"></div></div>
-        <span class="prog-mini-label" style="color:${et.c}">${expected}/18</span>
-      </div>`;
-    }).join('');
+function renderExternasSemGenericoSr(sem){
+  if (sem.key === '2s26') return renderExternasBoxSr(CAL_2S26);
+  if (sem.key === '1s27') return renderExternasBoxSr(CAL_1S27);
+  return `<div class="sem-special" style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px;">
+    <div class="section-label" style="margin-bottom:7px;">📍 Atividades externas marcadas no calendário</div>
+    <div style="font-size:11px;color:var(--muted);">Disponível apenas para os semestres do calendário oficial (2S2026 e 1S2027) por enquanto.</div>
+  </div>`;
+}
+
+function toggleSemCardSr(key){
+  semAbertoSr[key] = !semAbertoSr[key];
+  saveState();
+  renderSemestres();
+}
+function abrirEdicaoSemSr(key){
+  semEditandoSr = key;
+  semAbertoSr[key] = true;
+  renderSemestres();
+}
+function cancelarEdicaoSemSr(){
+  semEditandoSr = null;
+  renderSemestres();
+}
+function salvarEdicaoSemSr(key){
+  const sem = SEMESTRES_SR.find(s => s.key === key);
+  if (!sem) return;
+  const tituloEl = document.getElementById('semTitulo_' + key);
+  const titulo = tituloEl.value.trim();
+  if (!titulo) { alert('Dê um título pro semestre.'); return; }
+  sem.titulo = titulo;
+  sem.periodo = document.getElementById('semPeriodo_' + key).value.trim();
+  sem.cor1 = document.getElementById('semCor1_' + key).value;
+  sem.cor2 = document.getElementById('semCor2_' + key).value;
+  semEditandoSr = null;
+  saveState();
+  renderSemestres();
+}
+function adicionarSemestreSr(){
+  const key = 'sem' + Date.now();
+  SEMESTRES_SR.push({ key, titulo: 'Novo Semestre', periodo: '', cor1: '#6D1026', cor2: '#9C1B3A', origem: false, especiais: [] });
+  semAbertoSr[key] = true;
+  semEditandoSr = key;
+  saveState();
+  renderSemestres();
+  setTimeout(() => { const el = document.getElementById('semTitulo_' + key); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 50);
+}
+function removerSemestreSr(key){
+  const sem = SEMESTRES_SR.find(s => s.key === key);
+  if (sem && sem.origem) { alert('Não é possível remover os semestres originais do ciclo oficial.'); return; }
+  if (!confirm('Remover este semestre? Os blocos-foco e metas cadastrados nele também serão apagados.')) return;
+  SEMESTRES_SR = SEMESTRES_SR.filter(s => s.key !== key);
+  delete CICLO_BLOCOS_SR[key];
+  delete METAS_SR[key];
+  delete semAbertoSr[key];
+  saveState();
+  renderSemestres();
+}
+
+function renderSemCardSr(sem){
+  const aberto = !!semAbertoSr[sem.key];
+  const editando = semEditandoSr === sem.key;
+  let headerHtml;
+  if (editando) {
+    headerHtml = `<div class="sem-header" style="background:linear-gradient(135deg,${sem.cor1},${sem.cor2});border-radius:var(--r);cursor:default;" onclick="event.stopPropagation()">
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <input type="text" class="f-input" id="semTitulo_${sem.key}" value="${sem.titulo}" placeholder="Título do semestre">
+        <input type="text" class="f-input" id="semPeriodo_${sem.key}" value="${sem.periodo}" placeholder="Ex: 01/08/2026 → 28/11/2026">
+        <div style="display:flex;gap:10px;align-items:center;">
+          <label style="font-size:11px;color:#fff;font-weight:700;">Cores do cabeçalho</label>
+          <input type="color" id="semCor1_${sem.key}" value="${sem.cor1}">
+          <input type="color" id="semCor2_${sem.key}" value="${sem.cor2}">
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-prim" style="flex:1;padding:8px;font-size:12px;" onclick="salvarEdicaoSemSr('${sem.key}')">💾 Salvar</button>
+          <button class="btn-sec" style="flex:1;padding:8px;font-size:12px;" onclick="cancelarEdicaoSemSr()">Cancelar</button>
+        </div>
+      </div>
+    </div>`;
+  } else {
+    headerHtml = `<div class="sem-header" style="background:linear-gradient(135deg,${sem.cor1},${sem.cor2});border-radius:${aberto ? 'var(--r) var(--r) 0 0' : 'var(--r)'};cursor:pointer;position:relative;box-shadow:${aberto ? 'none' : 'var(--shadow)'};" onclick="toggleSemCardSr('${sem.key}')">
+      <h3 style="padding-right:70px;">📅 ${sem.titulo}</h3>
+      <div class="period">${sem.periodo || 'Período não definido'}</div>
+      <button class="btn-ic" style="position:absolute;top:10px;right:${sem.origem ? '38px' : '66px'};background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.35);color:#fff;padding:3px 7px;" onclick="event.stopPropagation();abrirEdicaoSemSr('${sem.key}')" title="Editar semestre">✏️</button>
+      ${!sem.origem ? `<button class="btn-ic" style="position:absolute;top:10px;right:38px;background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.35);color:#fff;padding:3px 7px;" onclick="event.stopPropagation();removerSemestreSr('${sem.key}')" title="Remover semestre">🗑️</button>` : ''}
+      <span style="position:absolute;top:11px;right:12px;color:#fff;font-size:13px;transition:transform .2s;transform:rotate(${aberto ? 180 : 0}deg);">▾</span>
+    </div>`;
   }
 
-  c.innerHTML=`
-  <div class="sem-section">
-    <div class="sem-header">
-      <h3>📅 2º Semestre 2026</h3>
-      <div class="period">01/08/2026 → 28/11/2026</div>
-    </div>
-    <div class="sem-body">
+  let bodyHtml = '';
+  if (aberto && !editando) {
+    const especiaisHtml = (sem.especiais || []).map(e => `<div class="sem-special-item"><span class="sem-special-icon">${e.icone}</span><div><strong>${e.destaque}</strong> ${e.texto}</div></div>`).join('');
+    bodyHtml = `<div class="sem-body">
       <div class="section-label" style="margin-bottom:7px;">Blocos-foco do semestre</div>
-      <div class="sem-blocks">${blockRowsEditavelSr('2s26')}</div>
-      <div class="sem-special">
-        <div class="sem-special-item"><span class="sem-special-icon">⚡</span><div><strong>22-23/ago:</strong> Enduro Distrital Sênior</div></div>
-        <div class="sem-special-item"><span class="sem-special-icon">⚠</span><div><strong>31/out:</strong> Sem atividade (chefia em curso 30/10)</div></div>
-        <div class="sem-special-item"><span class="sem-special-icon">⛺</span><div><strong>20-22/nov:</strong> Acampamento de Grupo — Bloco 7 (Vida ao Ar Livre) concluído integralmente</div></div>
-      </div>
-      ${renderExternasBoxSr(CAL_2S26)}
-      ${renderMetasBoxSr('2s26', 'Milestones esperados ao final do 2S2026')}
+      <div class="sem-blocks">${blockRowsEditavelSr(sem.key)}</div>
+      ${especiaisHtml ? `<div class="sem-special">${especiaisHtml}</div>` : ''}
+      ${renderExternasSemGenericoSr(sem)}
+      ${renderMetasBoxSr(sem.key, 'Metas — ' + sem.titulo)}
       <div class="prog-overview">
-        <div class="prog-overview-title">Previsão de blocos ao final do 2S2026</div>
-        ${progRows('2s26')}
+        <div class="prog-overview-title">Previsão de blocos ao final de ${sem.titulo}</div>
+        ${progRowsSemSr(sem.key)}
       </div>
-    </div>
-  </div>
+    </div>`;
+  }
 
-  <div class="sem-section" style="margin-top:14px;">
-    <div class="sem-header" style="background:linear-gradient(135deg,#1B3B6F,#2A5298)">
-      <h3>📅 1º Semestre 2027</h3>
-      <div class="period">fev/2027 → jun/2027</div>
-    </div>
-    <div class="sem-body">
-      <div class="section-label" style="margin-bottom:7px;">Blocos-foco do semestre</div>
-      <div class="sem-blocks">${blockRowsEditavelSr('1s27')}</div>
-      <div class="sem-special">
-        <div class="sem-special-item"><span class="sem-special-icon">🏆</span><div><strong>Mai/Jun 2027:</strong> Cerimônia de Passagem de Paulo e Thauany — Reconhecimento de Escoteiro da Pátria + passagem para o Ramo Pioneiro</div></div>
-      </div>
-      ${renderExternasBoxSr(CAL_1S27)}
-      ${renderMetasBoxSr('1s27', 'Milestones ao final do 1S2027')}
-      <div class="prog-overview">
-        <div class="prog-overview-title">Previsão de blocos ao final do 1S2027</div>
-        ${progRows('1s27')}
-      </div>
-    </div>
-  </div>`;
+  return `<div class="sem-section" style="margin-top:14px;">${headerHtml}${bodyHtml}</div>`;
+}
+
+function renderSemestres(){
+  const c=document.getElementById('sem-content');
+  c.innerHTML = SEMESTRES_SR.map(renderSemCardSr).join('')
+    + `<button class="btn-sec" style="display:block;width:calc(100% - 24px);margin:16px 12px 24px;padding:12px;font-size:13px;font-weight:700;text-align:center;" onclick="adicionarSemestreSr()">+ Adicionar novo semestre</button>`;
 }
 
 // ╔═══════════════════════════════════════════════════╗
