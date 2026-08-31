@@ -523,9 +523,12 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 <div id="pagina-calendario" style="display:none;">
 
 <div style="margin:0 0 12px;background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;">
-<div style="background:var(--vinho);padding:10px 13px;display:flex;align-items:center;justify-content:space-between;">
+<div style="background:var(--vinho);padding:10px 13px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="toggleResumoPresencas()">
 <span style="color:#fff;font-size:12px;font-weight:800;">📋 Resumo de Presenças</span>
+<div style="display:flex;align-items:center;gap:8px;">
 <span style="color:rgba(255,255,255,.7);font-size:10px;">3 faltas = atenção</span>
+<span id="chevResumoPresencas" style="color:#fff;font-size:11px;transition:transform .2s;transform:rotate(180deg);">▾</span>
+</div>
 </div>
 <div id="presenca-summary" style="padding:8px 13px 10px;"></div>
 </div>
@@ -2168,9 +2171,18 @@ const justificados = JUSTIFICATIVAS[jovemId] || [];
 return !streak.some(id => justificados.includes(id));
 }
 
+let resumoPresencasAberto = true;
+function toggleResumoPresencas() {
+resumoPresencasAberto = !resumoPresencasAberto;
+document.getElementById('presenca-summary').style.display = resumoPresencasAberto ? 'block' : 'none';
+document.getElementById('chevResumoPresencas').style.transform = resumoPresencasAberto ? 'rotate(180deg)' : 'rotate(0deg)';
+}
+
 function renderResumoPresencas() {
 const el = document.getElementById('presenca-summary');
 if (!el) return;
+el.style.display = resumoPresencasAberto ? 'block' : 'none';
+document.getElementById('chevResumoPresencas').style.transform = resumoPresencasAberto ? 'rotate(180deg)' : 'rotate(0deg)';
 const passados = eventosPassadosOrdenados();
 if (!passados.length) { el.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:4px 0;">Nenhuma atividade registrada ainda.</div>'; return; }
 let html = '';
