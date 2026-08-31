@@ -706,7 +706,7 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 </div>
 
 <div id="pagina-senior" style="display:none;">
-<iframe id="iframeSenior" src="tropa-senior.html" style="width:100%;border:none;display:block;" title="Tropa Sênior"></iframe>
+<iframe id="iframeSenior" src="tropa-senior.html" style="width:100%;border:none;display:block;transition:height .25s ease;" title="Tropa Sênior"></iframe>
 </div>
 
 <script>
@@ -3069,6 +3069,8 @@ const msg = ev.data;
 if (!msg || msg.tipo !== 'headerCompactoSr') return;
 const header = document.querySelector('.header');
 if (header) header.classList.toggle('compacto', !!msg.compacto);
+requestAnimationFrame(ajustarAlturaIframeSenior);
+setTimeout(ajustarAlturaIframeSenior, 260);
 });
 
 async function iniciar() {
