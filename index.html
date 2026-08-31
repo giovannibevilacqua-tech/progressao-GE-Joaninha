@@ -1913,6 +1913,9 @@ document.getElementById('tabsLinha').style.display = r === 'escoteira' ? '' : 'n
 document.getElementById('ramoBtnEscoteira').classList.toggle('active', r === 'escoteira');
 document.getElementById('ramoBtnSenior').classList.toggle('active', r === 'senior');
 window.scrollTo(0, 0);
+document.documentElement.style.overflow = r === 'senior' ? 'hidden' : '';
+document.body.style.overflow = r === 'senior' ? 'hidden' : '';
+document.body.style.paddingBottom = r === 'senior' ? '0px' : '';
 if (r === 'senior') {
 requestAnimationFrame(ajustarAlturaIframeSenior);
 setTimeout(ajustarAlturaIframeSenior, 50);
