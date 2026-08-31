@@ -229,6 +229,32 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .btn-ic:hover{background:var(--bg);}
 .arch-section{margin:0 12px;background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;margin-top:10px;}
 
+.patrulha-form{display:flex;flex-direction:column;gap:8px;padding:10px;border:1px dashed var(--border);border-radius:10px;}
+.patrulha-form-row{display:flex;gap:8px;align-items:center;}
+.patrulha-form-row input[type=color]{width:44px;height:38px;border-radius:8px;border:1px solid var(--border);padding:2px;cursor:pointer;background:none;}
+.patrulha-form-row .f-input{flex:1;}
+.patrulhas-grid{display:flex;flex-direction:column;}
+.patrulha-secao{margin:10px 0 0;position:relative;}
+@media (min-width:640px){
+  .patrulhas-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:0;}
+  .patrulhas-grid .patrulha-secao{margin:10px 7px 0;}
+}
+.patrulha-secao-header{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-radius:10px 10px 0 0;color:#fff;font-size:11px;font-weight:800;}
+.patrulha-secao-header-direita{display:flex;align-items:center;gap:4px;}
+.patrulha-secao-count{background:rgba(255,255,255,.28);padding:1px 9px;border-radius:20px;font-size:10px;font-weight:800;}
+.patrulha-menu-btn{border:none;background:none;color:#fff;font-size:15px;font-weight:900;cursor:pointer;padding:1px 5px;border-radius:6px;line-height:1;}
+.patrulha-menu-btn:hover{background:rgba(255,255,255,.25);}
+.patrulha-dropdown{position:absolute;top:38px;right:0;background:var(--card);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);overflow:hidden;z-index:20;min-width:130px;}
+.patrulha-dropdown button{display:block;width:100%;text-align:left;padding:10px 12px;font-size:12px;font-weight:700;border:none;background:var(--card);color:var(--text);cursor:pointer;}
+.patrulha-dropdown button:hover{background:#F5F2EE;}
+.patrulha-dropdown button.remover{color:#E74C3C;}
+.patrulha-drop-zone{background:#FAFAF8;border:1px dashed var(--border);border-top:none;border-radius:0 0 10px 10px;padding:6px;min-height:46px;transition:background .15s ease,border-color .15s ease;}
+.patrulha-drop-zone.drag-over{background:#EAFAF1;border-color:#27AE60;}
+.patrulha-vazia{font-size:11px;color:var(--muted);text-align:center;padding:14px;}
+.roster-row-sr{display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer;border-bottom:1px solid #F0EDE8;}
+.roster-row-sr:last-child{border-bottom:none;}
+.roster-row-sr:hover{background:#F5F2EE;}
+
 /* SAVE BAR */
 .save-bar{position:fixed;bottom:0;left:0;right:0;background:var(--azul);color:#fff;
   padding:9px 14px;display:flex;align-items:center;gap:8px;z-index:600;
@@ -425,6 +451,12 @@ body{padding-bottom:50px;}
     </div>
     <button onclick="renderJovens()" style="background:var(--vinho);color:#fff;border:none;border-radius:20px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 2px 6px rgba(109,16,38,.3);">↺ Atualizar</button>
   </div>
+
+  <div style="margin:12px 12px 0;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">🏕️ Patrulhas</div>
+  <div id="patrulhasContainerSr" style="margin:6px 12px 0;"></div>
+  <div id="semPatrulhaContainerSr" style="margin:0 12px 0;"></div>
+
+  <div style="margin:16px 12px 0;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">👤 Todos os jovens</div>
   <div id="jovens-cards" style="padding:12px;display:flex;flex-direction:column;gap:10px;"></div>
 </div>
 
@@ -632,13 +664,16 @@ async function loadState(){
       if (dados.CAL_1S27) { CAL_1S27.length = 0; dados.CAL_1S27.forEach(x => CAL_1S27.push(x)); }
       if (dados.JUSTIFICATIVAS_SR) JUSTIFICATIVAS_SR = dados.JUSTIFICATIVAS_SR;
       if (dados.METAS_SR) METAS_SR = dados.METAS_SR;
+      if (dados.CICLO_BLOCOS_SR) CICLO_BLOCOS_SR = dados.CICLO_BLOCOS_SR;
+      if (dados.PATRULHAS_SR) PATRULHAS_SR = dados.PATRULHAS_SR;
+      if (dados.PATRULHA_DE_SR) PATRULHA_DE_SR = dados.PATRULHA_DE_SR;
     } else {
       S = deepCopy(INICIAL);
     }
   }catch(e){ S = deepCopy(INICIAL); console.error('Tropa Sênior: usando dados padrão (falha ou demora ao buscar):', e); }
 }
 async function saveState(){
-  const payload = JSON.stringify({ S, JOVENS, JNOMES, JCORES, PRESENCA, YOUTH_DATA, EP_DATA, CAL_EXTRAS, CAL_2S26, CAL_1S27, JUSTIFICATIVAS_SR, METAS_SR });
+  const payload = JSON.stringify({ S, JOVENS, JNOMES, JCORES, PRESENCA, YOUTH_DATA, EP_DATA, CAL_EXTRAS, CAL_2S26, CAL_1S27, JUSTIFICATIVAS_SR, METAS_SR, CICLO_BLOCOS_SR, PATRULHAS_SR, PATRULHA_DE_SR });
   try {
     await fetch(REST_URL_SR, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
     onDataSaved();
@@ -883,6 +918,16 @@ function renderEixo(eixoId){
 let PRESENCA = {};
 let CAL_EXTRAS = {};
 let JUSTIFICATIVAS_SR = {};
+let PATRULHAS_SR = [];
+let PATRULHA_DE_SR = {};
+let patrulhaEditandoIdSr = null;
+let patrulhaMenuAbertoIdSr = null;
+let jovemArrastadoSr = null;
+let CICLO_BLOCOS_SR = {
+  '2s26': BLOCKS.filter(b => b.focus && b.semester === 1).map(b => b.id),
+  '1s27': BLOCKS.filter(b => b.focus && b.semester === 2).map(b => b.id)
+};
+let cicloPickerAbertoKeySr = null;
 let METAS_SR = {
   '2s26': [
     { icone: '⭐', texto: 'Paulo: alcança Azimute (blocos 11→12: Consumo + Comunidade)' },
@@ -1583,26 +1628,85 @@ function renderExternasBoxSr(events) {
     return h;
   }
 
-  function renderSemestres(){
-  const c=document.getElementById('sem-content');
-  const blks1=BLOCKS.filter(b=>b.focus&&b.semester===1);
-  const blks2=BLOCKS.filter(b=>b.focus&&b.semester===2);
-
-  function blockRows(blks){
-    return blks.map((b,i)=>
-      `<div class="sem-block-row" style="background:${EIXO_BG[b.eixo]}44;">
-        <span class="sem-block-num">${i+1}.</span>
-        <div class="sem-eixo-dot" style="background:${EIXO_COLORS[b.eixo]};"></div>
-        <span class="sem-block-name">${b.name}${b.campOnly?' <em style=font-size:10px>(⛺ Acampamento)</em>':''}</span>
-      </div>`
-    ).join('');
+  // ── Blocos editáveis por semestre (aba Semestres) ─────────
+function blocosCicloSemY(sem) {
+  if (!CICLO_BLOCOS_SR[sem]) CICLO_BLOCOS_SR[sem] = [];
+  return CICLO_BLOCOS_SR[sem];
+}
+function toggleCicloPickerSr(sem, j) {
+  const key = sem + '_' + j;
+  cicloPickerAbertoKeySr = (cicloPickerAbertoKeySr === key) ? null : key;
+  renderSemestres();
+}
+function selecionarCicloBlocoSr(sem, j, blocoId) {
+  blocosCicloSemY(sem)[j] = blocoId;
+  cicloPickerAbertoKeySr = null;
+  saveState();
+  renderSemestres();
+}
+function adicionarBlocoCicloSr(sem) {
+  blocosCicloSemY(sem).push('');
+  saveState();
+  renderSemestres();
+}
+function removerBlocoCicloSr(sem, j) {
+  blocosCicloSemY(sem).splice(j, 1);
+  cicloPickerAbertoKeySr = null;
+  saveState();
+  renderSemestres();
+}
+function construirCicloBlocoPickerSr(sem, j, blocoSel) {
+  const def = blocoSel ? BLOCKS.find(b => b.id === blocoSel) : null;
+  const key = sem + '_' + j;
+  const aberto = cicloPickerAbertoKeySr === key;
+  const estiloBtn = def ? `background:${EIXO_COLORS[def.eixo]};color:#fff;border-color:${EIXO_COLORS[def.eixo]};` : '';
+  let painel = '';
+  if (aberto) {
+    painel = `<div class="itens-picker-scroll-sr" style="display:block;">` + Object.keys(EIXOS).map(eixoId => {
+      const eixo = EIXOS[eixoId];
+      const blocosHtml = eixo.blockIds.map(bid => {
+        const b = BLOCKS.find(x => x.id === bid);
+        if (!b) return '';
+        const sel = bid === blocoSel;
+        return `<div class="picker-bloco-sr" style="${sel ? `border-color:${EIXO_COLORS[eixoId]};` : ''}">
+          <div class="picker-bloco-head-sr" onclick="selecionarCicloBlocoSr('${sem}',${j},'${bid}')">
+            <span>${b.name}</span>
+            ${sel ? `<span class="picker-bloco-count-sr">✓ selecionado</span>` : ''}
+          </div>
+        </div>`;
+      }).join('');
+      return `<div class="eixo-picker-header-sr" style="background:${EIXO_COLORS[eixoId]}">${eixo.label}</div>${blocosHtml}`;
+    }).join('') + `<div class="picker-bloco-sr" onclick="selecionarCicloBlocoSr('${sem}',${j},'')" style="cursor:pointer;">
+      <div class="picker-bloco-head-sr"><span>— Limpar seleção</span></div>
+    </div></div>`;
   }
+  return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+    <div style="flex:1;">
+      <button type="button" class="btn-picker-toggle-sr" style="${estiloBtn}" onclick="toggleCicloPickerSr('${sem}',${j})">
+        <span>${def ? def.name + (def.campOnly ? ' ⛺' : '') : 'Selecionar bloco'}</span>
+        <span class="chev" style="transform:rotate(${aberto ? 180 : 0}deg);${def ? 'color:#fff;' : ''}">▾</span>
+      </button>
+      ${painel}
+    </div>
+    <button class="btn-ic" style="color:#E74C3C;flex-shrink:0;" onclick="removerBlocoCicloSr('${sem}',${j})" title="Remover este bloco">✕</button>
+  </div>`;
+}
+function blockRowsEditavelSr(sem) {
+  const lista = blocosCicloSemY(sem);
+  let h = lista.map((b, j) => construirCicloBlocoPickerSr(sem, j, b)).join('');
+  if (!lista.length) h += `<div style="font-size:11px;color:var(--muted);padding:4px 0;">Nenhum bloco selecionado ainda.</div>`;
+  h += `<button class="btn-ic" style="width:100%;margin-top:4px;text-align:center;" onclick="adicionarBlocoCicloSr('${sem}')">+ Adicionar bloco</button>`;
+  return h;
+}
 
-  function progRows(semIdx){
-    const semBlocks=BLOCKS.filter(b=>b.focus&&b.semester===semIdx);
+function renderSemestres(){
+  const c=document.getElementById('sem-content');
+
+  function progRows(sem){
+    const semBlockIds=blocosCicloSemY(sem).filter(Boolean);
     return actJ().map(({yid:j,i})=>{
       const baseDone=getTotalConcluded(i);
-      const gains=semBlocks.filter(b=>!isBlockConcluded(b.id,i)).length;
+      const gains=semBlockIds.filter(bid=>!isBlockConcluded(bid,i)).length;
       const expected=Math.min(18,baseDone+gains);
       const pct=Math.round(expected/18*100);
       const et=etapa(expected);
@@ -1618,10 +1722,11 @@ function renderExternasBoxSr(events) {
   <div class="sem-section">
     <div class="sem-header">
       <h3>📅 2º Semestre 2026</h3>
-      <div class="period">01/08/2026 → 28/11/2026 · 7 blocos</div>
+      <div class="period">01/08/2026 → 28/11/2026</div>
     </div>
     <div class="sem-body">
-      <div class="sem-blocks">${blockRows(blks1)}</div>
+      <div class="section-label" style="margin-bottom:7px;">Blocos-foco do semestre</div>
+      <div class="sem-blocks">${blockRowsEditavelSr('2s26')}</div>
       <div class="sem-special">
         <div class="sem-special-item"><span class="sem-special-icon">⚡</span><div><strong>22-23/ago:</strong> Enduro Distrital Sênior</div></div>
         <div class="sem-special-item"><span class="sem-special-icon">⚠</span><div><strong>31/out:</strong> Sem atividade (chefia em curso 30/10)</div></div>
@@ -1631,7 +1736,7 @@ function renderExternasBoxSr(events) {
       ${renderMetasBoxSr('2s26', 'Milestones esperados ao final do 2S2026')}
       <div class="prog-overview">
         <div class="prog-overview-title">Previsão de blocos ao final do 2S2026</div>
-        ${progRows(1)}
+        ${progRows('2s26')}
       </div>
     </div>
   </div>
@@ -1639,10 +1744,11 @@ function renderExternasBoxSr(events) {
   <div class="sem-section" style="margin-top:14px;">
     <div class="sem-header" style="background:linear-gradient(135deg,#1B3B6F,#2A5298)">
       <h3>📅 1º Semestre 2027</h3>
-      <div class="period">fev/2027 → jun/2027 · 4 blocos + Cerimônia</div>
+      <div class="period">fev/2027 → jun/2027</div>
     </div>
     <div class="sem-body">
-      <div class="sem-blocks">${blockRows(blks2)}</div>
+      <div class="section-label" style="margin-bottom:7px;">Blocos-foco do semestre</div>
+      <div class="sem-blocks">${blockRowsEditavelSr('1s27')}</div>
       <div class="sem-special">
         <div class="sem-special-item"><span class="sem-special-icon">🏆</span><div><strong>Mai/Jun 2027:</strong> Cerimônia de Passagem de Paulo e Thauany — Reconhecimento de Escoteiro da Pátria + passagem para o Ramo Pioneiro</div></div>
       </div>
@@ -1650,7 +1756,7 @@ function renderExternasBoxSr(events) {
       ${renderMetasBoxSr('1s27', 'Milestones ao final do 1S2027')}
       <div class="prog-overview">
         <div class="prog-overview-title">Previsão de blocos ao final do 1S2027</div>
-        ${progRows(2)}
+        ${progRows('1s27')}
       </div>
     </div>
   </div>`;
@@ -2264,6 +2370,7 @@ function deleteYouth(yid){
 
   // ── 3. Remove do EP_DATA ──────────────────────────
   if(typeof EP_DATA!=='undefined') delete EP_DATA[yid];
+  delete PATRULHA_DE_SR[yid];
 
   // ── 4. Remove de JOVENS/JNOMES/JCORES ────────────
   if(idx>=0){JOVENS.splice(idx,1);JNOMES.splice(idx,1);JCORES.splice(idx,1);}
@@ -2351,7 +2458,135 @@ function hasConsecutiveAbsences(jovemIdx,threshold=3){
 }
 
 // ─── RENDER JOVENS ───────────────────────────────────────
+// ╔═══════════════════════════════════════════════════╗
+// ║                   PATRULHAS                      ║
+// ╚═══════════════════════════════════════════════════╝
+function construirFormPatrulhaSr(p) {
+  const id = p ? p.id : 'nova';
+  return `<div class="patrulha-form" onclick="event.stopPropagation()">
+    <input type="text" class="f-input" id="patNomeSr_${id}" placeholder="Nome da patrulha" value="${p ? p.nome : ''}">
+    <div class="patrulha-form-row">
+      <input type="color" id="patCorSr_${id}" value="${p ? p.cor : '#1B3B6F'}">
+      <input type="text" class="f-input" id="patIconeSr_${id}" placeholder="Ícone (emoji)" value="${p ? p.icone : '🏕️'}" maxlength="4">
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn-prim" style="flex:1;padding:9px;font-size:12px;" onclick="salvarPatrulhaSr('${id}')">💾 Salvar</button>
+      <button class="btn-sec" style="flex:1;padding:9px;font-size:12px;" onclick="cancelarEdicaoPatrulhaSr()">Cancelar</button>
+    </div>
+  </div>`;
+}
+function abrirNovaPatrulhaSr() { patrulhaEditandoIdSr = 'nova'; renderPatrulhasSr(); }
+function abrirEdicaoPatrulhaSr(id) { patrulhaEditandoIdSr = id; renderPatrulhasSr(); }
+function cancelarEdicaoPatrulhaSr() { patrulhaEditandoIdSr = null; renderPatrulhasSr(); }
+function salvarPatrulhaSr(id) {
+  const nome = document.getElementById('patNomeSr_' + id).value.trim();
+  const cor = document.getElementById('patCorSr_' + id).value;
+  const icone = document.getElementById('patIconeSr_' + id).value.trim() || '🏕️';
+  if (!nome) { alert('Dê um nome pra patrulha.'); return; }
+  if (id === 'nova') {
+    const novoId = 'pat' + Date.now() + Math.floor(Math.random() * 1000);
+    PATRULHAS_SR.push({ id: novoId, nome, cor, icone });
+  } else {
+    const p = PATRULHAS_SR.find(p => p.id === id);
+    if (p) { p.nome = nome; p.cor = cor; p.icone = icone; }
+  }
+  patrulhaEditandoIdSr = null;
+  saveState();
+  renderPatrulhasSr();
+}
+function excluirPatrulhaSr(id) {
+  if (!confirm('Excluir essa patrulha? Os jovens dela voltam para "Sem patrulha".')) return;
+  PATRULHAS_SR = PATRULHAS_SR.filter(p => p.id !== id);
+  Object.keys(PATRULHA_DE_SR).forEach(yid => { if (PATRULHA_DE_SR[yid] === id) delete PATRULHA_DE_SR[yid]; });
+  patrulhaEditandoIdSr = null;
+  saveState();
+  renderPatrulhasSr();
+}
+function dragJovemStartSr(e, yid) {
+  jovemArrastadoSr = yid;
+  if (e.dataTransfer) { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', yid); }
+}
+function dropJovemEmSr(e, patrulhaId) {
+  if (e.preventDefault) e.preventDefault();
+  const yid = (e.dataTransfer && e.dataTransfer.getData('text/plain')) || jovemArrastadoSr;
+  jovemArrastadoSr = null;
+  if (!yid) return;
+  if (patrulhaId) PATRULHA_DE_SR[yid] = patrulhaId;
+  else delete PATRULHA_DE_SR[yid];
+  saveState();
+  renderPatrulhasSr();
+}
+function togglePatrulhaMenuSr(id) {
+  patrulhaMenuAbertoIdSr = (patrulhaMenuAbertoIdSr === id) ? null : id;
+  renderPatrulhasSr();
+}
+function construirCardJovemPatrulhaSr(yid) {
+  const y = YOUTH_DATA.find(x => x.id === yid);
+  if (!y) return '';
+  const idx = JOVENS.indexOf(yid);
+  const cor = (idx !== -1 && JCORES[idx]) ? JCORES[idx] : (y.color || '#1A6B3C');
+  return `<div class="roster-row-sr" draggable="true" ondragstart="dragJovemStartSr(event,'${yid}')" onclick="showModal('${yid}')">
+    <div style="width:30px;height:30px;border-radius:50%;background:${cor};color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;">${initials(y.name)}</div>
+    <span style="font-size:12px;font-weight:700;flex:1;">${y.name}${y.role ? ` <span style="font-weight:500;color:var(--muted);">· ${y.role}</span>` : ''}</span>
+  </div>`;
+}
+function construirSecaoPatrulhaSr(patrulha, membros) {
+  const cor = patrulha ? patrulha.cor : '#8A94A3';
+  const nome = patrulha ? patrulha.nome : 'Sem patrulha';
+  const icone = patrulha ? patrulha.icone : '❔';
+  const dropId = patrulha ? patrulha.id : '';
+  const editando = patrulha && patrulhaEditandoIdSr === patrulha.id;
+  const menuAberto = patrulha && patrulhaMenuAbertoIdSr === patrulha.id;
+
+  let h = `<div class="patrulha-secao">`;
+  if (editando) {
+    h += construirFormPatrulhaSr(patrulha);
+  } else {
+    h += `<div class="patrulha-secao-header" style="background:${cor}">
+      <span>${icone} ${nome}</span>
+      <span class="patrulha-secao-header-direita">
+        <span class="patrulha-secao-count">${membros.length}</span>
+        ${patrulha ? `<button class="patrulha-menu-btn" onclick="event.stopPropagation();togglePatrulhaMenuSr('${patrulha.id}')">⋮</button>` : ''}
+      </span>
+    </div>
+    ${menuAberto ? `<div class="patrulha-dropdown" onclick="event.stopPropagation()">
+      <button onclick="abrirEdicaoPatrulhaSr('${patrulha.id}')">✏️ Editar</button>
+      <button class="remover" onclick="excluirPatrulhaSr('${patrulha.id}')">🗑️ Excluir</button>
+    </div>` : ''}`;
+  }
+  h += `<div class="patrulha-drop-zone" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="this.classList.remove('drag-over');dropJovemEmSr(event,'${dropId}')">`;
+  if (!membros.length) {
+    h += `<div class="patrulha-vazia">Arraste jovens pra cá</div>`;
+  } else {
+    membros.forEach(yid => { h += construirCardJovemPatrulhaSr(yid); });
+  }
+  h += `</div></div>`;
+  return h;
+}
+function renderPatrulhasSr() {
+  const el = document.getElementById('patrulhasContainerSr');
+  const elSem = document.getElementById('semPatrulhaContainerSr');
+  if (!el || !elSem) return;
+  const ativosIds = YOUTH_DATA.filter(y => !y.archived && y.id !== 'isis').map(y => y.id);
+  let htmlP = '';
+  if (PATRULHAS_SR.length) {
+    htmlP += '<div class="patrulhas-grid">' + PATRULHAS_SR.map(p => {
+      const membros = ativosIds.filter(yid => PATRULHA_DE_SR[yid] === p.id);
+      return construirSecaoPatrulhaSr(p, membros);
+    }).join('') + '</div>';
+  } else if (patrulhaEditandoIdSr !== 'nova') {
+    htmlP += '<div style="font-size:11px;color:var(--muted);padding:4px 0 0;">Nenhuma patrulha criada ainda. Use o botão abaixo pra começar.</div>';
+  }
+  htmlP += patrulhaEditandoIdSr === 'nova' ? construirFormPatrulhaSr(null) : `<button class="btn-sec" style="border-style:dashed;margin-top:10px;width:100%;padding:10px;" onclick="abrirNovaPatrulhaSr()">+ Nova patrulha</button>`;
+  el.innerHTML = htmlP;
+
+  const idsValidas = PATRULHAS_SR.map(p => p.id);
+  const semPatrulha = ativosIds.filter(yid => !idsValidas.includes(PATRULHA_DE_SR[yid]));
+  elSem.innerHTML = construirSecaoPatrulhaSr(null, semPatrulha);
+}
+
 function renderJovens(){
+  renderPatrulhasSr();
   const today=new Date();
   document.getElementById('calc-date').textContent=fmtDate(today);
   const active=YOUTH_DATA.filter(y=>!y.archived);
