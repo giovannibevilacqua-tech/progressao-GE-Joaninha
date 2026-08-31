@@ -366,6 +366,12 @@ border: 1px solid var(--border); background: #FAFAF8; color: var(--text); cursor
 .chip-toggle:hover { background: #F2EFEA; }
 .chip-toggle.selected { background: var(--vinho); color: #fff; border-color: var(--vinho); }
 .evento-bloco-tag { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; color: #fff; white-space: nowrap; }
+.fmt-badge { font-size: 9px; font-weight: 800; padding: 2px 7px; border-radius: 20px; letter-spacing: .5px; margin-right: 5px; }
+.fmt-T { background: #EBF5FB; color: #1565C0; }
+.fmt-P { background: #F4ECF7; color: #6A1B9A; }
+.fmt-PN { background: #D6EAF8; color: #0D47A1; }
+.fmt-Av { background: #EAFAF1; color: #1A7434; }
+.fmt-Esp { background: #FFF9C4; color: #7A4A00; }
 .presenca-section { margin-top: 8px; padding-top: 8px; border-top: 1px solid #F2EFEA; }
 .presenca-toggle {
 border: none; background: #F5F3EF; color: var(--text); font-size: 11px; font-weight: 700;
@@ -516,6 +522,14 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 
 <div id="pagina-calendario" style="display:none;">
 
+<div style="margin:0 0 12px;background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;">
+<div style="background:var(--vinho);padding:10px 13px;display:flex;align-items:center;justify-content:space-between;">
+<span style="color:#fff;font-size:12px;font-weight:800;">📋 Resumo de Presenças</span>
+<span style="color:rgba(255,255,255,.7);font-size:10px;">3 faltas = atenção</span>
+</div>
+<div id="presenca-summary" style="padding:8px 13px 10px;"></div>
+</div>
+
 <div class="roster-section" style="padding:0;overflow:hidden;">
 <div class="bloco-head cabecalho-secao" id="cabecalhoAddEvento" style="padding:14px;" onclick="toggleAddEvento()">
 <span class="bloco-name" style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">+ Adicionar atividade</span>
@@ -533,6 +547,16 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 <div>
 <label class="campo-label">Local</label>
 <input type="text" id="eventoLocal" class="campo-input" placeholder="Ex: Sede do Grupo Escoteiro Joaninha">
+</div>
+<div>
+<label class="campo-label">Tipo de atividade</label>
+<select id="eventoTipo" class="campo-input">
+<option value="T">Tropa (T)</option>
+<option value="P">Patrulha (P)</option>
+<option value="PN">Pernoite (PN)</option>
+<option value="Av">Avaliação (Av)</option>
+<option value="Esp">Especial (Esp)</option>
+</select>
 </div>
 <div>
 <label class="campo-label">Itens de progressão trabalhados</label>
@@ -1744,6 +1768,7 @@ BLOCOS[ev.blocoId].variaveis.forEach((_, i) => itens.push(`${ev.blocoId}|v|${i}`
 return Object.assign({}, ev, {
 responsaveis,
 itens,
+tipo: ev.tipo || 'T',
 presentes: ev.presentes || []
 });
 }
@@ -1844,6 +1869,7 @@ return `<div class="eixo-picker-header" style="background:${eixo.cor}">${eixo.no
 
 function limparFormularioEvento() {
 ['eventoData','eventoNome','eventoLocal','eventoDescricao','eventoResponsavelOutroInput','eventoLink','eventoResposta'].forEach(fid => { document.getElementById(fid).value = ''; });
+document.getElementById('eventoTipo').value = 'T';
 eventoItensSelecionados = [];
 itemPickerBlocosAbertos = {};
 eventoItensPickerAberto = false;
@@ -1927,6 +1953,7 @@ eventoEditandoId = id;
 document.getElementById('eventoData').value = ev.data;
 document.getElementById('eventoNome').value = ev.nome;
 document.getElementById('eventoLocal').value = ev.local || '';
+document.getElementById('eventoTipo').value = ev.tipo || 'T';
 document.getElementById('eventoDescricao').value = ev.descricao || '';
 document.getElementById('eventoLink').value = ev.link || '';
 document.getElementById('eventoResposta').value = ev.resposta || '';
@@ -1962,6 +1989,7 @@ function adicionarEvento() {
 const data = document.getElementById('eventoData').value;
 const nome = document.getElementById('eventoNome').value.trim();
 const local = document.getElementById('eventoLocal').value.trim();
+const tipo = document.getElementById('eventoTipo').value;
 const descricao = document.getElementById('eventoDescricao').value.trim();
 const link = document.getElementById('eventoLink').value.trim();
 const resposta = document.getElementById('eventoResposta').value.trim();
@@ -1973,10 +2001,10 @@ if (!data || !nome) { alert('Preencha pelo menos a data e o nome da atividade.')
 
 if (eventoEditandoId) {
 const ev = EVENTOS.find(e => e.id === eventoEditandoId);
-if (ev) { ev.data = data; ev.nome = nome; ev.local = local; ev.descricao = descricao; ev.itens = itens; ev.responsaveis = responsaveis; ev.link = link; ev.resposta = resposta; ev.anexo = anexo; }
+if (ev) { ev.data = data; ev.nome = nome; ev.local = local; ev.tipo = tipo; ev.descricao = descricao; ev.itens = itens; ev.responsaveis = responsaveis; ev.link = link; ev.resposta = resposta; ev.anexo = anexo; }
 } else {
 const id = 'ev' + Date.now() + Math.floor(Math.random()*1000);
-EVENTOS.push({ id, data, nome, local, descricao, itens, responsaveis, presentes: [], link, resposta, anexo });
+EVENTOS.push({ id, data, nome, local, tipo, descricao, itens, responsaveis, presentes: [], link, resposta, anexo });
 }
 temAlteracaoLocalPendente = true;
 saveState();
@@ -2140,6 +2168,33 @@ const justificados = JUSTIFICATIVAS[jovemId] || [];
 return !streak.some(id => justificados.includes(id));
 }
 
+function renderResumoPresencas() {
+const el = document.getElementById('presenca-summary');
+if (!el) return;
+const passados = eventosPassadosOrdenados();
+if (!passados.length) { el.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:4px 0;">Nenhuma atividade registrada ainda.</div>'; return; }
+let html = '';
+JOVENS.forEach(j => {
+const total = passados.length;
+const presentesCount = passados.filter(e => (e.presentes || []).includes(j)).length;
+const ausentesCount = total - presentesCount;
+const flag = precisaFlagAusencia(j);
+const fg = ausentesCount >= 3 ? '#E74C3C' : ausentesCount === 2 ? '#E67E22' : '#27AE60';
+let nota = '';
+if (ausentesCount >= 3) nota = ' &nbsp;<span style="background:#E74C3C;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:20px;">⚠ atenção</span>';
+else if (ausentesCount === 2) nota = ' &nbsp;<span style="background:#E67E22;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:20px;">atenção</span>';
+html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #F2EFEA;">
+<span style="font-size:12px;font-weight:700;">${flag ? '<span class="flag-ausencia" title="3+ faltas seguidas sem justificativa">🚩</span>' : ''}${JNOMES[j]}</span>
+<div style="display:flex;align-items:center;gap:5px;">
+<span style="font-size:11px;color:#666;">${presentesCount}/${total} pres.</span>
+<span style="font-size:11px;font-weight:800;color:${fg};">${ausentesCount} falta${ausentesCount !== 1 ? 's' : ''}${nota}</span>
+</div>
+</div>`;
+});
+html += `<div style="font-size:10px;color:var(--muted);margin-top:6px;padding-top:4px;">🚩 3 faltas consecutivas sem justificativa</div>`;
+el.innerHTML = html;
+}
+
 function exportarPresenca(eventoId) {
 const ev = EVENTOS.find(e => e.id === eventoId);
 if (!ev) return;
@@ -2199,6 +2254,7 @@ renderPaginaCalendario();
 }
 
 function renderPaginaCalendario() {
+renderResumoPresencas();
 const el = document.getElementById('listaEventos');
 if (!EVENTOS.length) {
 el.innerHTML = '<div class="eixo-blocos-hint" style="padding:24px 14px;">Nenhuma atividade cadastrada ainda. Use o formulário acima pra adicionar a primeira.</div>';
@@ -2225,7 +2281,7 @@ ${menuAberto ? `<div class="evento-dropdown" onclick="event.stopPropagation()">
 <button onclick="exportarPresenca('${ev.id}')">📄 Exportar presença</button>
 <button class="remover" onclick="removerEvento('${ev.id}')">🗑️ Remover</button>
 </div>` : ''}
-<div class="evento-nome">${ev.nome}</div>
+<div class="evento-nome">${ev.tipo ? `<span class="fmt-badge fmt-${ev.tipo}">${ev.tipo}</span>` : ''}${ev.nome}</div>
 <div class="evento-meta">
 ${ev.local ? `<span class="evento-tag">📍 ${ev.local}</span>` : ''}
 ${(ev.responsaveis && ev.responsaveis.length) ? `<span class="evento-tag">👤 ${ev.responsaveis.join(', ')}</span>` : ''}

@@ -103,7 +103,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .cal-section-hdr{margin:14px 12px 8px;font-size:13px;font-weight:800;color:var(--vinho);display:flex;align-items:center;gap:8px;}
 .cal-section-hdr::after{content:'';flex:1;height:1px;background:var(--border);}
 .cal-list{padding:0 12px;display:flex;flex-direction:column;gap:8px;}
-.cal-card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);display:flex;overflow:hidden;}
+.cal-card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);display:flex;overflow:hidden;position:relative;}
 .cal-strip{width:55px;min-width:55px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px;color:#fff;text-align:center;}
 .strip-idx{font-size:8px;font-weight:700;opacity:.65;letter-spacing:.5px;}
 .strip-day{font-size:18px;font-weight:900;line-height:1.1;}
@@ -134,6 +134,41 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .extra-link-input,.extra-resposta-input{width:100%;padding:8px 10px;border:2px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;outline:none;}
 .extra-link-input:focus,.extra-resposta-input:focus{border-color:var(--vinho);}
 .evento-link-sr{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--vinho);text-decoration:none;}
+.grupo-label-sr{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:8px 0 4px;}
+.item-row-sr{display:flex;align-items:flex-start;gap:8px;padding:6px 6px;border-radius:6px;}
+.item-row-sr:hover{background:#F5F2EE;}
+.item-check-sr{width:18px;height:18px;border-radius:5px;border:2px solid #DDD9D4;flex-shrink:0;margin-top:1px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;}
+.item-check-sr.sel{background:var(--vinho);border-color:var(--vinho2);}
+.item-text-sr{font-size:12px;line-height:1.45;cursor:pointer;}
+.chip-select-group-sr{display:flex;flex-wrap:wrap;gap:6px;}
+.chip-toggle-sr{font-size:11px;font-weight:700;padding:7px 12px;border-radius:20px;border:1px solid var(--border);background:#FAFAF8;color:var(--text);cursor:pointer;}
+.chip-toggle-sr:hover{background:#F2EFEA;}
+.chip-toggle-sr.selected{background:var(--vinho);color:#fff;border-color:var(--vinho);}
+.btn-picker-toggle-sr{width:100%;text-align:left;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:#FAFAF8;font-size:12px;font-weight:700;color:var(--text);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.btn-picker-toggle-sr:hover{background:#F2EFEA;}
+.itens-picker-scroll-sr{max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:10px;padding:8px;background:#FAFAF8;margin-top:8px;}
+.eixo-picker-header-sr{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;padding:7px 10px;border-radius:8px;color:#fff;margin-top:8px;}
+.eixo-picker-header-sr:first-child{margin-top:0;}
+.picker-bloco-sr{border:1px solid var(--border);border-radius:8px;margin-top:6px;overflow:hidden;background:var(--card);}
+.picker-bloco-head-sr{display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer;font-size:11px;font-weight:700;}
+.picker-bloco-head-sr:hover{background:#F5F2EE;}
+.picker-bloco-head-sr .chev{margin-left:auto;}
+.picker-bloco-body-sr{display:none;padding:2px 10px 10px;}
+.picker-bloco-sr.open .picker-bloco-body-sr{display:block;}
+.picker-bloco-sr.open .chev{transform:rotate(180deg);}
+.picker-bloco-count-sr{font-size:9px;font-weight:800;padding:2px 6px;border-radius:10px;background:var(--done-bg);color:#1E8449;}
+.presenca-marcar-todos-sr{display:flex;gap:8px;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid #F0EDE8;}
+.presenca-marcar-todos-sr button{flex:1;font-size:10px;font-weight:700;padding:6px;border-radius:8px;border:1px solid var(--border);background:#FAFAF8;color:var(--text);cursor:pointer;}
+.presenca-marcar-todos-sr button:first-child:hover{border-color:#27AE60;color:#1E8449;background:var(--done-bg);}
+.presenca-marcar-todos-sr button:last-child:hover{border-color:#E74C3C;color:#E74C3C;background:#FDEBEA;}
+.justificar-btn-sr{margin-left:auto;font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px;border:1px solid var(--border);background:#fff;color:var(--muted);cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.justificar-btn-sr:hover{border-color:var(--vinho);color:var(--vinho);}
+.justificar-btn-sr.justificado{background:var(--done-bg);color:#1E8449;border-color:#27AE60;}
+.evento-menu-btn-sr{background:none;border:none;font-size:16px;color:var(--muted);cursor:pointer;padding:2px 6px;flex-shrink:0;}
+.evento-dropdown-sr{position:absolute;right:8px;top:34px;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.15);z-index:50;overflow:hidden;min-width:160px;}
+.evento-dropdown-sr button{display:block;width:100%;text-align:left;padding:10px 14px;border:none;background:none;font-size:12px;font-weight:600;color:var(--text);cursor:pointer;}
+.evento-dropdown-sr button:hover{background:#F5F2EE;}
+.evento-dropdown-sr button.remover{color:#E74C3C;}
 .strip-normal{background:var(--vinho);}
 .strip-leve{background:#78909C;}
 .strip-pernoite{background:#1565C0;}
@@ -298,6 +333,63 @@ body{padding-bottom:50px;}
         <div class="legend-item"><div class="legend-dot" style="background:#1A7434"></div>Avaliação (Av)</div>
         <div class="legend-item"><div class="legend-dot" style="background:#78909C"></div>Atividade Leve</div>
         <div class="legend-item"><div class="legend-dot" style="background:#B0BEC5"></div>Sem atividade</div>
+      </div>
+    </div>
+
+    <div class="roster-section" style="padding:0;overflow:hidden;margin:0 12px 12px;">
+      <div class="bloco-head cabecalho-secao" id="cabecalhoAddEventoSr" style="padding:14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;" onclick="toggleAddEventoSr()">
+        <span class="bloco-name" style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">+ Adicionar atividade</span>
+        <span class="chev" id="chevAddEventoSr" style="transform:rotate(0deg);">▾</span>
+      </div>
+      <div id="addEventoBodySr" style="padding:4px 14px 14px;display:none;flex-direction:column;gap:10px;">
+        <div>
+          <label class="f-label">Semestre</label>
+          <select class="f-input" id="eventoSemestreSr">
+            <option value="2s26">2º Semestre 2026</option>
+            <option value="1s27">1º Semestre 2027</option>
+          </select>
+        </div>
+        <div>
+          <label class="f-label">Data</label>
+          <input type="date" id="eventoDataSr" class="f-input">
+        </div>
+        <div>
+          <label class="f-label">Nome da atividade</label>
+          <input type="text" id="eventoNomeSr" class="f-input" placeholder="Ex: Reunião de patrulha">
+        </div>
+        <div>
+          <label class="f-label">Local</label>
+          <input type="text" id="eventoLocalSr" class="f-input" placeholder="Ex: Sede do Grupo Escoteiro Joaninha">
+        </div>
+        <div>
+          <label class="f-label">Formato</label>
+          <select class="f-input" id="eventoFmtSr">
+            <option value="T">Tropa (T)</option>
+            <option value="P">Patrulha (P)</option>
+            <option value="PN">Pernoite (PN)</option>
+            <option value="Av">Avaliação (Av)</option>
+            <option value="Esp">Especial (Esp)</option>
+          </select>
+        </div>
+        <div>
+          <label class="f-label">Itens de progressão trabalhados</label>
+          <button type="button" class="btn-picker-toggle-sr" onclick="toggleEventoItensPickerSr()">
+            <span id="resumoItensPickerSr">Nenhum item selecionado</span>
+            <span class="chev" id="chevItensPickerSr">▾</span>
+          </button>
+          <div class="itens-picker-scroll-sr" id="eventoItensPickerSr" style="display:none;"></div>
+        </div>
+        <div>
+          <label class="f-label">Responsável</label>
+          <div class="chip-select-group-sr" id="eventoResponsavelChipsSr"></div>
+          <input type="text" id="eventoResponsavelOutroInputSr" class="f-input" placeholder="Nome de quem é o &quot;Outro&quot;" style="display:none;margin-top:8px;">
+        </div>
+        <div>
+          <label class="f-label">Descrição</label>
+          <textarea id="eventoDescricaoSr" class="f-input" rows="3" placeholder="Detalhes da atividade..." style="resize:vertical;"></textarea>
+        </div>
+        <button class="btn-prim" id="btnSalvarEventoSr" onclick="adicionarEventoSr()">+ Adicionar atividade</button>
+        <button class="btn-sec" id="btnCancelarEdicaoEventoSr" style="display:none;" onclick="cancelarEdicaoEventoSr()">Cancelar edição</button>
       </div>
     </div>
 
@@ -497,6 +589,12 @@ const CAL_1S27 = [
    txt:'Avaliação final do 1S2027 + encerramento do ciclo de 1 ano. Planejamento do 2S2027.',special:''},
 ];
 
+// Garante id estável em cada atividade pré-existente (compatível com PRESENCA/CAL_EXTRAS já salvos)
+CAL_2S26.forEach((ev,i) => { if (!ev.id) ev.id = '2s26_' + i; });
+CAL_1S27.forEach((ev,i) => { if (!ev.id) ev.id = '1s27_' + i; });
+
+const MESES_ABREV_SR = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+
 // ╔═══════════════════════════════════════════════════╗
 // ║                   ESTADO                         ║
 // ╚═══════════════════════════════════════════════════╝
@@ -522,13 +620,16 @@ async function loadState(){
       if (dados.YOUTH_DATA) YOUTH_DATA = dados.YOUTH_DATA;
       if (dados.EP_DATA) EP_DATA = dados.EP_DATA;
       if (dados.CAL_EXTRAS) CAL_EXTRAS = dados.CAL_EXTRAS;
+      if (dados.CAL_2S26) { CAL_2S26.length = 0; dados.CAL_2S26.forEach(x => CAL_2S26.push(x)); }
+      if (dados.CAL_1S27) { CAL_1S27.length = 0; dados.CAL_1S27.forEach(x => CAL_1S27.push(x)); }
+      if (dados.JUSTIFICATIVAS_SR) JUSTIFICATIVAS_SR = dados.JUSTIFICATIVAS_SR;
     } else {
       S = deepCopy(INICIAL);
     }
   }catch(e){ S = deepCopy(INICIAL); console.error('Tropa Sênior: usando dados padrão (falha ou demora ao buscar):', e); }
 }
 async function saveState(){
-  const payload = JSON.stringify({ S, JOVENS, JNOMES, JCORES, PRESENCA, YOUTH_DATA, EP_DATA, CAL_EXTRAS });
+  const payload = JSON.stringify({ S, JOVENS, JNOMES, JCORES, PRESENCA, YOUTH_DATA, EP_DATA, CAL_EXTRAS, CAL_2S26, CAL_1S27, JUSTIFICATIVAS_SR });
   try {
     await fetch(REST_URL_SR, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
     onDataSaved();
@@ -772,6 +873,7 @@ function renderEixo(eixoId){
 // ╚═══════════════════════════════════════════════════╝
 let PRESENCA = {};
 let CAL_EXTRAS = {};
+let JUSTIFICATIVAS_SR = {};
 
 function loadPresenca(){
   /* PRESENCA já é carregado junto em loadState() */
@@ -810,7 +912,11 @@ function renderPresencaSummary(){
 function togglePresenca(eid,jovemIdx){
   if(!PRESENCA[eid]) PRESENCA[eid]={};
   const cur=PRESENCA[eid][jovemIdx];
-  if(cur===undefined||cur===null) PRESENCA[eid][jovemIdx]=1;   // pendente → presente
+  if(cur===undefined||cur===null) {
+    PRESENCA[eid][jovemIdx]=1;   // pendente → presente
+    const ev = encontrarEventoSr(eid);
+    if (ev && ev.itens && ev.itens.length) { marcarProgressoPorPresencaSr(jovemIdx, ev.itens); renderAll(); }
+  }
   else if(cur===1)                 PRESENCA[eid][jovemIdx]=0;   // presente → ausente
   else                             delete PRESENCA[eid][jovemIdx]; // ausente → pendente
   savePresenca();
@@ -877,44 +983,392 @@ function fillPresencaGrid(eid){
   const badge=document.getElementById('pb-'+eid);
   if(!grid) return;
   grid.innerHTML='';
+
+  const marcarTodosDiv=document.createElement('div');
+  marcarTodosDiv.className='presenca-marcar-todos-sr';
+  marcarTodosDiv.innerHTML='<button onclick="event.stopPropagation();marcarTodosPresentesSr(\''+eid+'\',true)">✓ Marcar todos</button>'
+    +'<button onclick="event.stopPropagation();marcarTodosPresentesSr(\''+eid+'\',false)">✗ Desmarcar todos</button>';
+  grid.appendChild(marcarTodosDiv);
+
+  const total=actJ().length;
   let presentes=0,marcados=0;
   actJ().forEach(function(item){var j=item.yid,i=item.i;
     const val=PRESENCA[eid]?.[i];
-    let bg,fg,lbl,title;
-    if(val===1){bg='#27AE60';fg='#fff';lbl='✓';presentes++;marcados++;title='Presente — clique para marcar ausente';}
-    else if(val===0){bg='#E74C3C';fg='#fff';lbl='✗';marcados++;title='Ausente — clique para limpar';}
-    else{bg='#E8E5E0';fg='#999';lbl='·';title='Não registrado — clique para marcar presente';}
-    const absencias=countAbsences(i);
-    const alerta=absencias>=3&&val===0?'outline:2px solid #C0392B;':'';
-    const btn=document.createElement('div');
-    btn.style.cssText=`background:${bg};color:${fg};border-radius:8px;padding:6px 9px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;flex:1;min-width:60px;${alerta}`;
-    btn.title=title;
-    btn.innerHTML=`<span style="flex:1;">${JNOMES[i].split(' ')[0]}</span><span>${lbl}</span>`;
-    btn.onclick=()=>togglePresenca(eid,i);
-    grid.appendChild(btn);
+    let bg,fg,lbl;
+    if(val===1){bg='#27AE60';fg='#fff';lbl='✓';presentes++;marcados++;}
+    else if(val===0){bg='#E74C3C';fg='#fff';lbl='✗';marcados++;}
+    else{bg='#E8E5E0';fg='#999';lbl='·';}
+    const justificado=(JUSTIFICATIVAS_SR[i]||[]).includes(eid);
+    const row=document.createElement('div');
+    row.className='presenca-row';
+    row.onclick=()=>togglePresenca(eid,i);
+    row.innerHTML=`<div style="width:24px;height:24px;border-radius:7px;background:${bg};color:${fg};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;">${lbl}</div>`
+      +`<span class="presenca-nome">${JNOMES[i]}</span>`
+      +(val===0?`<button class="justificar-btn-sr${justificado?' justificado':''}" onclick="event.stopPropagation();toggleJustificativaSr('${eid}',${i})">${justificado?'✓ Justificada':'Justificar falta'}</button>`:'');
+    grid.appendChild(row);
   });
   if(badge){
     if(marcados===0) badge.textContent='';
     else{
-      const cor=presentes===5?'#27AE60':presentes<3?'#E74C3C':'#E67E22';
-      badge.innerHTML=`<span style="color:${cor};font-weight:800;font-size:9px;">${presentes}/5 presentes</span>`;
+      const cor=presentes===total?'#27AE60':presentes<Math.ceil(total/2)?'#E74C3C':'#E67E22';
+      badge.innerHTML=`<span style="color:${cor};font-weight:800;font-size:9px;">${presentes}/${total} presentes</span>`;
     }
   }
+}
+
+// ╔═══════════════════════════════════════════════════╗
+// ║       CALENDÁRIO EDITÁVEL — CRUD DE ATIVIDADES   ║
+// ╚═══════════════════════════════════════════════════╝
+const RESPONSAVEIS_OPCOES_SR = ['Todos', 'Giovanni', 'João Paulo', 'João Vitor', 'Zósimo', 'Greh', 'Outro'];
+let responsaveisSelecionadosSr = [];
+let eventoItensSelecionadosSr = [];
+let itemPickerBlocosAbertosSr = {};
+let eventoItensPickerAbertoSr = false;
+let eventoEditandoIdSr = null;
+let eventoMenuAbertoIdSr = null;
+
+function encontrarEventoSr(id) {
+  return CAL_2S26.find(e => e.id === id) || CAL_1S27.find(e => e.id === id);
+}
+function arrayDoEventoSr(ev) {
+  return CAL_2S26.includes(ev) ? CAL_2S26 : CAL_1S27;
+}
+
+function toggleAddEventoSr() {
+  const body = document.getElementById('addEventoBodySr');
+  const aberto = body.style.display !== 'none';
+  body.style.display = aberto ? 'none' : 'flex';
+  document.getElementById('chevAddEventoSr').style.transform = aberto ? 'rotate(0deg)' : 'rotate(180deg)';
+}
+
+function renderResponsavelChipsSr() {
+  const el = document.getElementById('eventoResponsavelChipsSr');
+  if (!el) return;
+  el.innerHTML = RESPONSAVEIS_OPCOES_SR.map(nome => {
+    const sel = responsaveisSelecionadosSr.includes(nome);
+    return `<button type="button" class="chip-toggle-sr${sel ? ' selected' : ''}" onclick="toggleResponsavelChipSr('${nome.replace(/'/g, "\\'")}')">${nome}</button>`;
+  }).join('');
+  const outroInput = document.getElementById('eventoResponsavelOutroInputSr');
+  outroInput.style.display = responsaveisSelecionadosSr.includes('Outro') ? '' : 'none';
+}
+function toggleResponsavelChipSr(nome) {
+  const idx = responsaveisSelecionadosSr.indexOf(nome);
+  if (idx !== -1) responsaveisSelecionadosSr.splice(idx, 1);
+  else responsaveisSelecionadosSr.push(nome);
+  renderResponsavelChipsSr();
+}
+
+function toggleEventoItensPickerSr() {
+  eventoItensPickerAbertoSr = !eventoItensPickerAbertoSr;
+  document.getElementById('eventoItensPickerSr').style.display = eventoItensPickerAbertoSr ? 'block' : 'none';
+  document.getElementById('chevItensPickerSr').style.transform = eventoItensPickerAbertoSr ? 'rotate(180deg)' : 'rotate(0deg)';
+  if (eventoItensPickerAbertoSr) renderEventoItensPickerSr();
+}
+function togglePickerBlocoSr(blocoId) {
+  itemPickerBlocosAbertosSr[blocoId] = !itemPickerBlocosAbertosSr[blocoId];
+  renderEventoItensPickerSr();
+}
+function toggleEventoItemSr(itemId) {
+  const idx = eventoItensSelecionadosSr.indexOf(itemId);
+  if (idx !== -1) eventoItensSelecionadosSr.splice(idx, 1);
+  else eventoItensSelecionadosSr.push(itemId);
+  renderEventoItensPickerSr();
+  atualizarResumoItensPickerSr();
+}
+function atualizarResumoItensPickerSr() {
+  const el = document.getElementById('resumoItensPickerSr');
+  if (!el) return;
+  const n = eventoItensSelecionadosSr.length;
+  el.textContent = n ? `${n} ${n === 1 ? 'item selecionado' : 'itens selecionados'}` : 'Nenhum item selecionado';
+}
+function renderEventoItensPickerSr() {
+  const el = document.getElementById('eventoItensPickerSr');
+  if (!el) return;
+  el.innerHTML = Object.keys(EIXOS).map(eixoId => {
+    const eixo = EIXOS[eixoId];
+    const blocosHtml = eixo.blockIds.map(bid => {
+      const def = BLOCKS.find(b => b.id === bid);
+      if (!def) return '';
+      const open = !!itemPickerBlocosAbertosSr[bid];
+      const todosIds = [
+        ...def.fixed.map(a => `${bid}|f|${a.id}`),
+        ...def.variable.map(a => `${bid}|v|${a.id}`),
+        ...(def.specialties || []).map(a => `${bid}|s|${a.id}`),
+        ...(def.insignias || []).map(a => `${bid}|g|${a.id}`),
+      ];
+      const nSel = todosIds.filter(id => eventoItensSelecionadosSr.includes(id)).length;
+      function linhas(lista, tipo, rotulo) {
+        if (!lista.length) return '';
+        const itensHtml = lista.map(a => {
+          const id = `${bid}|${tipo}|${a.id}`;
+          const sel = eventoItensSelecionadosSr.includes(id);
+          return `<div class="item-row-sr"><div class="item-check-sr${sel ? ' sel' : ''}" onclick="toggleEventoItemSr('${id}')">${sel ? '✓' : ''}</div><div class="item-text-sr" onclick="toggleEventoItemSr('${id}')">${a.name}</div></div>`;
+        }).join('');
+        return `<div class="grupo-label-sr">${rotulo}</div>${itensHtml}`;
+      }
+      return `<div class="picker-bloco-sr${open ? ' open' : ''}">
+        <div class="picker-bloco-head-sr" onclick="togglePickerBlocoSr('${bid}')">
+          <span>${def.name}</span>
+          ${nSel ? `<span class="picker-bloco-count-sr">${nSel}</span>` : ''}
+          <span class="chev">▾</span>
+        </div>
+        <div class="picker-bloco-body-sr">
+          ${linhas(def.fixed, 'f', '📌 Ações fixas')}
+          ${linhas(def.variable, 'v', '☑ Ações variáveis')}
+          ${linhas(def.specialties || [], 's', '🎖 Especialidades')}
+          ${linhas(def.insignias || [], 'g', '🏅 Insígnias')}
+        </div>
+      </div>`;
+    }).join('');
+    return `<div class="eixo-picker-header-sr" style="background:${EIXO_COLORS[eixoId]}">${eixo.label}</div>${blocosHtml}`;
+  }).join('');
+}
+
+function limparFormularioEventoSr() {
+  ['eventoDataSr', 'eventoNomeSr', 'eventoLocalSr', 'eventoDescricaoSr', 'eventoResponsavelOutroInputSr'].forEach(fid => { document.getElementById(fid).value = ''; });
+  document.getElementById('eventoFmtSr').value = 'T';
+  document.getElementById('eventoSemestreSr').value = '2s26';
+  eventoItensSelecionadosSr = [];
+  itemPickerBlocosAbertosSr = {};
+  eventoItensPickerAbertoSr = false;
+  document.getElementById('eventoItensPickerSr').style.display = 'none';
+  document.getElementById('eventoItensPickerSr').innerHTML = '';
+  document.getElementById('chevItensPickerSr').style.transform = 'rotate(0deg)';
+  atualizarResumoItensPickerSr();
+  responsaveisSelecionadosSr = [];
+  renderResponsavelChipsSr();
+  eventoEditandoIdSr = null;
+  document.getElementById('btnSalvarEventoSr').textContent = '+ Adicionar atividade';
+  document.getElementById('btnCancelarEdicaoEventoSr').style.display = 'none';
+}
+
+function adicionarEventoSr() {
+  const semestre = document.getElementById('eventoSemestreSr').value;
+  const dataISO = document.getElementById('eventoDataSr').value;
+  const nome = document.getElementById('eventoNomeSr').value.trim();
+  const local = document.getElementById('eventoLocalSr').value.trim();
+  const fmt = document.getElementById('eventoFmtSr').value;
+  const descricao = document.getElementById('eventoDescricaoSr').value.trim();
+  const itens = eventoItensSelecionadosSr.slice();
+  const outroNome = document.getElementById('eventoResponsavelOutroInputSr').value.trim();
+  const responsaveis = responsaveisSelecionadosSr.map(n => (n === 'Outro' && outroNome) ? outroNome : n);
+  if (!dataISO || !nome) { alert('Preencha pelo menos a data e o nome da atividade.'); return; }
+
+  const partes = dataISO.split('-');
+  const dia = partes[2];
+  const mes = MESES_ABREV_SR[parseInt(partes[1], 10) - 1] || '';
+
+  if (eventoEditandoIdSr) {
+    const ev = encontrarEventoSr(eventoEditandoIdSr);
+    if (ev) {
+      const arrAtual = arrayDoEventoSr(ev);
+      ev.dataISO = dataISO; ev.dia = dia; ev.mes = mes;
+      ev.nome = nome; ev.local = local; ev.fmt = fmt; ev.txt = descricao;
+      ev.responsaveis = responsaveis; ev.itens = itens;
+      const arrDestino = semestre === '2s26' ? CAL_2S26 : CAL_1S27;
+      if (arrDestino !== arrAtual) {
+        const idx = arrAtual.indexOf(ev);
+        if (idx !== -1) arrAtual.splice(idx, 1);
+        arrDestino.push(ev);
+      }
+    }
+  } else {
+    const id = 'ev' + Date.now() + Math.floor(Math.random() * 1000);
+    const novo = { id, dataISO, dia, mes, n: '•', tipo: 'normal', fmt, blocos: '', comp: '', nome, local, txt: descricao, responsaveis, itens, special: '' };
+    const arr = semestre === '2s26' ? CAL_2S26 : CAL_1S27;
+    arr.push(novo);
+  }
+
+  saveState();
+  limparFormularioEventoSr();
+  document.getElementById('addEventoBodySr').style.display = 'none';
+  document.getElementById('chevAddEventoSr').style.transform = 'rotate(0deg)';
+  renderCal(CAL_2S26, 'cal-2s26', '2s26');
+  renderCal(CAL_1S27, 'cal-1s27', '1s27');
+}
+
+function editarEventoSr(id) {
+  const ev = encontrarEventoSr(id);
+  if (!ev) return;
+  eventoEditandoIdSr = id;
+  eventoMenuAbertoIdSr = null;
+  document.getElementById('addEventoBodySr').style.display = 'flex';
+  document.getElementById('chevAddEventoSr').style.transform = 'rotate(180deg)';
+  document.getElementById('eventoSemestreSr').value = CAL_2S26.includes(ev) ? '2s26' : '1s27';
+  document.getElementById('eventoDataSr').value = ev.dataISO || '';
+  document.getElementById('eventoNomeSr').value = ev.nome || '';
+  document.getElementById('eventoLocalSr').value = ev.local || '';
+  document.getElementById('eventoFmtSr').value = ev.fmt || 'T';
+  document.getElementById('eventoDescricaoSr').value = ev.txt || '';
+  eventoItensSelecionadosSr = (ev.itens || []).slice();
+  atualizarResumoItensPickerSr();
+  responsaveisSelecionadosSr = (ev.responsaveis || []).filter(n => RESPONSAVEIS_OPCOES_SR.includes(n) || n === 'Outro');
+  const nomeCustom = (ev.responsaveis || []).find(n => n && !RESPONSAVEIS_OPCOES_SR.includes(n));
+  if (nomeCustom) {
+    if (!responsaveisSelecionadosSr.includes('Outro')) responsaveisSelecionadosSr.push('Outro');
+    document.getElementById('eventoResponsavelOutroInputSr').value = nomeCustom;
+  }
+  renderResponsavelChipsSr();
+  document.getElementById('btnSalvarEventoSr').textContent = '💾 Salvar edição';
+  document.getElementById('btnCancelarEdicaoEventoSr').style.display = 'block';
+  renderCal(CAL_2S26, 'cal-2s26', '2s26');
+  renderCal(CAL_1S27, 'cal-1s27', '1s27');
+  document.getElementById('addEventoBodySr').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function cancelarEdicaoEventoSr() {
+  limparFormularioEventoSr();
+  document.getElementById('addEventoBodySr').style.display = 'none';
+  document.getElementById('chevAddEventoSr').style.transform = 'rotate(0deg)';
+  renderCal(CAL_2S26, 'cal-2s26', '2s26');
+  renderCal(CAL_1S27, 'cal-1s27', '1s27');
+}
+
+function removerEventoSr(id) {
+  if (!confirm('Remover esta atividade? A presença e os anexos registrados nela também serão apagados.')) { eventoMenuAbertoIdSr = null; renderCal(CAL_2S26, 'cal-2s26', '2s26'); renderCal(CAL_1S27, 'cal-1s27', '1s27'); return; }
+  let idx = CAL_2S26.findIndex(e => e.id === id);
+  if (idx !== -1) CAL_2S26.splice(idx, 1);
+  else { idx = CAL_1S27.findIndex(e => e.id === id); if (idx !== -1) CAL_1S27.splice(idx, 1); }
+  delete PRESENCA[id];
+  delete CAL_EXTRAS[id];
+  saveState();
+  eventoMenuAbertoIdSr = null;
+  renderCal(CAL_2S26, 'cal-2s26', '2s26');
+  renderCal(CAL_1S27, 'cal-1s27', '1s27');
+  renderPresencaSummary();
+}
+
+function toggleEventoMenuSr(id) {
+  eventoMenuAbertoIdSr = (eventoMenuAbertoIdSr === id) ? null : id;
+  renderCal(CAL_2S26, 'cal-2s26', '2s26');
+  renderCal(CAL_1S27, 'cal-1s27', '1s27');
+  if (eventoMenuAbertoIdSr) {
+    setTimeout(() => {
+      document.addEventListener('click', function fechar() {
+        eventoMenuAbertoIdSr = null;
+        renderCal(CAL_2S26, 'cal-2s26', '2s26');
+        renderCal(CAL_1S27, 'cal-1s27', '1s27');
+        document.removeEventListener('click', fechar);
+      }, { once: true });
+    }, 0);
+  }
+}
+
+// ── Marcação automática de progressão pela presença ──────
+function marcarProgressoPorPresencaSr(jovemIdx, itens) {
+  (itens || []).forEach(itemId => {
+    const [blocoId, tipo, aid] = itemId.split('|');
+    if (!S[blocoId]) S[blocoId] = { concluded: [], f: {}, v: {}, s: {}, g: {} };
+    if (!S[blocoId][tipo]) S[blocoId][tipo] = {};
+    if (!S[blocoId][tipo][aid]) S[blocoId][tipo][aid] = [];
+    while (S[blocoId][tipo][aid].length <= jovemIdx) S[blocoId][tipo][aid].push(0);
+    S[blocoId][tipo][aid][jovemIdx] = 1;
+    checkAutoComplete(blocoId, jovemIdx);
+  });
+}
+
+function marcarTodosPresentesSr(eid, presente) {
+  if (!PRESENCA[eid]) PRESENCA[eid] = {};
+  const ev = encontrarEventoSr(eid);
+  actJ().forEach(({ i }) => {
+    if (presente) {
+      if (PRESENCA[eid][i] !== 1) {
+        PRESENCA[eid][i] = 1;
+        if (ev && ev.itens && ev.itens.length) marcarProgressoPorPresencaSr(i, ev.itens);
+      }
+    } else {
+      delete PRESENCA[eid][i];
+    }
+  });
+  savePresenca();
+  if (presente && ev && ev.itens && ev.itens.length) renderAll();
+  fillPresencaGrid(eid);
+  renderPresencaSummary();
+}
+
+// ── Justificativa de falta ────────────────────────────────
+function toggleJustificativaSr(eid, jovemIdx) {
+  JUSTIFICATIVAS_SR[jovemIdx] = JUSTIFICATIVAS_SR[jovemIdx] || [];
+  const idx = JUSTIFICATIVAS_SR[jovemIdx].indexOf(eid);
+  if (idx !== -1) JUSTIFICATIVAS_SR[jovemIdx].splice(idx, 1);
+  else JUSTIFICATIVAS_SR[jovemIdx].push(eid);
+  saveState();
+  fillPresencaGrid(eid);
+  renderPresencaSummary();
+}
+
+// ── Exportar lista de presença ────────────────────────────
+function exportarPresencaSr(eid) {
+  const ev = encontrarEventoSr(eid);
+  if (!ev) return;
+  let txt = `LISTA DE PRESENÇA\n================\n\n`;
+  txt += `Atividade: ${ev.nome || (ev.txt || '').slice(0, 60)}\n`;
+  txt += `Data: ${ev.dia || ''} ${ev.mes || ''}\n`;
+  if (ev.local) txt += `Local: ${ev.local}\n`;
+  if (ev.responsaveis && ev.responsaveis.length) txt += `Responsável(is): ${ev.responsaveis.join(', ')}\n`;
+  if (ev.txt) txt += `Descrição: ${ev.txt}\n`;
+  const ex = CAL_EXTRAS[eid];
+  if (ex) {
+    if (ex.link) txt += `Link: ${ex.link}\n`;
+    if (ex.anexo) txt += `Anexo: ${ex.anexo.name}\n`;
+    if (ex.resposta) txt += `Avaliação da atividade: ${ex.resposta}\n`;
+  }
+  const presentesNomes = [], ausentesNomes = [];
+  actJ().forEach(({ i }) => {
+    const val = PRESENCA[eid] ? PRESENCA[eid][i] : undefined;
+    if (val === 1) presentesNomes.push(JNOMES[i]); else ausentesNomes.push(JNOMES[i]);
+  });
+  txt += `\nPRESENTES (${presentesNomes.length}/${actJ().length}):\n`;
+  if (presentesNomes.length) presentesNomes.forEach(n => { txt += `  [x] ${n}\n`; }); else txt += `  (nenhum registrado)\n`;
+  txt += `\nAUSENTES (${ausentesNomes.length}/${actJ().length}):\n`;
+  if (ausentesNomes.length) ausentesNomes.forEach(n => { txt += `  [ ] ${n}\n`; }); else txt += `  (nenhum)\n`;
+
+  const itens = ev.itens || [];
+  if (itens.length) {
+    const porBloco = {};
+    itens.forEach(itemId => {
+      const [blocoId, tipo, aid] = itemId.split('|');
+      const def = BLOCKS.find(b => b.id === blocoId);
+      if (!def) return;
+      const lista = tipo === 'f' ? def.fixed : tipo === 'v' ? def.variable : tipo === 's' ? (def.specialties || []) : (def.insignias || []);
+      const acao = lista.find(a => a.id === aid);
+      if (!acao) return;
+      porBloco[blocoId] = porBloco[blocoId] || [];
+      porBloco[blocoId].push(acao.name);
+    });
+    txt += `\nITENS DE PROGRESSÃO TRABALHADOS:\n`;
+    Object.keys(porBloco).forEach(b => {
+      const def = BLOCKS.find(x => x.id === b);
+      txt += `\n${def ? def.name : b}:\n`;
+      porBloco[b].forEach(t => { txt += `  • ${t}\n`; });
+    });
+  }
+
+  const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `presenca_${ev.dataISO || ((ev.mes || '') + '_' + (ev.dia || '')) || 'sem-data'}_${(ev.nome || 'atividade').replace(/[^a-zA-Z0-9]+/g, '_')}.txt`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  eventoMenuAbertoIdSr = null;
+  renderCal(CAL_2S26, 'cal-2s26', '2s26');
+  renderCal(CAL_1S27, 'cal-1s27', '1s27');
 }
 
 function renderCal(events, containerId, pfx){
   const list=document.getElementById(containerId);
   list.innerHTML='';
   const tipoColor={normal:'strip-normal',leve:'strip-leve',pernoite:'strip-pernoite',planejar:'strip-planejar',avaliar:'strip-avaliar',sem:'strip-sem'};
-  events.forEach((ev,idx)=>{
-    const eid=`${pfx}_${idx}`;
+  events.forEach((ev)=>{
+    const eid=ev.id;
     if(ev.special==='sem'){
       const card=document.createElement('div');
       card.className='cal-card';
       card.innerHTML=`<div class="cal-strip strip-sem" style="background:#B0BEC5;">
         <div class="strip-idx">${ev.n}</div>
-        <div class="strip-day">31</div>
-        <div class="strip-mon">OUT</div>
+        <div class="strip-day">${ev.dia}</div>
+        <div class="strip-mon">${ev.mes}</div>
       </div>
       <div class="cal-body">
         <div class="cal-meta"><span class="fmt-badge" style="background:#F5F5F5;color:#999;">—</span>
@@ -938,15 +1392,27 @@ function renderCal(events, containerId, pfx){
     if(ev.special==='radical') specialHtml=`<div><span class="special-banner" style="background:#6A1B9A;color:#fff;font-size:9px;font-weight:900;padding:2px 7px;border-radius:4px;">⚡ RADICAL DAY DISTRITAL</span></div>`;
     if(ev.special==='cerimonia') specialHtml=`<div><span class="special-banner" style="background:#6A1B9A;">🏆 CERIMÔNIA DE PASSAGEM</span></div>`;
     const stripColor=(tipoColor[ev.tipo])||'strip-normal';
+    const nomeHtml = ev.nome ? `<div style="font-size:12px;font-weight:800;color:var(--vinho);margin-bottom:3px;">${ev.nome}</div>` : '';
+    const localHtml = ev.local ? `<div style="font-size:10px;color:var(--muted);margin-bottom:2px;">📍 ${ev.local}</div>` : '';
+    const respHtml = (ev.responsaveis && ev.responsaveis.length) ? `<div style="font-size:10px;color:var(--muted);margin-bottom:4px;">👤 ${ev.responsaveis.join(', ')}</div>` : '';
+    const menuAberto = eventoMenuAbertoIdSr === eid;
     // Main card row (strip + body)
     const mainRow=document.createElement('div');
     mainRow.style.cssText='display:flex;';
     mainRow.innerHTML=`<div class="cal-strip ${stripColor}">
       <div class="strip-idx">${ev.n}</div>
-      <div class="strip-day" style="font-size:${ev.dia.length>2?'13px':'18px'}">${ev.dia}</div>
+      <div class="strip-day" style="font-size:${String(ev.dia).length>2?'13px':'18px'}">${ev.dia}</div>
       <div class="strip-mon">${ev.mes}</div>
     </div>
-    <div class="cal-body">${metaHtml}${specialHtml}<div class="cal-text">${ev.txt}</div></div>`;
+    <div class="cal-body" style="flex:1;position:relative;">
+      <button class="evento-menu-btn-sr" style="position:absolute;top:0;right:0;" onclick="event.stopPropagation();toggleEventoMenuSr('${eid}')">⋮</button>
+      <div style="padding-right:20px;">${nomeHtml}${localHtml}${respHtml}${metaHtml}${specialHtml}<div class="cal-text">${ev.txt}</div></div>
+      ${menuAberto?`<div class="evento-dropdown-sr" onclick="event.stopPropagation()">
+        <button onclick="editarEventoSr('${eid}')">✏️ Editar</button>
+        <button onclick="exportarPresencaSr('${eid}')">📄 Exportar presença</button>
+        <button class="remover" onclick="removerEventoSr('${eid}')">🗑️ Excluir</button>
+      </div>`:''}
+    </div>`;
     card.appendChild(mainRow);
     // Attendance section
     const det=document.createElement('details');
@@ -957,7 +1423,7 @@ function renderCal(events, containerId, pfx){
       <span style="font-size:9px;">▼</span>
     </summary>
     <div style="padding:6px 11px 10px;">
-      <div style="display:flex;gap:5px;flex-wrap:wrap;" id="pg-${eid}"></div>
+      <div style="display:flex;flex-direction:column;gap:2px;" id="pg-${eid}"></div>
     </div>`;
     card.appendChild(det);
 
@@ -1659,7 +2125,7 @@ function deleteYouth(yid){
       const bl=S[blockId];
       if(Array.isArray(bl.concluded)) bl.concluded.splice(idx,1);
       const rm=sec=>{if(!sec)return;for(const aid in sec)if(Array.isArray(sec[aid]))sec[aid].splice(idx,1);};
-      rm(bl.f);rm(bl.v);
+      rm(bl.f);rm(bl.v);rm(bl.s);rm(bl.g);
     }
   }
 
@@ -1675,6 +2141,14 @@ function deleteYouth(yid){
       }
       PRESENCA[eid]=novo;
     }
+    // Reindexar justificativas de falta também
+    const novasJust={};
+    for(const k in JUSTIFICATIVAS_SR){
+      const ki=parseInt(k);
+      if(ki<idx) novasJust[k]=JUSTIFICATIVAS_SR[k];
+      else if(ki>idx) novasJust[String(ki-1)]=JUSTIFICATIVAS_SR[k];
+    }
+    JUSTIFICATIVAS_SR=novasJust;
   }
 
   // ── 3. Remove do EP_DATA ──────────────────────────
@@ -1879,6 +2353,7 @@ async function iniciarApp(){
   syncJovens();
   renderAll();
   loadPresenca();
+  renderResponsavelChipsSr();
   renderCal(CAL_2S26,'cal-2s26','2s26');
   renderCal(CAL_1S27,'cal-1s27','1s27');
   loadEPData();
