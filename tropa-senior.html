@@ -347,11 +347,14 @@ body{padding-bottom:50px;}
 
     <!-- Resumo de Presenças -->
     <div style="margin:0 12px 12px;background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;">
-      <div style="background:var(--azul);padding:10px 13px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="background:var(--azul);padding:10px 13px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="toggleResumoPresencasSr()">
         <span style="color:#fff;font-size:12px;font-weight:800;">📋 Resumo de Presenças</span>
-        <span style="color:rgba(255,255,255,.7);font-size:10px;">3 faltas = inscrição reavaliada</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="color:rgba(255,255,255,.7);font-size:10px;">3 faltas = inscrição reavaliada</span>
+          <span id="chevResumoPresencasSr" style="color:#fff;font-size:11px;transition:transform .2s;transform:rotate(0deg);">▾</span>
+        </div>
       </div>
-      <div id="presenca-summary" style="padding:8px 13px 10px;"></div>
+      <div id="presenca-summary" style="padding:8px 13px 10px;display:none;"></div>
     </div>
 
     <div class="cal-legend" style="margin-top:0;">
@@ -968,8 +971,18 @@ function savePresenca(){
 function countAbsences(jovemIdx){
   return Object.values(PRESENCA).filter(ev=>ev[jovemIdx]===0).length;
 }
+let resumoPresencasAbertoSr = false;
+function toggleResumoPresencasSr() {
+  resumoPresencasAbertoSr = !resumoPresencasAbertoSr;
+  document.getElementById('presenca-summary').style.display = resumoPresencasAbertoSr ? 'block' : 'none';
+  document.getElementById('chevResumoPresencasSr').style.transform = resumoPresencasAbertoSr ? 'rotate(180deg)' : 'rotate(0deg)';
+}
+
 function renderPresencaSummary(){
   const c=document.getElementById('presenca-summary');
+  if (c) { c.style.display = resumoPresencasAbertoSr ? 'block' : 'none'; }
+  const chev = document.getElementById('chevResumoPresencasSr');
+  if (chev) chev.style.transform = resumoPresencasAbertoSr ? 'rotate(180deg)' : 'rotate(0deg)';
   if(!c) return;
   let html='';
   actJ().forEach(function(item){var j=item.yid,i=item.i;

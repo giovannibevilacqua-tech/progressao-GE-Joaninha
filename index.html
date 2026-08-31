@@ -263,6 +263,7 @@ text-align: center;
 .ramo-btn.active { background: var(--vinho); color: #fff; border-color: var(--vinho); }
 
 .tabs-linha { display: flex; background: var(--card); border-bottom: 2px solid var(--border); position: sticky; top: 0; z-index: 200; box-shadow: 0 2px 6px rgba(0,0,0,.1); overflow-x: auto; overflow-y: hidden; margin-top: 14px; }
+.cabecalho-fixo { position: sticky; top: 0; z-index: 310; background: var(--bg); }
 .tabs-linha .tab-btn-linha {
 flex: 1; min-width: 80px; padding: 16px 6px; border: none; border-bottom: 3px solid transparent; background: transparent;
 font-size: 11px; font-weight: 700; color: var(--muted); cursor: pointer; position: relative;
@@ -307,12 +308,6 @@ border-radius: 12px; border: 2px solid var(--text); background: #F5F3EF; color: 
 .resumo-bar { height: 100%; border-radius: 20px; transition: width .4s ease; }
 .reset-btn { display: block; margin: 16px auto 32px; background: none; border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; font-size: 11px; color: var(--muted); cursor: pointer; }
 .reset-btn:hover { border-color: #E74C3C; color: #E74C3C; }
-.backup-row { display: flex; gap: 8px; justify-content: center; margin: -20px auto 32px; padding: 0 14px; }
-.backup-btn {
-flex: 1; max-width: 180px; text-align: center; background: none; border: 1px solid var(--border);
-border-radius: 20px; padding: 7px 12px; font-size: 11px; font-weight: 700; color: var(--muted); cursor: pointer;
-}
-.backup-btn:hover { border-color: var(--vinho); color: var(--vinho); }
 
 .backup-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--vinho); color: #fff; z-index: 600; box-shadow: 0 -2px 10px rgba(0,0,0,.25); }
 .backup-bar-handle { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 14px; cursor: pointer; font-size: 11px; font-weight: 700; }
@@ -464,8 +459,8 @@ padding: 12px; margin: 14px 14px 0; border-radius: var(--r); box-shadow: var(--s
 }
 .ciclo-card { background: var(--card); border-radius: var(--r); box-shadow: var(--shadow); margin: 10px 14px 0; padding: 14px; }
 .ciclo-card-header {
-display: flex; align-items: center; justify-content: space-between; padding: 15px 16px;
-background: linear-gradient(135deg, var(--vinho) 0%, #23884F 100%); border-radius: var(--r) var(--r) 0 0;
+display: flex; align-items: center; justify-content: space-between; padding: 12px 16px;
+border-radius: var(--r) var(--r) 0 0;
 cursor: pointer; color: #fff;
 }
 .ciclo-card-header:hover { filter: brightness(1.05); }
@@ -483,6 +478,7 @@ cursor: pointer; color: #fff;
 </head>
 <body>
 
+<div class="cabecalho-fixo" id="cabecalhoFixo">
 <header class="header">
 <div class="header-flor">⚜</div>
 <h1>PROGRESSÃO JOVENS<br>GE JOANINHA</h1>
@@ -495,10 +491,11 @@ cursor: pointer; color: #fff;
 <button class="ramo-btn active" id="ramoBtnEscoteira" onclick="mudarRamo('escoteira')">🏕️ Tropa Escoteira</button>
 <button class="ramo-btn" id="ramoBtnSenior" onclick="mudarRamo('senior')">🎓 Tropa Sênior</button>
 </div>
+</div>
 
 <div id="ramo-escoteira">
 
-<nav class="tabs-linha">
+<nav class="tabs-linha" id="tabsLinha">
 <button class="tab-btn-linha active" id="tabJovem" onclick="mudarPagina('jovem')">👤 Por Jovem</button>
 <button class="tab-btn-linha" id="tabTabela" onclick="mudarPagina('tabela')">📊 Por Bloco</button>
 <button class="tab-btn-linha" id="tabCalendario" onclick="mudarPagina('calendario')">📅 Calendário</button>
@@ -1900,6 +1897,8 @@ window.scrollTo(0, 0);
 if (r === 'senior') {
 requestAnimationFrame(ajustarAlturaIframeSenior);
 setTimeout(ajustarAlturaIframeSenior, 50);
+} else {
+requestAnimationFrame(ajustarTopoTabsLinha);
 }
 }
 
@@ -2874,15 +2873,15 @@ return h;
 
 function renderPreviewBlocosCiclo(sem) {
 const selecionados = sem.blocos.filter(Boolean);
-if (!selecionados.length) return `<div style="font-size:11px;color:var(--muted);padding:2px 14px 14px;">Nenhum bloco selecionado ainda.</div>`;
+if (!selecionados.length) return `<div style="font-size:11px;color:var(--muted);padding:2px 14px 16px;">Nenhum bloco selecionado ainda.</div>`;
 const chips = selecionados.map(b => {
 const def = BLOCOS[b];
 if (!def) return '';
 const eixo = EIXOS.find(e => e.blocos.includes(b));
 const cor = eixo ? eixo.cor : '#666';
-return `<div style="background:${cor}18;border-left:3px solid ${cor};border-radius:6px;padding:6px 8px;font-size:10px;font-weight:700;color:${cor};line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${def.nome}</div>`;
+return `<div style="background:${cor};border-radius:10px;padding:14px 10px;font-size:12px;font-weight:800;color:#fff;line-height:1.35;min-height:64px;display:flex;align-items:center;justify-content:center;text-align:center;box-shadow:0 2px 5px rgba(0,0,0,.12);">${def.nome}</div>`;
 }).join('');
-return `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:0 14px 14px;">${chips}</div>`;
+return `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:2px 14px 16px;">${chips}</div>`;
 }
 
 function renderPaginaCiclo() {
@@ -2893,8 +2892,9 @@ const blocosHtml = sem.blocos.map((b, j) => `<div style="display:flex;align-item
 <button class="btn-secundario" style="padding:6px 9px;font-size:11px;color:#E74C3C;flex-shrink:0;" onclick="removerBlocoCiclo(${i},${j})" title="Remover este bloco">✕</button>
 </div>`).join('');
 const aberto = !!cicloCardsAbertos[i];
+const corCard = corPara(i);
 return `<div class="ciclo-card" style="padding:0;overflow:hidden;">
-<div class="ciclo-card-header" onclick="toggleCicloCard(${i})">
+<div class="ciclo-card-header" style="background:${corCard};" onclick="toggleCicloCard(${i})">
 <div>
 <div class="ciclo-card-header-titulo">${i+1}º Semestre do Ciclo</div>
 ${sem.ano ? `<div class="ciclo-card-header-periodo">${fmtIntervaloSemestreDisplay(sem)}</div>` : ''}
@@ -2945,13 +2945,24 @@ scrollAutoIntervalo = setInterval(() => window.scrollBy(0, velocidade), 16);
 document.addEventListener('dragend', function() { clearInterval(scrollAutoIntervalo); });
 document.addEventListener('drop', function() { clearInterval(scrollAutoIntervalo); });
 
+function ajustarTopoTabsLinha() {
+const cabecalho = document.getElementById('cabecalhoFixo');
+const tabs = document.getElementById('tabsLinha');
+if (!cabecalho || !tabs) return;
+tabs.style.top = cabecalho.offsetHeight + 'px';
+}
+window.addEventListener('resize', ajustarTopoTabsLinha);
+requestAnimationFrame(() => requestAnimationFrame(ajustarTopoTabsLinha));
+
 async function iniciar() {
 document.getElementById('roster').innerHTML = '<div style="padding:12px;font-size:12px;color:var(--muted);text-align:center;">Carregando dados compartilhados…</div>';
 atualizarResumoItensPicker();
 renderResponsavelChips();
 renderEventoAnexoArea();
+ajustarTopoTabsLinha();
 await iniciarSync();
 renderRoster();
+ajustarTopoTabsLinha();
 }
 iniciar();
 </script>
