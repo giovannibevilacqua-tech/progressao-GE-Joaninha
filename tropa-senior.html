@@ -134,6 +134,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .extra-link-input,.extra-resposta-input{width:100%;padding:8px 10px;border:2px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;outline:none;}
 .extra-link-input:focus,.extra-resposta-input:focus{border-color:var(--vinho);}
 .evento-link-sr{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--vinho);text-decoration:none;}
+.toggle-externa-row-sr{display:flex;align-items:center;gap:9px;padding:10px 12px;background:#FAFAF8;border:1px solid var(--border);border-radius:8px;cursor:pointer;}
+.toggle-externa-row-sr input[type=checkbox]{width:17px;height:17px;accent-color:var(--vinho);cursor:pointer;flex-shrink:0;}
+.toggle-externa-row-sr label{font-size:12px;font-weight:600;color:var(--text);cursor:pointer;}
+.externa-badge-sr{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:800;padding:2px 8px;border-radius:20px;background:#E8F5E9;color:#1E7A34;border:1px solid #A8D8B0;margin-right:5px;}
 .grupo-label-sr{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:8px 0 4px;}
 .item-row-sr{display:flex;align-items:flex-start;gap:8px;padding:6px 6px;border-radius:6px;}
 .item-row-sr:hover{background:#F5F2EE;}
@@ -370,6 +374,10 @@ body{padding-bottom:50px;}
             <option value="Av">Avaliação (Av)</option>
             <option value="Esp">Especial (Esp)</option>
           </select>
+        </div>
+        <div class="toggle-externa-row-sr" onclick="event.stopPropagation();document.getElementById('eventoExternaSr').click()">
+          <input type="checkbox" id="eventoExternaSr">
+          <label for="eventoExternaSr" onclick="event.stopPropagation()">🌍 Atividade externa (fora da rotina normal da tropa)</label>
         </div>
         <div>
           <label class="f-label">Itens de progressão trabalhados</label>
@@ -623,13 +631,14 @@ async function loadState(){
       if (dados.CAL_2S26) { CAL_2S26.length = 0; dados.CAL_2S26.forEach(x => CAL_2S26.push(x)); }
       if (dados.CAL_1S27) { CAL_1S27.length = 0; dados.CAL_1S27.forEach(x => CAL_1S27.push(x)); }
       if (dados.JUSTIFICATIVAS_SR) JUSTIFICATIVAS_SR = dados.JUSTIFICATIVAS_SR;
+      if (dados.METAS_SR) METAS_SR = dados.METAS_SR;
     } else {
       S = deepCopy(INICIAL);
     }
   }catch(e){ S = deepCopy(INICIAL); console.error('Tropa Sênior: usando dados padrão (falha ou demora ao buscar):', e); }
 }
 async function saveState(){
-  const payload = JSON.stringify({ S, JOVENS, JNOMES, JCORES, PRESENCA, YOUTH_DATA, EP_DATA, CAL_EXTRAS, CAL_2S26, CAL_1S27, JUSTIFICATIVAS_SR });
+  const payload = JSON.stringify({ S, JOVENS, JNOMES, JCORES, PRESENCA, YOUTH_DATA, EP_DATA, CAL_EXTRAS, CAL_2S26, CAL_1S27, JUSTIFICATIVAS_SR, METAS_SR });
   try {
     await fetch(REST_URL_SR, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
     onDataSaved();
@@ -874,6 +883,18 @@ function renderEixo(eixoId){
 let PRESENCA = {};
 let CAL_EXTRAS = {};
 let JUSTIFICATIVAS_SR = {};
+let METAS_SR = {
+  '2s26': [
+    { icone: '⭐', texto: 'Paulo: alcança Azimute (blocos 11→12: Consumo + Comunidade)' },
+    { icone: '⭐', texto: 'Thauany: alcança Azimute (blocos 12→15)' }
+  ],
+  '1s27': [
+    { icone: '🏆', texto: 'Paulo: 18 blocos — Reconhecimento de Escoteiro da Pátria' },
+    { icone: '🏆', texto: 'Thauany: 18 blocos — Reconhecimento de Escoteiro da Pátria' }
+  ]
+};
+let metaEditandoSr = null;
+let metaFormAbertoSr = null;
 
 function loadPresenca(){
   /* PRESENCA já é carregado junto em loadState() */
@@ -1127,6 +1148,7 @@ function renderEventoItensPickerSr() {
 function limparFormularioEventoSr() {
   ['eventoDataSr', 'eventoNomeSr', 'eventoLocalSr', 'eventoDescricaoSr', 'eventoResponsavelOutroInputSr'].forEach(fid => { document.getElementById(fid).value = ''; });
   document.getElementById('eventoFmtSr').value = 'T';
+  document.getElementById('eventoExternaSr').checked = false;
   document.getElementById('eventoSemestreSr').value = '2s26';
   eventoItensSelecionadosSr = [];
   itemPickerBlocosAbertosSr = {};
@@ -1148,6 +1170,7 @@ function adicionarEventoSr() {
   const nome = document.getElementById('eventoNomeSr').value.trim();
   const local = document.getElementById('eventoLocalSr').value.trim();
   const fmt = document.getElementById('eventoFmtSr').value;
+  const externa = document.getElementById('eventoExternaSr').checked;
   const descricao = document.getElementById('eventoDescricaoSr').value.trim();
   const itens = eventoItensSelecionadosSr.slice();
   const outroNome = document.getElementById('eventoResponsavelOutroInputSr').value.trim();
@@ -1163,7 +1186,7 @@ function adicionarEventoSr() {
     if (ev) {
       const arrAtual = arrayDoEventoSr(ev);
       ev.dataISO = dataISO; ev.dia = dia; ev.mes = mes;
-      ev.nome = nome; ev.local = local; ev.fmt = fmt; ev.txt = descricao;
+      ev.nome = nome; ev.local = local; ev.fmt = fmt; ev.externa = externa; ev.txt = descricao;
       ev.responsaveis = responsaveis; ev.itens = itens;
       const arrDestino = semestre === '2s26' ? CAL_2S26 : CAL_1S27;
       if (arrDestino !== arrAtual) {
@@ -1174,7 +1197,7 @@ function adicionarEventoSr() {
     }
   } else {
     const id = 'ev' + Date.now() + Math.floor(Math.random() * 1000);
-    const novo = { id, dataISO, dia, mes, n: '•', tipo: 'normal', fmt, blocos: '', comp: '', nome, local, txt: descricao, responsaveis, itens, special: '' };
+    const novo = { id, dataISO, dia, mes, n: '•', tipo: 'normal', fmt, externa, blocos: '', comp: '', nome, local, txt: descricao, responsaveis, itens, special: '' };
     const arr = semestre === '2s26' ? CAL_2S26 : CAL_1S27;
     arr.push(novo);
   }
@@ -1199,6 +1222,7 @@ function editarEventoSr(id) {
   document.getElementById('eventoNomeSr').value = ev.nome || '';
   document.getElementById('eventoLocalSr').value = ev.local || '';
   document.getElementById('eventoFmtSr').value = ev.fmt || 'T';
+  document.getElementById('eventoExternaSr').checked = !!ev.externa;
   document.getElementById('eventoDescricaoSr').value = ev.txt || '';
   eventoItensSelecionadosSr = (ev.itens || []).slice();
   atualizarResumoItensPickerSr();
@@ -1392,7 +1416,7 @@ function renderCal(events, containerId, pfx){
     if(ev.special==='radical') specialHtml=`<div><span class="special-banner" style="background:#6A1B9A;color:#fff;font-size:9px;font-weight:900;padding:2px 7px;border-radius:4px;">⚡ RADICAL DAY DISTRITAL</span></div>`;
     if(ev.special==='cerimonia') specialHtml=`<div><span class="special-banner" style="background:#6A1B9A;">🏆 CERIMÔNIA DE PASSAGEM</span></div>`;
     const stripColor=(tipoColor[ev.tipo])||'strip-normal';
-    const nomeHtml = ev.nome ? `<div style="font-size:12px;font-weight:800;color:var(--vinho);margin-bottom:3px;">${ev.nome}</div>` : '';
+    const nomeHtml = ev.nome ? `<div style="font-size:12px;font-weight:800;color:var(--vinho);margin-bottom:3px;">${ev.externa ? `<span class="externa-badge-sr">🌍 Externa</span>` : ''}${ev.nome}</div>` : '';
     const localHtml = ev.local ? `<div style="font-size:10px;color:var(--muted);margin-bottom:2px;">📍 ${ev.local}</div>` : '';
     const respHtml = (ev.responsaveis && ev.responsaveis.length) ? `<div style="font-size:10px;color:var(--muted);margin-bottom:4px;">👤 ${ev.responsaveis.join(', ')}</div>` : '';
     const menuAberto = eventoMenuAbertoIdSr === eid;
@@ -1466,7 +1490,100 @@ function renderCal(events, containerId, pfx){
 const EIXO_COLORS={hv:'var(--hv-b)',ma:'var(--ma-b)',pd:'var(--pd-b)',sb:'var(--sb-b)'};
 const EIXO_BG={hv:'var(--hv)',ma:'var(--ma)',pd:'var(--pd)',sb:'var(--sb)'};
 
-function renderSemestres(){
+// ── Metas/marcos editáveis por semestre ───────────────────
+function metaSemY(sem) {
+  if (!METAS_SR[sem]) METAS_SR[sem] = [];
+  return METAS_SR[sem];
+}
+function toggleMetaFormSr(sem) {
+  metaFormAbertoSr = (metaFormAbertoSr === sem) ? null : sem;
+  metaEditandoSr = null;
+  renderSemestres();
+}
+function editarMetaSr(sem, idx) {
+  metaEditandoSr = { sem, idx };
+  metaFormAbertoSr = sem;
+  renderSemestres();
+}
+function salvarMetaSr(sem) {
+  const icone = document.getElementById('metaIconeSr_' + sem).value;
+  const texto = document.getElementById('metaTextoSr_' + sem).value.trim();
+  if (!texto) { alert('Escreva o texto da meta.'); return; }
+  const lista = metaSemY(sem);
+  if (metaEditandoSr && metaEditandoSr.sem === sem) lista[metaEditandoSr.idx] = { icone, texto };
+  else lista.push({ icone, texto });
+  metaEditandoSr = null;
+  metaFormAbertoSr = null;
+  saveState();
+  renderSemestres();
+}
+function removerMetaSr(sem, idx) {
+  if (!confirm('Remover esta meta?')) return;
+  metaSemY(sem).splice(idx, 1);
+  saveState();
+  renderSemestres();
+}
+function cancelarMetaSr() {
+  metaEditandoSr = null;
+  metaFormAbertoSr = null;
+  renderSemestres();
+}
+function renderMetasBoxSr(sem, titulo) {
+  const lista = metaSemY(sem);
+  const formAberto = metaFormAbertoSr === sem;
+  const editandoIdx = (metaEditandoSr && metaEditandoSr.sem === sem) ? metaEditandoSr.idx : null;
+  const valIcone = editandoIdx !== null ? lista[editandoIdx].icone : '⭐';
+  const valTexto = editandoIdx !== null ? lista[editandoIdx].texto : '';
+  let h = `<div class="milestone-box">
+    <div class="section-label" style="margin-bottom:7px;">${titulo}</div>`;
+  lista.forEach((m, idx) => {
+    h += `<div class="milestone-item" style="align-items:center;">
+      <span class="milestone-star">${m.icone}</span>
+      <div style="flex:1;">${m.texto}</div>
+      <div style="display:flex;gap:4px;flex-shrink:0;">
+        <button class="btn-ic" onclick="editarMetaSr('${sem}',${idx})">✏️</button>
+        <button class="btn-ic" style="color:#E74C3C;" onclick="removerMetaSr('${sem}',${idx})">🗑️</button>
+      </div>
+    </div>`;
+  });
+  if (!lista.length && !formAberto) h += `<div style="font-size:11px;color:var(--muted);padding:4px 0;">Nenhuma meta cadastrada ainda.</div>`;
+  if (formAberto) {
+    h += `<div style="margin-top:8px;padding:10px;background:#FAFAF8;border-radius:8px;display:flex;flex-direction:column;gap:8px;">
+      <select class="ep-sel" id="metaIconeSr_${sem}">
+        <option value="⭐" ${valIcone === '⭐' ? 'selected' : ''}>⭐ Marco</option>
+        <option value="🏆" ${valIcone === '🏆' ? 'selected' : ''}>🏆 Conquista</option>
+        <option value="🎯" ${valIcone === '🎯' ? 'selected' : ''}>🎯 Meta</option>
+        <option value="📌" ${valIcone === '📌' ? 'selected' : ''}>📌 Observação</option>
+      </select>
+      <textarea class="ep-ta" id="metaTextoSr_${sem}" placeholder="Ex: Paulo alcança Azimute (blocos 11→12)" rows="2">${valTexto}</textarea>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-prim" style="flex:1;padding:8px;font-size:12px;" onclick="salvarMetaSr('${sem}')">💾 Salvar</button>
+        <button class="btn-sec" style="flex:1;padding:8px;font-size:12px;" onclick="cancelarMetaSr()">Cancelar</button>
+      </div>
+    </div>`;
+  } else {
+    h += `<button class="btn-ic" style="margin-top:8px;width:100%;text-align:center;" onclick="toggleMetaFormSr('${sem}')">+ Adicionar meta</button>`;
+  }
+  h += `</div>`;
+  return h;
+}
+
+function renderExternasBoxSr(events) {
+    const lista = events.filter(e => e.externa);
+    let h = `<div class="sem-special" style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px;">
+      <div class="section-label" style="margin-bottom:7px;">📍 Atividades externas marcadas no calendário</div>`;
+    if (!lista.length) {
+      h += `<div style="font-size:11px;color:var(--muted);">Nenhuma atividade externa marcada ainda. Marque o toggle "🌍 Atividade externa" ao criar uma atividade no Calendário.</div>`;
+    } else {
+      lista.forEach(ev => {
+        h += `<div class="sem-special-item"><span class="sem-special-icon">📍</span><div><strong>${ev.dia}/${ev.mes}:</strong> ${ev.nome || (ev.txt || '').slice(0, 60)}</div></div>`;
+      });
+    }
+    h += `</div>`;
+    return h;
+  }
+
+  function renderSemestres(){
   const c=document.getElementById('sem-content');
   const blks1=BLOCKS.filter(b=>b.focus&&b.semester===1);
   const blks2=BLOCKS.filter(b=>b.focus&&b.semester===2);
@@ -1510,11 +1627,8 @@ function renderSemestres(){
         <div class="sem-special-item"><span class="sem-special-icon">⚠</span><div><strong>31/out:</strong> Sem atividade (chefia em curso 30/10)</div></div>
         <div class="sem-special-item"><span class="sem-special-icon">⛺</span><div><strong>20-22/nov:</strong> Acampamento de Grupo — Bloco 7 (Vida ao Ar Livre) concluído integralmente</div></div>
       </div>
-      <div class="milestone-box">
-        <div class="section-label" style="margin-bottom:7px;">Milestones esperados ao final do 2S2026</div>
-        <div class="milestone-item"><span class="milestone-star">⭐</span><div><span class="milestone-text">Paulo:</span> alcança <strong>Azimute</strong> <span class="milestone-sub">(blocos 11→12: Consumo + Comunidade)</span></div></div>
-        <div class="milestone-item"><span class="milestone-star">⭐</span><div><span class="milestone-text">Thauany:</span> alcança <strong>Azimute</strong> <span class="milestone-sub">(blocos 12→15)</span></div></div>
-      </div>
+      ${renderExternasBoxSr(CAL_2S26)}
+      ${renderMetasBoxSr('2s26', 'Milestones esperados ao final do 2S2026')}
       <div class="prog-overview">
         <div class="prog-overview-title">Previsão de blocos ao final do 2S2026</div>
         ${progRows(1)}
@@ -1532,11 +1646,8 @@ function renderSemestres(){
       <div class="sem-special">
         <div class="sem-special-item"><span class="sem-special-icon">🏆</span><div><strong>Mai/Jun 2027:</strong> Cerimônia de Passagem de Paulo e Thauany — Reconhecimento de Escoteiro da Pátria + passagem para o Ramo Pioneiro</div></div>
       </div>
-      <div class="milestone-box">
-        <div class="section-label" style="margin-bottom:7px;">Milestones ao final do 1S2027</div>
-        <div class="milestone-item"><span class="milestone-star">🏆</span><div><span class="milestone-text">Paulo:</span> <strong>18 blocos</strong> — Reconhecimento de Escoteiro da Pátria</div></div>
-        <div class="milestone-item"><span class="milestone-star">🏆</span><div><span class="milestone-text">Thauany:</span> <strong>18 blocos</strong> — Reconhecimento de Escoteiro da Pátria</div></div>
-      </div>
+      ${renderExternasBoxSr(CAL_1S27)}
+      ${renderMetasBoxSr('1s27', 'Milestones ao final do 1S2027')}
       <div class="prog-overview">
         <div class="prog-overview-title">Previsão de blocos ao final do 1S2027</div>
         ${progRows(2)}

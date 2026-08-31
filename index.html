@@ -403,6 +403,13 @@ border: 1px solid var(--border); background: #FAFAF8; color: var(--text); cursor
 .fmt-PN { background: #D6EAF8; color: #0D47A1; }
 .fmt-Av { background: #EAFAF1; color: #1A7434; }
 .fmt-Esp { background: #FFF9C4; color: #7A4A00; }
+.toggle-externa-row {
+display: flex; align-items: center; gap: 9px; padding: 10px 12px; background: #FAFAF8;
+border: 1px solid var(--border); border-radius: 8px; cursor: pointer;
+}
+.toggle-externa-row input[type=checkbox] { width: 17px; height: 17px; accent-color: var(--vinho); cursor: pointer; flex-shrink: 0; }
+.toggle-externa-row label { font-size: 12px; font-weight: 600; color: var(--text); cursor: pointer; }
+.externa-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 20px; background: #E8F5E9; color: #1E7A34; border: 1px solid #A8D8B0; margin-right: 5px; }
 .presenca-section { margin-top: 8px; padding-top: 8px; border-top: 1px solid #F2EFEA; }
 .presenca-toggle {
 border: none; background: #F5F3EF; color: var(--text); font-size: 11px; font-weight: 700;
@@ -591,6 +598,10 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 <option value="Av">Avaliação (Av)</option>
 <option value="Esp">Especial (Esp)</option>
 </select>
+</div>
+<div class="toggle-externa-row" onclick="event.stopPropagation();document.getElementById('eventoExterna').click()">
+<input type="checkbox" id="eventoExterna">
+<label for="eventoExterna" onclick="event.stopPropagation()">🌍 Atividade externa (fora da rotina normal da tropa)</label>
 </div>
 <div>
 <label class="campo-label">Itens de progressão trabalhados</label>
@@ -2073,6 +2084,7 @@ return Object.assign({}, ev, {
 responsaveis,
 itens,
 tipo: ev.tipo || 'T',
+externa: !!ev.externa,
 presentes: ev.presentes || []
 });
 }
@@ -2174,6 +2186,7 @@ return `<div class="eixo-picker-header" style="background:${eixo.cor}">${eixo.no
 function limparFormularioEvento() {
 ['eventoData','eventoNome','eventoLocal','eventoDescricao','eventoResponsavelOutroInput','eventoLink','eventoResposta'].forEach(fid => { document.getElementById(fid).value = ''; });
 document.getElementById('eventoTipo').value = 'T';
+document.getElementById('eventoExterna').checked = false;
 eventoItensSelecionados = [];
 itemPickerBlocosAbertos = {};
 eventoItensPickerAberto = false;
@@ -2258,6 +2271,7 @@ document.getElementById('eventoData').value = ev.data;
 document.getElementById('eventoNome').value = ev.nome;
 document.getElementById('eventoLocal').value = ev.local || '';
 document.getElementById('eventoTipo').value = ev.tipo || 'T';
+document.getElementById('eventoExterna').checked = !!ev.externa;
 document.getElementById('eventoDescricao').value = ev.descricao || '';
 document.getElementById('eventoLink').value = ev.link || '';
 document.getElementById('eventoResposta').value = ev.resposta || '';
@@ -2294,6 +2308,7 @@ const data = document.getElementById('eventoData').value;
 const nome = document.getElementById('eventoNome').value.trim();
 const local = document.getElementById('eventoLocal').value.trim();
 const tipo = document.getElementById('eventoTipo').value;
+const externa = document.getElementById('eventoExterna').checked;
 const descricao = document.getElementById('eventoDescricao').value.trim();
 const link = document.getElementById('eventoLink').value.trim();
 const resposta = document.getElementById('eventoResposta').value.trim();
@@ -2305,10 +2320,10 @@ if (!data || !nome) { alert('Preencha pelo menos a data e o nome da atividade.')
 
 if (eventoEditandoId) {
 const ev = EVENTOS.find(e => e.id === eventoEditandoId);
-if (ev) { ev.data = data; ev.nome = nome; ev.local = local; ev.tipo = tipo; ev.descricao = descricao; ev.itens = itens; ev.responsaveis = responsaveis; ev.link = link; ev.resposta = resposta; ev.anexo = anexo; }
+if (ev) { ev.data = data; ev.nome = nome; ev.local = local; ev.tipo = tipo; ev.externa = externa; ev.descricao = descricao; ev.itens = itens; ev.responsaveis = responsaveis; ev.link = link; ev.resposta = resposta; ev.anexo = anexo; }
 } else {
 const id = 'ev' + Date.now() + Math.floor(Math.random()*1000);
-EVENTOS.push({ id, data, nome, local, tipo, descricao, itens, responsaveis, presentes: [], link, resposta, anexo });
+EVENTOS.push({ id, data, nome, local, tipo, externa, descricao, itens, responsaveis, presentes: [], link, resposta, anexo });
 }
 temAlteracaoLocalPendente = true;
 saveState();
@@ -2594,7 +2609,7 @@ ${menuAberto ? `<div class="evento-dropdown" onclick="event.stopPropagation()">
 <button onclick="exportarPresenca('${ev.id}')">📄 Exportar presença</button>
 <button class="remover" onclick="removerEvento('${ev.id}')">🗑️ Remover</button>
 </div>` : ''}
-<div class="evento-nome">${ev.tipo ? `<span class="fmt-badge fmt-${ev.tipo}">${ev.tipo}</span>` : ''}${ev.nome}</div>
+<div class="evento-nome">${ev.tipo ? `<span class="fmt-badge fmt-${ev.tipo}">${ev.tipo}</span>` : ''}${ev.externa ? `<span class="externa-badge">🌍 Externa</span>` : ''}${ev.nome}</div>
 <div class="evento-meta">
 ${ev.local ? `<span class="evento-tag">📍 ${ev.local}</span>` : ''}
 ${(ev.responsaveis && ev.responsaveis.length) ? `<span class="evento-tag">👤 ${ev.responsaveis.join(', ')}</span>` : ''}
@@ -2662,7 +2677,7 @@ saveStateDebounced();
 renderPaginaCiclo();
 }
 
-function atualizarCicloAno(i, val) { CICLO[i].ano = val; temAlteracaoLocalPendente = true; saveStateDebounced(); }
+function atualizarCicloAno(i, val) { CICLO[i].ano = val; temAlteracaoLocalPendente = true; saveStateDebounced(); renderPaginaCiclo(); }
 function atualizarCicloSemestre(i, val) { CICLO[i].semestre = val; temAlteracaoLocalPendente = true; saveStateDebounced(); renderPaginaCiclo(); }
 
 function construirCicloBlocoPicker(i, j, blocoSel) {
@@ -2754,6 +2769,45 @@ return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
 </div>`;
 }).join('');
 }
+// ── Datas do semestre + atividades externas (Ciclo de Programa) ──
+function calcularIntervaloSemestre(sem) {
+const ano = parseInt(sem.ano, 10);
+if (!ano) return null;
+if (sem.semestre === '1') return { inicio: `${ano}-01-01`, fim: `${ano}-06-30` };
+return { inicio: `${ano}-07-01`, fim: `${ano}-12-31` };
+}
+function fmtIntervaloSemestreDisplay(sem) {
+if (!sem.ano) return '';
+return sem.semestre === '1' ? `Jan/${sem.ano} → Jun/${sem.ano}` : `Jul/${sem.ano} → Dez/${sem.ano}`;
+}
+function atividadesExternasDoSemestre(sem) {
+const intervalo = calcularIntervaloSemestre(sem);
+if (!intervalo) return [];
+return EVENTOS.filter(e => e.externa && e.data && e.data >= intervalo.inicio && e.data <= intervalo.fim).sort((a, b) => a.data.localeCompare(b.data));
+}
+function renderExternasCiclo(i) {
+const sem = CICLO[i];
+const intervalo = calcularIntervaloSemestre(sem);
+const lista = atividadesExternasDoSemestre(sem);
+let h = `<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+<div class="campo-label" style="margin-bottom:7px;">📍 Atividades externas do semestre</div>`;
+if (!intervalo) {
+h += `<div style="font-size:11px;color:var(--muted);">Preencha o ano pra ver as atividades externas marcadas no calendário para esse período.</div>`;
+} else if (!lista.length) {
+h += `<div style="font-size:11px;color:var(--muted);">Nenhuma atividade externa marcada no calendário para esse período ainda. Marque o toggle "🌍 Atividade externa" ao criar uma atividade no Calendário.</div>`;
+} else {
+lista.forEach(ev => {
+const partes = ev.data.split('-');
+h += `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #F2EFEA;">
+<span style="font-size:11px;font-weight:800;color:var(--vinho);white-space:nowrap;flex-shrink:0;">${partes[2]}/${partes[1]}</span>
+<span style="font-size:12px;flex:1;">${ev.nome}</span>
+</div>`;
+});
+}
+h += `</div>`;
+return h;
+}
+
 function renderMetasBoxCiclo(i) {
 const lista = metaCicloY(i);
 const formAberto = metaFormAbertoCiclo === i;
@@ -2801,7 +2855,7 @@ const el = document.getElementById('listaCiclo');
 el.innerHTML = CICLO.map((sem, i) => {
 const blocosHtml = sem.blocos.map((b, j) => construirCicloBlocoPicker(i, j, b)).join('');
 return `<div class="ciclo-card">
-<div class="ciclo-card-titulo">${i+1}º Semestre do Ciclo</div>
+<div class="ciclo-card-titulo">${i+1}º Semestre do Ciclo${sem.ano ? `<span style="font-weight:600;font-size:11px;color:var(--muted);margin-left:8px;">${fmtIntervaloSemestreDisplay(sem)}</span>` : ''}</div>
 <div class="ciclo-datas-row">
 <div>
 <label class="campo-label">Ano</label>
@@ -2817,6 +2871,7 @@ return `<div class="ciclo-card">
 </div>
 <div class="ciclo-blocos-grid">${blocosHtml}</div>
 ${renderMetasBoxCiclo(i)}
+${renderExternasCiclo(i)}
 </div>`;
 }).join('');
 }
