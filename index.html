@@ -710,6 +710,38 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 </div>
 
 <script>
+// ── Autenticação anônima do Firebase (evita banco de dados aberto ao público) ──
+// Ative "Anônimo" em: Console do Firebase → Authentication → Sign-in method
+// A chave abaixo fica em: Configurações do projeto (⚙️) → Geral → "Chave de API da Web"
+const FIREBASE_WEB_API_KEY = "AIzaSyB50r7SU6qU_dwq03v_oQksLi1bAxbU614";
+let firebaseAuthToken = null;
+async function autenticarFirebaseAnonimo() {
+if (!FIREBASE_WEB_API_KEY || FIREBASE_WEB_API_KEY.indexOf('COLE_AQUI') === 0) {
+console.warn('Firebase: chave de API da Web não configurada — o banco pode continuar acessível sem autenticação.');
+return null;
+}
+try {
+const resp = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + FIREBASE_WEB_API_KEY, {
+method: 'POST',
+headers: {'Content-Type': 'application/json'},
+body: JSON.stringify({ returnSecureToken: true })
+});
+const data = await resp.json();
+if (data && data.idToken) {
+firebaseAuthToken = data.idToken;
+setTimeout(autenticarFirebaseAnonimo, 50 * 60 * 1000); // token expira em ~1h — renova antes
+}
+return firebaseAuthToken;
+} catch (e) {
+console.error('Falha ao autenticar no Firebase:', e);
+return null;
+}
+}
+function urlComAuthFirebase(url) {
+if (!firebaseAuthToken) return url;
+return url + (url.indexOf('?') !== -1 ? '&' : '?') + 'auth=' + firebaseAuthToken;
+}
+
 const DB_URL = "https://joaninha-progressao-default-rtdb.firebaseio.com";
 const REST_URL = DB_URL + "/tropaProgressao/json.json";
 </script>
@@ -835,7 +867,8 @@ return Array.from({length:6}, () => ({ ano:'', semestre:'1', blocos:['','',''], 
 }
 
 function iniciarSync() {
-  return new Promise((resolve) => {
+  return new Promise(async (resolve) => {
+    await autenticarFirebaseAnonimo();
     let primeira = true;
 
     function processar(valor) {
@@ -895,7 +928,7 @@ function iniciarSync() {
 
     async function fetchOnce() {
       try {
-        const r = await fetch(REST_URL);
+        const r = await fetch(urlComAuthFirebase(REST_URL));
         const val = await r.json();
         processar(val);
       } catch(e) {
@@ -905,7 +938,7 @@ function iniciarSync() {
     }
 
     let es = null;
-    try { es = new EventSource(REST_URL); } catch(e) { es = null; }
+    try { es = new EventSource(urlComAuthFirebase(REST_URL)); } catch(e) { es = null; }
 
     if (es) {
       es.addEventListener('put', (e) => {
@@ -932,7 +965,7 @@ async function saveState() {
   mostrarStatusSalvando('Salvando…');
   for (let tentativa = 1; tentativa <= 2; tentativa++) {
     try {
-      const r = await fetch(REST_URL, {
+      const r = await fetch(urlComAuthFirebase(REST_URL), {
         method: 'PUT',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(payload)

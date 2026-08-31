@@ -649,10 +649,43 @@ let S = {};
 const DB_URL = "https://joaninha-progressao-default-rtdb.firebaseio.com";
 const REST_URL_SR = DB_URL + "/tropaSenior/json.json";
 
+// ── Autenticação anônima do Firebase (evita banco de dados aberto ao público) ──
+// Ative "Anônimo" em: Console do Firebase → Authentication → Sign-in method
+// A chave abaixo fica em: Configurações do projeto (⚙️) → Geral → "Chave de API da Web"
+const FIREBASE_WEB_API_KEY = "AIzaSyB50r7SU6qU_dwq03v_oQksLi1bAxbU614";
+let firebaseAuthToken = null;
+async function autenticarFirebaseAnonimo() {
+  if (!FIREBASE_WEB_API_KEY || FIREBASE_WEB_API_KEY.indexOf('COLE_AQUI') === 0) {
+    console.warn('Firebase: chave de API da Web não configurada — o banco pode continuar acessível sem autenticação.');
+    return null;
+  }
+  try {
+    const resp = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + FIREBASE_WEB_API_KEY, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ returnSecureToken: true })
+    });
+    const data = await resp.json();
+    if (data && data.idToken) {
+      firebaseAuthToken = data.idToken;
+      setTimeout(autenticarFirebaseAnonimo, 50 * 60 * 1000); // token expira em ~1h — renova antes
+    }
+    return firebaseAuthToken;
+  } catch (e) {
+    console.error('Falha ao autenticar no Firebase:', e);
+    return null;
+  }
+}
+function urlComAuthFirebase(url) {
+  if (!firebaseAuthToken) return url;
+  return url + (url.indexOf('?') !== -1 ? '&' : '?') + 'auth=' + firebaseAuthToken;
+}
+
 async function loadState(){
+  await autenticarFirebaseAnonimo();
   try{
     const r = await Promise.race([
-      fetch(REST_URL_SR),
+      fetch(urlComAuthFirebase(REST_URL_SR)),
       new Promise((_, reject) => setTimeout(() => reject(new Error('Tempo limite ao buscar dados da Tropa Sênior')), 4000))
     ]);
     const val = await r.json();
@@ -683,7 +716,7 @@ async function loadState(){
 async function saveState(){
   const payload = JSON.stringify({ S, JOVENS, JNOMES, JCORES, PRESENCA, YOUTH_DATA, EP_DATA, CAL_EXTRAS, CAL_2S26, CAL_1S27, JUSTIFICATIVAS_SR, METAS_SR, CICLO_BLOCOS_SR, PATRULHAS_SR, PATRULHA_DE_SR, SEMESTRES_SR, semAbertoSr });
   try {
-    await fetch(REST_URL_SR, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    await fetch(urlComAuthFirebase(REST_URL_SR), { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
     onDataSaved();
   } catch(e) { console.error('Não foi possível salvar dados da Tropa Sênior:', e); }
 }
