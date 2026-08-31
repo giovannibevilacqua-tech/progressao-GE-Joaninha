@@ -473,6 +473,12 @@ padding: 13px 16px; border-radius: var(--r); cursor: pointer; box-shadow: var(--
 .ciclo-grupo-header-sub { font-size: 10px; font-weight: 600; opacity: .85; margin-top: 2px; }
 .ciclo-grupo-header-periodo { font-size: 11px; font-weight: 700; opacity: .9; white-space: nowrap; }
 .ciclo-grupo-header .chev { color: #fff; font-size: 14px; transition: transform .2s; flex-shrink: 0; }
+.ciclo-grupo-menu-btn { border: none; background: rgba(255,255,255,.18); color: #fff; font-size: 16px; font-weight: 900; cursor: pointer; padding: 2px 9px; border-radius: 7px; line-height: 1.4; }
+.ciclo-grupo-menu-btn:hover { background: rgba(255,255,255,.32); }
+.ciclo-grupo-dropdown { position: absolute; top: 46px; right: 0; background: var(--card); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); overflow: hidden; z-index: 30; min-width: 170px; }
+.ciclo-grupo-dropdown button { display: block; width: 100%; text-align: left; padding: 10px 14px; font-size: 12px; font-weight: 700; border: none; background: var(--card); color: var(--text); cursor: pointer; }
+.ciclo-grupo-dropdown button:hover { background: #F5F2EE; }
+.ciclo-grupo-dropdown button.remover { color: #E74C3C; }
 .ciclo-card { background: var(--card); border-radius: var(--r); box-shadow: var(--shadow); margin: 10px 14px 0; padding: 14px; }
 .ciclo-card-header {
 display: flex; align-items: center; justify-content: space-between; padding: 12px 16px;
@@ -897,6 +903,7 @@ function iniciarSync() {
           OBSERVACOES = dados.observacoes || {};
           LIS_OURO_DATA = dados.lisOuroDe || {};
           CICLO_DESTAQUE = dados.cicloDestaque || {};
+          CICLO_INFO = dados.cicloInfo || {};
         } catch(e) {
           if (primeira) { S = deepCopy(INICIAL); EVENTOS = []; CICLO = cicloEmBranco(); DATAS_NASC = {}; JUSTIFICATIVAS = {}; }
         }
@@ -960,7 +967,7 @@ async function saveState() {
   const extras = [...JOVENS, ...idsExtrasArquivados].filter(j => !JOVENS_BASE.includes(j)).map(id => ({id, nome: JNOMES[id]}));
   const nomesBase = {};
   JOVENS_BASE.forEach(id => { if (JNOMES[id] !== JNOMES_PADRAO[id]) nomesBase[id] = JNOMES[id]; });
-  const payload = JSON.stringify({ S, extraJovens: extras, eventos: EVENTOS, ciclo: CICLO, nomesBase, datasNascimento: DATAS_NASC, excluidos: JOVENS_EXCLUIDOS, arquivados: JOVENS_ARQUIVADOS, justificativas: JUSTIFICATIVAS, patrulhas: PATRULHAS, patrulhaDe: PATRULHA_DE, cargoDe: CARGO_DE, observacoes: OBSERVACOES, lisOuroDe: LIS_OURO_DATA, cicloDestaque: CICLO_DESTAQUE });
+  const payload = JSON.stringify({ S, extraJovens: extras, eventos: EVENTOS, ciclo: CICLO, nomesBase, datasNascimento: DATAS_NASC, excluidos: JOVENS_EXCLUIDOS, arquivados: JOVENS_ARQUIVADOS, justificativas: JUSTIFICATIVAS, patrulhas: PATRULHAS, patrulhaDe: PATRULHA_DE, cargoDe: CARGO_DE, observacoes: OBSERVACOES, lisOuroDe: LIS_OURO_DATA, cicloDestaque: CICLO_DESTAQUE, cicloInfo: CICLO_INFO });
   temAlteracaoLocalPendente = false; // este payload já reflete tudo que foi clicado até agora
   mostrarStatusSalvando('Salvando…');
   for (let tentativa = 1; tentativa <= 2; tentativa++) {
@@ -2984,6 +2991,9 @@ renderPaginaCiclo();
 // ── Grupos de ciclo (3 anos / 6 semestres cada) ───────────
 let ciclosGrupoAbertos = {};
 let CICLO_DESTAQUE = {};
+let CICLO_INFO = {};
+let cicloMenuAbertoGrupo = null;
+let cicloInfoEditando = null;
 
 function toggleCicloGrupo(g) {
 ciclosGrupoAbertos[g] = ciclosGrupoAbertos[g] === undefined ? false : !ciclosGrupoAbertos[g];
@@ -2993,6 +3003,81 @@ function adicionarNovoCiclo() {
 for (let k = 0; k < 6; k++) CICLO.push({ ano: '', semestre: (k % 2 === 0 ? '1' : '2'), blocos: ['', '', ''], metas: [] });
 const novoGrupo = Math.floor((CICLO.length - 1) / 6);
 ciclosGrupoAbertos[novoGrupo] = true;
+temAlteracaoLocalPendente = true;
+saveState();
+renderPaginaCiclo();
+}
+
+// ── Nome, descrição, editar e remover ciclos ──────────────
+function cicloInfoY(g) {
+if (!CICLO_INFO[g]) CICLO_INFO[g] = { nome: '', descricao: '' };
+return CICLO_INFO[g];
+}
+function toggleCicloGrupoMenu(g) {
+cicloMenuAbertoGrupo = (cicloMenuAbertoGrupo === g) ? null : g;
+renderPaginaCiclo();
+}
+function abrirEdicaoCicloInfo(g) {
+cicloMenuAbertoGrupo = null;
+cicloInfoEditando = g;
+renderPaginaCiclo();
+}
+function cancelarEdicaoCicloInfo() {
+cicloInfoEditando = null;
+renderPaginaCiclo();
+}
+function salvarCicloInfo(g) {
+const nome = document.getElementById('cicloNome_' + g).value.trim();
+const descricao = document.getElementById('cicloDescricao_' + g).value.trim();
+CICLO_INFO[g] = { nome, descricao };
+cicloInfoEditando = null;
+temAlteracaoLocalPendente = true;
+saveState();
+renderPaginaCiclo();
+}
+function construirFormCicloInfo(g) {
+const info = cicloInfoY(g);
+return `<div style="margin:0 14px;padding:12px 14px;background:var(--card);border-radius:0 0 var(--r) var(--r);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px;">
+<div>
+<label class="campo-label">Nome do ciclo</label>
+<input type="text" class="campo-input" id="cicloNome_${g}" placeholder="Ex: Ciclo 1 — Turma 2026" value="${info.nome || ''}">
+</div>
+<div>
+<label class="campo-label">Descrição</label>
+<textarea class="campo-input" id="cicloDescricao_${g}" rows="2" placeholder="Ex: Foco na formação da nova patrulha">${info.descricao || ''}</textarea>
+</div>
+<div style="display:flex;gap:8px;">
+<button class="btn-primario" style="flex:1;padding:8px;font-size:12px;" onclick="salvarCicloInfo(${g})">💾 Salvar</button>
+<button class="btn-secundario" style="flex:1;padding:8px;font-size:12px;" onclick="cancelarEdicaoCicloInfo()">Cancelar</button>
+</div>
+</div>`;
+}
+function removerGrupoCiclo(g) {
+cicloMenuAbertoGrupo = null;
+if (!confirm('Remover este ciclo inteiro (6 semestres, blocos, metas e destaque)? Essa ação não pode ser desfeita.')) { renderPaginaCiclo(); return; }
+CICLO.splice(g * 6, 6);
+const reindexar = (obj, chave) => {
+const novo = {};
+Object.keys(obj).forEach(k => {
+const idx = parseInt(k, 10);
+if (idx < chave) novo[idx] = obj[k];
+else if (idx > chave) novo[idx - 1] = obj[k];
+});
+return novo;
+};
+const reindexarSemestre = (obj) => {
+const novo = {};
+Object.keys(obj).forEach(k => {
+const idx = parseInt(k, 10);
+if (idx < g * 6) novo[idx] = obj[k];
+else if (idx >= g * 6 + 6) novo[idx - 6] = obj[k];
+});
+return novo;
+};
+CICLO_DESTAQUE = reindexar(CICLO_DESTAQUE, g);
+CICLO_INFO = reindexar(CICLO_INFO, g);
+ciclosGrupoAbertos = reindexar(ciclosGrupoAbertos, g);
+cicloCardsAbertos = reindexarSemestre(cicloCardsAbertos);
 temAlteracaoLocalPendente = true;
 saveState();
 renderPaginaCiclo();
@@ -3048,17 +3133,26 @@ const grupoAberto = ciclosGrupoAbertos[g] === undefined ? true : ciclosGrupoAber
 const primeiroAno = semestresDoGrupo[0] ? semestresDoGrupo[0].ano : '';
 const ultimoAno = semestresDoGrupo[semestresDoGrupo.length - 1] ? semestresDoGrupo[semestresDoGrupo.length - 1].ano : '';
 const resumoPeriodo = primeiroAno ? (ultimoAno && ultimoAno !== primeiroAno ? `${primeiroAno} → ${ultimoAno}` : `${primeiroAno}`) : '';
-html += `<div style="margin:14px 14px 0;">
-<div class="ciclo-grupo-header" onclick="toggleCicloGrupo(${g})">
-<div>
-<div class="ciclo-grupo-header-titulo">📚 Ciclo ${g+1}</div>
-<div class="ciclo-grupo-header-sub">3 anos · 6 semestres</div>
+const info = cicloInfoY(g);
+const tituloExibido = info.nome ? info.nome : ('Ciclo ' + (g + 1));
+const menuAberto = cicloMenuAbertoGrupo === g;
+html += `<div style="margin:14px 14px 0;position:relative;">
+<div class="ciclo-grupo-header">
+<div style="flex:1;cursor:pointer;min-width:0;" onclick="toggleCicloGrupo(${g})">
+<div class="ciclo-grupo-header-titulo" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">📚 ${tituloExibido}</div>
+<div class="ciclo-grupo-header-sub">3 anos · 6 semestres${info.descricao ? ' · ' + info.descricao : ''}</div>
 </div>
-<div style="display:flex;align-items:center;gap:10px;">
+<div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
 ${resumoPeriodo ? `<span class="ciclo-grupo-header-periodo">${resumoPeriodo}</span>` : ''}
-<span class="chev" style="transform:rotate(${grupoAberto ? 180 : 0}deg);">▾</span>
+<button class="ciclo-grupo-menu-btn" onclick="event.stopPropagation();toggleCicloGrupoMenu(${g})" title="Mais opções">⋮</button>
+<span class="chev" style="cursor:pointer;" onclick="toggleCicloGrupo(${g})">${grupoAberto ? '▴' : '▾'}</span>
 </div>
 </div>
+${menuAberto ? `<div class="ciclo-grupo-dropdown" onclick="event.stopPropagation()">
+<button onclick="abrirEdicaoCicloInfo(${g})">✏️ Nome e descrição</button>
+<button class="remover" onclick="removerGrupoCiclo(${g})">🗑️ Excluir ciclo</button>
+</div>` : ''}
+${cicloInfoEditando === g ? construirFormCicloInfo(g) : ''}
 ${grupoAberto ? `<div style="margin-top:10px;">
 ${renderDestaqueCiclo(g)}
 ${semestresDoGrupo.map((sem, k) => renderSemestreCardCiclo(inicioIdx + k, sem)).join('<div style="height:10px;"></div>')}
