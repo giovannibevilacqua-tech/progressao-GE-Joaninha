@@ -894,7 +894,7 @@ function iniciarSync() {
           JOVENS.forEach((j,i) => JCOR[j] = corPara(i));
           S = dados.S || deepCopy(INICIAL);
           EVENTOS = (dados.eventos || []).map(normalizarEvento);
-          CICLO = (dados.ciclo && dados.ciclo.length === 6) ? dados.ciclo : cicloEmBranco();
+          CICLO = (dados.ciclo && dados.ciclo.length > 0 && dados.ciclo.length % 6 === 0) ? dados.ciclo : cicloEmBranco();
           DATAS_NASC = dados.datasNascimento || {};
           JUSTIFICATIVAS = dados.justificativas || {};
           PATRULHAS = dados.patrulhas || [];
@@ -1122,7 +1122,7 @@ if (!confirm('Importar esse backup vai substituir TODOS os dados atuais da Tropa
 
 S = d.S || {};
 EVENTOS = (d.eventos || []).map(normalizarEvento);
-CICLO = (d.ciclo && d.ciclo.length === 6) ? d.ciclo : cicloEmBranco();
+CICLO = (d.ciclo && d.ciclo.length > 0 && d.ciclo.length % 6 === 0) ? d.ciclo : cicloEmBranco();
 DATAS_NASC = d.datasNascimento || {};
 JOVENS_EXCLUIDOS = d.excluidos || [];
 JOVENS_ARQUIVADOS = d.arquivados || [];
