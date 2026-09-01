@@ -2791,7 +2791,7 @@ return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
 </button>
 ${painel}
 </div>
-<button class="btn-secundario" style="padding:6px 9px;font-size:11px;color:#E74C3C;flex-shrink:0;" onclick="removerBlocoCiclo(${i},${j})" title="Remover este bloco">✕</button>
+<button class="btn-secundario" style="width:auto;padding:6px 9px;font-size:11px;color:#E74C3C;flex-shrink:0;" onclick="removerBlocoCiclo(${i},${j})" title="Remover este bloco">✕</button>
 </div>`;
 }
 
@@ -2904,8 +2904,8 @@ lista.forEach((m, idx) => {
 h += `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #F2EFEA;">
 <span style="font-size:15px;">${m.icone}</span>
 <div style="flex:1;font-size:12px;">${m.texto}</div>
-<button class="btn-secundario" style="padding:3px 7px;font-size:11px;" onclick="editarMetaCiclo(${i},${idx})">✏️</button>
-<button class="btn-secundario" style="padding:3px 7px;font-size:11px;color:#E74C3C;" onclick="removerMetaCiclo(${i},${idx})">🗑️</button>
+<button class="btn-secundario" style="width:auto;padding:3px 7px;font-size:11px;" onclick="editarMetaCiclo(${i},${idx})">✏️</button>
+<button class="btn-secundario" style="width:auto;padding:3px 7px;font-size:11px;color:#E74C3C;" onclick="removerMetaCiclo(${i},${idx})">🗑️</button>
 </div>`;
 });
 if (!lista.length && !formAberto) h += `<div style="font-size:11px;color:var(--muted);padding:4px 0;">Nenhuma meta cadastrada ainda.</div>`;
@@ -3114,7 +3114,7 @@ ${JOVENS.map(j => `<option value="${j}" ${jovemAtual === j ? 'selected' : ''}>${
 if (sugestao) {
 h += `<div style="margin-top:9px;padding-top:9px;border-top:1px solid #F2EFEA;font-size:11px;color:var(--muted);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
 <span>💡 Sugestão: <strong style="color:var(--vinho);">${JNOMES[sugestao.j]}</strong> — precisa de ${sugestao.faltam} bloco${sugestao.faltam !== 1 ? 's' : ''} em ${sugestao.meses} ${sugestao.meses === 1 ? 'mês' : 'meses'} até a passagem pra Sênior</span>
-${jovemAtual !== sugestao.j ? `<button class="btn-secundario" style="padding:5px 10px;font-size:10px;flex-shrink:0;" onclick="selecionarDestaqueCiclo(${g},'${sugestao.j}')">Usar sugestão</button>` : ''}
+${jovemAtual !== sugestao.j ? `<button class="btn-secundario" style="width:auto;padding:5px 10px;font-size:10px;flex-shrink:0;" onclick="selecionarDestaqueCiclo(${g},'${sugestao.j}')">Usar sugestão</button>` : ''}
 </div>`;
 }
 h += `</div>`;
