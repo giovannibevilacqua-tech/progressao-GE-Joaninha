@@ -133,7 +133,7 @@ background: #FAFAF8; cursor: pointer; font-size: 12px; font-weight: 800; color: 
 </div>
 
 <div id="pagina-ciclo-view" class="pagina-view">
-<div class="aviso-view">Esta é uma versão de visualização — sem opções de editar blocos, metas ou ciclos.</div>
+<div class="aviso-view">Esta é uma versão de visualização — sem opções de editar blocos ou ciclos.</div>
 <div id="listaCicloView"></div>
 </div>
 
@@ -332,11 +332,6 @@ const cor = eixo ? eixo.cor : '#666';
 return `<div class="bloco-chip-view" style="background:${cor}16;border:1px solid ${cor}50;color:${cor};">${def ? def.nome : b}</div>`;
 }).join('') + `</div>`;
 }
-const metasHtml = (sem.metas && sem.metas.length) ? `<div class="metas-view">
-<div class="secao-label-view">🎯 Metas e marcos</div>
-${sem.metas.map(m => `<div class="meta-item-view"><span>${m.icone || '⭐'}</span><span>${m.texto}</span></div>`).join('')}
-</div>` : '';
-
 let externasHtml = '';
 if (sem.ano) {
 const intervaloObj = { inicio: sem.semestre === '1' ? `${sem.ano}-01-01` : `${sem.ano}-07-01`, fim: sem.semestre === '1' ? `${sem.ano}-06-30` : `${sem.ano}-12-31` };
@@ -354,7 +349,7 @@ return `<div class="sem-card-view">
 <span>${(i % 6) + 1}º Semestre${intervalo ? ` — ${intervalo}` : ''}</span>
 <span class="chev-view">${aberto ? '▴' : '▾'}</span>
 </div>
-${aberto ? `<div class="sem-card-body-view">${blocosHtml}${metasHtml}${externasHtml}</div>` : ''}
+${aberto ? `<div class="sem-card-body-view">${blocosHtml}${externasHtml}</div>` : ''}
 </div>`;
 }
 
