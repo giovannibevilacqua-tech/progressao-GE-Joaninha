@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Visualização — Progressão Jovens GE Joaninha</title>
+<style>
+:root {
+--vinho: #1A6B3C;
+--bg: #F4F1EC;
+--card: #FFFFFF;
+--text: #1A1A1A;
+--muted: #6B6B6B;
+--border: #E4DFD6;
+--r: 10px;
+--shadow: 0 2px 8px rgba(0,0,0,.10);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+background: var(--bg);
+color: var(--text);
+min-height: 100vh;
+padding-bottom: 24px;
+}
+.cabecalho-fixo { position: sticky; top: 0; z-index: 310; background: var(--bg); overflow-anchor: none; }
+.header {
+background: linear-gradient(160deg, #C1121F 0%, #9A0D18 60%, #E63946 100%);
+color: #fff;
+padding: 20px 16px 16px;
+text-align: center;
+transition: padding .25s ease;
+}
+.header.compacto { padding: 8px 16px; }
+.header-flor { font-size: 30px; margin-bottom: 4px; filter: drop-shadow(0 2px 4px rgba(0,0,0,.3)); transition: opacity .2s ease, max-height .2s ease, margin .2s ease; max-height: 40px; overflow: hidden; }
+.header.compacto .header-flor { opacity: 0; max-height: 0; margin: 0; }
+.header h1 { font-size: 17px; font-weight: 800; letter-spacing: .5px; line-height: 1.3; transition: font-size .2s ease; }
+.header.compacto h1 { font-size: 13px; }
+.header .sub { font-size: 12px; opacity: .82; margin-top: 4px; transition: opacity .2s ease, max-height .2s ease, margin .2s ease; max-height: 30px; overflow: hidden; }
+.header.compacto .sub { opacity: 0; max-height: 0; margin: 0; }
+.badge-view {
+display: inline-flex; align-items: center; gap: 4px; background: rgba(255,255,255,.18);
+border: 1px solid rgba(255,255,255,.32); color: #fff; font-size: 10px; font-weight: 700;
+padding: 3px 10px; border-radius: 20px; margin-top: 8px;
+}
+.tabs-linha { display: flex; background: var(--card); border-bottom: 2px solid var(--border); overflow-x: auto; overflow-y: hidden; }
+.tab-btn-linha {
+flex: 1; min-width: 120px; padding: 14px 10px; border: none; border-bottom: 3px solid transparent;
+background: transparent; font-size: 12px; font-weight: 700; color: var(--muted); cursor: pointer;
+transition: color .2s, border-color .2s; white-space: nowrap;
+}
+.tab-btn-linha.active { color: var(--vinho); border-bottom-color: var(--vinho); }
+.pagina-view { display: none; }
+.pagina-view.active { display: block; }
+.aviso-view {
+margin: 12px 14px 0; background: #FFF9E6; border-left: 4px solid #F0B429; border-radius: 0 var(--r) var(--r) 0;
+padding: 10px 12px; font-size: 11px; color: #7A5A00; line-height: 1.5;
+}
+.hint-vazio, .hint-vazio-sm { color: var(--muted); font-size: 12px; padding: 16px; text-align: center; }
+.hint-vazio-sm { padding: 10px 4px; text-align: left; font-size: 11px; }
+
+/* Calendário */
+.evento-card-view { display: flex; background: var(--card); border-radius: var(--r); box-shadow: var(--shadow); margin: 10px 14px 0; overflow: hidden; }
+.evento-data-view { width: 56px; min-width: 56px; background: var(--vinho); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px 4px; }
+.ev-dia { font-size: 18px; font-weight: 900; line-height: 1.1; }
+.ev-mes { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
+.evento-corpo-view { flex: 1; padding: 12px 14px; min-width: 0; }
+.evento-nome-view { font-size: 13px; font-weight: 800; margin-bottom: 4px; }
+.evento-local-view, .evento-resp { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+.evento-desc-view { font-size: 12px; color: #3A3A3A; line-height: 1.5; white-space: pre-line; margin-top: 6px; }
+.evento-extra-row { display: flex; gap: 8px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+.evento-link { font-size: 11px; font-weight: 700; color: var(--vinho); text-decoration: none; }
+.evento-anexo-tag { font-size: 10px; font-weight: 700; background: #EEF2FF; color: var(--vinho); border: 1px solid #C0CCF0; border-radius: 20px; padding: 3px 9px; }
+.evento-resposta-view { background: #FAFAF8; border-left: 3px solid var(--vinho); border-radius: 0 8px 8px 0; padding: 7px 10px; font-size: 11px; color: #3A3A3A; margin-top: 8px; line-height: 1.5; white-space: pre-line; }
+.fmt-badge { font-size: 9px; font-weight: 800; padding: 2px 7px; border-radius: 20px; letter-spacing: .5px; margin-right: 5px; }
+.fmt-T { background: #EBF5FB; color: #1565C0; }
+.fmt-P { background: #F4ECF7; color: #6A1B9A; }
+.fmt-PN { background: #D6EAF8; color: #0D47A1; }
+.fmt-Av { background: #EAFAF1; color: #1A7434; }
+.fmt-Esp { background: #FFF9C4; color: #7A4A00; }
+.externa-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 20px; background: #E8F5E9; color: #1E7A34; border: 1px solid #A8D8B0; margin-right: 5px; }
+
+/* Ciclo de Programa */
+.ciclo-grupo-view { margin: 14px 14px 0; }
+.ciclo-grupo-header-view {
+background: linear-gradient(160deg, var(--vinho) 0%, #2D8659 100%); color: #fff;
+display: flex; align-items: center; justify-content: space-between; gap: 10px;
+padding: 13px 16px; border-radius: var(--r); cursor: pointer; box-shadow: var(--shadow);
+}
+.ciclo-grupo-header-view:hover { filter: brightness(1.06); }
+.ciclo-grupo-titulo-view { font-size: 13px; font-weight: 800; }
+.ciclo-grupo-sub-view { font-size: 10px; font-weight: 600; opacity: .85; margin-top: 2px; }
+.ciclo-grupo-periodo-view { font-size: 11px; font-weight: 700; opacity: .9; white-space: nowrap; }
+.chev-view { color: #fff; font-size: 13px; flex-shrink: 0; }
+.ciclo-grupo-body-view { margin-top: 10px; }
+.destaque-view { background: var(--card); border-radius: var(--r); box-shadow: var(--shadow); padding: 11px 14px; font-size: 12px; margin-bottom: 10px; }
+.sem-card-view { background: var(--card); border-radius: var(--r); box-shadow: var(--shadow); margin-bottom: 8px; overflow: hidden; }
+.sem-card-header-view {
+display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 11px 14px;
+background: #FAFAF8; cursor: pointer; font-size: 12px; font-weight: 800; color: var(--text);
+}
+.sem-card-header-view:hover { background: #F2EFEA; }
+.sem-card-header-view .chev-view { color: var(--muted); }
+.sem-card-body-view { padding: 12px 14px; }
+.blocos-grid-view { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; }
+.bloco-chip-view { border-radius: 8px; padding: 9px 8px; font-size: 11px; font-weight: 700; line-height: 1.3; min-height: 50px; display: flex; align-items: center; justify-content: center; text-align: center; }
+.metas-view { margin-top: 12px; padding-top: 10px; border-top: 1px solid #F0EDE8; }
+.secao-label-view { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); margin-bottom: 7px; }
+.meta-item-view { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 12px; border-bottom: 1px solid #F5F2EE; }
+.meta-item-view:last-child { border-bottom: none; }
+</style>
+</head>
+<body>
+
+<div id="scrollSentinelView" style="position:absolute;top:0;left:0;width:1px;height:1px;"></div>
+
+<div class="cabecalho-fixo" id="cabecalhoFixo">
+<header class="header">
+<div class="header-flor">⚜</div>
+<h1>PROGRESSÃO JOVENS<br>GE JOANINHA</h1>
+<div class="sub">Tropa Escoteira — Visualização</div>
+<div class="badge-view">🔒 Modo somente leitura</div>
+</header>
+
+<nav class="tabs-linha">
+<button class="tab-btn-linha active" id="tabCalView" onclick="mudarPaginaView('calendario')">📅 Calendário</button>
+<button class="tab-btn-linha" id="tabCicloView" onclick="mudarPaginaView('ciclo')">🔄 Ciclo de Programa</button>
+</nav>
+</div>
+
+<div id="pagina-calendario-view" class="pagina-view active">
+<div class="aviso-view">Esta é uma versão de visualização — sem opções de editar, adicionar ou remover atividades, e sem a lista de presença de cada uma.</div>
+<div id="listaEventosView"></div>
+</div>
+
+<div id="pagina-ciclo-view" class="pagina-view">
+<div class="aviso-view">Esta é uma versão de visualização — sem opções de editar blocos, metas ou ciclos.</div>
+<div id="listaCicloView"></div>
+</div>
+
+
+<script>
+// ── Dados base (jovens padrão) ──────────────────────────
+const JOVENS_BASE = ['miguel','sabrina','pedro','ivan','richard','anita','ashylley','sophiak','felipa','fernando','eduardo','larissa','safira','rafael','thaynara','sophiar','victor','maria','giovanna','sophiad'];
+const JNOMES_PADRAO = {miguel:'Miguel Silva',sabrina:'Sabrina Sigmaringa',pedro:'Pedro Andrade',ivan:'Ivan Moraes',richard:'Richard Fonseca',anita:'Anita Gomes',ashylley:'Ashylley Santos',sophiak:'Sophia Khatuanian',felipa:'Felipa Almeida',fernando:'Fernando Santos',eduardo:'Eduardo Dias',larissa:'Larissa Souza',safira:'Safira Fonseca',rafael:'Rafael Cruz',thaynara:'Thaynara Santos',sophiar:'Sophia Rodrigues',victor:'Victor Silva',maria:'Maria Santos',giovanna:'Giovanna Souza',sophiad:'Sophia Diniz'};
+const ICONE_FOLHA = '<svg viewBox="0 0 24 24" fill="white"><path d="M12 2C6.5 3.5 4 8 4 13c0 4.4 3.6 8 8 8s8-3.6 8-8c0-6-3.5-9.5-8-11z"/><rect x="11.3" y="6" width="1.4" height="13" fill="white" opacity="0.55"/></svg>';
+const ICONE_POMBA = '<svg viewBox="0 0 24 24" fill="white"><path d="M23 4.2c-.8.5-1.7.8-2.6.9a4.7 4.7 0 0 0 2-2.6c-.9.5-1.9.9-3 1.1a4.6 4.6 0 0 0-7.9 4.2A13.1 13.1 0 0 1 2 2.9a4.6 4.6 0 0 0 1.4 6.2 4.6 4.6 0 0 1-2.1-.6v.1a4.6 4.6 0 0 0 3.7 4.5c-.7.2-1.4.2-2 .1a4.6 4.6 0 0 0 4.3 3.2A9.3 9.3 0 0 1 0 18.6a13 13 0 0 0 7.1 2.1c8.5 0 13.2-7.4 13.2-13.8v-.6c.9-.6 1.7-1.4 2.3-2.3z"/></svg>';
+const ICONE_MAOS_CORACAO = '<svg viewBox="0 0 24 24" fill="white"><path d="M12.5 6.7c1.6-1.9 4.4-2.2 6.2-.5 1.8 1.7 1.9 4.5.2 6.3L12 19.5l-6.9-7c-1.7-1.8-1.6-4.6.2-6.3 1.8-1.7 4.6-1.4 6.2.5z"/><path d="M2.5 12.2 5.2 9.6a1.7 1.7 0 0 1 2.3 0l.5.5-1.6 1.7a1.15 1.15 0 0 0 1.6 1.65l2.2-2.2 1.1 1.15-2.2 2.2a1.15 1.15 0 0 0 1.6 1.65l2.2-2.2" fill="none" stroke="white" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/></svg>';
+const ICONE_BUSSOLA = '<svg viewBox="0 0 24 24" fill="white"><path d="M12 1a11 11 0 1 0 0 22 11 11 0 0 0 0-22zm0 1.8a9.2 9.2 0 1 1 0 18.4 9.2 9.2 0 0 1 0-18.4z"/><path d="M16.5 7.5 13 13l-5.5 3.5L11 11z"/></svg>';
+
+const EIXOS = [
+{ id:'ma', nome:'Meio Ambiente', cor:'#5CB85C', icone: ICONE_FOLHA, blocos:['mudancas','consumo','preservacao','vida_ar'] },
+{ id:'pd', nome:'Paz e Desenvolvimento', cor:'#1B3B6F', icone: ICONE_POMBA, blocos:['paz','heranca','democracia','comunidade','valores'] },
+{ id:'sb', nome:'Saúde e Bem-estar', cor:'#DB9270', icone: ICONE_MAOS_CORACAO, blocos:['habitos','saude_mental','cuidado','vinculos','espiritualidade'] },
+{ id:'hv', nome:'Habilidades para a Vida', cor:'#E0355F', icone: ICONE_BUSSOLA, blocos:['criatividade','inteligencia','aprendizagem','autonomia'] },
+];
+
+const BLOCOS = {
+criatividade:{nome:'1. Criatividade e Inovação', metaVar:4,
+fixas:['Animar um Fogo de Conselho em um acampamento da patrulha ou de tropa.','Aplicar conceitos básicos de estruturas (cavaletes, encaixes, ancoragens) em projetos como pontes, balsas, pórticos ou outras pioneirias.'],
+variaveis:['Organizar uma atividade de divulgação do escotismo no colégio, usando diferentes recursos: vídeos, cartazes, panfletos etc.','Conhecer e cantar canções e danças apropriadas para diferentes momentos.','Criar uma campanha publicitária divertida promovendo algum projeto ou atividade da patrulha ou Tropa Escoteira.','Construir equipamentos improvisados de campo (mesa, suporte, abrigo, utensílios) utilizando materiais disponíveis.','Propor e implementar soluções criativas para reduzir custos de uma atividade, aproveitando materiais recicláveis ou doados.','Ensinar e aplicar dois novos jogos para sua tropa.','Criar alternativas criativas para decorar o canto da patrulha ou o acampamento.','Participar de um festival de talentos na tropa.','Improvisar apresentações artísticas (esquetes, músicas, danças) em um Fogo de Conselho, explorando recursos disponíveis.','Criar um vídeo de divulgação das atividades de sua patrulha ou tropa.','Especialidade - Equivalente a 1 item variável']},
+inteligencia:{nome:'2. Inteligência Emocional', metaVar:4,
+fixas:['Identificar situações perigosas e de maus tratos, sabendo como agir e a quem recorrer.'],
+variaveis:['Conversar com a patrulha sobre pontos fortes e de melhoria no desempenho da equipe em atividades e acampamentos.','Identificar seus medos e suas emoções diante a um obstáculo desafiador, trabalhando para conseguir superá-lo.','Em um acampamento, participar de um turno de ronda com outro companheiro de patrulha, refletindo sobre o cuidado com o outro.','Participar de jogos ou competições, respeitando regras e resultados.','Em uma atividade de patrulha ou de tropa aplicar técnicas de respiração, relaxamento ou meditação antes de um grande desafio.','Participar de rodas de conversa ou momentos de partilha após atividades intensas, ouvindo e respeitando as emoções dos demais.','Escrever uma pequena carta para si mesmo com palavras de incentivo, lembrando de suas qualidades e dando sugestões de como você pode superar desafios futuros.','Criar e encenar uma pequena história em que o personagem passa por dificuldades e encontra formas saudáveis de lidar com elas.','Especialidade - Equivalente a 1 item variável']},
+aprendizagem:{nome:'3. Aprendizagem Contínua e Desenvolvimento Vocacional', metaVar:4,
+fixas:['Conquistar, no Ramo Escoteiro, uma especialidade sobre um tema de seu interesse e que seja um conhecimento novo.','Em conjunto com a sua patrulha, realizar um Percurso de Gilwell de pelo menos 3km.'],
+variaveis:['Enviar e receber mensagens simples em Alfabeto Fonético, Código Internacional de Sinais, Semáfora, Heliografia, Cifra de César ou Criptografia.','Visitar com a sua patrulha: hospital, quartel de bombeiros, delegacia, empresas, comércios locais ou outros para conhecer o funcionamento de diferentes profissões.','Conhecer o funcionamento de serviços de internet, rádio e TV, e usar esses conhecimentos para resolver problemas técnicos.','Convidar um especialista da comunidade para dialogar com a tropa e esclarecer dúvidas sobre determinado tema ou profissão.','Utilizar corretamente um rádio comunicador em atividade da patrulha.','Realizar uma pesquisa sobre um tema escolhido e apresentar os resultados para a patrulha ou tropa em formato criativo (cartaz, teatro, vídeo, oficina).','Planejar e executar, em conjunto com a sua patrulha, uma ação de serviço comunitário baseada em informações pesquisadas sobre necessidades locais.','Especialidade - Equivalente a 1 item variável']},
+autonomia:{nome:'4. Autonomia e Liderança', metaVar:5,
+fixas:['Montar corretamente uma mochila para um acampamento, mantendo o equipamento pessoal em bom estado.'],
+variaveis:['Contribuir para o planejamento e a organização de uma excursão de patrulha.','Fazer uma excursão urbana com a sua patrulha ou tropa, se locomovendo por meio de transportes públicos como ônibus, trens, metrô, entre outros.','Pesquisar e realizar as compras dos alimentos para um acampamento, apresentando para a patrulha uma prestação de contas.','Saber onde encontrar, identificando em um mapa, os principais serviços públicos na cidade.','Planejar e executar em patrulha um projeto de captação de recursos para participação em uma atividade escoteira.','Participar de atividades ou oficinas sobre finanças pessoais.','Assumir pelo menos três encargos diferentes na patrulha, sendo bem avaliado pelos seus companheiros.','Administrar o fundo de patrulha por pelo menos três meses, registrando receitas e despesas, e utilizar os recursos em atividades planejadas pela patrulha.','Registrar receitas e despesas simples ou da mesada em planilha ou caderno por um período determinado.','Conduzir uma reunião de patrulha como monitor ou secretário, registrando decisões e acompanhando sua execução.','Especialidade - Equivalente a 1 item variável']},
+mudancas:{nome:'5. Mudanças Climáticas', metaVar:5,
+fixas:[],
+variaveis:['Em um acampamento, criar uma estação meteorológica simples para registrar temperatura, umidade, direção do vento, nuvens e possíveis mudanças no tempo.','Participar da construção de um fogão solar e usá-lo em um acampamento de patrulha ou tropa.','Participar de uma excursão urbana com foco ecológico, identificando situações de risco para a sociedade referentes às mudanças climáticas.','Visitar ou participar de uma atividade com uma organização que atua em prol do meio ambiente.','Em uma excursão ou acampamento em área não urbana, identificar ações prejudiciais à natureza, como extrativismo e mineração, e listar seus impactos.','Planejar e participar de uma excursão, utilizando meios de transporte que dependem de fontes de energia limpa (bicicleta, ônibus elétrico, embarcação a remo, entre outros).','Organizar, com sua patrulha ou tropa, um projeto de conscientização sobre o uso de energia e água em sua escola, condomínio ou sede da UEL.','Participar de mutirões de plantio de mudas ou cultivo de uma horta em casa, na escola ou na UEL.','Especialidade - Equivalente a 1 item variável']},
+consumo:{nome:'6. Consumo Responsável', metaVar:5,
+fixas:['Em acampamentos e excursões, criar soluções para melhorar a higiene e conforto e classificar os resíduos em categorias, tratando-os adequadamente.','Planejar adequadamente e adquirir as quantidades dos alimentos para refeições em um acampamento para sua patrulha, evitando desperdício.'],
+variaveis:['Registrar e analisar o consumo de água e energia da sua residência, buscando ideias para economizar, e apresentar para sua patrulha os resultados.','Avaliar o impacto ambiental de uma atividade e apresentar alternativas mais sustentáveis.','Visitar uma estação de energia renovável, uma estação de tratamento de água, uma cooperativa ou usina de reciclagem ou outras opções semelhantes.','Consertar objetos simples, como brinquedos ou pequenos eletrodomésticos.','Utilizar embalagens retornáveis ou reutilizáveis nas refeições de campo, evitando descartáveis.','Separar resíduos orgânicos e criar um sistema de compostagem caseira.','Criar uma campanha educativa para a tropa sobre consumo consciente e economia de recursos.','Trocar roupas, livros ou jogos com amigos e familiares em vez de comprar novos.','Organizar, com sua patrulha, uma campanha de conscientização sobre consumo responsável.','Confeccionar utensílios ou equipamentos a partir de materiais reciclados para uso nas atividades da patrulha.','Planejar e realizar as refeições de um dia de acampamento sem carne, garantindo a ingestão adequada de proteínas.','Organizar, cuidar e fazer reparos nos materiais da patrulha.','Especialidade - Equivalente a 1 item variável']},
+preservacao:{nome:'7. Preservação da Biodiversidade', metaVar:5,
+fixas:['Participar, em patrulha, de uma atividade de exploração em ambiente natural, reconhecendo a fauna e a flora locais e identificando riscos à preservação, além de propor soluções para evitá-los.'],
+variaveis:['Reconhecer os animais venenosos e peçonhentos da região e saber como agir em casos de picadas ou contaminação.','Planejar e executar um projeto ambiental com a patrulha ou tropa.','Plantar uma espécie nativa e observar seu crescimento, registrando cada etapa.','Identificar as pegadas de pelo menos cinco animais da fauna brasileira e realizar levantamento das pegadas em áreas naturais.','Participar de uma atividade de mergulho que tenha o objetivo de conhecer e explorar a vida na água.','Participar de uma atividade de observação de animais noturnos com sua patrulha.','Observar e registrar espécies de aves, insetos, plantas ou outros animais durante um acampamento ou excursão.','Visitar parques, reservas ou centros de proteção ambiental para conhecer ações de preservação da fauna e da flora.','Construir comedouros ou bebedouros para aves e instalar em áreas adequadas, acompanhando seu uso.','Criar materiais educativos, como vídeos ou posts, sobre a importância de preservar a biodiversidade.','Especialidade - Equivalente a 1 item variável']},
+vida_ar:{nome:'8. Vida ao Ar Livre', metaVar:5,
+fixas:['Montar o campo de patrulha com pioneirias como mesa, pórtico e canto do lenhador, utilizando amarras adequadas.','Aplicar os nós direito, correr, aselha, volta do fiel, escolta, durante um acampamento sabendo sua utilização.','Escolher corretamente o local para montagem da barraca, incluindo técnicas de montagem, desmontagem e acondicionamento durante um acampamento de patrulha ou tropa.','Manusear corretamente ferramentas de corte e sapa durante um acampamento de patrulha ou tropa, zelando pela segurança e realizando reparos.','Preparar e executar uma fogueira para uma refeição mateira durante um acampamento de patrulha ou tropa, seguindo as técnicas de segurança.','Participar de ao menos duas excursões ao ar livre (patrulha ou tropa), utilizando normas de baixo impacto ambiental.','Participar de ao menos dois acampamentos ao ar livre (patrulha ou tropa), utilizando normas de baixo impacto ambiental.','Orientar-se com recursos naturais, bússola e mapa, utilizando azimutes.'],
+variaveis:['Participar de um percurso no campo de pelo menos 1 km utilizando sinais de pista.','Colaborar na preparação de alimentos para a patrulha em pelo menos três atividades ao ar livre, sendo uma delas no estilo comida mateira, sem utensílios.','Desenvolver soluções para purificação e consumo de água em um acampamento.','Aplicar técnicas de "tocaia" em jogos com a patrulha.','Participar da construção de um fogão suspenso ou forno de acampamento para o preparo de uma refeição.','Construir e pernoitar em um bivaque ou abrigo natural durante uma atividade de patrulha.','Confeccionar falcaças, nó catau, lais de guia, pescador, oito duplo e demonstrar cuidados com as cordas.','Participar de uma atividade aquática com a tropa, seguindo as normas de segurança.','Desenhar um croqui de um acampamento, usando sinais topográficos.','Especialidade - Equivalente a 1 item variável']},
+paz:{nome:'9. Promoção da Paz', metaVar:4,
+fixas:['Aplicar uma atividade para a patrulha sobre Direitos Humanos ou os Direitos da Criança e do Adolescente.'],
+variaveis:['Convidar a patrulha a cooperar em ações organizadas por uma comunidade em favor de pessoas vulneráveis.','Participar de uma excursão com sua patrulha ou tropa visitando diferentes templos e conhecendo um pouco mais sobre cada religião.','Participar de eventos de trocas culturais entre jovens de diferentes origens para estimular o respeito mútuo.','Participar de uma atividade com outro grupo escoteiro ou seção autônoma e refletir sobre o que é Fraternidade Mundial Escoteira.','Conhecer as diferentes denominações de fé e crença de amigos da patrulha, tropa, escola e comunidade.','Promover uma campanha que incentive atitudes de respeito e cooperação entre todos.','Convidar representantes de diferentes crenças para compartilhar experiências e responder perguntas da tropa.','Criar com sua patrulha ou seção um calendário de celebrações religiosas das diferentes denominações de fé e crença ali presentes.','Especialidade - Equivalente a 1 item variável']},
+heranca:{nome:'10. Herança Cultural', metaVar:5,
+fixas:['Realizar o hasteamento ou arriamento da bandeira em cerimônia de abertura ou encerramento de atividade.'],
+variaveis:['Desenvolver sua "Árvore Genealógica", pesquisando seu sobrenome, significado e a história dos seus antepassados, situando-os no contexto histórico, e apresentá-la para sua patrulha.','Participar das cerimônias com os símbolos nacionais e cantar o Hino Nacional corretamente.','Apresentar para sua patrulha ou tropa histórias de mulheres que se destacaram em nosso país.','Participar, com sua patrulha, de uma comemoração ou festa típica da sua região.','Participar, com sua patrulha, de um safari fotográfico em sua cidade, identificando os locais de importância histórica da localidade.','Participar de um jantar festivo representando um estado diferente do seu.','Aplicar jogos e atividades típicas da sua região.','Visitar museus, centros culturais ou pontos históricos locais para conhecer o patrimônio da região.','Investigar lendas, histórias ou personagens do folclore brasileiro e dramatizá-los em esquetes no Fogo de Conselho.','Aplicar canções e danças típicas do Brasil.','Confeccionar artesanato típico de alguma região do Brasil.','Apresentar a cultura da sua cidade em um evento regional ou nacional, como feira das cidades ou noite folclórica.','Especialidade - Equivalente a 1 item variável']},
+democracia:{nome:'11. Democracia', metaVar:2,
+fixas:['Participar ativamente das decisões do Conselho de Patrulha, contribuindo com ideias, votando e assumindo responsabilidades, respeitando os resultados.','Participar ativamente das decisões da Assembleia de Tropa, contribuindo com ideias, votando e assumindo responsabilidades, respeitando os resultados.','Participar da eleição do monitor da patrulha e das decisões de encargos, respeitando os resultados.'],
+variaveis:['Visitar a sede administrativa de qualquer um dos três poderes, e explicar a importância e as particularidades desta forma de governo, conhecendo a constituição e os símbolos nacionais, do estado e município.','Conhecer a estrutura do grupo escoteiro ou seção autônoma e participar de uma Assembleia da UEL.','Participar ativamente de um fórum de jovens do grupo escoteiro.','Aprender e compartilhar sobre a história do voto e da democracia no Brasil.','Especialidade - Equivalente a 1 item variável']},
+comunidade:{nome:'12. Comunidade', metaVar:3,
+fixas:['Identificar, sozinho ou em patrulha, uma necessidade da comunidade e planejar e executar uma ação comunitária.','Identificar os riscos de desastres naturais na comunidade e conhecer os hospitais e contatos de emergência, sabendo quando acionar cada um.'],
+variaveis:['Aplicar o conhecimento adquirido nas especialidades em ações de serviço à comunidade.','Participar ativamente de pelo menos uma campanha de serviço e desenvolvimento comunitário organizadas pela UEL, distrito ou região.','Organizar uma oficina de brinquedos, doando os itens consertados para uma instituição que atende crianças carentes.','Colaborar em ações organizadas por outras instituições de serviço.','Especialidade - Equivalente a 1 item variável']},
+valores:{nome:'13. Valores', metaVar:3,
+fixas:['Avaliar, com seus companheiros de patrulha, a vivência da Promessa e Lei Escoteira.'],
+variaveis:['Participar da avaliação da sua Progressão Pessoal e dos companheiros da patrulha.','Explicar o significado da Lei e da Promessa Escoteira aos novos membros da patrulha.','Auxiliar um companheiro de patrulha a realizar sua Promessa Escoteira.','Explicar aos novos membros da patrulha os significados da flor-de-lis e da Saudação Escoteira.','Conhecer e cantar o Hino Alerta.','Especialidade - Equivalente a 1 item variável']},
+habitos:{nome:'14. Hábitos Saudáveis', metaVar:3,
+fixas:['Planejar e executar um cardápio completo e saudável (café da manhã, almoço e jantar) para a patrulha em acampamento.','Conhecer e aplicar normas de limpeza no tratamento e conservação de alimentos nas atividades de patrulha.'],
+variaveis:['Manter hábitos de higiene pessoal, utilizar o vestuário ou uniforme adequadamente, demonstrando aplicação correta dos distintivos.','Contribuir para manter a sede do grupo e canto de patrulha em ordem e em perfeito estado de conservação.','Montar um cronograma semanal, equilibrando estudos, responsabilidades e momentos de lazer.','Praticar uma atividade física regularmente.','Promover um piquenique com alimentos saudáveis com sua patrulha ou tropa.','Manter adequada rotina de sono e alimentação saudável.','Saber o que são as indicações de rótulos, o que são gorduras saturadas, conservantes, corantes além dos selos de advertência.','Arrumar e limpar seu quarto e contribuir nas rotinas da casa.','Especialidade - Equivalente a 1 item variável']},
+saude_mental:{nome:'15. Saúde Mental', metaVar:2,
+fixas:['Conhecer o conceito de Espaços Seguros e aplicá-los em todas as atividades de sua patrulha ou tropa.','Aprender a identificar sinais de tristeza ou isolamento em colegas e saber como oferecer apoio inicial, como conversar com respeito e buscar ajuda de um adulto de confiança.'],
+variaveis:['Participar de uma atividade sobre a importância do autocuidado e da saúde mental.','Conduzir uma sessão de relaxamento como yoga, meditação, caminhadas silenciosas na natureza, alongamentos, entre outras, para sua patrulha ou tropa.','Organizar sua rotina de atividades semanais, considerando a importância do equilíbrio entre as atividades do mundo digital e real e realizar uma atividade de bem-estar offline.','Propor momentos de descontração com a família ao ar livre, evitando o uso da tecnologia e compartilhar como foi a experiência.','Participar com sua patrulha de uma atividade que promova o contato com seus sentidos e promova momentos de equilíbrio emocional como por exemplo: uma trilha sensorial, pintura livre, roda de canções, observação de céu ou fogueira etc.','Especialidade - Equivalente a 1 item variável']},
+cuidado:{nome:'16. Cuidado com o Corpo', metaVar:4,
+fixas:['Conhecer as ações iniciais em acidentes e como cuidar de: pequenos cortes; contusões; escoriações; queimaduras e picadas de animais peçonhentos.','Aplicar técnicas de bandagens e transporte de feridos.','Cuidar da segurança física e mental nas atividades escoteiras, respeitando os limites próprios e dos outros, e seguindo as orientações dos escotistas.'],
+variaveis:['Conhecer as medidas do seu corpo (palmo, envergadura, passo simples e duplo) e aplicá-las durante uma excursão com sua patrulha.','Participar de uma atividade, oficina, palestra que trate dos malefícios dos seguintes assuntos: anorexia, bulimia, drogas, álcool, cigarro e cigarros eletrônicos.','Saber contato dos órgãos de emergência e saber como informar os sinais vitais e situação da vítima.','Participar de uma simulação de acidente e atuar em conjunto com a sua patrulha.','Proteger-se do sol e do frio durante as atividades, identificando casos de desidratação e insolação, e respeitar os limites do seu corpo.','Demonstrar como ajudar uma pessoa em casos de obstrução das vias aéreas e convulsões.','Conhecer os itens que compõem a caixa de primeiros socorros da patrulha e mantê-la organizada.','Saber agir em casos de hemorragia.','Especialidade - Equivalente a 1 item variável']},
+vinculos:{nome:'17. Vínculos Saudáveis', metaVar:4,
+fixas:['Realizar uma campanha para combater o bullying e cyberbullying para a comunidade.'],
+variaveis:['Participar de jogos com a patrulha ou a tropa, respeitando as regras e seus participantes.','Organizar uma atividade de patrulha em sua casa ou na casa de um membro da patrulha.','Ensinar uma canção escoteira a outros escoteiros.','Ajudar outro membro da UEL a conquistar uma especialidade ou insígnias.','Propor metas para melhorar a convivência na vida na patrulha e na tropa, compreendendo como todos se sentem quanto a isso.','Participar de uma atividade entre diferentes grupos escoteiros ou atividade regional ou nacional.','Acolher os novos integrantes da patrulha.','Assumir tarefas domésticas para melhorar a convivência em casa.','Participar de uma atividade da tropa com a família ou responsáveis.','Convidar um colega da mesma faixa etária para participar de um Fogo de Conselho, integrado a sua patrulha e com o devido "Registro de Visitante".','Especialidade - Equivalente a 1 item variável']},
+espiritualidade:{nome:'18. Espiritualidade', metaVar:4,
+fixas:[],
+variaveis:['Fazer reflexões espirituais rotineiras na tropa ou patrulha, ao ar livre.','Apresentar um pequeno relato à patrulha ou tropa sobre os ensinamentos de sua crença ou religião.','Auxiliar na realização de uma celebração de sua comunidade religiosa.','Celebrar sua crença ou religião regularmente.','Colaborar na organização de um culto interconfessional em uma atividade escoteira.','Participar de um momento de reflexão e conexão com um ambiente natural em que possa apreciar e agradecer a beleza do mundo natural.','Especialidade - Equivalente a 1 item variável']},
+};
+const BLOCO_IDS = Object.keys(BLOCOS);
+
+
+const MESES_ABREV = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+
+// ── Autenticação anônima do Firebase (mesma do app principal) ──
+const FIREBASE_WEB_API_KEY = "AIzaSyB50r7SU6qU_dwq03v_oQksLi1bAxbU614";
+let firebaseAuthToken = null;
+async function autenticarFirebaseAnonimo() {
+if (!FIREBASE_WEB_API_KEY || FIREBASE_WEB_API_KEY.indexOf('COLE_AQUI') === 0) {
+console.warn('Firebase: chave de API da Web não configurada.');
+return null;
+}
+try {
+const resp = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + FIREBASE_WEB_API_KEY, {
+method: 'POST',
+headers: {'Content-Type': 'application/json'},
+body: JSON.stringify({ returnSecureToken: true })
+});
+const data = await resp.json();
+if (data && data.idToken) {
+firebaseAuthToken = data.idToken;
+setTimeout(autenticarFirebaseAnonimo, 50 * 60 * 1000);
+}
+return firebaseAuthToken;
+} catch (e) {
+console.error('Falha ao autenticar no Firebase:', e);
+return null;
+}
+}
+function urlComAuthFirebase(url) {
+if (!firebaseAuthToken) return url;
+return url + (url.indexOf('?') !== -1 ? '&' : '?') + 'auth=' + firebaseAuthToken;
+}
+
+const DB_URL = "https://joaninha-progressao-default-rtdb.firebaseio.com";
+const REST_URL = DB_URL + "/tropaProgressao/json.json";
+
+let EVENTOS = [];
+let CICLO = [];
+let CICLO_INFO = {};
+let CICLO_DESTAQUE = {};
+let JOVENS = [];
+let JNOMES = {};
+
+async function carregarDadosView() {
+await autenticarFirebaseAnonimo();
+try {
+const r = await Promise.race([
+fetch(urlComAuthFirebase(REST_URL)),
+new Promise((_, reject) => setTimeout(() => reject(new Error('Tempo limite ao buscar dados')), 6000))
+]);
+const valor = await r.json();
+if (valor) {
+const dados = JSON.parse(valor);
+EVENTOS = dados.eventos || [];
+CICLO = dados.ciclo || [];
+CICLO_INFO = dados.cicloInfo || {};
+CICLO_DESTAQUE = dados.cicloDestaque || {};
+const excluidos = dados.excluidos || [];
+const arquivados = dados.arquivados || [];
+const extras = dados.extraJovens || [];
+const nomesBase = dados.nomesBase || {};
+JOVENS = JOVENS_BASE.filter(id => !excluidos.includes(id));
+JNOMES = Object.assign({}, JNOMES_PADRAO);
+extras.forEach(ex => { JOVENS.push(ex.id); JNOMES[ex.id] = ex.nome; });
+JOVENS = JOVENS.filter(id => !arquivados.includes(id));
+Object.keys(nomesBase).forEach(id => { JNOMES[id] = nomesBase[id]; });
+}
+} catch (e) {
+console.error('Erro ao carregar dados:', e);
+document.getElementById('listaEventosView').innerHTML = '<div class="hint-vazio">Não foi possível carregar os dados agora. Tente atualizar a página em instantes.</div>';
+document.getElementById('listaCicloView').innerHTML = '<div class="hint-vazio">Não foi possível carregar os dados agora. Tente atualizar a página em instantes.</div>';
+return;
+}
+renderCalendarioVisualizacao();
+renderCicloVisualizacao();
+}
+
+function mudarPaginaView(p) {
+document.getElementById('pagina-calendario-view').classList.toggle('active', p === 'calendario');
+document.getElementById('pagina-ciclo-view').classList.toggle('active', p === 'ciclo');
+document.getElementById('tabCalView').classList.toggle('active', p === 'calendario');
+document.getElementById('tabCicloView').classList.toggle('active', p === 'ciclo');
+window.scrollTo(0, 0);
+}
+
+// ── Calendário (somente leitura, sem lista de presença) ──
+function renderCalendarioVisualizacao() {
+const el = document.getElementById('listaEventosView');
+if (!EVENTOS.length) { el.innerHTML = '<div class="hint-vazio">Nenhuma atividade cadastrada ainda.</div>'; return; }
+const ordenados = [...EVENTOS].filter(e => e.data).sort((a, b) => a.data.localeCompare(b.data));
+el.innerHTML = ordenados.map(ev => {
+const partes = ev.data.split('-');
+const mesTxt = MESES_ABREV[parseInt(partes[1], 10) - 1] || '';
+const dia = partes[2] || '';
+const respHtml = (ev.responsaveis && ev.responsaveis.length) ? `<div class="evento-resp">👤 ${ev.responsaveis.join(', ')}</div>` : '';
+const linkHtml = ev.link ? `<a class="evento-link" href="${ev.link}" target="_blank" rel="noopener">🔗 Abrir link</a>` : '';
+const anexoHtml = ev.anexo ? `<span class="evento-anexo-tag">📎 ${ev.anexo.name}</span>` : '';
+const respostaHtml = ev.resposta ? `<div class="evento-resposta-view">💬 ${ev.resposta}</div>` : '';
+return `<div class="evento-card-view">
+<div class="evento-data-view">
+<div class="ev-dia">${dia}</div><div class="ev-mes">${mesTxt}</div>
+</div>
+<div class="evento-corpo-view">
+<div class="evento-nome-view">${ev.tipo ? `<span class="fmt-badge fmt-${ev.tipo}">${ev.tipo}</span>` : ''}${ev.externa ? `<span class="externa-badge">🌍 Externa</span>` : ''}${ev.nome || ''}</div>
+${ev.local ? `<div class="evento-local-view">📍 ${ev.local}</div>` : ''}
+${respHtml}
+${ev.descricao ? `<div class="evento-desc-view">${ev.descricao}</div>` : ''}
+${(linkHtml || anexoHtml) ? `<div class="evento-extra-row">${linkHtml}${anexoHtml}</div>` : ''}
+${respostaHtml}
+</div>
+</div>`;
+}).join('');
+}
+
+// ── Ciclo de Programa (somente leitura) ──
+let ciclosGrupoAbertosView = {};
+let semCardsAbertosView = {};
+function toggleGrupoView(g) { ciclosGrupoAbertosView[g] = ciclosGrupoAbertosView[g] === undefined ? false : !ciclosGrupoAbertosView[g]; renderCicloVisualizacao(); }
+function toggleSemView(i) { semCardsAbertosView[i] = semCardsAbertosView[i] === undefined ? false : !semCardsAbertosView[i]; renderCicloVisualizacao(); }
+
+function renderSemestreView(i, sem) {
+const aberto = semCardsAbertosView[i] === undefined ? true : semCardsAbertosView[i];
+const intervalo = sem.ano ? (sem.semestre === '1' ? `Jan/${sem.ano} → Jun/${sem.ano}` : `Jul/${sem.ano} → Dez/${sem.ano}`) : '';
+const blocosSelecionados = (sem.blocos || []).filter(Boolean);
+let blocosHtml;
+if (!blocosSelecionados.length) {
+blocosHtml = `<div class="hint-vazio-sm">Nenhum bloco selecionado.</div>`;
+} else {
+blocosHtml = `<div class="blocos-grid-view">` + blocosSelecionados.map(b => {
+const def = BLOCOS[b];
+const eixo = EIXOS.find(e => e.blocos.includes(b));
+const cor = eixo ? eixo.cor : '#666';
+return `<div class="bloco-chip-view" style="background:${cor}16;border:1px solid ${cor}50;color:${cor};">${def ? def.nome : b}</div>`;
+}).join('') + `</div>`;
+}
+const metasHtml = (sem.metas && sem.metas.length) ? `<div class="metas-view">
+<div class="secao-label-view">🎯 Metas e marcos</div>
+${sem.metas.map(m => `<div class="meta-item-view"><span>${m.icone || '⭐'}</span><span>${m.texto}</span></div>`).join('')}
+</div>` : '';
+
+let externasHtml = '';
+if (sem.ano) {
+const intervaloObj = { inicio: sem.semestre === '1' ? `${sem.ano}-01-01` : `${sem.ano}-07-01`, fim: sem.semestre === '1' ? `${sem.ano}-06-30` : `${sem.ano}-12-31` };
+const externas = EVENTOS.filter(e => e.externa && e.data && e.data >= intervaloObj.inicio && e.data <= intervaloObj.fim).sort((a, b) => a.data.localeCompare(b.data));
+if (externas.length) {
+externasHtml = `<div class="metas-view">
+<div class="secao-label-view">📍 Atividades externas</div>
+${externas.map(ev => { const p = ev.data.split('-'); return `<div class="meta-item-view"><span>${p[2]}/${p[1]}</span><span>${ev.nome}</span></div>`; }).join('')}
+</div>`;
+}
+}
+
+return `<div class="sem-card-view">
+<div class="sem-card-header-view" onclick="toggleSemView(${i})">
+<span>${(i % 6) + 1}º Semestre${intervalo ? ` — ${intervalo}` : ''}</span>
+<span class="chev-view">${aberto ? '▴' : '▾'}</span>
+</div>
+${aberto ? `<div class="sem-card-body-view">${blocosHtml}${metasHtml}${externasHtml}</div>` : ''}
+</div>`;
+}
+
+function renderCicloVisualizacao() {
+const el = document.getElementById('listaCicloView');
+if (!CICLO.length) { el.innerHTML = '<div class="hint-vazio">Nenhum ciclo cadastrado ainda.</div>'; return; }
+const totalGrupos = Math.ceil(CICLO.length / 6);
+let html = '';
+for (let g = 0; g < totalGrupos; g++) {
+const inicioIdx = g * 6;
+const semestresDoGrupo = CICLO.slice(inicioIdx, inicioIdx + 6);
+const info = CICLO_INFO[g] || {};
+const titulo = info.nome ? info.nome : ('Ciclo ' + (g + 1));
+const aberto = ciclosGrupoAbertosView[g] === undefined ? true : ciclosGrupoAbertosView[g];
+const primeiroAno = semestresDoGrupo[0] ? semestresDoGrupo[0].ano : '';
+const ultimoAno = semestresDoGrupo[semestresDoGrupo.length - 1] ? semestresDoGrupo[semestresDoGrupo.length - 1].ano : '';
+const resumoPeriodo = primeiroAno ? (ultimoAno && ultimoAno !== primeiroAno ? `${primeiroAno} → ${ultimoAno}` : `${primeiroAno}`) : '';
+const destaqueId = CICLO_DESTAQUE[g];
+const destaqueNome = destaqueId ? (JNOMES[destaqueId] || null) : null;
+
+html += `<div class="ciclo-grupo-view">
+<div class="ciclo-grupo-header-view" onclick="toggleGrupoView(${g})">
+<div>
+<div class="ciclo-grupo-titulo-view">📚 ${titulo}</div>
+<div class="ciclo-grupo-sub-view">3 anos · 6 semestres${info.descricao ? ' · ' + info.descricao : ''}</div>
+</div>
+<div style="display:flex;align-items:center;gap:10px;">
+${resumoPeriodo ? `<span class="ciclo-grupo-periodo-view">${resumoPeriodo}</span>` : ''}
+<span class="chev-view">${aberto ? '▴' : '▾'}</span>
+</div>
+</div>
+${aberto ? `<div class="ciclo-grupo-body-view">
+${destaqueNome ? `<div class="destaque-view">🎯 Jovem em destaque: <strong>${destaqueNome}</strong></div>` : ''}
+${semestresDoGrupo.map((sem, k) => renderSemestreView(inicioIdx + k, sem)).join('')}
+</div>` : ''}
+</div>`;
+}
+el.innerHTML = html;
+}
+
+// ── Cabeçalho compacto ao rolar (sensor de interseção, mesmo padrão robusto do app principal) ──
+function iniciarObservadorHeaderCompactoView() {
+const sentinela = document.getElementById('scrollSentinelView');
+const header = document.querySelector('.header');
+if (!sentinela || !header) return;
+if (!('IntersectionObserver' in window)) return;
+const observer = new IntersectionObserver((entries) => {
+entries.forEach((entry) => {
+header.classList.toggle('compacto', !entry.isIntersecting);
+});
+}, { threshold: 0 });
+observer.observe(sentinela);
+}
+iniciarObservadorHeaderCompactoView();
+
+carregarDadosView();
+</script>
+
+</body>
+</html>
