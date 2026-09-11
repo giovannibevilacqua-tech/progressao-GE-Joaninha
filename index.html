@@ -119,7 +119,7 @@ scrollbar-width: thin; scrollbar-color: rgba(0,0,0,.25) transparent;
 #eventoModalOv .lis-modal-box::-webkit-scrollbar-track { background: transparent; margin: 10px 0; }
 #eventoModalOv .lis-modal-box::-webkit-scrollbar-thumb { background: rgba(0,0,0,.25); border-radius: 10px; }
 #eventoModalOv.centralizado { align-items: center; }
-#eventoModalOv.centralizado .lis-modal-box { margin: 20px auto; max-height: 85vh; }
+#eventoModalOv.centralizado .lis-modal-box { margin: 20px auto; max-height: 85vh; max-height: 85dvh; }
 .lis-modal-header { position: sticky; top: 0; z-index: 5; background: var(--card); padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
 .lis-modal-titulo { font-size: 15px; font-weight: 800; color: var(--vinho); }
 .lis-modal-fechar { background: none; border: none; font-size: 20px; color: var(--muted); cursor: pointer; padding: 0 4px; }
@@ -2514,8 +2514,7 @@ function abrirModalPresencaEvento(id) {
 eventoModalAbertoId = id;
 eventoModalTipo = 'presenca';
 renderEventoModalBody();
-document.getElementById('eventoModalOv').classList.remove('centralizado');
-document.getElementById('eventoModalOv').classList.add('open');
+document.getElementById('eventoModalOv').classList.add('open', 'centralizado');
 }
 
 function salvarLinkEventoCard(id, val) {
