@@ -397,7 +397,20 @@ border: 1px solid var(--border); background: #FAFAF8; color: var(--text); cursor
 }
 .chip-toggle:hover { background: #F2EFEA; }
 .chip-toggle.selected { background: var(--vinho); color: #fff; border-color: var(--vinho); }
-.evento-bloco-tag { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; color: #fff; white-space: nowrap; }
+.evento-bloco-tag {
+font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; color: #fff; white-space: nowrap;
+position: relative; cursor: pointer;
+}
+.itens-popup {
+display: none; position: absolute; top: 100%; left: 0; margin-top: 6px; z-index: 40;
+background: var(--card); color: var(--text); border: 1px solid var(--border); border-radius: 10px;
+box-shadow: var(--shadow); padding: 10px 12px; min-width: 220px; max-width: 300px;
+font-size: 11px; font-weight: 500; white-space: normal; text-align: left; line-height: 1.5;
+}
+.evento-bloco-tag:hover .itens-popup, .evento-bloco-tag.aberto .itens-popup { display: block; }
+.itens-popup-bloco { font-weight: 800; font-size: 10px; text-transform: uppercase; letter-spacing: .3px; color: var(--muted); margin: 6px 0 2px; }
+.itens-popup-bloco:first-child { margin-top: 0; }
+.itens-popup-item { padding: 2px 0; }
 .fmt-badge { font-size: 9px; font-weight: 800; padding: 2px 7px; border-radius: 20px; letter-spacing: .5px; margin-right: 5px; }
 .fmt-T { background: #EBF5FB; color: #1565C0; }
 .fmt-P { background: #F4ECF7; color: #6A1B9A; }
@@ -2658,6 +2671,39 @@ eventoMenuAbertoId = null;
 renderPaginaCalendario();
 }
 
+function itensAgrupadosPorEixo(itens) {
+const porEixo = {};
+(itens || []).forEach(itemId => {
+const { blocoId, tipo, idx } = parseItemId(itemId);
+const def = BLOCOS[blocoId];
+if (!def) return;
+const texto = tipo === 'f' ? def.fixas[idx] : def.variaveis[idx];
+if (texto === undefined) return;
+const eixo = EIXOS.find(e => e.blocos.includes(blocoId));
+if (!eixo) return;
+if (!porEixo[eixo.id]) porEixo[eixo.id] = { eixo, blocos: {} };
+if (!porEixo[eixo.id].blocos[blocoId]) porEixo[eixo.id].blocos[blocoId] = [];
+porEixo[eixo.id].blocos[blocoId].push(texto);
+});
+return porEixo;
+}
+function construirBolhasItens(itens) {
+const EMOJI_EIXO = { ma: '🌿', pd: '🕊', sb: '🤝', hv: '🧭' };
+const porEixo = itensAgrupadosPorEixo(itens);
+const eixoIds = Object.keys(porEixo);
+if (!eixoIds.length) return '';
+return `<div class="evento-blocos-row">` + eixoIds.map(eixoId => {
+const grupo = porEixo[eixoId];
+const total = Object.values(grupo.blocos).reduce((s, arr) => s + arr.length, 0);
+const popupHtml = Object.keys(grupo.blocos).map(b => `<div class="itens-popup-bloco">${BLOCOS[b].nome}</div>${grupo.blocos[b].map(t => `<div class="itens-popup-item">• ${t}</div>`).join('')}`).join('');
+return `<span class="evento-bloco-tag" style="background:${grupo.eixo.cor};" onclick="event.stopPropagation();this.classList.toggle('aberto')">
+${EMOJI_EIXO[eixoId] || '📘'} ${grupo.eixo.nome} · ${total} ${total === 1 ? 'item' : 'itens'}
+<div class="itens-popup" onclick="event.stopPropagation()">${popupHtml}</div>
+</span>`;
+}).join('') + `</div>`;
+}
+document.addEventListener('click', () => { document.querySelectorAll('.evento-bloco-tag.aberto').forEach(el => el.classList.remove('aberto')); });
+
 function renderPaginaCalendario() {
 renderResumoPresencas();
 const el = document.getElementById('listaEventos');
@@ -2665,15 +2711,13 @@ if (!EVENTOS.length) {
 el.innerHTML = '<div class="eixo-blocos-hint" style="padding:24px 14px;">Nenhuma atividade cadastrada ainda. Use o formulário acima pra adicionar a primeira.</div>';
 return;
 }
+
 const ordenados = [...EVENTOS].sort((a, b) => a.data.localeCompare(b.data));
 el.innerHTML = ordenados.map(ev => {
 const partes = ev.data.split('-');
 const mesTxt = MESES_ABREV[parseInt(partes[1], 10) - 1] || '';
 const menuAberto = eventoMenuAbertoId === ev.id;
-const itens = ev.itens || [];
-const contagemPorBloco = {};
-itens.forEach(itemId => { const { blocoId } = parseItemId(itemId); contagemPorBloco[blocoId] = (contagemPorBloco[blocoId] || 0) + 1; });
-const blocosTocados = Object.keys(contagemPorBloco);
+const bolhasItens = construirBolhasItens(ev.itens);
 const presentes = ev.presentes || [];
 const presencaAberta = !!presencaAbertaIds[ev.id];
 const extraAberta = !!extraAbertaIds[ev.id];
@@ -2690,8 +2734,8 @@ ${menuAberto ? `<div class="evento-dropdown" onclick="event.stopPropagation()">
 <div class="evento-meta">
 ${ev.local ? `<span class="evento-tag">📍 ${ev.local}</span>` : ''}
 ${(ev.responsaveis && ev.responsaveis.length) ? `<span class="evento-tag">👤 ${ev.responsaveis.join(', ')}</span>` : ''}
-${blocosTocados.map(b => { const eixo = EIXOS.find(e => e.blocos.includes(b)); return `<span class="evento-bloco-tag" style="background:${eixo?eixo.cor:'#666'};">📘 ${BLOCOS[b].nome} · ${contagemPorBloco[b]} ${contagemPorBloco[b]===1?'item':'itens'}</span>`; }).join('')}
 </div>
+${bolhasItens}
 ${ev.descricao ? `<div class="evento-desc">${ev.descricao}</div>` : ''}
 <div class="acoes-evento-row">
 <button class="acao-evento-btn" onclick="toggleExtraEvento('${ev.id}')">📎 Link, arquivo e avaliação ${(ev.link||ev.anexo||ev.resposta) ? '●' : ''} <span class="chev-acao">${extraAberta ? '▾' : '▸'}</span></button>

@@ -60,15 +60,28 @@ padding: 10px 12px; font-size: 11px; color: #7A5A00; line-height: 1.5;
 .hint-vazio-sm { padding: 10px 4px; text-align: left; font-size: 11px; }
 
 /* Calendário */
-.evento-card-view { display: flex; background: var(--card); border-radius: var(--r); box-shadow: var(--shadow); margin: 10px 14px 0; overflow: hidden; }
-.evento-data-view { width: 56px; min-width: 56px; background: var(--vinho); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px 4px; }
+.evento-card-view { display: flex; background: var(--card); border-radius: var(--r); box-shadow: var(--shadow); margin: 10px 14px 0; overflow: visible; position: relative; }
+.evento-data-view { width: 56px; min-width: 56px; background: var(--vinho); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px 4px; border-radius: var(--r) 0 0 var(--r); }
 .ev-dia { font-size: 18px; font-weight: 900; line-height: 1.1; }
 .ev-mes { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
 .evento-corpo-view { flex: 1; padding: 12px 14px; min-width: 0; }
 .evento-nome-view { font-size: 13px; font-weight: 800; margin-bottom: 4px; }
 .evento-local-view, .evento-resp { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
 .evento-blocos-row { display: flex; flex-wrap: wrap; gap: 5px; margin: 6px 0 2px; }
-.evento-bloco-tag-view { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; color: #fff; white-space: nowrap; }
+.evento-bloco-tag-view {
+font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; color: #fff; white-space: nowrap;
+position: relative; cursor: pointer;
+}
+.itens-popup-view {
+display: none; position: absolute; top: 100%; left: 0; margin-top: 6px; z-index: 40;
+background: var(--card); color: var(--text); border: 1px solid var(--border); border-radius: 10px;
+box-shadow: var(--shadow); padding: 10px 12px; min-width: 220px; max-width: 300px;
+font-size: 11px; font-weight: 500; white-space: normal; text-align: left; line-height: 1.5;
+}
+.evento-bloco-tag-view:hover .itens-popup-view, .evento-bloco-tag-view.aberto .itens-popup-view { display: block; }
+.itens-popup-bloco-view { font-weight: 800; font-size: 10px; text-transform: uppercase; letter-spacing: .3px; color: var(--muted); margin: 6px 0 2px; }
+.itens-popup-bloco-view:first-child { margin-top: 0; }
+.itens-popup-item-view { padding: 2px 0; }
 .evento-desc-view { font-size: 12px; color: #3A3A3A; line-height: 1.5; white-space: pre-line; margin-top: 6px; }
 .evento-extra-row { display: flex; gap: 8px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
 .evento-link { font-size: 11px; font-weight: 700; color: var(--vinho); text-decoration: none; }
@@ -289,6 +302,38 @@ function parseItemId(itemId) {
 const [blocoId, tipo, idxStr] = itemId.split('|');
 return { blocoId, tipo, idx: parseInt(idxStr, 10) };
 }
+const EMOJI_EIXO_VIEW = { ma: '🌿', pd: '🕊', sb: '🤝', hv: '🧭' };
+function itensAgrupadosPorEixoView(itens) {
+const porEixo = {};
+(itens || []).forEach(itemId => {
+const { blocoId, tipo, idx } = parseItemId(itemId);
+const def = BLOCOS[blocoId];
+if (!def) return;
+const texto = tipo === 'f' ? def.fixas[idx] : def.variaveis[idx];
+if (texto === undefined) return;
+const eixo = EIXOS.find(e => e.blocos.includes(blocoId));
+if (!eixo) return;
+if (!porEixo[eixo.id]) porEixo[eixo.id] = { eixo, blocos: {} };
+if (!porEixo[eixo.id].blocos[blocoId]) porEixo[eixo.id].blocos[blocoId] = [];
+porEixo[eixo.id].blocos[blocoId].push(texto);
+});
+return porEixo;
+}
+function construirBolhasItensView(itens) {
+const porEixo = itensAgrupadosPorEixoView(itens);
+const eixoIds = Object.keys(porEixo);
+if (!eixoIds.length) return '';
+return `<div class="evento-blocos-row">` + eixoIds.map(eixoId => {
+const grupo = porEixo[eixoId];
+const total = Object.values(grupo.blocos).reduce((s, arr) => s + arr.length, 0);
+const popupHtml = Object.keys(grupo.blocos).map(b => `<div class="itens-popup-bloco-view">${BLOCOS[b].nome}</div>${grupo.blocos[b].map(t => `<div class="itens-popup-item-view">• ${t}</div>`).join('')}`).join('');
+return `<span class="evento-bloco-tag-view" style="background:${grupo.eixo.cor};" onclick="event.stopPropagation();this.classList.toggle('aberto')">
+${EMOJI_EIXO_VIEW[eixoId] || '📘'} ${grupo.eixo.nome} · ${total} ${total === 1 ? 'item' : 'itens'}
+<div class="itens-popup-view" onclick="event.stopPropagation()">${popupHtml}</div>
+</span>`;
+}).join('') + `</div>`;
+}
+document.addEventListener('click', () => { document.querySelectorAll('.evento-bloco-tag-view.aberto').forEach(el => el.classList.remove('aberto')); });
 
 function renderCalendarioVisualizacao() {
 const el = document.getElementById('listaEventosView');
@@ -302,14 +347,7 @@ const respHtml = (ev.responsaveis && ev.responsaveis.length) ? `<div class="even
 const linkHtml = ev.link ? `<a class="evento-link" href="${ev.link}" target="_blank" rel="noopener">🔗 Abrir link</a>` : '';
 const anexoHtml = ev.anexo ? `<span class="evento-anexo-tag">📎 ${ev.anexo.name}</span>` : '';
 const respostaHtml = ev.resposta ? `<div class="evento-resposta-view">💬 ${ev.resposta}</div>` : '';
-const itens = ev.itens || [];
-const contagemPorBloco = {};
-itens.forEach(itemId => { const { blocoId } = parseItemId(itemId); if (blocoId) contagemPorBloco[blocoId] = (contagemPorBloco[blocoId] || 0) + 1; });
-const blocosTocados = Object.keys(contagemPorBloco).filter(b => BLOCOS[b]);
-const blocosHtml = blocosTocados.length ? `<div class="evento-blocos-row">${blocosTocados.map(b => {
-const eixo = EIXOS.find(e => e.blocos.includes(b));
-return `<span class="evento-bloco-tag-view" style="background:${eixo ? eixo.cor : '#666'};">📘 ${BLOCOS[b].nome} · ${contagemPorBloco[b]} ${contagemPorBloco[b] === 1 ? 'item' : 'itens'}</span>`;
-}).join('')}</div>` : '';
+const blocosHtml = construirBolhasItensView(ev.itens);
 return `<div class="evento-card-view">
 <div class="evento-data-view">
 <div class="ev-dia">${dia}</div><div class="ev-mes">${mesTxt}</div>
