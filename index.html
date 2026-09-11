@@ -2710,7 +2710,7 @@ clearTimeout(hoverPopoverCloseTimer);
 el.classList.add('hover-aberto');
 }
 function bolhaMouseLeave(el) {
-hoverPopoverCloseTimer = setTimeout(() => { el.classList.remove('hover-aberto'); }, 400);
+hoverPopoverCloseTimer = setTimeout(() => { el.classList.remove('hover-aberto'); }, 200);
 }
 
 function renderPaginaCalendario() {
@@ -2726,6 +2726,7 @@ el.innerHTML = ordenados.map(ev => {
 const partes = ev.data.split('-');
 const mesTxt = MESES_ABREV[parseInt(partes[1], 10) - 1] || '';
 const menuAberto = eventoMenuAbertoId === ev.id;
+const itens = ev.itens || [];
 const bolhasItens = construirBolhasItens(ev.itens);
 const presentes = ev.presentes || [];
 const presencaAberta = !!presencaAbertaIds[ev.id];
