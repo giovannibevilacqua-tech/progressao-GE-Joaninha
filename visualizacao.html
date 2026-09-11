@@ -67,6 +67,8 @@ padding: 10px 12px; font-size: 11px; color: #7A5A00; line-height: 1.5;
 .evento-corpo-view { flex: 1; padding: 12px 14px; min-width: 0; }
 .evento-nome-view { font-size: 13px; font-weight: 800; margin-bottom: 4px; }
 .evento-local-view, .evento-resp { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+.evento-blocos-row { display: flex; flex-wrap: wrap; gap: 5px; margin: 6px 0 2px; }
+.evento-bloco-tag-view { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; color: #fff; white-space: nowrap; }
 .evento-desc-view { font-size: 12px; color: #3A3A3A; line-height: 1.5; white-space: pre-line; margin-top: 6px; }
 .evento-extra-row { display: flex; gap: 8px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
 .evento-link { font-size: 11px; font-weight: 700; color: var(--vinho); text-decoration: none; }
@@ -283,6 +285,11 @@ window.scrollTo(0, 0);
 }
 
 // ── Calendário (somente leitura, sem lista de presença) ──
+function parseItemId(itemId) {
+const [blocoId, tipo, idxStr] = itemId.split('|');
+return { blocoId, tipo, idx: parseInt(idxStr, 10) };
+}
+
 function renderCalendarioVisualizacao() {
 const el = document.getElementById('listaEventosView');
 if (!EVENTOS.length) { el.innerHTML = '<div class="hint-vazio">Nenhuma atividade cadastrada ainda.</div>'; return; }
@@ -295,6 +302,14 @@ const respHtml = (ev.responsaveis && ev.responsaveis.length) ? `<div class="even
 const linkHtml = ev.link ? `<a class="evento-link" href="${ev.link}" target="_blank" rel="noopener">🔗 Abrir link</a>` : '';
 const anexoHtml = ev.anexo ? `<span class="evento-anexo-tag">📎 ${ev.anexo.name}</span>` : '';
 const respostaHtml = ev.resposta ? `<div class="evento-resposta-view">💬 ${ev.resposta}</div>` : '';
+const itens = ev.itens || [];
+const contagemPorBloco = {};
+itens.forEach(itemId => { const { blocoId } = parseItemId(itemId); if (blocoId) contagemPorBloco[blocoId] = (contagemPorBloco[blocoId] || 0) + 1; });
+const blocosTocados = Object.keys(contagemPorBloco).filter(b => BLOCOS[b]);
+const blocosHtml = blocosTocados.length ? `<div class="evento-blocos-row">${blocosTocados.map(b => {
+const eixo = EIXOS.find(e => e.blocos.includes(b));
+return `<span class="evento-bloco-tag-view" style="background:${eixo ? eixo.cor : '#666'};">📘 ${BLOCOS[b].nome} · ${contagemPorBloco[b]} ${contagemPorBloco[b] === 1 ? 'item' : 'itens'}</span>`;
+}).join('')}</div>` : '';
 return `<div class="evento-card-view">
 <div class="evento-data-view">
 <div class="ev-dia">${dia}</div><div class="ev-mes">${mesTxt}</div>
@@ -303,6 +318,7 @@ return `<div class="evento-card-view">
 <div class="evento-nome-view">${ev.tipo ? `<span class="fmt-badge fmt-${ev.tipo}">${ev.tipo}</span>` : ''}${ev.externa ? `<span class="externa-badge">🌍 Externa</span>` : ''}${ev.nome || ''}</div>
 ${ev.local ? `<div class="evento-local-view">📍 ${ev.local}</div>` : ''}
 ${respHtml}
+${blocosHtml}
 ${ev.descricao ? `<div class="evento-desc-view">${ev.descricao}</div>` : ''}
 ${(linkHtml || anexoHtml) ? `<div class="evento-extra-row">${linkHtml}${anexoHtml}</div>` : ''}
 ${respostaHtml}
