@@ -402,12 +402,12 @@ font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; color:
 position: relative; cursor: pointer;
 }
 .itens-popup {
-display: none; position: absolute; top: 100%; left: 0; margin-top: 6px; z-index: 40;
+display: none; position: absolute; top: 100%; left: 0; margin-top: 0; z-index: 40;
 background: var(--card); color: var(--text); border: 1px solid var(--border); border-radius: 10px;
 box-shadow: var(--shadow); padding: 10px 12px; min-width: 220px; max-width: 300px;
 font-size: 11px; font-weight: 500; white-space: normal; text-align: left; line-height: 1.5;
 }
-.evento-bloco-tag:hover .itens-popup, .evento-bloco-tag.aberto .itens-popup { display: block; }
+.evento-bloco-tag.aberto .itens-popup, .evento-bloco-tag.hover-aberto .itens-popup { display: block; }
 .itens-popup-bloco { font-weight: 800; font-size: 10px; text-transform: uppercase; letter-spacing: .3px; color: var(--muted); margin: 6px 0 2px; }
 .itens-popup-bloco:first-child { margin-top: 0; }
 .itens-popup-item { padding: 2px 0; }
@@ -2696,13 +2696,22 @@ return `<div class="evento-blocos-row">` + eixoIds.map(eixoId => {
 const grupo = porEixo[eixoId];
 const total = Object.values(grupo.blocos).reduce((s, arr) => s + arr.length, 0);
 const popupHtml = Object.keys(grupo.blocos).map(b => `<div class="itens-popup-bloco">${BLOCOS[b].nome}</div>${grupo.blocos[b].map(t => `<div class="itens-popup-item">• ${t}</div>`).join('')}`).join('');
-return `<span class="evento-bloco-tag" style="background:${grupo.eixo.cor};" onclick="event.stopPropagation();this.classList.toggle('aberto')">
+return `<span class="evento-bloco-tag" style="background:${grupo.eixo.cor};" onclick="event.stopPropagation();this.classList.toggle('aberto')" onmouseenter="bolhaMouseEnter(this)" onmouseleave="bolhaMouseLeave(this)">
 ${EMOJI_EIXO[eixoId] || '📘'} ${grupo.eixo.nome} · ${total} ${total === 1 ? 'item' : 'itens'}
 <div class="itens-popup" onclick="event.stopPropagation()">${popupHtml}</div>
 </span>`;
 }).join('') + `</div>`;
 }
 document.addEventListener('click', () => { document.querySelectorAll('.evento-bloco-tag.aberto').forEach(el => el.classList.remove('aberto')); });
+
+let hoverPopoverCloseTimer = null;
+function bolhaMouseEnter(el) {
+clearTimeout(hoverPopoverCloseTimer);
+el.classList.add('hover-aberto');
+}
+function bolhaMouseLeave(el) {
+hoverPopoverCloseTimer = setTimeout(() => { el.classList.remove('hover-aberto'); }, 400);
+}
 
 function renderPaginaCalendario() {
 renderResumoPresencas();
