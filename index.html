@@ -111,6 +111,15 @@ border: none; background: var(--card); color: var(--text); cursor: pointer;
 .lis-modal-ov { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1000; align-items: flex-end; justify-content: center; }
 .lis-modal-ov.open { display: flex; }
 .lis-modal-box { background: var(--bg); border-radius: 16px 16px 0 0; padding: 0; width: 100%; max-width: 560px; max-height: 92vh; overflow-y: auto; }
+#eventoModalOv .lis-modal-box {
+border-radius: 16px; margin: 0 auto 14px;
+scrollbar-width: thin; scrollbar-color: rgba(0,0,0,.25) transparent;
+}
+#eventoModalOv .lis-modal-box::-webkit-scrollbar { width: 6px; }
+#eventoModalOv .lis-modal-box::-webkit-scrollbar-track { background: transparent; margin: 10px 0; }
+#eventoModalOv .lis-modal-box::-webkit-scrollbar-thumb { background: rgba(0,0,0,.25); border-radius: 10px; }
+#eventoModalOv.centralizado { align-items: center; }
+#eventoModalOv.centralizado .lis-modal-box { margin: 20px auto; max-height: 85vh; }
 .lis-modal-header { position: sticky; top: 0; z-index: 5; background: var(--card); padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
 .lis-modal-titulo { font-size: 15px; font-weight: 800; color: var(--vinho); }
 .lis-modal-fechar { background: none; border: none; font-size: 20px; color: var(--muted); cursor: pointer; padding: 0 4px; }
@@ -424,7 +433,6 @@ border: 1px solid var(--border); border-radius: 8px; cursor: pointer;
 .toggle-externa-row input[type=checkbox] { width: 17px; height: 17px; accent-color: var(--vinho); cursor: pointer; flex-shrink: 0; }
 .toggle-externa-row label { font-size: 12px; font-weight: 600; color: var(--text); cursor: pointer; }
 .externa-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 20px; background: #E8F5E9; color: #1E7A34; border: 1px solid #A8D8B0; margin-right: 5px; }
-.presenca-section { margin-top: 8px; padding-top: 8px; border-top: 1px solid #F2EFEA; }
 .presenca-toggle {
 border: none; background: #F5F3EF; color: var(--text); font-size: 11px; font-weight: 700;
 padding: 6px 10px; border-radius: 20px; cursor: pointer;
@@ -730,6 +738,16 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 <button class="lis-modal-fechar" onclick="fecharLisOuro()">✕</button>
 </div>
 <div class="lis-modal-body" id="lisModalBody"></div>
+</div>
+</div>
+
+<div class="lis-modal-ov" id="eventoModalOv" onclick="if(event.target===this)fecharEventoModal()">
+<div class="lis-modal-box">
+<div class="lis-modal-header">
+<span class="lis-modal-titulo" id="eventoModalTitulo"></span>
+<button class="lis-modal-fechar" onclick="fecharEventoModal()">✕</button>
+</div>
+<div class="lis-modal-body" id="eventoModalBody"></div>
 </div>
 </div>
 
@@ -2147,8 +2165,6 @@ let addEventoAberto = false;
 let eventoEditandoId = null;
 let eventoAnexoTemp = null;
 let eventoMenuAbertoId = null;
-let presencaAbertaIds = {};
-let extraAbertaIds = {};
 const RESPONSAVEIS_OPCOES = ['Todos', 'Giovanni', 'João Paulo', 'João Vitor', 'Zósimo', 'Greh', 'Outro'];
 let responsaveisSelecionados = [];
 let eventoItensSelecionados = [];
@@ -2431,14 +2447,75 @@ saveState();
 renderPaginaCalendario();
 }
 
-function togglePresencaEvento(id) {
-presencaAbertaIds[id] = !presencaAbertaIds[id];
+let eventoModalAbertoId = null;
+let eventoModalTipo = null; // 'extra' | 'presenca'
+
+function fecharEventoModal() {
+document.getElementById('eventoModalOv').classList.remove('open', 'centralizado');
+eventoModalAbertoId = null;
+eventoModalTipo = null;
 renderPaginaCalendario();
 }
 
-function toggleExtraEvento(id) {
-extraAbertaIds[id] = !extraAbertaIds[id];
-renderPaginaCalendario();
+function renderEventoModalBody() {
+if (!eventoModalAbertoId) return;
+const ev = EVENTOS.find(e => e.id === eventoModalAbertoId);
+if (!ev) { fecharEventoModal(); return; }
+if (eventoModalTipo === 'extra') {
+document.getElementById('eventoModalTitulo').textContent = '📎 Link, arquivo e avaliação';
+document.getElementById('eventoModalBody').innerHTML = `<div style="display:flex;flex-direction:column;gap:10px;">
+<div>
+<label class="campo-label">Link (Google Drive, fotos, documento etc.)</label>
+<input type="url" class="campo-input" value="${ev.link||''}" placeholder="https://drive.google.com/..." onchange="salvarLinkEventoCard('${ev.id}',this.value)">
+${ev.link ? `<a class="evento-link" href="${ev.link}" target="_blank" rel="noopener" style="display:inline-block;margin-top:6px;">🔗 Abrir link</a>` : ''}
+</div>
+<div>
+<label class="campo-label">Anexar arquivo (máx. 3MB)</label>
+<div id="anexoCard-${ev.id}">
+${ev.anexo ? `<div class="anexo-arquivo-row"><div class="anexo-arquivo-info"><div class="anexo-arquivo-nome">📎 ${ev.anexo.name}</div><div class="anexo-arquivo-tam">${fmtBytesEvento(ev.anexo.size)}</div></div><button type="button" class="anexo-btn" style="background:var(--azul);color:#fff;" onclick="baixarEventoAnexo('${ev.id}')">⬇</button><button type="button" class="anexo-btn" style="background:#E74C3C;color:#fff;" onclick="removerAnexoEventoCard('${ev.id}')">✕</button></div>` : `<label class="anexo-upload-label"><input type="file" onchange="handleAnexoEventoCard('${ev.id}',this.files[0])"><span style="font-size:16px;">📎</span><span style="font-size:11px;color:var(--muted);">Toque pra anexar</span></label>`}
+</div>
+</div>
+<div>
+<label class="campo-label">Como foi a atividade? Relato e observações</label>
+<textarea class="campo-input" rows="3" placeholder="Escreva aqui..." onchange="salvarRespostaEventoCard('${ev.id}',this.value)">${ev.resposta||''}</textarea>
+</div>
+</div>`;
+} else if (eventoModalTipo === 'presenca') {
+const presentes = ev.presentes || [];
+const itens = ev.itens || [];
+document.getElementById('eventoModalTitulo').textContent = `📋 Presença (${presentes.length}/${JOVENS.length})`;
+document.getElementById('eventoModalBody').innerHTML = `<div class="presenca-list">
+<div class="presenca-marcar-todos">
+<button onclick="marcarTodosPresentes('${ev.id}', true)">✓ Marcar todos</button>
+<button onclick="marcarTodosPresentes('${ev.id}', false)">✗ Desmarcar todos</button>
+</div>
+${JOVENS.map(j => {
+const presente = presentes.includes(j);
+const justificado = (JUSTIFICATIVAS[j] || []).includes(ev.id);
+return `<div class="presenca-row" onclick="marcarPresenca('${ev.id}','${j}')">
+<div class="item-check${presente ? ' done' : ''}">${presente ? '✓' : ''}</div>
+<div class="presenca-nome">${JNOMES[j]}</div>
+${presente && itens.length ? '<span class="presenca-marcado">✓ itens marcados</span>' : ''}
+${!presente ? `<button class="justificar-btn${justificado ? ' justificado' : ''}" onclick="event.stopPropagation();toggleJustificativa('${ev.id}','${j}')">${justificado ? '✓ Justificada' : 'Justificar falta'}</button>` : ''}
+</div>`;
+}).join('')}
+${!itens.length ? '<div class="presenca-hint">Nenhum item de progressão vinculado a esta atividade — a presença é registrada, mas a progressão dos jovens não é marcada automaticamente. Edite a atividade para selecionar itens.</div>' : ''}
+</div>`;
+}
+}
+
+function abrirModalExtraEvento(id) {
+eventoModalAbertoId = id;
+eventoModalTipo = 'extra';
+renderEventoModalBody();
+document.getElementById('eventoModalOv').classList.add('open', 'centralizado');
+}
+function abrirModalPresencaEvento(id) {
+eventoModalAbertoId = id;
+eventoModalTipo = 'presenca';
+renderEventoModalBody();
+document.getElementById('eventoModalOv').classList.remove('centralizado');
+document.getElementById('eventoModalOv').classList.add('open');
 }
 
 function salvarLinkEventoCard(id, val) {
@@ -2447,6 +2524,7 @@ if (!ev) return;
 ev.link = val.trim();
 temAlteracaoLocalPendente = true;
 saveState();
+renderEventoModalBody();
 }
 
 function salvarRespostaEventoCard(id, val) {
@@ -2469,7 +2547,7 @@ if (!ev) return;
 ev.anexo = { name: file.name, type: file.type || 'application/octet-stream', size: file.size, data: b64 };
 temAlteracaoLocalPendente = true;
 saveState();
-renderPaginaCalendario();
+renderEventoModalBody();
 };
 reader.onerror = () => alert('Erro ao ler o arquivo. Tente novamente.');
 reader.readAsDataURL(file);
@@ -2481,7 +2559,7 @@ if (!ev) return;
 ev.anexo = null;
 temAlteracaoLocalPendente = true;
 saveState();
-renderPaginaCalendario();
+renderEventoModalBody();
 }
 
 function marcarProgressoPorPresenca(jovemId, itens) {
@@ -2514,7 +2592,7 @@ if (paginaAtiva === 'tabela') {
 if (blocoTabela) { atualizarTabelaBloco(); document.getElementById('resumoContainer').innerHTML = construirResumoBlocos(); }
 else { renderPaginaTabela(); }
 }
-renderPaginaCalendario();
+renderEventoModalBody();
 }
 
 function marcarTodosPresentes(eventoId, presente) {
@@ -2540,6 +2618,7 @@ if (blocoTabela) { atualizarTabelaBloco(); document.getElementById('resumoContai
 else { renderPaginaTabela(); }
 }
 renderPaginaCalendario();
+renderEventoModalBody();
 }
 
 function toggleJustificativa(eventoId, jovemId) {
@@ -2551,6 +2630,7 @@ temAlteracaoLocalPendente = true;
 saveState();
 renderRoster();
 renderPaginaCalendario();
+renderEventoModalBody();
 }
 
 function eventosPassadosOrdenados() {
@@ -2726,11 +2806,8 @@ el.innerHTML = ordenados.map(ev => {
 const partes = ev.data.split('-');
 const mesTxt = MESES_ABREV[parseInt(partes[1], 10) - 1] || '';
 const menuAberto = eventoMenuAbertoId === ev.id;
-const itens = ev.itens || [];
 const bolhasItens = construirBolhasItens(ev.itens);
 const presentes = ev.presentes || [];
-const presencaAberta = !!presencaAbertaIds[ev.id];
-const extraAberta = !!extraAbertaIds[ev.id];
 return `<div class="evento-card">
 <div class="evento-strip"><div class="evento-dia">${partes[2]}</div><div class="evento-mes">${mesTxt}</div></div>
 <div class="evento-body">
@@ -2748,46 +2825,8 @@ ${(ev.responsaveis && ev.responsaveis.length) ? `<span class="evento-tag">👤 $
 ${bolhasItens}
 ${ev.descricao ? `<div class="evento-desc">${ev.descricao}</div>` : ''}
 <div class="acoes-evento-row">
-<button class="acao-evento-btn" onclick="toggleExtraEvento('${ev.id}')">📎 Link, arquivo e avaliação ${(ev.link||ev.anexo||ev.resposta) ? '●' : ''} <span class="chev-acao">${extraAberta ? '▾' : '▸'}</span></button>
-<button class="acao-evento-btn" onclick="togglePresencaEvento('${ev.id}')">📋 Presença (${presentes.length}/${JOVENS.length}) <span class="chev-acao">${presencaAberta ? '▾' : '▸'}</span></button>
-</div>
-<div class="presenca-section">
-${extraAberta ? `<div class="presenca-list" onclick="event.stopPropagation()" style="display:flex;flex-direction:column;gap:10px;padding:8px 4px;">
-<div>
-<label class="campo-label">Link (Google Drive, fotos, documento etc.)</label>
-<input type="url" class="campo-input" value="${ev.link||''}" placeholder="https://drive.google.com/..." onchange="salvarLinkEventoCard('${ev.id}',this.value)">
-${ev.link ? `<a class="evento-link" href="${ev.link}" target="_blank" rel="noopener" style="display:inline-block;margin-top:6px;">🔗 Abrir link</a>` : ''}
-</div>
-<div>
-<label class="campo-label">Anexar arquivo (máx. 3MB)</label>
-<div id="anexoCard-${ev.id}">
-${ev.anexo ? `<div class="anexo-arquivo-row"><div class="anexo-arquivo-info"><div class="anexo-arquivo-nome">📎 ${ev.anexo.name}</div><div class="anexo-arquivo-tam">${fmtBytesEvento(ev.anexo.size)}</div></div><button type="button" class="anexo-btn" style="background:var(--azul);color:#fff;" onclick="baixarEventoAnexo('${ev.id}')">⬇</button><button type="button" class="anexo-btn" style="background:#E74C3C;color:#fff;" onclick="removerAnexoEventoCard('${ev.id}')">✕</button></div>` : `<label class="anexo-upload-label"><input type="file" onchange="handleAnexoEventoCard('${ev.id}',this.files[0])"><span style="font-size:16px;">📎</span><span style="font-size:11px;color:var(--muted);">Toque pra anexar</span></label>`}
-</div>
-</div>
-<div>
-<label class="campo-label">Como foi a atividade? Relato e observações</label>
-<textarea class="campo-input" rows="3" placeholder="Escreva aqui..." onchange="salvarRespostaEventoCard('${ev.id}',this.value)">${ev.resposta||''}</textarea>
-</div>
-</div>` : ''}
-</div>
-<div class="presenca-section">
-${presencaAberta ? `<div class="presenca-list">
-<div class="presenca-marcar-todos">
-<button onclick="event.stopPropagation();marcarTodosPresentes('${ev.id}', true)">✓ Marcar todos</button>
-<button onclick="event.stopPropagation();marcarTodosPresentes('${ev.id}', false)">✗ Desmarcar todos</button>
-</div>
-${JOVENS.map(j => {
-const presente = presentes.includes(j);
-const justificado = (JUSTIFICATIVAS[j] || []).includes(ev.id);
-return `<div class="presenca-row" onclick="marcarPresenca('${ev.id}','${j}')">
-<div class="item-check${presente ? ' done' : ''}">${presente ? '✓' : ''}</div>
-<div class="presenca-nome">${JNOMES[j]}</div>
-${presente && itens.length ? '<span class="presenca-marcado">✓ itens marcados</span>' : ''}
-${!presente ? `<button class="justificar-btn${justificado ? ' justificado' : ''}" onclick="event.stopPropagation();toggleJustificativa('${ev.id}','${j}')">${justificado ? '✓ Justificada' : 'Justificar falta'}</button>` : ''}
-</div>`;
-}).join('')}
-${!itens.length ? '<div class="presenca-hint">Nenhum item de progressão vinculado a esta atividade — a presença é registrada, mas a progressão dos jovens não é marcada automaticamente. Edite a atividade para selecionar itens.</div>' : ''}
-</div>` : ''}
+<button class="acao-evento-btn" onclick="abrirModalExtraEvento('${ev.id}')">📎 Link, arquivo e avaliação ${(ev.link||ev.anexo||ev.resposta) ? '●' : ''}</button>
+<button class="acao-evento-btn" onclick="abrirModalPresencaEvento('${ev.id}')">📋 Presença (${presentes.length}/${JOVENS.length})</button>
 </div>
 </div>
 </div>`;
