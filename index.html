@@ -448,10 +448,11 @@ display: inline-flex; align-items: center; justify-content: center; gap: 5px; wh
 .acao-evento-btn:hover { background: #EEEBE7; }
 .acao-evento-btn .chev-acao { font-size: 9px; opacity: .7; }
 .presenca-list { display: flex; flex-direction: column; gap: 2px; margin-top: 8px; }
-.presenca-row { display: flex; align-items: center; gap: 8px; padding: 8px 6px; cursor: pointer; border-radius: 6px; border-bottom: 1px solid #E3DCCF; }
+.presenca-row { display: flex; align-items: center; gap: 8px; padding: 8px 6px; border-radius: 6px; border-bottom: 1px solid #E3DCCF; }
 .presenca-list .presenca-row:last-child { border-bottom: none; }
-.presenca-row:hover { background: #ECE5D8; box-shadow: inset 3px 0 0 var(--vinho); }
-.presenca-nome { font-size: 12px; font-weight: 600; flex: 1; }
+.presenca-row .item-check { cursor: pointer; }
+.presenca-nome { font-size: 12px; font-weight: 600; flex: 1; cursor: pointer; }
+.presenca-nome:hover { text-decoration: underline; color: var(--vinho); }
 .presenca-marcado { font-size: 9px; font-weight: 700; color: var(--done); }
 .presenca-hint { font-size: 10px; color: var(--muted); margin-top: 6px; line-height: 1.4; }
 .presenca-marcar-todos { display: flex; gap: 8px; margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px solid #F2EFEA; }
@@ -2450,6 +2451,12 @@ renderPaginaCalendario();
 let eventoModalAbertoId = null;
 let eventoModalTipo = null; // 'extra' | 'presenca'
 
+function irParaFichaJovem(j) {
+fecharEventoModal();
+mudarPagina('jovem');
+selecionarJovem(j);
+}
+
 function fecharEventoModal() {
 document.getElementById('eventoModalOv').classList.remove('open', 'centralizado');
 eventoModalAbertoId = null;
@@ -2492,9 +2499,9 @@ document.getElementById('eventoModalBody').innerHTML = `<div class="presenca-lis
 ${JOVENS.map(j => {
 const presente = presentes.includes(j);
 const justificado = (JUSTIFICATIVAS[j] || []).includes(ev.id);
-return `<div class="presenca-row" onclick="marcarPresenca('${ev.id}','${j}')">
-<div class="item-check${presente ? ' done' : ''}">${presente ? '✓' : ''}</div>
-<div class="presenca-nome">${JNOMES[j]}</div>
+return `<div class="presenca-row">
+<div class="item-check${presente ? ' done' : ''}" onclick="marcarPresenca('${ev.id}','${j}')">${presente ? '✓' : ''}</div>
+<div class="presenca-nome" onclick="irParaFichaJovem('${j}')">${JNOMES[j]}</div>
 ${presente && itens.length ? '<span class="presenca-marcado">✓ itens marcados</span>' : ''}
 ${!presente ? `<button class="justificar-btn${justificado ? ' justificado' : ''}" onclick="event.stopPropagation();toggleJustificativa('${ev.id}','${j}')">${justificado ? '✓ Justificada' : 'Justificar falta'}</button>` : ''}
 </div>`;
