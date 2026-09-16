@@ -2784,12 +2784,18 @@ ${EMOJI_EIXO[eixoId] || '📘'} ${grupo.eixo.nome} · ${total} ${total === 1 ? '
 document.addEventListener('click', () => { document.querySelectorAll('.evento-bloco-tag.aberto').forEach(el => el.classList.remove('aberto')); });
 
 let hoverPopoverCloseTimer = null;
+let hoverPopoverAbertoEl = null;
 function bolhaMouseEnter(el) {
 clearTimeout(hoverPopoverCloseTimer);
+if (hoverPopoverAbertoEl && hoverPopoverAbertoEl !== el) hoverPopoverAbertoEl.classList.remove('hover-aberto');
+hoverPopoverAbertoEl = el;
 el.classList.add('hover-aberto');
 }
 function bolhaMouseLeave(el) {
-hoverPopoverCloseTimer = setTimeout(() => { el.classList.remove('hover-aberto'); }, 200);
+hoverPopoverCloseTimer = setTimeout(() => {
+el.classList.remove('hover-aberto');
+if (hoverPopoverAbertoEl === el) hoverPopoverAbertoEl = null;
+}, 200);
 }
 
 function renderPaginaCalendario() {

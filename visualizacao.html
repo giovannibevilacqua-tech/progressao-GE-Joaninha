@@ -336,12 +336,18 @@ ${EMOJI_EIXO_VIEW[eixoId] || '📘'} ${grupo.eixo.nome} · ${total} ${total === 
 document.addEventListener('click', () => { document.querySelectorAll('.evento-bloco-tag-view.aberto').forEach(el => el.classList.remove('aberto')); });
 
 let hoverPopoverCloseTimerView = null;
+let hoverPopoverAbertoElView = null;
 function bolhaMouseEnterView(el) {
 clearTimeout(hoverPopoverCloseTimerView);
+if (hoverPopoverAbertoElView && hoverPopoverAbertoElView !== el) hoverPopoverAbertoElView.classList.remove('hover-aberto');
+hoverPopoverAbertoElView = el;
 el.classList.add('hover-aberto');
 }
 function bolhaMouseLeaveView(el) {
-hoverPopoverCloseTimerView = setTimeout(() => { el.classList.remove('hover-aberto'); }, 200);
+hoverPopoverCloseTimerView = setTimeout(() => {
+el.classList.remove('hover-aberto');
+if (hoverPopoverAbertoElView === el) hoverPopoverAbertoElView = null;
+}, 200);
 }
 
 function renderCalendarioVisualizacao() {
