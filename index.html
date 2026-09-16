@@ -451,8 +451,9 @@ display: inline-flex; align-items: center; justify-content: center; gap: 5px; wh
 .presenca-row { display: flex; align-items: center; gap: 8px; padding: 8px 6px; border-radius: 6px; border-bottom: 1px solid #E3DCCF; cursor: pointer; }
 .presenca-list .presenca-row:last-child { border-bottom: none; }
 .presenca-row:hover { background: #ECE5D8; box-shadow: inset 3px 0 0 var(--vinho); }
-.presenca-nome { font-size: 12px; font-weight: 600; flex: 1; cursor: pointer; }
+.presenca-nome { font-size: 12px; font-weight: 600; cursor: pointer; display: inline-block; }
 .presenca-nome:hover { text-decoration: underline; color: var(--vinho); }
+.presenca-spacer { flex: 1; }
 .presenca-marcado { font-size: 9px; font-weight: 700; color: var(--done); }
 .presenca-hint { font-size: 10px; color: var(--muted); margin-top: 6px; line-height: 1.4; }
 .presenca-marcar-todos { display: flex; gap: 8px; margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px solid #F2EFEA; }
@@ -2502,6 +2503,7 @@ const justificado = (JUSTIFICATIVAS[j] || []).includes(ev.id);
 return `<div class="presenca-row" onclick="marcarPresenca('${ev.id}','${j}')">
 <div class="item-check${presente ? ' done' : ''}">${presente ? '✓' : ''}</div>
 <div class="presenca-nome" onclick="event.stopPropagation();irParaFichaJovem('${j}')">${JNOMES[j]}</div>
+<div class="presenca-spacer"></div>
 ${presente && itens.length ? '<span class="presenca-marcado">✓ itens marcados</span>' : ''}
 ${!presente ? `<button class="justificar-btn${justificado ? ' justificado' : ''}" onclick="event.stopPropagation();toggleJustificativa('${ev.id}','${j}')">${justificado ? '✓ Justificada' : 'Justificar falta'}</button>` : ''}
 </div>`;
