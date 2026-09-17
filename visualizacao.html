@@ -290,6 +290,24 @@ renderCicloVisualizacao();
 let paginaSalvaView = null;
 try { paginaSalvaView = localStorage.getItem('visualizacao_paginaAtiva'); } catch (e) {}
 if (paginaSalvaView === 'ciclo') mudarPaginaView('ciclo');
+restaurarScrollSalvoView('visualizacao_scrollY');
+}
+
+let scrollSaveTimerView = null;
+window.addEventListener('scroll', () => {
+clearTimeout(scrollSaveTimerView);
+scrollSaveTimerView = setTimeout(() => {
+try { localStorage.setItem('visualizacao_scrollY', window.scrollY); } catch (e) {}
+}, 200);
+}, { passive: true });
+
+function restaurarScrollSalvoView(chave) {
+let scrollSalvo = null;
+try { scrollSalvo = localStorage.getItem(chave); } catch (e) {}
+if (scrollSalvo === null) return;
+const y = parseInt(scrollSalvo, 10);
+if (isNaN(y)) return;
+[50, 150, 300, 600, 1000].forEach(delay => setTimeout(() => window.scrollTo(0, y), delay));
 }
 
 function mudarPaginaView(p) {
