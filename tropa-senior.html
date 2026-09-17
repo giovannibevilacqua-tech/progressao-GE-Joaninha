@@ -755,6 +755,14 @@ function countActionsDone(blockId,type,jovemIdx){
   return Object.values(bl).filter(arr=>arr[jovemIdx]===1).length;
 }
 
+let blocosAbertosSr = {};
+function preservarScrollSr(fn) {
+const y = window.scrollY;
+fn();
+window.scrollTo(0, y);
+requestAnimationFrame(() => window.scrollTo(0, y));
+requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo(0, y)));
+}
 function toggle(blockId,type,actionId,jovemIdx){
   if(!S[blockId]) S[blockId]={concluded:[],f:{},v:{},s:{},g:{}};
   if(!S[blockId][type]) S[blockId][type]={};
@@ -763,14 +771,14 @@ function toggle(blockId,type,actionId,jovemIdx){
   S[blockId][type][actionId][jovemIdx] ^= 1;
   checkAutoComplete(blockId,jovemIdx);
   saveState();
-  renderAll();
+  preservarScrollSr(renderAll);
 }
 function toggleConcluded(blockId,jovemIdx){
   if(!S[blockId]) S[blockId]=deepCopy(INICIAL[blockId]||{concluded:[0,0,0,0],f:{},v:{}});
   if(!S[blockId].concluded) S[blockId].concluded=[0,0,0,0];
   S[blockId].concluded[jovemIdx] ^= 1;
   saveState();
-  renderAll();
+  preservarScrollSr(renderAll);
 }
 
 function renderProgressBars(){
@@ -929,6 +937,8 @@ function renderEixo(eixoId){
 
     const blockEl=document.createElement('details');
     blockEl.className='block-item';
+    blockEl.open = !!blocosAbertosSr[bid];
+    blockEl.addEventListener('toggle', () => { blocosAbertosSr[bid] = blockEl.open; });
     blockEl.innerHTML=`
       <summary class="block-summary">
         <span class="block-arrow">▶</span>
