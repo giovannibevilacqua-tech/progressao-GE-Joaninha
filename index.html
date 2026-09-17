@@ -100,7 +100,7 @@ font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0;
 font-size: 11px; font-weight: 800; text-align: center; white-space: nowrap;
 padding: 4px 8px; border-radius: 20px; flex-shrink: 0;
 }
-.roster-menu-btn { border: none; background: none; color: var(--muted); font-size: 16px; font-weight: 900; cursor: pointer; padding: 2px 6px; border-radius: 6px; line-height: 1; flex-shrink: 0; }
+.roster-menu-btn { border: none; background: none; color: var(--muted); font-size: 16px; font-weight: 900; cursor: pointer; padding: 10px 10px; margin: -8px -6px -8px 0; border-radius: 8px; line-height: 1; flex-shrink: 0; }
 .roster-menu-btn:hover { background: #F0EDE8; color: var(--text); }
 .roster-dropdown {
 position: absolute; top: 38px; right: 10px; background: var(--card); border: 1px solid var(--border);
@@ -130,6 +130,14 @@ scrollbar-width: thin; scrollbar-color: rgba(0,0,0,.25) transparent;
 #eventoModalOv .lis-modal-box::-webkit-scrollbar-thumb { background: rgba(0,0,0,.25); border-radius: 10px; }
 #eventoModalOv.centralizado { align-items: center; }
 #eventoModalOv.centralizado .lis-modal-box { margin: 20px auto; max-height: 85vh; max-height: 85dvh; }
+#fichaModalOv { align-items: center; }
+#fichaModalOv .lis-modal-box {
+border-radius: 16px; margin: 20px auto; max-height: 85vh; max-height: 85dvh;
+scrollbar-width: thin; scrollbar-color: rgba(0,0,0,.25) transparent;
+}
+#fichaModalOv .lis-modal-box::-webkit-scrollbar { width: 6px; }
+#fichaModalOv .lis-modal-box::-webkit-scrollbar-track { background: transparent; margin: 10px 0; }
+#fichaModalOv .lis-modal-box::-webkit-scrollbar-thumb { background: rgba(0,0,0,.25); border-radius: 10px; }
 .lis-modal-header { position: sticky; top: 0; z-index: 5; background: var(--card); padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
 .lis-modal-titulo { font-size: 15px; font-weight: 800; color: var(--vinho); }
 .lis-modal-fechar { background: none; border: none; font-size: 20px; color: var(--muted); cursor: pointer; padding: 0 4px; }
@@ -350,6 +358,25 @@ border: 2px solid var(--text); background: #F5F3EF; color: var(--text); cursor: 
 .cb-pb.done-pb { background: var(--done); color: #fff; border-color: #1E8449; }
 th[data-jovem-pb].destaque-jovem-pb { background: #E67E22 !important; }
 td[data-jovem-pb].destaque-jovem-pb { background: #FDEBD0 !important; }
+.autocomplete-lista-pb {
+position: absolute; left: 14px; right: 14px; top: 100%; margin-top: 2px; z-index: 30;
+background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+box-shadow: var(--shadow); overflow: hidden; max-height: 220px; overflow-y: auto;
+}
+.autocomplete-item-pb { padding: 10px 12px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.autocomplete-item-pb:hover { background: #F5F2EE; }
+.autocomplete-item-pb:not(:last-child) { border-bottom: 1px solid #F0EDE8; }
+.chips-jovem-pb { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.chip-jovem-pb {
+display: inline-flex; align-items: center; gap: 5px; background: #FDEBD0; color: #A85D00;
+border: 1px solid #F0AD4E; border-radius: 20px; padding: 4px 6px 4px 10px; font-size: 11px; font-weight: 700;
+}
+.chip-jovem-pb button { border: none; background: rgba(0,0,0,.08); color: #A85D00; width: 16px; height: 16px; border-radius: 50%; cursor: pointer; font-size: 9px; line-height: 1; padding: 0; }
+.chip-jovem-pb button:hover { background: rgba(0,0,0,.18); }
+.indicador-destaque-pb {
+display: flex; align-items: center; gap: 6px; margin-top: 8px; padding: 7px 11px;
+background: #E8F5E9; color: #1E7A34; border-radius: 8px; font-size: 11px; font-weight: 700;
+}
 .cb-pb.pending-pb { background: #EDEBE8; color: #C0BCB7; border-color: #DDD9D4; }
 .cb-pb.pending-pb:hover { background: var(--done-bg); border-color: var(--done); color: var(--done); }
 .cb-pb.done-pb:hover { background: #E74C3C; border-color: #C0392B; }
@@ -646,9 +673,12 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 </div>
 
 <div id="resumoContainer"></div>
-<div style="margin:14px 14px 0;">
-<label class="campo-label">🔎 Filtrar por jovem</label>
-<input type="text" class="campo-input" id="filtroJovemPBInput" placeholder="Digite um nome pra filtrar a tabela..." oninput="filtrarJovemPB(this.value)">
+<div style="margin:14px 14px 0;position:relative;">
+<label class="campo-label">🔎 Destacar jovens na tabela</label>
+<input type="text" class="campo-input" id="filtroJovemPBInput" placeholder="Digite um nome..." autocomplete="off" oninput="autocompleteJovemPB(this.value)" onfocus="autocompleteJovemPB(this.value)" onkeydown="if(event.key==='Enter')adicionarPrimeiraSugestaoPB()">
+<div id="autocompleteJovemPBList" class="autocomplete-lista-pb" style="display:none;"></div>
+<div id="chipsJovemPB" class="chips-jovem-pb"></div>
+<div id="indicadorDestaquePB" class="indicador-destaque-pb" style="display:none;"></div>
 </div>
 <div id="blocosPorEixoContainer"></div>
 </div>
@@ -1282,9 +1312,12 @@ persistirEstado('rosterAberto', rosterAberto);
 aplicarEstadoRoster();
 }
 
-let patrulhasSecaoAberta = true;
+let patrulhasSecaoAberta = window.innerWidth > 640;
 function togglePatrulhasSecao() {
 patrulhasSecaoAberta = !patrulhasSecaoAberta;
+aplicarEstadoPatrulhas();
+}
+function aplicarEstadoPatrulhas() {
 document.getElementById('patrulhasSecaoBody').style.display = patrulhasSecaoAberta ? '' : 'none';
 document.getElementById('chevPatrulhas').style.transform = patrulhasSecaoAberta ? 'rotate(180deg)' : 'rotate(0deg)';
 document.getElementById('cabecalhoPatrulhas').classList.toggle('aberto', patrulhasSecaoAberta);
@@ -2150,14 +2183,14 @@ if (def.fixas.length) {
 const rows = def.fixas.map((txt, i) => {
 const cells = JOVENS.map(j => {
 const marcado = S[j][b].fixas[i];
-return `<td data-jovem-pb="${j}"><div class="cb-pb ${marcado ? 'done-pb' : 'pending-pb'}" onclick="toggleFixaTabela('${j}','${b}',${i})">${marcado ? '✓' : '·'}</div></td>`;
+return `<td data-jovem-pb="${j}" class="${jovensDestacadosPB.includes(j)?'destaque-jovem-pb':''}"><div class="cb-pb ${marcado ? 'done-pb' : 'pending-pb'}" onclick="toggleFixaTabela('${j}','${b}',${i})">${marcado ? '✓' : '·'}</div></td>`;
 }).join('');
 return `<tr class="fixed-row-pb"><td class="act-col-pb">${txt}</td>${cells}</tr>`;
 }).join('');
 fixedSection = `<div class="actions-section-pb">
 <div class="actions-label-pb fixed-label-pb">📌 Ações Fixas (obrigatórias)</div>
 <div class="actions-table-wrap-pb"><table class="actions-table-pb">
-<thead><tr><th class="act-col-pb">Ação</th>${JOVENS.map(j => `<th data-jovem-pb="${j}">${nomeCurto(j)}</th>`).join('')}</tr></thead>
+<thead><tr><th class="act-col-pb">Ação</th>${JOVENS.map(j => `<th data-jovem-pb="${j}" class="${jovensDestacadosPB.includes(j)?'destaque-jovem-pb':''}">${nomeCurto(j)}</th>`).join('')}</tr></thead>
 <tbody>${rows}</tbody>
 </table></div>
 </div>`;
@@ -2168,14 +2201,14 @@ if (def.variaveis.length) {
 const rows = def.variaveis.map((txt, i) => {
 const cells = JOVENS.map(j => {
 const marcado = S[j][b].variaveis[i];
-return `<td data-jovem-pb="${j}"><div class="cb-pb ${marcado ? 'done-pb' : 'pending-pb'}" onclick="toggleVarTabela('${j}','${b}',${i})">${marcado ? '✓' : '·'}</div></td>`;
+return `<td data-jovem-pb="${j}" class="${jovensDestacadosPB.includes(j)?'destaque-jovem-pb':''}"><div class="cb-pb ${marcado ? 'done-pb' : 'pending-pb'}" onclick="toggleVarTabela('${j}','${b}',${i})">${marcado ? '✓' : '·'}</div></td>`;
 }).join('');
 return `<tr><td class="act-col-pb">${txt}</td>${cells}</tr>`;
 }).join('');
 varSection = `<div class="actions-section-pb">
 <div class="actions-label-pb var-label-pb">☑ Ações Variáveis (mín. ${def.metaVar} de ${def.variaveis.length})</div>
 <div class="actions-table-wrap-pb"><table class="actions-table-pb">
-<thead><tr><th class="act-col-pb">Ação</th>${JOVENS.map(j => `<th data-jovem-pb="${j}">${nomeCurto(j)}</th>`).join('')}</tr></thead>
+<thead><tr><th class="act-col-pb">Ação</th>${JOVENS.map(j => `<th data-jovem-pb="${j}" class="${jovensDestacadosPB.includes(j)?'destaque-jovem-pb':''}">${nomeCurto(j)}</th>`).join('')}</tr></thead>
 <tbody>${rows}</tbody>
 </table></div>
 </div>`;
@@ -2184,10 +2217,10 @@ varSection = `<div class="actions-section-pb">
 const especialidadeHtml = `<div class="actions-section-pb">
 <div class="actions-label-pb" style="color:#E67E22;">🎖 Especialidade <span style="font-weight:400;font-size:9px;">(substitui todas as variáveis)</span></div>
 <div class="actions-table-wrap-pb"><table class="actions-table-pb">
-<thead><tr><th class="act-col-pb">Especialidade</th>${JOVENS.map(j => `<th data-jovem-pb="${j}">${nomeCurto(j)}</th>`).join('')}</tr></thead>
+<thead><tr><th class="act-col-pb">Especialidade</th>${JOVENS.map(j => `<th data-jovem-pb="${j}" class="${jovensDestacadosPB.includes(j)?'destaque-jovem-pb':''}">${nomeCurto(j)}</th>`).join('')}</tr></thead>
 <tbody><tr><td class="act-col-pb">Especialidade concluída</td>${JOVENS.map(j => {
 const marcado = S[j][b].especialidade;
-return `<td data-jovem-pb="${j}"><div class="cb-pb ${marcado ? 'done-pb' : 'pending-pb'}" style="${marcado?'background:#F39C12;border-color:#E67E22;':''}" onclick="toggleEspTabela('${j}','${b}')">${marcado ? '★' : '·'}</div></td>`;
+return `<td data-jovem-pb="${j}" class="${jovensDestacadosPB.includes(j)?'destaque-jovem-pb':''}"><div class="cb-pb ${marcado ? 'done-pb' : 'pending-pb'}" style="${marcado?'background:#F39C12;border-color:#E67E22;':''}" onclick="toggleEspTabela('${j}','${b}')">${marcado ? '★' : '·'}</div></td>`;
 }).join('')}</tr></tbody>
 </table></div>
 </div>`;
@@ -2209,14 +2242,51 @@ ${especialidadeHtml}
 </details>`;
 }
 
-function filtrarJovemPB(nome) {
-const termo = nome.trim().toLowerCase();
-document.querySelectorAll('[data-jovem-pb].destaque-jovem-pb').forEach(el => el.classList.remove('destaque-jovem-pb'));
-if (!termo) return;
-JOVENS.filter(j => JNOMES[j].toLowerCase().includes(termo)).forEach(j => {
-document.querySelectorAll('[data-jovem-pb="' + j + '"]').forEach(el => el.classList.add('destaque-jovem-pb'));
-});
+let jovensDestacadosPB = [];
+
+function autocompleteJovemPB(termo) {
+const lista = document.getElementById('autocompleteJovemPBList');
+const t = termo.trim().toLowerCase();
+if (!t) { lista.style.display = 'none'; lista.innerHTML = ''; return; }
+const candidatos = JOVENS.filter(j => JNOMES[j].toLowerCase().includes(t) && !jovensDestacadosPB.includes(j)).slice(0, 6);
+if (!candidatos.length) { lista.style.display = 'none'; lista.innerHTML = ''; return; }
+lista.innerHTML = candidatos.map(j => `<div class="autocomplete-item-pb" onclick="adicionarJovemDestaquePB('${j}')">${JNOMES[j]}</div>`).join('');
+lista.style.display = 'block';
 }
+function adicionarPrimeiraSugestaoPB() {
+const primeiro = document.querySelector('.autocomplete-item-pb');
+if (primeiro) primeiro.click();
+}
+function adicionarJovemDestaquePB(j) {
+if (!jovensDestacadosPB.includes(j)) jovensDestacadosPB.push(j);
+document.getElementById('filtroJovemPBInput').value = '';
+document.getElementById('autocompleteJovemPBList').style.display = 'none';
+document.getElementById('autocompleteJovemPBList').innerHTML = '';
+aplicarDestaqueJovensPB();
+}
+function removerJovemDestaquePB(j) {
+jovensDestacadosPB = jovensDestacadosPB.filter(x => x !== j);
+aplicarDestaqueJovensPB();
+}
+function aplicarDestaqueJovensPB() {
+renderPaginaTabela();
+const chipsEl = document.getElementById('chipsJovemPB');
+chipsEl.innerHTML = jovensDestacadosPB.map(j => `<span class="chip-jovem-pb">${JNOMES[j]}<button onclick="removerJovemDestaquePB('${j}')">✕</button></span>`).join('');
+const indicador = document.getElementById('indicadorDestaquePB');
+if (jovensDestacadosPB.length) {
+indicador.style.display = 'flex';
+const palavra = jovensDestacadosPB.length > 1 ? 'jovens' : 'jovem';
+indicador.innerHTML = `✅ ${jovensDestacadosPB.length} ${palavra} destacado${jovensDestacadosPB.length > 1 ? 's' : ''} na tabela`;
+} else {
+indicador.style.display = 'none';
+indicador.innerHTML = '';
+}
+}
+document.addEventListener('click', (ev) => {
+const lista = document.getElementById('autocompleteJovemPBList');
+const input = document.getElementById('filtroJovemPBInput');
+if (lista && input && !lista.contains(ev.target) && ev.target !== input) { lista.style.display = 'none'; }
+});
 
 function renderPaginaTabela() {
 document.getElementById('resumoContainer').innerHTML = construirResumoBlocos();
@@ -3450,6 +3520,7 @@ renderEventoAnexoArea();
 await iniciarSync();
 renderRoster();
 aplicarEstadoRoster();
+aplicarEstadoPatrulhas();
 let ramoSalvo = null, paginaSalva = null;
 try { ramoSalvo = localStorage.getItem('escoteira_ramoAtivo'); paginaSalva = localStorage.getItem('escoteira_paginaAtiva'); } catch (e) {}
 if (ramoSalvo === 'senior') mudarRamo('senior');
