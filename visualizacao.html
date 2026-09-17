@@ -385,10 +385,21 @@ ${respostaHtml}
 }
 
 // ── Ciclo de Programa (somente leitura) ──
-let ciclosGrupoAbertosView = {};
-let semCardsAbertosView = {};
-function toggleGrupoView(g) { ciclosGrupoAbertosView[g] = ciclosGrupoAbertosView[g] === undefined ? false : !ciclosGrupoAbertosView[g]; renderCicloVisualizacao(); }
-function toggleSemView(i) { semCardsAbertosView[i] = semCardsAbertosView[i] === undefined ? false : !semCardsAbertosView[i]; renderCicloVisualizacao(); }
+// ── Persistência genérica de estado colapsável (localStorage) ──
+function persistirEstadoView(chave, valor) {
+try { localStorage.setItem('visualizacao_' + chave, JSON.stringify(valor)); } catch (e) {}
+}
+function restaurarEstadoView(chave, padrao) {
+try {
+const v = localStorage.getItem('visualizacao_' + chave);
+return v !== null ? JSON.parse(v) : padrao;
+} catch (e) { return padrao; }
+}
+
+let ciclosGrupoAbertosView = restaurarEstadoView('ciclosGrupoAbertosView', {});
+let semCardsAbertosView = restaurarEstadoView('semCardsAbertosView', {});
+function toggleGrupoView(g) { ciclosGrupoAbertosView[g] = ciclosGrupoAbertosView[g] === undefined ? false : !ciclosGrupoAbertosView[g]; persistirEstadoView('ciclosGrupoAbertosView', ciclosGrupoAbertosView); renderCicloVisualizacao(); }
+function toggleSemView(i) { semCardsAbertosView[i] = semCardsAbertosView[i] === undefined ? false : !semCardsAbertosView[i]; persistirEstadoView('semCardsAbertosView', semCardsAbertosView); renderCicloVisualizacao(); }
 
 function renderSemestreView(i, sem) {
 const aberto = semCardsAbertosView[i] === undefined ? true : semCardsAbertosView[i];

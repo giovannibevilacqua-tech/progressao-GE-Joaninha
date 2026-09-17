@@ -51,6 +51,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
 /* EIXO HEADER */
 .eixo-hdr{display:flex;align-items:center;gap:7px;margin:14px 12px 6px;padding:9px 11px;border-radius:var(--r);font-size:12px;font-weight:800;letter-spacing:.3px;border-left:4px solid;}
+.chev-eixo-sr{font-size:11px;transition:transform .2s;flex-shrink:0;}
 .eixo-icon{font-size:14px;}
 .eixo-stats{font-size:10px;font-weight:600;margin-left:auto;opacity:.7;}
 
@@ -317,27 +318,31 @@ body{padding-bottom:50px;}
     </div>
   </div>
 
-  <div class="eixo-hdr" style="background:var(--hv);border-color:var(--hv-b);color:var(--hv-t);">
+  <div class="eixo-hdr" id="hdr-hv" style="background:var(--hv);border-color:var(--hv-b);color:var(--hv-t);cursor:pointer;" onclick="toggleEixoSr('hv')">
     <span class="eixo-icon">⚙</span><span>Habilidades para a Vida</span>
     <span class="eixo-stats" id="stats-hv"></span>
+    <span class="chev-eixo-sr" id="chev-hv">▾</span>
   </div>
   <div class="block-list" id="bl-hv"></div>
 
-  <div class="eixo-hdr" style="background:var(--ma);border-color:var(--ma-b);color:var(--ma-t);">
+  <div class="eixo-hdr" id="hdr-ma" style="background:var(--ma);border-color:var(--ma-b);color:var(--ma-t);cursor:pointer;" onclick="toggleEixoSr('ma')">
     <span class="eixo-icon">🌿</span><span>Meio Ambiente</span>
     <span class="eixo-stats" id="stats-ma"></span>
+    <span class="chev-eixo-sr" id="chev-ma">▾</span>
   </div>
   <div class="block-list" id="bl-ma"></div>
 
-  <div class="eixo-hdr" style="background:var(--pd);border-color:var(--pd-b);color:var(--pd-t);">
+  <div class="eixo-hdr" id="hdr-pd" style="background:var(--pd);border-color:var(--pd-b);color:var(--pd-t);cursor:pointer;" onclick="toggleEixoSr('pd')">
     <span class="eixo-icon">🕊</span><span>Paz e Desenvolvimento</span>
     <span class="eixo-stats" id="stats-pd"></span>
+    <span class="chev-eixo-sr" id="chev-pd">▾</span>
   </div>
   <div class="block-list" id="bl-pd"></div>
 
-  <div class="eixo-hdr" style="background:var(--sb);border-color:var(--sb-b);color:var(--sb-t);">
+  <div class="eixo-hdr" id="hdr-sb" style="background:var(--sb);border-color:var(--sb-b);color:var(--sb-t);cursor:pointer;" onclick="toggleEixoSr('sb')">
     <span class="eixo-icon">💪</span><span>Saúde e Bem-estar</span>
     <span class="eixo-stats" id="stats-sb"></span>
+    <span class="chev-eixo-sr" id="chev-sb">▾</span>
   </div>
   <div class="block-list" id="bl-sb"></div>
 
@@ -755,7 +760,34 @@ function countActionsDone(blockId,type,jovemIdx){
   return Object.values(bl).filter(arr=>arr[jovemIdx]===1).length;
 }
 
-let blocosAbertosSr = {};
+// ── Persistência genérica de estado colapsável (localStorage) ──
+function persistirEstadoSr(chave, valor) {
+try { localStorage.setItem('senior_' + chave, JSON.stringify(valor)); } catch (e) {}
+}
+function restaurarEstadoSr(chave, padrao) {
+try {
+const v = localStorage.getItem('senior_' + chave);
+return v !== null ? JSON.parse(v) : padrao;
+} catch (e) { return padrao; }
+}
+
+let blocosAbertosSr = restaurarEstadoSr('blocosAbertosSr', {});
+let eixosAbertosSr = restaurarEstadoSr('eixosAbertosSr', {});
+function toggleEixoSr(id) {
+eixosAbertosSr[id] = !(eixosAbertosSr[id] ?? true);
+persistirEstadoSr('eixosAbertosSr', eixosAbertosSr);
+aplicarEstadoEixoSr(id);
+}
+function aplicarEstadoEixoSr(id) {
+const aberto = eixosAbertosSr[id] ?? true;
+const lista = document.getElementById('bl-' + id);
+const chev = document.getElementById('chev-' + id);
+if (lista) lista.style.display = aberto ? '' : 'none';
+if (chev) chev.style.transform = aberto ? 'rotate(0deg)' : 'rotate(-90deg)';
+}
+function aplicarEstadoEixosTodosSr() {
+['hv', 'ma', 'pd', 'sb'].forEach(aplicarEstadoEixoSr);
+}
 function preservarScrollSr(fn) {
 const y = window.scrollY;
 fn();
@@ -938,7 +970,7 @@ function renderEixo(eixoId){
     const blockEl=document.createElement('details');
     blockEl.className='block-item';
     blockEl.open = !!blocosAbertosSr[bid];
-    blockEl.addEventListener('toggle', () => { blocosAbertosSr[bid] = blockEl.open; });
+    blockEl.addEventListener('toggle', () => { blocosAbertosSr[bid] = blockEl.open; persistirEstadoSr('blocosAbertosSr', blocosAbertosSr); });
     blockEl.innerHTML=`
       <summary class="block-summary">
         <span class="block-arrow">▶</span>
@@ -1017,9 +1049,10 @@ function savePresenca(){
 function countAbsences(jovemIdx){
   return Object.values(PRESENCA).filter(ev=>ev[jovemIdx]===0).length;
 }
-let resumoPresencasAbertoSr = false;
+let resumoPresencasAbertoSr = restaurarEstadoSr('resumoPresencasAbertoSr', false);
 function toggleResumoPresencasSr() {
   resumoPresencasAbertoSr = !resumoPresencasAbertoSr;
+  persistirEstadoSr('resumoPresencasAbertoSr', resumoPresencasAbertoSr);
   document.getElementById('presenca-summary').style.display = resumoPresencasAbertoSr ? 'block' : 'none';
   document.getElementById('chevResumoPresencasSr').style.transform = resumoPresencasAbertoSr ? 'rotate(180deg)' : 'rotate(0deg)';
 }
@@ -2851,6 +2884,7 @@ async function iniciarApp(){
   await loadState();
   syncJovens();
   renderAll();
+  aplicarEstadoEixosTodosSr();
   loadPresenca();
   renderResponsavelChipsSr();
   renderCal(CAL_2S26,'cal-2s26','2s26');

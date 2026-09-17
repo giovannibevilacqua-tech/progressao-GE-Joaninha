@@ -298,21 +298,49 @@ border: 2px solid var(--text); background: #F5F3EF; color: var(--text); cursor: 
 }
 .page-tab.active { background: var(--vinho); color: #fff; border-color: var(--vinho); }
 
-.tabela-bloco-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; margin-top: 12px; }
-.tabela-bloco-btn {
-display: flex; align-items: center; justify-content: center; text-align: center;
-min-height: 6.5em; padding: 8px; font-size: 11px; font-weight: 800; line-height: 1.3;
-border-radius: 12px; border: 2px solid var(--text); background: #F5F3EF; color: var(--text); cursor: pointer;
-}
-.tabela-bloco-btn.active { background: var(--vinho); color: #fff; border-color: var(--vinho); }
-.tabela-wrap { margin: 10px 14px 0; border-radius: var(--r); box-shadow: var(--shadow); overflow: auto; max-height: 70vh; background: var(--card); }
-.tabela-check-grid { border-collapse: collapse; font-size: 11px; table-layout: fixed; }
-.tabela-check-grid th, .tabela-check-grid td { border: 1px solid #F0EDE8; padding: 8px 4px; text-align: center; white-space: nowrap; width: 52px; }
-.tabela-check-grid th.item-col, .tabela-check-grid td.item-col { text-align: left; position: sticky; left: 0; background: var(--card); width: 220px; min-width: 220px; white-space: normal; z-index: 1; }
-.tabela-check-grid thead th { background: var(--azul); color: #fff; position: sticky; top: 0; z-index: 2; font-size: 10px; overflow: hidden; text-overflow: ellipsis; }
-.tabela-check-grid thead th.item-col { z-index: 3; }
-.tabela-check-grid .grupo-row td { background: #F5F3EF; font-weight: 800; text-transform: uppercase; font-size: 9px; letter-spacing: .5px; color: var(--muted); }
-.tabela-check-grid input[type=checkbox] { width: 24px; height: 24px; cursor: pointer; }
+/* ── Por Bloco — layout estilo Sênior, responsivo ── */
+.eixo-hdr-pb { display: flex; align-items: center; gap: 8px; margin: 16px 14px 8px; padding: clamp(8px,2vw,11px) clamp(10px,2.5vw,14px); border-radius: var(--r); font-size: clamp(11px,2.8vw,13px); font-weight: 800; letter-spacing: .3px; border-left: 4px solid; }
+.eixo-hdr-pb .eixo-icone-mini { width: clamp(20px,5vw,26px); height: clamp(20px,5vw,26px); border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.eixo-hdr-pb .eixo-icone-mini svg { width: 62%; height: 62%; }
+.eixo-hdr-pb .eixo-stats-pb { font-size: clamp(9px,2.2vw,11px); font-weight: 600; margin-left: auto; opacity: .75; white-space: nowrap; }
+.block-list-pb { margin: 0 14px; display: flex; flex-direction: column; gap: 7px; }
+.block-item-pb { background: var(--card); border-radius: var(--r); box-shadow: var(--shadow); overflow: hidden; }
+.block-item-pb[open] .block-arrow-pb { transform: rotate(90deg); }
+.block-summary-pb { display: flex; align-items: center; gap: clamp(6px,2vw,10px); padding: clamp(10px,2.5vw,13px) clamp(10px,2.5vw,14px); cursor: pointer; list-style: none; user-select: none; -webkit-user-select: none; }
+.block-summary-pb::-webkit-details-marker { display: none; }
+.block-arrow-pb { font-size: 11px; color: var(--muted); transition: transform .2s; flex-shrink: 0; }
+.block-info-pb { flex: 1; min-width: 0; }
+.block-title-pb { font-size: clamp(11px,2.8vw,13px); font-weight: 700; line-height: 1.3; }
+.block-meta-pb { font-size: clamp(9px,2.2vw,11px); color: var(--muted); margin-top: 2px; }
+.block-badges-pb { display: flex; gap: 4px; flex-wrap: wrap; margin-left: auto; flex-shrink: 0; max-width: 40%; justify-content: flex-end; }
+.block-resumo-compacto-pb { display: flex; align-items: center; gap: 6px; margin-left: auto; flex-shrink: 0; width: clamp(70px,22vw,110px); }
+.block-resumo-track-pb { flex: 1; height: 6px; background: #EEEBE7; border-radius: 10px; overflow: hidden; }
+.block-resumo-bar-pb { height: 100%; border-radius: 10px; background: var(--done); }
+.block-resumo-texto-pb { font-size: clamp(9px,2.2vw,10px); font-weight: 800; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
+.b-badge-pb { width: clamp(16px,4.2vw,21px); height: clamp(16px,4.2vw,21px); border-radius: 50%; font-size: clamp(8px,2vw,9px); font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.b-done-pb { background: var(--done); color: #fff; }
+.b-part-pb { background: #F39C12; color: #fff; }
+.b-none-pb { background: #E0E0E0; color: #999; }
+.actions-section-pb { margin-top: 10px; padding: 0 clamp(10px,2.5vw,14px) clamp(10px,2.5vw,14px); }
+.actions-label-pb { font-size: clamp(9px,2.2vw,11px); font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+.fixed-label-pb { color: #C0392B; }
+.var-label-pb { color: var(--azul); }
+.actions-table-wrap-pb { overflow-x: auto; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); max-height: 60vh; overflow-y: auto; }
+.actions-table-pb { width: 100%; border-collapse: collapse; background: var(--card); table-layout: fixed; }
+.actions-table-pb th { background: var(--azul); color: #fff; padding: clamp(5px,1.5vw,7px) 4px; font-size: clamp(8px,2vw,10px); font-weight: 700; text-align: center; white-space: nowrap; position: sticky; top: 0; z-index: 2; width: clamp(38px,9vw,52px); overflow: hidden; text-overflow: ellipsis; }
+.actions-table-pb th.act-col-pb { text-align: left; padding-left: clamp(6px,2vw,10px); min-width: clamp(120px,32vw,190px); width: clamp(120px,32vw,190px); position: sticky; left: 0; z-index: 3; }
+.actions-table-pb td { padding: clamp(5px,1.5vw,7px) 4px; border-bottom: 1px solid #F0EDE8; font-size: clamp(9px,2.2vw,11px); vertical-align: middle; text-align: center; }
+.actions-table-pb td.act-col-pb { text-align: left; padding-left: clamp(6px,2vw,10px); line-height: 1.4; font-weight: 500; position: sticky; left: 0; background: var(--card); z-index: 1; }
+.actions-table-pb tr:last-child td { border-bottom: none; }
+.actions-table-pb tr:nth-child(even) td.act-col-pb { background: #FAFAF8; }
+.actions-table-pb tr:nth-child(even) { background: #FAFAF8; }
+.actions-table-pb tr.fixed-row-pb { background: #FFF5F5; }
+.actions-table-pb tr.fixed-row-pb td.act-col-pb { background: #FFF5F5; }
+.cb-pb { width: clamp(22px,5.6vw,28px); height: clamp(22px,5.6vw,28px); border-radius: 7px; margin: auto; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .15s; border: 2px solid transparent; font-size: clamp(11px,2.8vw,14px); font-weight: 700; user-select: none; -webkit-user-select: none; }
+.cb-pb.done-pb { background: var(--done); color: #fff; border-color: #1E8449; }
+.cb-pb.pending-pb { background: #EDEBE8; color: #C0BCB7; border-color: #DDD9D4; }
+.cb-pb.pending-pb:hover { background: var(--done-bg); border-color: var(--done); color: var(--done); }
+.cb-pb.done-pb:hover { background: #E74C3C; border-color: #C0392B; }
 .resumo-row { padding: 10px 14px; cursor: pointer; border-bottom: 1px solid #E3DCCF; }
 .resumo-row:hover { background: #ECE5D8; box-shadow: inset 3px 0 0 var(--vinho); }
 .resumo-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; gap: 8px; }
@@ -612,12 +640,7 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 
 <div id="pagina-tabela" style="display:none;">
 <div id="resumoContainer"></div>
-<div class="roster-section">
-<div class="section-label">Eixos</div>
-<div id="tabelaEixos" class="eixo-grid"></div>
-<div id="tabelaBlocos"></div>
-</div>
-<div id="tabelaContainer"></div>
+<div id="blocosPorEixoContainer"></div>
 </div>
 
 <div id="pagina-calendario" style="display:none;">
@@ -966,8 +989,7 @@ function iniciarSync() {
           renderRoster();
           if (ativo) renderDetail(ativo);
           if (paginaAtiva === 'tabela') {
-            if (blocoTabela) { atualizarTabelaBloco(); document.getElementById('resumoContainer').innerHTML = construirResumoBlocos(); }
-            else { renderPaginaTabela(); }
+            atualizarTabelaBloco();
           }
           if (paginaAtiva === 'calendario') renderPaginaCalendario();
           if (paginaAtiva === 'ciclo') renderPaginaCiclo();
@@ -1211,7 +1233,18 @@ if (n >= 4) return {l:'Trilha', c:'#D4A017'};
 return {l:'Pistas', c:'#27AE60'};
 }
 
-let rosterAberto = true;
+// ── Persistência genérica de estado colapsável (localStorage) ──
+function persistirEstado(chave, valor) {
+try { localStorage.setItem('escoteira_' + chave, JSON.stringify(valor)); } catch (e) {}
+}
+function restaurarEstado(chave, padrao) {
+try {
+const v = localStorage.getItem('escoteira_' + chave);
+return v !== null ? JSON.parse(v) : padrao;
+} catch (e) { return padrao; }
+}
+
+let rosterAberto = restaurarEstado('rosterAberto', true);
 function aplicarEstadoRoster() {
 document.getElementById('rosterBody').style.display = rosterAberto ? '' : 'none';
 document.getElementById('chevRoster').style.transform = rosterAberto ? 'rotate(180deg)' : 'rotate(0deg)';
@@ -1219,6 +1252,7 @@ document.getElementById('cabecalhoRoster').classList.toggle('aberto', rosterAber
 }
 function toggleRosterSecao() {
 rosterAberto = !rosterAberto;
+persistirEstado('rosterAberto', rosterAberto);
 aplicarEstadoRoster();
 }
 
@@ -1825,9 +1859,10 @@ const semPatrulha = JOVENS.filter(j => !idsValidas.includes(PATRULHA_DE[j]));
 document.getElementById('roster').innerHTML = construirSecaoPatrulha(null, semPatrulha) + construirSecaoArquivados();
 }
 
-let arquivadosAberto = false;
+let arquivadosAberto = restaurarEstado('arquivadosAberto', false);
 function toggleArquivados() {
 arquivadosAberto = !arquivadosAberto;
+persistirEstado('arquivadosAberto', arquivadosAberto);
 renderRoster();
 }
 
@@ -1959,8 +1994,6 @@ if (card) card.classList.toggle('open');
 
 // ===== PÁGINA 2: TABELA POR BLOCO =====
 let paginaAtiva = 'jovem';
-let eixoTabela = null;
-let blocoTabela = null;
 
 let seniorCarregado = false;
 function mudarPagina(p) {
@@ -2006,63 +2039,146 @@ setTimeout(ajustarAlturaIframeSenior, 50);
 }
 }
 
-function selecionarEixoTabela(id) {
-eixoTabela = (eixoTabela === id) ? null : id;
-blocoTabela = null;
-renderPaginaTabela();
-}
-function selecionarBlocoTabela(b) {
-blocoTabela = b;
+let blocosAbertosTabela = restaurarEstado('blocosAbertosTabela', {});
+let eixosAbertosTabela = restaurarEstado('eixosAbertosTabela', {});
+function toggleEixoTabela(id) {
+eixosAbertosTabela[id] = !(eixosAbertosTabela[id] ?? true);
+persistirEstado('eixosAbertosTabela', eixosAbertosTabela);
 renderPaginaTabela();
 }
 function abrirBlocoResumo(eixoId, b) {
-eixoTabela = eixoId;
-blocoTabela = b;
+eixosAbertosTabela[eixoId] = true;
+blocosAbertosTabela[b] = true;
+persistirEstado('eixosAbertosTabela', eixosAbertosTabela);
+persistirEstado('blocosAbertosTabela', blocosAbertosTabela);
 renderPaginaTabela();
+setTimeout(() => {
+const el = document.querySelector('[data-bloco-pb="' + b + '"]');
+if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}, 60);
+}
+
+function construirEixoHeaderPb(eixo) {
+const totalPossivel = eixo.blocos.length * JOVENS.length;
+const totalConcluidos = eixo.blocos.reduce((s, b) => s + JOVENS.filter(j => blocoConcluido(j, b)).length, 0);
+const aberto = eixosAbertosTabela[eixo.id] ?? true;
+return `<div class="eixo-hdr-pb" style="background:${eixo.cor}18;border-left-color:${eixo.cor};color:${eixo.cor};cursor:pointer;" onclick="toggleEixoTabela('${eixo.id}')">
+<div class="eixo-icone-mini" style="background:${eixo.cor};">${eixo.icone}</div>
+<span>${eixo.nome}</span>
+<span class="eixo-stats-pb">${totalConcluidos}/${totalPossivel} concluídos</span>
+<span class="chev" style="color:${eixo.cor};font-size:11px;transform:rotate(${aberto?180:0}deg);margin-left:4px;">▾</span>
+</div>`;
+}
+
+function construirBlocoCardPb(b) {
+const def = BLOCOS[b];
+const aberto = !!blocosAbertosTabela[b];
+const badges = JOVENS.length > 8
+? (() => {
+const concluidos = JOVENS.filter(j => blocoConcluido(j, b)).length;
+const pct = Math.round(concluidos / JOVENS.length * 100);
+return `<div class="block-resumo-compacto-pb">
+<div class="block-resumo-track-pb"><div class="block-resumo-bar-pb" style="width:${pct}%;"></div></div>
+<span class="block-resumo-texto-pb">${concluidos}/${JOVENS.length}</span>
+</div>`;
+})()
+: `<div class="block-badges-pb">` + JOVENS.map(j => {
+const nFixasFeitas = def.fixas.filter((_, i) => S[j][b].fixas[i]).length;
+const nVarFeitas = def.variaveis.filter((_, i) => S[j][b].variaveis[i]).length;
+const done = blocoConcluido(j, b);
+const partDone = nFixasFeitas + nVarFeitas;
+let cls = 'b-none-pb';
+if (done) cls = 'b-done-pb';
+else if (partDone > 0) cls = 'b-part-pb';
+return `<div class="b-badge-pb ${cls}" title="${JNOMES[j]}: ${done ? 'Concluído' : partDone + ' ações'}">${JNOMES[j][0]}</div>`;
+}).join('') + `</div>`;
+
+let fixedSection = '';
+if (def.fixas.length) {
+const rows = def.fixas.map((txt, i) => {
+const cells = JOVENS.map(j => {
+const marcado = S[j][b].fixas[i];
+return `<td><div class="cb-pb ${marcado ? 'done-pb' : 'pending-pb'}" onclick="toggleFixaTabela('${j}','${b}',${i})">${marcado ? '✓' : '·'}</div></td>`;
+}).join('');
+return `<tr class="fixed-row-pb"><td class="act-col-pb">${txt}</td>${cells}</tr>`;
+}).join('');
+fixedSection = `<div class="actions-section-pb">
+<div class="actions-label-pb fixed-label-pb">📌 Ações Fixas (obrigatórias)</div>
+<div class="actions-table-wrap-pb"><table class="actions-table-pb">
+<thead><tr><th class="act-col-pb">Ação</th>${JOVENS.map(j => `<th>${nomeCurto(j)}</th>`).join('')}</tr></thead>
+<tbody>${rows}</tbody>
+</table></div>
+</div>`;
+}
+
+let varSection = '';
+if (def.variaveis.length) {
+const rows = def.variaveis.map((txt, i) => {
+const cells = JOVENS.map(j => {
+const marcado = S[j][b].variaveis[i];
+return `<td><div class="cb-pb ${marcado ? 'done-pb' : 'pending-pb'}" onclick="toggleVarTabela('${j}','${b}',${i})">${marcado ? '✓' : '·'}</div></td>`;
+}).join('');
+return `<tr><td class="act-col-pb">${txt}</td>${cells}</tr>`;
+}).join('');
+varSection = `<div class="actions-section-pb">
+<div class="actions-label-pb var-label-pb">☑ Ações Variáveis (mín. ${def.metaVar} de ${def.variaveis.length})</div>
+<div class="actions-table-wrap-pb"><table class="actions-table-pb">
+<thead><tr><th class="act-col-pb">Ação</th>${JOVENS.map(j => `<th>${nomeCurto(j)}</th>`).join('')}</tr></thead>
+<tbody>${rows}</tbody>
+</table></div>
+</div>`;
+}
+
+const especialidadeHtml = `<div class="actions-section-pb">
+<div class="actions-label-pb" style="color:#E67E22;">🎖 Especialidade <span style="font-weight:400;font-size:9px;">(substitui todas as variáveis)</span></div>
+<div class="actions-table-wrap-pb"><table class="actions-table-pb">
+<thead><tr><th class="act-col-pb">Especialidade</th>${JOVENS.map(j => `<th>${nomeCurto(j)}</th>`).join('')}</tr></thead>
+<tbody><tr><td class="act-col-pb">Especialidade concluída</td>${JOVENS.map(j => {
+const marcado = S[j][b].especialidade;
+return `<td><div class="cb-pb ${marcado ? 'done-pb' : 'pending-pb'}" style="${marcado?'background:#F39C12;border-color:#E67E22;':''}" onclick="toggleEspTabela('${j}','${b}')">${marcado ? '★' : '·'}</div></td>`;
+}).join('')}</tr></tbody>
+</table></div>
+</div>`;
+
+return `<details class="block-item-pb" ${aberto ? 'open' : ''} data-bloco-pb="${b}" ontoggle="blocosAbertosTabela['${b}']=this.open;persistirEstado('blocosAbertosTabela',blocosAbertosTabela)">
+<summary class="block-summary-pb">
+<span class="block-arrow-pb">▶</span>
+<div class="block-info-pb">
+<div class="block-title-pb">${def.nome}</div>
+<div class="block-meta-pb">${def.fixas.length} fixas · ${def.variaveis.length} variáveis (mín.${def.metaVar})</div>
+</div>
+${badges}
+</summary>
+<div class="block-body-pb">
+${fixedSection}
+${varSection}
+${especialidadeHtml}
+</div>
+</details>`;
 }
 
 function renderPaginaTabela() {
 document.getElementById('resumoContainer').innerHTML = construirResumoBlocos();
-
-const elEixos = document.getElementById('tabelaEixos');
-elEixos.innerHTML = EIXOS.map(eixo => `
-<button class="eixo-tile${eixoTabela===eixo.id?' active':''}" onclick="selecionarEixoTabela('${eixo.id}')">
-<div class="eixo-tile-box" style="background:${eixo.cor}">
-<div class="eixo-tile-ring">${eixo.icone}</div>
-</div>
-<div class="eixo-tile-label">${eixo.nome}</div>
-</button>`).join('');
-
-const elBlocos = document.getElementById('tabelaBlocos');
-const elTabela = document.getElementById('tabelaContainer');
-const eixo = EIXOS.find(e => e.id === eixoTabela);
-if (!eixo) {
-elBlocos.innerHTML = '';
-elTabela.innerHTML = '';
-return;
-}
-elBlocos.innerHTML = '<div class="grupo-label" style="margin-top:12px;">Blocos de ' + eixo.nome + '</div>' +
-'<div class="tabela-bloco-grid">' +
-eixo.blocos.map(b => `<button class="tabela-bloco-btn${blocoTabela===b?' active':''}" onclick="selecionarBlocoTabela('${b}')">${BLOCOS[b].nome}</button>`).join('') +
-'</div>';
-
-if (!blocoTabela || !eixo.blocos.includes(blocoTabela)) {
-elTabela.innerHTML = '';
-return;
-}
-elTabela.innerHTML = construirTabelaBloco(blocoTabela);
+const el = document.getElementById('blocosPorEixoContainer');
+el.innerHTML = EIXOS.map(eixo => {
+const aberto = eixosAbertosTabela[eixo.id] ?? true;
+return construirEixoHeaderPb(eixo) + (aberto ? `<div class="block-list-pb">${eixo.blocos.map(b => construirBlocoCardPb(b)).join('')}</div>` : '');
+}).join('');
 }
 
-let resumoAberto = false;
-let resumoEixosAbertos = {};
+let resumoAberto = restaurarEstado('resumoAbertoPB', false);
+let resumoEixosAbertos = restaurarEstado('resumoEixosAbertosPB', {});
 function toggleResumo() {
 resumoAberto = !resumoAberto;
+persistirEstado('resumoAbertoPB', resumoAberto);
 renderPaginaTabela();
 }
 function toggleResumoEixo(id) {
-resumoEixosAbertos[id] = !(resumoEixosAbertos[id] ?? true);
+resumoEixosAbertos[id] = !(resumoEixosAbertos[id] ?? false);
+persistirEstado('resumoEixosAbertosPB', resumoEixosAbertos);
 renderPaginaTabela();
 }
+
 
 function construirResumoBlocos() {
 let h = `<div class="roster-section" style="padding:0;overflow:hidden;">
@@ -2101,64 +2217,9 @@ h += `</div>`;
 return h;
 }
 
-function construirTabelaBloco(b) {
-const def = BLOCOS[b];
-let h = `<div class="tabela-wrap" id="tabelaWrapScroll"><table class="tabela-check-grid"><thead><tr><th class="item-col">${def.nome}</th>`;
-JOVENS.forEach(j => { h += `<th>${nomeCurto(j)}</th>`; });
-h += `</tr></thead><tbody>`;
-
-if (def.fixas.length) {
-h += `<tr class="grupo-row"><td class="item-col" colspan="${JOVENS.length+1}">Ações fixas (todas obrigatórias)</td></tr>`;
-def.fixas.forEach((txt, i) => {
-h += `<tr><td class="item-col">${txt}</td>`;
-JOVENS.forEach(j => {
-const marcado = S[j][b].fixas[i];
-h += `<td><input type="checkbox" ${marcado?'checked':''} onchange="toggleFixaTabela('${j}','${b}',${i})"></td>`;
-});
-h += `</tr>`;
-});
-}
-
-h += `<tr class="grupo-row"><td class="item-col" colspan="${JOVENS.length+1}">Ações variáveis (mínimo ${def.metaVar} de ${def.variaveis.length})</td></tr>`;
-def.variaveis.forEach((txt, i) => {
-h += `<tr><td class="item-col">${txt}</td>`;
-JOVENS.forEach(j => {
-const marcado = S[j][b].variaveis[i];
-h += `<td><input type="checkbox" ${marcado?'checked':''} onchange="toggleVarTabela('${j}','${b}',${i})"></td>`;
-});
-h += `</tr>`;
-});
-
-h += `<tr class="grupo-row"><td class="item-col">Especialidade/insígnia (substitui variáveis)</td>`;
-JOVENS.forEach(j => {
-const marcado = S[j][b].especialidade;
-h += `<td><input type="checkbox" ${marcado?'checked':''} onchange="toggleEspTabela('${j}','${b}')"></td>`;
-});
-h += `</tr>`;
-
-h += `<tr><td class="item-col" style="font-weight:800;">✓ Bloco concluído</td>`;
-JOVENS.forEach(j => {
-h += `<td style="font-weight:800;">${blocoConcluido(j,b) ? '✅' : '—'}</td>`;
-});
-h += `</tr>`;
-
-h += `</tbody></table></div>`;
-return h;
-}
-
 function atualizarTabelaBloco() {
-if (!blocoTabela) return;
-const wrapAntigo = document.getElementById('tabelaWrapScroll');
-const scrollTopAntigo = wrapAntigo ? wrapAntigo.scrollTop : 0;
-const scrollLeftAntigo = wrapAntigo ? wrapAntigo.scrollLeft : 0;
-document.getElementById('tabelaContainer').innerHTML = construirTabelaBloco(blocoTabela);
-const restaurar = () => {
-const w = document.getElementById('tabelaWrapScroll');
-if (w) { w.scrollTop = scrollTopAntigo; w.scrollLeft = scrollLeftAntigo; }
-};
-restaurar();
-requestAnimationFrame(restaurar);
-requestAnimationFrame(() => requestAnimationFrame(restaurar));
+if (paginaAtiva !== 'tabela') return;
+renderPaginaTabela();
 }
 function toggleFixaTabela(j, b, i) { S[j][b].fixas[i] = S[j][b].fixas[i] ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); preservarScroll(atualizarTabelaBloco); }
 function toggleVarTabela(j, b, i) { S[j][b].variaveis[i] = S[j][b].variaveis[i] ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); preservarScroll(atualizarTabelaBloco); }
@@ -2599,8 +2660,7 @@ saveState();
 renderRoster();
 if (ativo) renderDetail(ativo);
 if (paginaAtiva === 'tabela') {
-if (blocoTabela) { atualizarTabelaBloco(); document.getElementById('resumoContainer').innerHTML = construirResumoBlocos(); }
-else { renderPaginaTabela(); }
+atualizarTabelaBloco();
 }
 renderEventoModalBody();
 }
@@ -2624,8 +2684,7 @@ saveState();
 renderRoster();
 if (ativo) renderDetail(ativo);
 if (paginaAtiva === 'tabela') {
-if (blocoTabela) { atualizarTabelaBloco(); document.getElementById('resumoContainer').innerHTML = construirResumoBlocos(); }
-else { renderPaginaTabela(); }
+atualizarTabelaBloco();
 }
 renderPaginaCalendario();
 renderEventoModalBody();
@@ -2667,9 +2726,10 @@ const justificados = JUSTIFICATIVAS[jovemId] || [];
 return !streak.some(id => justificados.includes(id));
 }
 
-let resumoPresencasAberto = false;
+let resumoPresencasAberto = restaurarEstado('resumoPresencasAberto', false);
 function toggleResumoPresencas() {
 resumoPresencasAberto = !resumoPresencasAberto;
+persistirEstado('resumoPresencasAberto', resumoPresencasAberto);
 document.getElementById('presenca-summary').style.display = resumoPresencasAberto ? 'block' : 'none';
 document.getElementById('chevResumoPresencas').style.transform = resumoPresencasAberto ? 'rotate(180deg)' : 'rotate(0deg)';
 }
@@ -3102,14 +3162,15 @@ ${renderExternasCiclo(i)}
 </div>`;
 }
 
-let cicloCardsAbertos = {};
+let cicloCardsAbertos = restaurarEstado('cicloCardsAbertos', {});
 function toggleCicloCard(i) {
 cicloCardsAbertos[i] = !cicloCardsAbertos[i];
+persistirEstado('cicloCardsAbertos', cicloCardsAbertos);
 renderPaginaCiclo();
 }
 
 // ── Grupos de ciclo (3 anos / 6 semestres cada) ───────────
-let ciclosGrupoAbertos = {};
+let ciclosGrupoAbertos = restaurarEstado('ciclosGrupoAbertos', {});
 let CICLO_DESTAQUE = {};
 let CICLO_INFO = {};
 let cicloMenuAbertoGrupo = null;
@@ -3117,6 +3178,7 @@ let cicloInfoEditando = null;
 
 function toggleCicloGrupo(g) {
 ciclosGrupoAbertos[g] = ciclosGrupoAbertos[g] === undefined ? false : !ciclosGrupoAbertos[g];
+persistirEstado('ciclosGrupoAbertos', ciclosGrupoAbertos);
 renderPaginaCiclo();
 }
 function adicionarNovoCiclo() {
@@ -3327,6 +3389,7 @@ renderResponsavelChips();
 renderEventoAnexoArea();
 await iniciarSync();
 renderRoster();
+aplicarEstadoRoster();
 let ramoSalvo = null, paginaSalva = null;
 try { ramoSalvo = localStorage.getItem('escoteira_ramoAtivo'); paginaSalva = localStorage.getItem('escoteira_paginaAtiva'); } catch (e) {}
 if (ramoSalvo === 'senior') mudarRamo('senior');
