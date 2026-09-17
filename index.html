@@ -348,6 +348,8 @@ border: 2px solid var(--text); background: #F5F3EF; color: var(--text); cursor: 
 .actions-table-pb tr.fixed-row-pb td.act-col-pb { background: #FFF5F5; }
 .cb-pb { width: clamp(22px,5.6vw,28px); height: clamp(22px,5.6vw,28px); border-radius: 7px; margin: auto; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .15s; border: 2px solid transparent; font-size: clamp(11px,2.8vw,14px); font-weight: 700; user-select: none; -webkit-user-select: none; }
 .cb-pb.done-pb { background: var(--done); color: #fff; border-color: #1E8449; }
+th[data-jovem-pb].destaque-jovem-pb { background: #E67E22 !important; }
+td[data-jovem-pb].destaque-jovem-pb { background: #FDEBD0 !important; }
 .cb-pb.pending-pb { background: #EDEBE8; color: #C0BCB7; border-color: #DDD9D4; }
 .cb-pb.pending-pb:hover { background: var(--done-bg); border-color: var(--done); color: var(--done); }
 .cb-pb.done-pb:hover { background: #E74C3C; border-color: #C0392B; }
@@ -587,8 +589,7 @@ cursor: pointer; color: #fff;
 </div>
 
 <nav class="tabs-linha" id="tabsLinha">
-<button class="tab-btn-linha active" id="tabJovem" onclick="mudarPagina('jovem')">👤 Por Jovem</button>
-<button class="tab-btn-linha" id="tabTabela" onclick="mudarPagina('tabela')">📊 Por Bloco</button>
+<button class="tab-btn-linha active" id="tabTabela" onclick="mudarPagina('tabela')">📊 Progressão</button>
 <button class="tab-btn-linha" id="tabCalendario" onclick="mudarPagina('calendario')">📅 Calendário</button>
 <button class="tab-btn-linha" id="tabCiclo" onclick="mudarPagina('ciclo')">🔄 Ciclo de Programa</button>
 </nav>
@@ -596,7 +597,7 @@ cursor: pointer; color: #fff;
 
 <div id="ramo-escoteira">
 
-<div id="pagina-jovem">
+<div id="pagina-tabela" style="display:none;">
 
 <div class="alert">
 Toque num jovem para abrir a ficha dele. Dentro de cada bloco, marque as ações fixas (todas são obrigatórias, quando houver)
@@ -644,16 +645,16 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 </div>
 </div>
 
-<div class="detail-section" id="detail"></div>
-
-</div>
-
-<div id="pagina-tabela" style="display:none;">
 <div id="resumoContainer"></div>
+<div style="margin:14px 14px 0;">
+<label class="campo-label">🔎 Filtrar por jovem</label>
+<input type="text" class="campo-input" id="filtroJovemPBInput" placeholder="Digite um nome pra filtrar a tabela..." oninput="filtrarJovemPB(this.value)">
+</div>
 <div id="blocosPorEixoContainer"></div>
 </div>
 
 <div id="pagina-calendario" style="display:none;">
+
 
 <div style="margin:0 0 12px;background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;">
 <div style="background:var(--vinho);padding:10px 13px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="toggleResumoPresencas()">
@@ -783,6 +784,16 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 <button class="lis-modal-fechar" onclick="fecharEventoModal()">✕</button>
 </div>
 <div class="lis-modal-body" id="eventoModalBody"></div>
+</div>
+</div>
+
+<div class="lis-modal-ov" id="fichaModalOv" onclick="if(event.target===this)fecharFichaModal()">
+<div class="lis-modal-box">
+<div class="lis-modal-header">
+<span class="lis-modal-titulo">📋 Ficha de Progressão</span>
+<button class="lis-modal-fechar" onclick="fecharFichaModal()">✕</button>
+</div>
+<div class="lis-modal-body" id="detail"></div>
 </div>
 </div>
 
@@ -1135,7 +1146,7 @@ ativo = id;
 window.__eixoAtivo = null;
 renderRoster();
 renderDetail(id);
-document.getElementById('detail').scrollIntoView({behavior:'smooth', block:'start'});
+document.getElementById('fichaModalOv').classList.add('open');
 }
 function deepCopy(o) { return JSON.parse(JSON.stringify(o)); }
 function confirmReset() {
@@ -1506,7 +1517,8 @@ ${sBadge(p1OK, 'Concluído', 'Em andamento')}</div>
 <div style="background:#EEEBE7;border-radius:20px;height:10px;overflow:hidden;margin-bottom:7px;">
 <div style="width:${bPct}%;height:100%;border-radius:20px;background:${p1OK ? '#27AE60' : cor};"></div></div>
 ${p1OK ? `<div style="font-size:11px;color:#27AE60;font-weight:700;">✓ Todos os 18 blocos concluídos!</div>`
-: `<div style="font-size:11px;color:var(--muted);">Faltam <strong>${18 - n} bloco${18 - n !== 1 ? 's' : ''}</strong> — acompanhe nas abas de progressão.</div>`}
+: `<div style="font-size:11px;color:var(--muted);">Faltam <strong>${18 - n} bloco${18 - n !== 1 ? 's' : ''}</strong> — acompanhe na aba de Progressão.</div>`}
+<button class="btn-secundario" style="width:100%;margin-top:8px;" onclick="event.stopPropagation();abrirFichaDireto('${jovemId}')">📋 Ver ficha completa</button>
 </div></div>`;
 
 h += `<div class="ep-pillar"><div class="ep-ph">
@@ -1604,7 +1616,7 @@ delete CARGO_DE[id];
 delete OBSERVACOES[id];
 delete LIS_OURO_DATA[id];
 delete CONVERSAR_COM[id];
-if (ativo === id) { ativo = null; document.getElementById('detail').innerHTML = ''; }
+if (ativo === id) { ativo = null; document.getElementById('detail').innerHTML = ''; document.getElementById('fichaModalOv').classList.remove('open'); }
 temAlteracaoLocalPendente = true;
 saveState();
 renderRoster();
@@ -1624,7 +1636,7 @@ if (!confirm(`Arquivar ${JNOMES[id]}? Ele(a) sai das listas ativas (patrulhas, p
 JOVENS = JOVENS.filter(x => x !== id);
 delete PATRULHA_DE[id];
 if (!JOVENS_ARQUIVADOS.includes(id)) JOVENS_ARQUIVADOS.push(id);
-if (ativo === id) { ativo = null; document.getElementById('detail').innerHTML = ''; }
+if (ativo === id) { ativo = null; document.getElementById('detail').innerHTML = ''; document.getElementById('fichaModalOv').classList.remove('open'); }
 temAlteracaoLocalPendente = true;
 saveState();
 renderRoster();
@@ -1657,7 +1669,7 @@ delete PATRULHA_DE[id];
 delete CARGO_DE[id];
 delete OBSERVACOES[id];
 delete LIS_OURO_DATA[id];
-if (ativo === id) { ativo = null; document.getElementById('detail').innerHTML = ''; }
+if (ativo === id) { ativo = null; document.getElementById('detail').innerHTML = ''; document.getElementById('fichaModalOv').classList.remove('open'); }
 temAlteracaoLocalPendente = true;
 saveState();
 renderRoster();
@@ -1717,14 +1729,21 @@ saveState();
 renderRoster();
 }
 
+function abrirFichaDireto(j) {
+ativo = j;
+renderDetail(j);
+document.getElementById('fichaModalOv').classList.add('open');
+}
+
 function selecionarJovem(j) {
 if (countConcluidos(j) >= 18) { abrirLisOuro(j); return; }
 ativo = j;
-rosterAberto = false;
-renderRoster();
-aplicarEstadoRoster();
 renderDetail(j);
-document.getElementById('detail').scrollIntoView({behavior:'smooth', block:'start'});
+document.getElementById('fichaModalOv').classList.add('open');
+}
+function fecharFichaModal() {
+document.getElementById('fichaModalOv').classList.remove('open');
+ativo = null;
 }
 
 function construirFormPatrulha(p) {
@@ -1925,9 +1944,18 @@ window.scrollTo(0, y);
 requestAnimationFrame(() => window.scrollTo(0, y));
 requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo(0, y)));
 }
-function toggleFixa(j, b, i) { S[j][b].fixas[i] = S[j][b].fixas[i] ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); preservarScroll(() => { renderRoster(); renderDetail(j); }); }
-function toggleVar(j, b, i) { S[j][b].variaveis[i] = S[j][b].variaveis[i] ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); preservarScroll(() => { renderRoster(); renderDetail(j); }); }
-function toggleEsp(j, b) { S[j][b].especialidade = S[j][b].especialidade ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); preservarScroll(() => { renderRoster(); renderDetail(j); }); }
+function preservarScrollFicha(fn) {
+const box = document.querySelector('#fichaModalOv .lis-modal-box');
+const y = box ? box.scrollTop : 0;
+fn();
+const restaurar = () => { const b = document.querySelector('#fichaModalOv .lis-modal-box'); if (b) b.scrollTop = y; };
+restaurar();
+requestAnimationFrame(restaurar);
+requestAnimationFrame(() => requestAnimationFrame(restaurar));
+}
+function toggleFixa(j, b, i) { S[j][b].fixas[i] = S[j][b].fixas[i] ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); preservarScrollFicha(() => { renderRoster(); renderDetail(j); }); }
+function toggleVar(j, b, i) { S[j][b].variaveis[i] = S[j][b].variaveis[i] ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); preservarScrollFicha(() => { renderRoster(); renderDetail(j); }); }
+function toggleEsp(j, b) { S[j][b].especialidade = S[j][b].especialidade ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); preservarScrollFicha(() => { renderRoster(); renderDetail(j); }); }
 
 function renderDetail(j) {
 const el = document.getElementById('detail');
@@ -2020,21 +2048,19 @@ if (card) card.classList.toggle('open');
 }
 
 // ===== PÁGINA 2: TABELA POR BLOCO =====
-let paginaAtiva = 'jovem';
+let paginaAtiva = 'tabela';
 
 let seniorCarregado = false;
 function mudarPagina(p) {
 paginaAtiva = p;
 try { localStorage.setItem('escoteira_paginaAtiva', p); } catch (e) {}
-document.getElementById('pagina-jovem').style.display = p === 'jovem' ? '' : 'none';
 document.getElementById('pagina-tabela').style.display = p === 'tabela' ? '' : 'none';
 document.getElementById('pagina-calendario').style.display = p === 'calendario' ? '' : 'none';
 document.getElementById('pagina-ciclo').style.display = p === 'ciclo' ? '' : 'none';
-document.getElementById('tabJovem').classList.toggle('active', p === 'jovem');
 document.getElementById('tabTabela').classList.toggle('active', p === 'tabela');
 document.getElementById('tabCalendario').classList.toggle('active', p === 'calendario');
 document.getElementById('tabCiclo').classList.toggle('active', p === 'ciclo');
-document.getElementById('btnLimparMarcacoes').style.display = (p === 'jovem' || p === 'tabela') ? '' : 'none';
+document.getElementById('btnLimparMarcacoes').style.display = p === 'tabela' ? '' : 'none';
 if (p === 'tabela') renderPaginaTabela();
 if (p === 'calendario') renderPaginaCalendario();
 if (p === 'ciclo') renderPaginaCiclo();
@@ -2124,14 +2150,14 @@ if (def.fixas.length) {
 const rows = def.fixas.map((txt, i) => {
 const cells = JOVENS.map(j => {
 const marcado = S[j][b].fixas[i];
-return `<td><div class="cb-pb ${marcado ? 'done-pb' : 'pending-pb'}" onclick="toggleFixaTabela('${j}','${b}',${i})">${marcado ? '✓' : '·'}</div></td>`;
+return `<td data-jovem-pb="${j}"><div class="cb-pb ${marcado ? 'done-pb' : 'pending-pb'}" onclick="toggleFixaTabela('${j}','${b}',${i})">${marcado ? '✓' : '·'}</div></td>`;
 }).join('');
 return `<tr class="fixed-row-pb"><td class="act-col-pb">${txt}</td>${cells}</tr>`;
 }).join('');
 fixedSection = `<div class="actions-section-pb">
 <div class="actions-label-pb fixed-label-pb">📌 Ações Fixas (obrigatórias)</div>
 <div class="actions-table-wrap-pb"><table class="actions-table-pb">
-<thead><tr><th class="act-col-pb">Ação</th>${JOVENS.map(j => `<th>${nomeCurto(j)}</th>`).join('')}</tr></thead>
+<thead><tr><th class="act-col-pb">Ação</th>${JOVENS.map(j => `<th data-jovem-pb="${j}">${nomeCurto(j)}</th>`).join('')}</tr></thead>
 <tbody>${rows}</tbody>
 </table></div>
 </div>`;
@@ -2142,14 +2168,14 @@ if (def.variaveis.length) {
 const rows = def.variaveis.map((txt, i) => {
 const cells = JOVENS.map(j => {
 const marcado = S[j][b].variaveis[i];
-return `<td><div class="cb-pb ${marcado ? 'done-pb' : 'pending-pb'}" onclick="toggleVarTabela('${j}','${b}',${i})">${marcado ? '✓' : '·'}</div></td>`;
+return `<td data-jovem-pb="${j}"><div class="cb-pb ${marcado ? 'done-pb' : 'pending-pb'}" onclick="toggleVarTabela('${j}','${b}',${i})">${marcado ? '✓' : '·'}</div></td>`;
 }).join('');
 return `<tr><td class="act-col-pb">${txt}</td>${cells}</tr>`;
 }).join('');
 varSection = `<div class="actions-section-pb">
 <div class="actions-label-pb var-label-pb">☑ Ações Variáveis (mín. ${def.metaVar} de ${def.variaveis.length})</div>
 <div class="actions-table-wrap-pb"><table class="actions-table-pb">
-<thead><tr><th class="act-col-pb">Ação</th>${JOVENS.map(j => `<th>${nomeCurto(j)}</th>`).join('')}</tr></thead>
+<thead><tr><th class="act-col-pb">Ação</th>${JOVENS.map(j => `<th data-jovem-pb="${j}">${nomeCurto(j)}</th>`).join('')}</tr></thead>
 <tbody>${rows}</tbody>
 </table></div>
 </div>`;
@@ -2158,10 +2184,10 @@ varSection = `<div class="actions-section-pb">
 const especialidadeHtml = `<div class="actions-section-pb">
 <div class="actions-label-pb" style="color:#E67E22;">🎖 Especialidade <span style="font-weight:400;font-size:9px;">(substitui todas as variáveis)</span></div>
 <div class="actions-table-wrap-pb"><table class="actions-table-pb">
-<thead><tr><th class="act-col-pb">Especialidade</th>${JOVENS.map(j => `<th>${nomeCurto(j)}</th>`).join('')}</tr></thead>
+<thead><tr><th class="act-col-pb">Especialidade</th>${JOVENS.map(j => `<th data-jovem-pb="${j}">${nomeCurto(j)}</th>`).join('')}</tr></thead>
 <tbody><tr><td class="act-col-pb">Especialidade concluída</td>${JOVENS.map(j => {
 const marcado = S[j][b].especialidade;
-return `<td><div class="cb-pb ${marcado ? 'done-pb' : 'pending-pb'}" style="${marcado?'background:#F39C12;border-color:#E67E22;':''}" onclick="toggleEspTabela('${j}','${b}')">${marcado ? '★' : '·'}</div></td>`;
+return `<td data-jovem-pb="${j}"><div class="cb-pb ${marcado ? 'done-pb' : 'pending-pb'}" style="${marcado?'background:#F39C12;border-color:#E67E22;':''}" onclick="toggleEspTabela('${j}','${b}')">${marcado ? '★' : '·'}</div></td>`;
 }).join('')}</tr></tbody>
 </table></div>
 </div>`;
@@ -2181,6 +2207,15 @@ ${varSection}
 ${especialidadeHtml}
 </div>
 </details>`;
+}
+
+function filtrarJovemPB(nome) {
+const termo = nome.trim().toLowerCase();
+document.querySelectorAll('[data-jovem-pb].destaque-jovem-pb').forEach(el => el.classList.remove('destaque-jovem-pb'));
+if (!termo) return;
+JOVENS.filter(j => JNOMES[j].toLowerCase().includes(termo)).forEach(j => {
+document.querySelectorAll('[data-jovem-pb="' + j + '"]').forEach(el => el.classList.add('destaque-jovem-pb'));
+});
 }
 
 function renderPaginaTabela() {
@@ -2543,7 +2578,6 @@ let eventoModalTipo = null; // 'extra' | 'presenca'
 
 function irParaFichaJovem(j) {
 fecharEventoModal();
-mudarPagina('jovem');
 selecionarJovem(j);
 }
 
@@ -3419,7 +3453,7 @@ aplicarEstadoRoster();
 let ramoSalvo = null, paginaSalva = null;
 try { ramoSalvo = localStorage.getItem('escoteira_ramoAtivo'); paginaSalva = localStorage.getItem('escoteira_paginaAtiva'); } catch (e) {}
 if (ramoSalvo === 'senior') mudarRamo('senior');
-if (paginaSalva && paginaSalva !== 'jovem') mudarPagina(paginaSalva);
+mudarPagina((paginaSalva && paginaSalva !== 'jovem') ? paginaSalva : 'tabela');
 restaurarScrollSalvo('escoteira_scrollY');
 }
 
