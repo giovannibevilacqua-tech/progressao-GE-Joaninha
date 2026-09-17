@@ -287,6 +287,9 @@ return;
 }
 renderCalendarioVisualizacao();
 renderCicloVisualizacao();
+let paginaSalvaView = null;
+try { paginaSalvaView = localStorage.getItem('visualizacao_paginaAtiva'); } catch (e) {}
+if (paginaSalvaView === 'ciclo') mudarPaginaView('ciclo');
 }
 
 function mudarPaginaView(p) {
@@ -295,6 +298,7 @@ document.getElementById('pagina-ciclo-view').classList.toggle('active', p === 'c
 document.getElementById('tabCalView').classList.toggle('active', p === 'calendario');
 document.getElementById('tabCicloView').classList.toggle('active', p === 'ciclo');
 window.scrollTo(0, 0);
+try { localStorage.setItem('visualizacao_paginaAtiva', p); } catch (e) {}
 }
 
 // ── Calendário (somente leitura, sem lista de presença) ──

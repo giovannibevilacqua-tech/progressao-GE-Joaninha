@@ -297,11 +297,11 @@ body{padding-bottom:50px;}
 <div id="scrollSentinel" style="position:absolute;top:0;left:0;width:1px;height:1px;"></div>
 
 <nav class="tabs">
-  <button class="tab-btn active" onclick="showTab('prog',this)">⚡ Progressão</button>
-  <button class="tab-btn" onclick="showTab('cal',this)">📅 Calendário</button>
-  <button class="tab-btn" onclick="showTab('sem',this)">🗓 Semestres</button>
-  <button class="tab-btn" onclick="showTab('jovens',this)">👥 Jovens</button>
-  <button class="tab-btn" onclick="showTab('ep',this);renderEP();">🏆 Escoteiro da Pátria</button>
+  <button class="tab-btn active" data-tab="prog" onclick="showTab('prog',this)">⚡ Progressão</button>
+  <button class="tab-btn" data-tab="cal" onclick="showTab('cal',this)">📅 Calendário</button>
+  <button class="tab-btn" data-tab="sem" onclick="showTab('sem',this)">🗓 Semestres</button>
+  <button class="tab-btn" data-tab="jovens" onclick="showTab('jovens',this)">👥 Jovens</button>
+  <button class="tab-btn" data-tab="ep" onclick="showTab('ep',this);renderEP();">🏆 Escoteiro da Pátria</button>
 </nav>
 
 <!-- ═══ TAB: PROGRESSÃO ═══════════════════════════════ -->
@@ -1913,6 +1913,16 @@ function showTab(id,btn){
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   if(btn) btn.classList.add('active');
+  try { localStorage.setItem('senior_abaAtiva', id); } catch (e) {}
+}
+function restaurarUltimaAbaSr() {
+  let abaSalva = null;
+  try { abaSalva = localStorage.getItem('senior_abaAtiva'); } catch (e) {}
+  if (!abaSalva || abaSalva === 'prog') return;
+  const btn = document.querySelector('.tab-btn[data-tab="' + abaSalva + '"]');
+  if (!btn) return;
+  showTab(abaSalva, btn);
+  if (abaSalva === 'ep') renderEP();
 }
 
 // ╔═══════════════════════════════════════════════════╗
@@ -2848,6 +2858,7 @@ async function iniciarApp(){
   loadEPData();
   renderJovens();
   renderEP();
+  restaurarUltimaAbaSr();
 }
 iniciarApp();
 

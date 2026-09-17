@@ -1965,6 +1965,7 @@ let blocoTabela = null;
 let seniorCarregado = false;
 function mudarPagina(p) {
 paginaAtiva = p;
+try { localStorage.setItem('escoteira_paginaAtiva', p); } catch (e) {}
 document.getElementById('pagina-jovem').style.display = p === 'jovem' ? '' : 'none';
 document.getElementById('pagina-tabela').style.display = p === 'tabela' ? '' : 'none';
 document.getElementById('pagina-calendario').style.display = p === 'calendario' ? '' : 'none';
@@ -1989,6 +1990,7 @@ iframe.style.height = Math.max(altura, 320) + 'px';
 window.addEventListener('resize', ajustarAlturaIframeSenior);
 
 function mudarRamo(r) {
+try { localStorage.setItem('escoteira_ramoAtivo', r); } catch (e) {}
 document.getElementById('ramo-escoteira').style.display = r === 'escoteira' ? '' : 'none';
 document.getElementById('pagina-senior').style.display = r === 'senior' ? '' : 'none';
 document.getElementById('tabsLinha').style.display = r === 'escoteira' ? '' : 'none';
@@ -3325,6 +3327,10 @@ renderResponsavelChips();
 renderEventoAnexoArea();
 await iniciarSync();
 renderRoster();
+let ramoSalvo = null, paginaSalva = null;
+try { ramoSalvo = localStorage.getItem('escoteira_ramoAtivo'); paginaSalva = localStorage.getItem('escoteira_paginaAtiva'); } catch (e) {}
+if (ramoSalvo === 'senior') mudarRamo('senior');
+if (paginaSalva && paginaSalva !== 'jovem') mudarPagina(paginaSalva);
 }
 iniciar();
 </script>
