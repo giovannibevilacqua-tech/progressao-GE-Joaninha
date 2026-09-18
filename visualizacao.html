@@ -43,6 +43,13 @@ display: inline-flex; align-items: center; gap: 4px; background: rgba(255,255,25
 border: 1px solid rgba(255,255,255,.32); color: #fff; font-size: 10px; font-weight: 700;
 padding: 3px 10px; border-radius: 20px; margin-top: 8px;
 }
+.ramo-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 14px 0; }
+.ramo-btn {
+padding: 16px 10px; border-radius: 12px; border: 2px solid var(--text);
+background: #F5F3EF; color: var(--text); font-size: 13px; font-weight: 800; cursor: pointer;
+text-align: center;
+}
+.ramo-btn.active { background: var(--vinho); color: #fff; border-color: var(--vinho); }
 .tabs-linha { display: flex; background: var(--card); border-bottom: 2px solid var(--border); overflow-x: auto; overflow-y: hidden; }
 .tab-btn-linha {
 flex: 1; min-width: 120px; padding: 14px 10px; border: none; border-bottom: 3px solid transparent;
@@ -94,6 +101,8 @@ font-size: 11px; font-weight: 500; white-space: normal; text-align: left; line-h
 .fmt-Av { background: #EAFAF1; color: #1A7434; }
 .fmt-Esp { background: #FFF9C4; color: #7A4A00; }
 .externa-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 20px; background: #E8F5E9; color: #1E7A34; border: 1px solid #A8D8B0; margin-right: 5px; }
+.evento-tag-view { display: inline-flex; align-items: center; font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 20px; background: #F5F2EE; color: #6B5B4D; margin-right: 5px; margin-bottom: 4px; }
+.special-banner-view { display: inline-block; font-size: 9px; font-weight: 900; padding: 3px 9px; border-radius: 6px; color: #fff; margin-bottom: 6px; }
 
 /* Ciclo de Programa */
 .ciclo-grupo-view { margin: 14px 14px 0; }
@@ -132,13 +141,20 @@ background: #FAFAF8; cursor: pointer; font-size: 12px; font-weight: 800; color: 
 <header class="header">
 <div class="header-flor">⚜</div>
 <h1>PROGRESSÃO JOVENS<br>GE JOANINHA</h1>
-<div class="sub">Tropa Escoteira — Visualização</div>
+<div class="sub">Tropa Escoteira e Tropa Sênior — Visualização</div>
 <div class="badge-view">🔒 Modo somente leitura</div>
 </header>
 
+<div class="ramo-switch">
+<button class="ramo-btn active" id="ramoBtnEscoteiraView" onclick="mudarRamoView('escoteira')">🏕️ Tropa Escoteira</button>
+<button class="ramo-btn" id="ramoBtnSeniorView" onclick="mudarRamoView('senior')">🎓 Tropa Sênior</button>
+</div>
+
 <nav class="tabs-linha">
-<button class="tab-btn-linha active" id="tabCalView" onclick="mudarPaginaView('calendario')">📅 Calendário</button>
-<button class="tab-btn-linha" id="tabCicloView" onclick="mudarPaginaView('ciclo')">🔄 Ciclo de Programa</button>
+<button class="tab-btn-linha active" id="tabCalView" data-ramo="escoteira" onclick="mudarPaginaView('calendario')">📅 Calendário</button>
+<button class="tab-btn-linha" id="tabCicloView" data-ramo="escoteira" onclick="mudarPaginaView('ciclo')">🔄 Ciclo de Programa</button>
+<button class="tab-btn-linha" id="tabCalSrView" data-ramo="senior" style="display:none;" onclick="mudarPaginaView('calendarioSr')">📅 Calendário Sênior</button>
+<button class="tab-btn-linha" id="tabSemSrView" data-ramo="senior" style="display:none;" onclick="mudarPaginaView('semestresSr')">🗓 Semestres Sênior</button>
 </nav>
 </div>
 
@@ -150,6 +166,16 @@ background: #FAFAF8; cursor: pointer; font-size: 12px; font-weight: 800; color: 
 <div id="pagina-ciclo-view" class="pagina-view">
 <div class="aviso-view">Esta é uma versão de visualização — sem opções de editar blocos ou ciclos.</div>
 <div id="listaCicloView"></div>
+</div>
+
+<div id="pagina-calendario-sr-view" class="pagina-view">
+<div class="aviso-view">Esta é uma versão de visualização — sem opções de editar, adicionar ou remover atividades, e sem a lista de presença de cada uma.</div>
+<div id="listaEventosSrView"></div>
+</div>
+
+<div id="pagina-semestres-sr-view" class="pagina-view">
+<div class="aviso-view">Esta é uma versão de visualização — sem opções de editar semestres ou blocos.</div>
+<div id="listaSemestresSrView"></div>
 </div>
 
 
@@ -231,10 +257,16 @@ const MESES_ABREV = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT'
 // ── Leitura pública (calendário e ciclo de programa não exigem login) ──
 const DB_URL = "https://joaninha-progressao-default-rtdb.firebaseio.com";
 const REST_URL = DB_URL + "/tropaProgressao/json.json";
+const REST_URL_SR = DB_URL + "/tropaSenior/json.json";
 
 let EVENTOS = [];
 let CICLO = [];
 let CICLO_INFO = {};
+let CAL_2S26_VIEW = [];
+let CAL_1S27_VIEW = [];
+let CAL_EXTRAS_VIEW = {};
+let SEMESTRES_SR_VIEW = [];
+let CICLO_BLOCOS_SR_VIEW = {};
 
 async function carregarDadosView() {
 try {
@@ -255,11 +287,34 @@ document.getElementById('listaEventosView').innerHTML = '<div class="hint-vazio"
 document.getElementById('listaCicloView').innerHTML = '<div class="hint-vazio">Não foi possível carregar os dados agora. Tente atualizar a página em instantes.</div>';
 return;
 }
+try {
+const rSr = await Promise.race([
+fetch(REST_URL_SR),
+new Promise((_, reject) => setTimeout(() => reject(new Error('Tempo limite ao buscar dados da Sênior')), 6000))
+]);
+const valorSr = await rSr.json();
+if (valorSr) {
+const dadosSr = JSON.parse(valorSr);
+CAL_2S26_VIEW = dadosSr.CAL_2S26 || [];
+CAL_1S27_VIEW = dadosSr.CAL_1S27 || [];
+CAL_EXTRAS_VIEW = dadosSr.CAL_EXTRAS || {};
+SEMESTRES_SR_VIEW = dadosSr.SEMESTRES_SR || [];
+CICLO_BLOCOS_SR_VIEW = dadosSr.CICLO_BLOCOS_SR || {};
+}
+} catch (e) {
+console.error('Erro ao carregar dados da Sênior:', e);
+document.getElementById('listaEventosSrView').innerHTML = '<div class="hint-vazio">Não foi possível carregar os dados agora. Tente atualizar a página em instantes.</div>';
+document.getElementById('listaSemestresSrView').innerHTML = '<div class="hint-vazio">Não foi possível carregar os dados agora. Tente atualizar a página em instantes.</div>';
+}
 renderCalendarioVisualizacao();
 renderCicloVisualizacao();
+renderCalendarioSeniorView();
+renderSemestresSeniorView();
 let paginaSalvaView = null;
 try { paginaSalvaView = localStorage.getItem('visualizacao_paginaAtiva'); } catch (e) {}
-if (paginaSalvaView === 'ciclo') mudarPaginaView('ciclo');
+const ramoSalvoView = (paginaSalvaView === 'calendarioSr' || paginaSalvaView === 'semestresSr') ? 'senior' : 'escoteira';
+mudarRamoView(ramoSalvoView);
+if (paginaSalvaView && paginaSalvaView !== 'calendario' && paginaSalvaView !== 'calendarioSr') mudarPaginaView(paginaSalvaView);
 restaurarScrollSalvoView('visualizacao_scrollY');
 }
 
@@ -280,11 +335,24 @@ if (isNaN(y)) return;
 [50, 150, 300, 600, 1000].forEach(delay => setTimeout(() => window.scrollTo(0, y), delay));
 }
 
+function mudarRamoView(r) {
+document.getElementById('ramoBtnEscoteiraView').classList.toggle('active', r === 'escoteira');
+document.getElementById('ramoBtnSeniorView').classList.toggle('active', r === 'senior');
+document.querySelectorAll('.tab-btn-linha[data-ramo="escoteira"]').forEach(el => el.style.display = r === 'escoteira' ? '' : 'none');
+document.querySelectorAll('.tab-btn-linha[data-ramo="senior"]').forEach(el => el.style.display = r === 'senior' ? '' : 'none');
+try { localStorage.setItem('visualizacao_ramoAtivo', r); } catch (e) {}
+mudarPaginaView(r === 'escoteira' ? 'calendario' : 'calendarioSr');
+}
+
 function mudarPaginaView(p) {
 document.getElementById('pagina-calendario-view').classList.toggle('active', p === 'calendario');
 document.getElementById('pagina-ciclo-view').classList.toggle('active', p === 'ciclo');
+document.getElementById('pagina-calendario-sr-view').classList.toggle('active', p === 'calendarioSr');
+document.getElementById('pagina-semestres-sr-view').classList.toggle('active', p === 'semestresSr');
 document.getElementById('tabCalView').classList.toggle('active', p === 'calendario');
 document.getElementById('tabCicloView').classList.toggle('active', p === 'ciclo');
+document.getElementById('tabCalSrView').classList.toggle('active', p === 'calendarioSr');
+document.getElementById('tabSemSrView').classList.toggle('active', p === 'semestresSr');
 window.scrollTo(0, 0);
 try { localStorage.setItem('visualizacao_paginaAtiva', p); } catch (e) {}
 }
@@ -368,6 +436,87 @@ ${ev.descricao ? `<div class="evento-desc-view">${ev.descricao}</div>` : ''}
 ${(linkHtml || anexoHtml) ? `<div class="evento-extra-row">${linkHtml}${anexoHtml}</div>` : ''}
 ${respostaHtml}
 </div>
+</div>`;
+}).join('');
+}
+
+// ── Calendário Sênior (somente leitura) ──
+const CORES_ESPECIAL = { camp: '#2E7D32', enduro: '#E65100', radical: '#6A1B9A', cerimonia: '#6A1B9A', sem: '#B0BEC5' };
+const TEXTOS_ESPECIAL = { camp: '⛺ ACAMPAMENTO DE GRUPO', enduro: '⚡ ENDURO DISTRITAL SÊNIOR', radical: '⚡ RADICAL DAY DISTRITAL', cerimonia: '🏆 CERIMÔNIA DE PASSAGEM', sem: '⚠ SEM ATIVIDADE' };
+
+function renderCalendarioSeniorView() {
+const el = document.getElementById('listaEventosSrView');
+const todos = [];
+CAL_2S26_VIEW.forEach((ev, i) => todos.push(Object.assign({}, ev, { id: ev.id || ('2s26_' + i) })));
+CAL_1S27_VIEW.forEach((ev, i) => todos.push(Object.assign({}, ev, { id: ev.id || ('1s27_' + i) })));
+if (!todos.length) { el.innerHTML = '<div class="hint-vazio">Nenhuma atividade cadastrada ainda.</div>'; return; }
+el.innerHTML = todos.map(ev => {
+const extras = CAL_EXTRAS_VIEW[ev.id] || {};
+if (ev.txt !== undefined) {
+const badges = [];
+if (ev.fmt) badges.push(`<span class="fmt-badge fmt-${ev.fmt}">${ev.fmt}</span>`);
+if (ev.blocos) ev.blocos.split(' + ').forEach(b => badges.push(`<span class="evento-tag-view">📌 ${b}</span>`));
+if (ev.comp) badges.push(`<span class="evento-tag-view">⚜ ${ev.comp}</span>`);
+const specialHtml = (ev.special && TEXTOS_ESPECIAL[ev.special]) ? `<div><span class="special-banner-view" style="background:${CORES_ESPECIAL[ev.special] || '#666'};">${TEXTOS_ESPECIAL[ev.special]}</span></div>` : '';
+const linkHtml = extras.link ? `<a class="evento-link" href="${extras.link}" target="_blank" rel="noopener">🔗 Abrir link</a>` : '';
+const respostaHtml = extras.resposta ? `<div class="evento-resposta-view">💬 ${extras.resposta}</div>` : '';
+return `<div class="evento-card-view">
+<div class="evento-data-view"><div class="ev-dia">${ev.dia || ''}</div><div class="ev-mes">${ev.mes || ''}</div></div>
+<div class="evento-corpo-view">
+${specialHtml}
+<div class="evento-nome-view">${badges.join('')}</div>
+<div class="evento-desc-view">${ev.txt}</div>
+${linkHtml ? `<div class="evento-extra-row">${linkHtml}</div>` : ''}
+${respostaHtml}
+</div>
+</div>`;
+}
+const partes = (ev.data || '').split('-');
+const mesTxt = MESES_ABREV[parseInt(partes[1], 10) - 1] || '';
+const dia = partes[2] || '';
+const respHtml = (ev.responsaveis && ev.responsaveis.length) ? `<div class="evento-resp">👤 ${ev.responsaveis.join(', ')}</div>` : '';
+const linkHtml = ev.link ? `<a class="evento-link" href="${ev.link}" target="_blank" rel="noopener">🔗 Abrir link</a>` : '';
+const respostaHtml = ev.resposta ? `<div class="evento-resposta-view">💬 ${ev.resposta}</div>` : '';
+return `<div class="evento-card-view">
+<div class="evento-data-view"><div class="ev-dia">${dia}</div><div class="ev-mes">${mesTxt}</div></div>
+<div class="evento-corpo-view">
+<div class="evento-nome-view">${ev.tipo ? `<span class="fmt-badge fmt-${ev.tipo}">${ev.tipo}</span>` : ''}${ev.externa ? `<span class="externa-badge">🌍 Externa</span>` : ''}${ev.nome || ''}</div>
+${ev.local ? `<div class="evento-local-view">📍 ${ev.local}</div>` : ''}
+${respHtml}
+${ev.descricao ? `<div class="evento-desc-view">${ev.descricao}</div>` : ''}
+${linkHtml ? `<div class="evento-extra-row">${linkHtml}</div>` : ''}
+${respostaHtml}
+</div>
+</div>`;
+}).join('');
+}
+
+// ── Semestres Sênior (somente leitura) ──
+function renderSemestresSeniorView() {
+const el = document.getElementById('listaSemestresSrView');
+if (!SEMESTRES_SR_VIEW.length) { el.innerHTML = '<div class="hint-vazio">Nenhum semestre cadastrado ainda.</div>'; return; }
+el.innerHTML = SEMESTRES_SR_VIEW.map(sem => {
+const blocosSelecionados = (CICLO_BLOCOS_SR_VIEW[sem.key] || []).filter(Boolean);
+let blocosHtml;
+if (!blocosSelecionados.length) {
+blocosHtml = `<div class="hint-vazio-sm">Nenhum bloco selecionado.</div>`;
+} else {
+blocosHtml = `<div class="blocos-grid-view">` + blocosSelecionados.map(b => {
+const def = BLOCOS[b];
+const eixo = EIXOS.find(e => e.blocos.includes(b));
+const cor = eixo ? eixo.cor : '#666';
+return `<div class="bloco-chip-view" style="background:${cor}16;border:1px solid ${cor}50;color:${cor};">${def ? def.nome : b}</div>`;
+}).join('') + `</div>`;
+}
+const especiaisHtml = (sem.especiais && sem.especiais.length) ? `<div class="metas-view">
+<div class="secao-label-view">📌 Datas especiais</div>
+${sem.especiais.map(e => `<div class="meta-item-view"><span>${e.icone || ''} ${e.destaque || ''}</span><span>${e.texto || ''}</span></div>`).join('')}
+</div>` : '';
+return `<div class="sem-card-view">
+<div class="sem-card-header-view" style="background:linear-gradient(135deg, ${sem.cor1 || '#333'}, ${sem.cor2 || sem.cor1 || '#333'});color:#fff;cursor:default;">
+<span>${sem.titulo || sem.key}${sem.periodo ? ` — ${sem.periodo}` : ''}</span>
+</div>
+<div class="sem-card-body-view">${blocosHtml}${especiaisHtml}</div>
 </div>`;
 }).join('');
 }
