@@ -23,6 +23,32 @@
 --shadow: 0 2px 8px rgba(0,0,0,.10);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
+
+.login-gate-ov {
+position: fixed; inset: 0; z-index: 2000; display: flex; align-items: center; justify-content: center;
+background: linear-gradient(160deg, #C1121F 0%, #9A0D18 60%, #E63946 100%); padding: 20px;
+}
+.login-gate-box {
+background: var(--card); border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,.3);
+padding: 32px 26px; width: 100%; max-width: 340px; text-align: center;
+}
+.login-erro-msg {
+margin-top: 10px; padding: 9px 11px; background: #FDECEA; color: #C0392B;
+border-radius: 8px; font-size: 11px; font-weight: 600; text-align: left; line-height: 1.4;
+}
+.info-icone-tip { position: relative; display: inline-flex; cursor: help; font-size: 12px; }
+.info-icone-tip-balao {
+display: none; position: absolute; bottom: 130%; left: 50%; transform: translateX(-50%);
+background: #1A1A1A; color: #fff; font-size: 10px; font-weight: 600; text-transform: none;
+letter-spacing: normal; padding: 7px 10px; border-radius: 7px; white-space: nowrap; z-index: 10;
+box-shadow: 0 3px 10px rgba(0,0,0,.25);
+}
+.info-icone-tip-balao::after {
+content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+border: 5px solid transparent; border-top-color: #1A1A1A;
+}
+.info-icone-tip:hover .info-icone-tip-balao, .info-icone-tip:active .info-icone-tip-balao { display: block; }
+
 body {
 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
 background: var(--bg);
@@ -138,6 +164,16 @@ scrollbar-width: thin; scrollbar-color: rgba(0,0,0,.25) transparent;
 #fichaModalOv .lis-modal-box::-webkit-scrollbar { width: 6px; }
 #fichaModalOv .lis-modal-box::-webkit-scrollbar-track { background: transparent; margin: 10px 0; }
 #fichaModalOv .lis-modal-box::-webkit-scrollbar-thumb { background: rgba(0,0,0,.25); border-radius: 10px; }
+#chefesModalOv { align-items: center; }
+#chefesModalOv .lis-modal-box { border-radius: 16px; margin: 20px auto; max-height: 85vh; max-height: 85dvh; }
+.chefe-add-row { display: flex; gap: 8px; margin-bottom: 14px; }
+.chefe-add-row input { flex: 1; }
+.chefe-row { display: flex; align-items: center; gap: 8px; padding: 10px 4px; border-bottom: 1px solid #F0EDE8; }
+.chefe-row:last-child { border-bottom: none; }
+.chefe-row-registro { font-size: 13px; font-weight: 700; flex: 1; }
+.chefe-badge-admin { font-size: 9px; font-weight: 800; background: #FDEBD0; color: #A85D00; padding: 2px 7px; border-radius: 10px; }
+.chefe-row-btn { border: 1px solid var(--border); background: var(--card); font-size: 10px; font-weight: 700; padding: 5px 8px; border-radius: 7px; cursor: pointer; white-space: nowrap; }
+.chefe-row-btn.remover { color: #E74C3C; border-color: #F5C6C0; }
 .lis-modal-header { position: sticky; top: 0; z-index: 5; background: var(--card); padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
 .lis-modal-titulo { font-size: 15px; font-weight: 800; color: var(--vinho); }
 .lis-modal-fechar { background: none; border: none; font-size: 20px; color: var(--muted); cursor: pointer; padding: 0 4px; }
@@ -288,6 +324,10 @@ padding: 8px; background: var(--focus-y); border-radius: 8px;
 .especialidade-row label { font-size: 11px; color: #7A4A00; cursor: pointer; }
 .meta-note { font-size: 10px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
 .ramo-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 14px 0; }
+.conta-barra { display: flex; align-items: center; gap: 8px; margin: 8px 14px 0; flex-wrap: wrap; }
+.conta-barra-registro { font-size: 11px; font-weight: 600; color: var(--muted); flex: 1; min-width: 0; }
+.conta-barra-btn { border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 11px; font-weight: 700; padding: 6px 10px; border-radius: 8px; cursor: pointer; white-space: nowrap; }
+.conta-barra-btn:hover { background: #F5F2EE; }
 .ramo-btn {
 padding: 16px 10px; border-radius: 12px; border: 2px solid var(--text);
 background: #F5F3EF; color: var(--text); font-size: 13px; font-weight: 800; cursor: pointer;
@@ -599,6 +639,21 @@ cursor: pointer; color: #fff;
 </head>
 <body>
 
+<div id="loginGateOv" class="login-gate-ov">
+<div class="login-gate-box">
+<div class="header-flor" style="font-size:34px;margin-bottom:6px;">⚜</div>
+<h1 style="font-size:16px;font-weight:800;letter-spacing:.5px;margin-bottom:4px;">PROGRESSÃO JOVENS<br>GE JOANINHA</h1>
+<div style="font-size:12px;color:var(--muted);margin-bottom:22px;">Acesso restrito aos chefes do grupo</div>
+<label class="campo-label" style="display:flex;align-items:center;gap:5px;justify-content:center;">
+REGISTRO ESCOTEIRO
+<span class="info-icone-tip">ℹ️<span class="info-icone-tip-balao">Registro escoteiro sem o dígito</span></span>
+</label>
+<input type="text" id="loginRegistroInput" class="campo-input" style="text-align:center;font-size:16px;letter-spacing:1px;" inputmode="numeric" autocomplete="off" placeholder="Ex: 123456" onkeydown="if(event.key==='Enter')tentarLoginTela()">
+<div id="loginErroMsg" class="login-erro-msg" style="display:none;"></div>
+<button class="btn-primario" id="loginEntrarBtn" style="width:100%;margin-top:14px;padding:12px;" onclick="tentarLoginTela()">Entrar</button>
+</div>
+</div>
+
 <div id="scrollSentinel" style="position:absolute;top:0;left:0;width:1px;height:1px;"></div>
 
 <div class="cabecalho-fixo" id="cabecalhoFixo">
@@ -613,6 +668,12 @@ cursor: pointer; color: #fff;
 <div class="ramo-switch">
 <button class="ramo-btn active" id="ramoBtnEscoteira" onclick="mudarRamo('escoteira')">🏕️ Tropa Escoteira</button>
 <button class="ramo-btn" id="ramoBtnSenior" onclick="mudarRamo('senior')">🎓 Tropa Sênior</button>
+</div>
+
+<div class="conta-barra">
+<span class="conta-barra-registro">👤 Registro <strong id="contaRegistroTxt"></strong></span>
+<button class="conta-barra-btn" id="btnGerenciarChefes" style="display:none;" onclick="abrirGerenciarChefes()">⚙️ Gerenciar Chefes</button>
+<button class="conta-barra-btn" onclick="if(confirm('Sair da sua conta neste navegador?'))fazerLogout()">🚪 Sair</button>
 </div>
 
 <nav class="tabs-linha" id="tabsLinha">
@@ -827,44 +888,268 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 </div>
 </div>
 
+<div class="lis-modal-ov" id="chefesModalOv" onclick="if(event.target===this)fecharGerenciarChefes()">
+<div class="lis-modal-box">
+<div class="lis-modal-header">
+<span class="lis-modal-titulo">⚙️ Gerenciar Chefes</span>
+<button class="lis-modal-fechar" onclick="fecharGerenciarChefes()">✕</button>
+</div>
+<div class="lis-modal-body" id="chefesModalBody"></div>
+</div>
+</div>
+
 <div id="pagina-senior" style="display:none;">
-<iframe id="iframeSenior" src="tropa-senior.html" style="width:100%;border:none;display:block;transition:height .25s ease;" title="Tropa Sênior"></iframe>
+<iframe id="iframeSenior" style="width:100%;border:none;display:block;transition:height .25s ease;" title="Tropa Sênior"></iframe>
 </div>
 
 <script>
-// ── Autenticação anônima do Firebase (evita banco de dados aberto ao público) ──
-// Ative "Anônimo" em: Console do Firebase → Authentication → Sign-in method
-// A chave abaixo fica em: Configurações do projeto (⚙️) → Geral → "Chave de API da Web"
+// ── Autenticação por Registro Escoteiro (login real — resolve o aviso de segurança do Firebase) ──
 const FIREBASE_WEB_API_KEY = "AIzaSyB50r7SU6qU_dwq03v_oQksLi1bAxbU614";
+const DB_URL = "https://joaninha-progressao-default-rtdb.firebaseio.com";
+const DOMINIO_LOGIN = "@joaninha.app";
+const REGISTRO_BOOTSTRAP_ADMIN = "426603"; // primeiro admin — a conta é criada sozinha no primeiro login dele, se ainda não existir
+
 let firebaseAuthToken = null;
-async function autenticarFirebaseAnonimo() {
-if (!FIREBASE_WEB_API_KEY || FIREBASE_WEB_API_KEY.indexOf('COLE_AQUI') === 0) {
-console.warn('Firebase: chave de API da Web não configurada — o banco pode continuar acessível sem autenticação.');
-return null;
-}
+let firebaseRefreshToken = null;
+let registroLogado = null;
+let souAdmin = false;
+
+function emailDoRegistro(registro) { return registro + DOMINIO_LOGIN; }
+
+let firebaseUid = null;
+
+function salvarSessao() {
 try {
-const resp = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + FIREBASE_WEB_API_KEY, {
+localStorage.setItem('chefeSessao', JSON.stringify({
+registro: registroLogado,
+uid: firebaseUid,
+idToken: firebaseAuthToken,
+refreshToken: firebaseRefreshToken,
+expiraEm: Date.now() + 55 * 60 * 1000
+}));
+} catch (e) {}
+}
+function limparSessao() {
+try { localStorage.removeItem('chefeSessao'); } catch (e) {}
+firebaseAuthToken = null; firebaseRefreshToken = null; registroLogado = null; firebaseUid = null; souAdmin = false;
+}
+function lerSessaoSalva() {
+try {
+const v = localStorage.getItem('chefeSessao');
+return v ? JSON.parse(v) : null;
+} catch (e) { return null; }
+}
+
+async function renovarTokenSessao(refreshToken) {
+const resp = await fetch('https://securetoken.googleapis.com/v1/token?key=' + FIREBASE_WEB_API_KEY, {
 method: 'POST',
-headers: {'Content-Type': 'application/json'},
-body: JSON.stringify({ returnSecureToken: true })
+headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(refreshToken)
 });
 const data = await resp.json();
-if (data && data.idToken) {
-firebaseAuthToken = data.idToken;
-setTimeout(autenticarFirebaseAnonimo, 50 * 60 * 1000); // token expira em ~1h — renova antes
+if (data && data.id_token) {
+return { idToken: data.id_token, refreshToken: data.refresh_token };
 }
-return firebaseAuthToken;
-} catch (e) {
-console.error('Falha ao autenticar no Firebase:', e);
 return null;
 }
+
+async function tentarRestaurarSessao() {
+const salva = lerSessaoSalva();
+if (!salva) return false;
+if (Date.now() < salva.expiraEm && salva.idToken) {
+firebaseAuthToken = salva.idToken;
+firebaseRefreshToken = salva.refreshToken;
+registroLogado = salva.registro;
+firebaseUid = salva.uid;
+} else {
+const renovado = await renovarTokenSessao(salva.refreshToken);
+if (!renovado) { limparSessao(); return false; }
+firebaseAuthToken = renovado.idToken;
+firebaseRefreshToken = renovado.refreshToken;
+registroLogado = salva.registro;
+firebaseUid = salva.uid;
+salvarSessao();
 }
+await checarSeSouAdmin();
+agendarRenovacaoToken();
+return true;
+}
+
+function agendarRenovacaoToken() {
+setTimeout(async () => {
+if (!firebaseRefreshToken) return;
+const renovado = await renovarTokenSessao(firebaseRefreshToken);
+if (renovado) {
+firebaseAuthToken = renovado.idToken;
+firebaseRefreshToken = renovado.refreshToken;
+salvarSessao();
+agendarRenovacaoToken();
+}
+}, 50 * 60 * 1000);
+}
+
+function mapearErroFirebaseLogin(codigo) {
+const mapa = {
+'EMAIL_NOT_FOUND': 'Registro não encontrado. Confira o número (sem o dígito) ou peça pra um admin te cadastrar.',
+'INVALID_PASSWORD': 'Registro incorreto. Confira o número, sem o dígito verificador.',
+'INVALID_LOGIN_CREDENTIALS': 'Registro incorreto ou não cadastrado. Confira o número, sem o dígito verificador.',
+'USER_DISABLED': 'Esse acesso foi desativado. Fale com um admin.',
+'TOO_MANY_ATTEMPTS_TRY_LATER': 'Muitas tentativas seguidas. Espera um pouco e tenta de novo.'
+};
+return mapa[codigo] || 'Não foi possível entrar. Confira o registro e tente de novo.';
+}
+
+async function fazerLoginRegistro(registro) {
+registro = (registro || '').trim();
+if (!registro) return { erro: true, mensagem: 'Digite o registro escoteiro.' };
+const email = emailDoRegistro(registro);
+let resp = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=' + FIREBASE_WEB_API_KEY, {
+method: 'POST', headers: {'Content-Type': 'application/json'},
+body: JSON.stringify({ email, password: registro, returnSecureToken: true })
+});
+let data = await resp.json();
+if (data.error) {
+const codigo = data.error.message;
+const podeSerBootstrap = registro === REGISTRO_BOOTSTRAP_ADMIN && (codigo === 'EMAIL_NOT_FOUND' || codigo === 'INVALID_LOGIN_CREDENTIALS');
+if (podeSerBootstrap) {
+resp = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + FIREBASE_WEB_API_KEY, {
+method: 'POST', headers: {'Content-Type': 'application/json'},
+body: JSON.stringify({ email, password: registro, returnSecureToken: true })
+});
+data = await resp.json();
+if (data.error) return { erro: true, mensagem: 'Não foi possível criar o primeiro acesso. Tenta de novo em instantes.' };
+firebaseAuthToken = data.idToken;
+firebaseRefreshToken = data.refreshToken;
+firebaseUid = data.localId;
+registroLogado = registro;
+try {
+await fetch(urlComAuthFirebase(DB_URL + '/usuarios/' + firebaseUid + '.json'), { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ registro: registro, admin: true, criadoEm: new Date().toISOString() }) });
+} catch (e) {}
+salvarSessao();
+souAdmin = true;
+agendarRenovacaoToken();
+return { erro: false };
+}
+return { erro: true, mensagem: mapearErroFirebaseLogin(codigo) };
+}
+firebaseAuthToken = data.idToken;
+firebaseRefreshToken = data.refreshToken;
+firebaseUid = data.localId;
+registroLogado = registro;
+salvarSessao();
+await checarSeSouAdmin();
+agendarRenovacaoToken();
+return { erro: false };
+}
+
+async function checarSeSouAdmin() {
+try {
+const r = await fetch(urlComAuthFirebase(DB_URL + '/usuarios/' + firebaseUid + '/admin.json'));
+const v = await r.json();
+souAdmin = v === true;
+} catch (e) { souAdmin = false; }
+}
+
+// ── Painel Gerenciar Chefes (só admins) ──
+async function carregarListaChefes() {
+try {
+const r = await fetch(urlComAuthFirebase(DB_URL + '/usuarios.json'));
+const dados = await r.json();
+return dados || {};
+} catch (e) { return {}; }
+}
+async function criarNovoChefe(registro, comoAdmin) {
+registro = (registro || '').trim();
+if (!registro) return { erro: true, mensagem: 'Digite o registro do novo chefe.' };
+const email = emailDoRegistro(registro);
+const resp = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + FIREBASE_WEB_API_KEY, {
+method: 'POST', headers: {'Content-Type': 'application/json'},
+body: JSON.stringify({ email, password: registro, returnSecureToken: true })
+});
+const data = await resp.json();
+if (data.error) {
+if (data.error.message === 'EMAIL_EXISTS') return { erro: true, mensagem: 'Esse registro já tem acesso cadastrado.' };
+return { erro: true, mensagem: 'Não foi possível criar o acesso. Tenta de novo.' };
+}
+await fetch(urlComAuthFirebase(DB_URL + '/usuarios/' + data.localId + '.json'), {
+method: 'PUT', headers: {'Content-Type': 'application/json'},
+body: JSON.stringify({ registro: registro, admin: !!comoAdmin, criadoEm: new Date().toISOString() })
+});
+return { erro: false };
+}
+async function alterarAdminChefe(uid, novoValor) {
+await fetch(urlComAuthFirebase(DB_URL + '/usuarios/' + uid + '/admin.json'), { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(novoValor) });
+}
+async function removerAcessoChefe(uid) {
+await fetch(urlComAuthFirebase(DB_URL + '/usuarios/' + uid + '.json'), { method: 'DELETE' });
+}
+
+async function abrirGerenciarChefes() {
+document.getElementById('chefesModalOv').classList.add('open');
+document.getElementById('chefesModalBody').innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">Carregando…</div>';
+await renderChefesModalBody();
+}
+function fecharGerenciarChefes() {
+document.getElementById('chefesModalOv').classList.remove('open');
+}
+async function renderChefesModalBody() {
+const chefes = await carregarListaChefes();
+const uids = Object.keys(chefes);
+let html = `
+<div class="chefe-add-row">
+<input type="text" class="campo-input" id="novoChefeRegistroInput" inputmode="numeric" autocomplete="off" placeholder="Registro do novo chefe" onkeydown="if(event.key==='Enter')criarNovoChefeUI()">
+<button class="btn-primario" style="white-space:nowrap;padding:0 14px;" onclick="criarNovoChefeUI()">+ Criar</button>
+</div>
+<div id="novoChefeErro" class="login-erro-msg" style="display:none;margin-bottom:12px;"></div>
+`;
+if (!uids.length) {
+html += '<div style="padding:14px;text-align:center;color:var(--muted);font-size:12px;">Nenhum chefe cadastrado ainda.</div>';
+} else {
+html += uids.map(uid => {
+const c = chefes[uid];
+return `<div class="chefe-row">
+<span class="chefe-row-registro">${c.registro || uid}</span>
+${c.admin ? '<span class="chefe-badge-admin">admin</span>' : ''}
+<button class="chefe-row-btn" onclick="alterarAdminChefeUI('${uid}', ${!c.admin})">${c.admin ? 'Tirar admin' : 'Tornar admin'}</button>
+${uid !== firebaseUid ? `<button class="chefe-row-btn remover" onclick="removerAcessoChefeUI('${uid}','${c.registro || ''}')">Remover</button>` : ''}
+</div>`;
+}).join('');
+}
+html += '<div style="font-size:10px;color:var(--muted);margin-top:12px;line-height:1.5;">⚠️ "Remover" tira o acesso do chefe aos dados, mas o registro dele continua funcionando como login se cadastrado de novo depois.</div>';
+document.getElementById('chefesModalBody').innerHTML = html;
+}
+async function criarNovoChefeUI() {
+const input = document.getElementById('novoChefeRegistroInput');
+const erroDiv = document.getElementById('novoChefeErro');
+erroDiv.style.display = 'none';
+const resultado = await criarNovoChefe(input.value, false);
+if (resultado.erro) {
+erroDiv.textContent = resultado.mensagem;
+erroDiv.style.display = 'block';
+return;
+}
+input.value = '';
+await renderChefesModalBody();
+}
+async function alterarAdminChefeUI(uid, novoValor) {
+await alterarAdminChefe(uid, novoValor);
+await renderChefesModalBody();
+}
+async function removerAcessoChefeUI(uid, registro) {
+if (!confirm(`Remover o acesso de ${registro || 'este chefe'}?`)) return;
+await removerAcessoChefe(uid);
+await renderChefesModalBody();
+}
+
+function fazerLogout() {
+limparSessao();
+window.location.reload();
+}
+
 function urlComAuthFirebase(url) {
 if (!firebaseAuthToken) return url;
 return url + (url.indexOf('?') !== -1 ? '&' : '?') + 'auth=' + firebaseAuthToken;
 }
-
-const DB_URL = "https://joaninha-progressao-default-rtdb.firebaseio.com";
 const REST_URL = DB_URL + "/tropaProgressao/json.json";
 </script>
 <script>
@@ -991,7 +1276,6 @@ return Array.from({length:6}, () => ({ ano:'', semestre:'1', blocos:['','',''], 
 
 function iniciarSync() {
   return new Promise(async (resolve) => {
-    await autenticarFirebaseAnonimo();
     let primeira = true;
 
     function processar(valor) {
@@ -3544,7 +3828,48 @@ const y = parseInt(scrollSalvo, 10);
 if (isNaN(y)) return;
 [50, 150, 300, 600, 1000].forEach(delay => setTimeout(() => window.scrollTo(0, y), delay));
 }
-iniciar();
+function aplicarEstadoContaLogada() {
+const txt = document.getElementById('contaRegistroTxt');
+if (txt) txt.textContent = registroLogado || '';
+const btnAdmin = document.getElementById('btnGerenciarChefes');
+if (btnAdmin) btnAdmin.style.display = souAdmin ? '' : 'none';
+const iframe = document.getElementById('iframeSenior');
+if (iframe && !iframe.src) iframe.src = 'tropa-senior.html';
+}
+
+async function tentarLoginTela() {
+const input = document.getElementById('loginRegistroInput');
+const btn = document.getElementById('loginEntrarBtn');
+const erroDiv = document.getElementById('loginErroMsg');
+erroDiv.style.display = 'none';
+const registro = input.value.trim();
+if (!registro) { erroDiv.textContent = 'Digite o registro escoteiro.'; erroDiv.style.display = 'block'; return; }
+btn.disabled = true;
+btn.textContent = 'Entrando...';
+const resultado = await fazerLoginRegistro(registro);
+btn.disabled = false;
+btn.textContent = 'Entrar';
+if (resultado.erro) {
+erroDiv.textContent = resultado.mensagem;
+erroDiv.style.display = 'block';
+return;
+}
+document.getElementById('loginGateOv').style.display = 'none';
+aplicarEstadoContaLogada();
+await iniciar();
+}
+
+async function iniciarComLogin() {
+const restaurou = await tentarRestaurarSessao();
+if (restaurou) {
+document.getElementById('loginGateOv').style.display = 'none';
+aplicarEstadoContaLogada();
+await iniciar();
+} else {
+document.getElementById('loginRegistroInput').focus();
+}
+}
+iniciarComLogin();
 </script>
 
 

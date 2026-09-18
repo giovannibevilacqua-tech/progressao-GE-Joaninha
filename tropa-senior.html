@@ -654,32 +654,55 @@ let S = {};
 const DB_URL = "https://joaninha-progressao-default-rtdb.firebaseio.com";
 const REST_URL_SR = DB_URL + "/tropaSenior/json.json";
 
-// ── Autenticação anônima do Firebase (evita banco de dados aberto ao público) ──
-// Ative "Anônimo" em: Console do Firebase → Authentication → Sign-in method
-// A chave abaixo fica em: Configurações do projeto (⚙️) → Geral → "Chave de API da Web"
+// ── Autenticação: usa a mesma sessão de registro escoteiro criada em index.html ──
 const FIREBASE_WEB_API_KEY = "AIzaSyB50r7SU6qU_dwq03v_oQksLi1bAxbU614";
 let firebaseAuthToken = null;
-async function autenticarFirebaseAnonimo() {
-  if (!FIREBASE_WEB_API_KEY || FIREBASE_WEB_API_KEY.indexOf('COLE_AQUI') === 0) {
-    console.warn('Firebase: chave de API da Web não configurada — o banco pode continuar acessível sem autenticação.');
-    return null;
-  }
+let firebaseRefreshToken = null;
+let firebaseUid = null;
+let registroLogado = null;
+
+function lerSessaoSalva() {
   try {
-    const resp = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + FIREBASE_WEB_API_KEY, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ returnSecureToken: true })
-    });
-    const data = await resp.json();
-    if (data && data.idToken) {
-      firebaseAuthToken = data.idToken;
-      setTimeout(autenticarFirebaseAnonimo, 50 * 60 * 1000); // token expira em ~1h — renova antes
-    }
-    return firebaseAuthToken;
-  } catch (e) {
-    console.error('Falha ao autenticar no Firebase:', e);
-    return null;
+    const v = localStorage.getItem('chefeSessao');
+    return v ? JSON.parse(v) : null;
+  } catch (e) { return null; }
+}
+function salvarSessao() {
+  try {
+    localStorage.setItem('chefeSessao', JSON.stringify({
+      registro: registroLogado, uid: firebaseUid, idToken: firebaseAuthToken, refreshToken: firebaseRefreshToken, expiraEm: Date.now() + 55 * 60 * 1000
+    }));
+  } catch (e) {}
+}
+async function renovarTokenSessao(refreshToken) {
+  const resp = await fetch('https://securetoken.googleapis.com/v1/token?key=' + FIREBASE_WEB_API_KEY, {
+    method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(refreshToken)
+  });
+  const data = await resp.json();
+  if (data && data.id_token) return { idToken: data.id_token, refreshToken: data.refresh_token };
+  return null;
+}
+function agendarRenovacaoTokenSr() {
+  setTimeout(async () => {
+    if (!firebaseRefreshToken) return;
+    const renovado = await renovarTokenSessao(firebaseRefreshToken);
+    if (renovado) { firebaseAuthToken = renovado.idToken; firebaseRefreshToken = renovado.refreshToken; salvarSessao(); agendarRenovacaoTokenSr(); }
+  }, 50 * 60 * 1000);
+}
+async function autenticarComSessaoCompartilhada() {
+  const salva = lerSessaoSalva();
+  if (!salva) return false;
+  if (Date.now() < salva.expiraEm && salva.idToken) {
+    firebaseAuthToken = salva.idToken; firebaseRefreshToken = salva.refreshToken; registroLogado = salva.registro; firebaseUid = salva.uid;
+  } else {
+    const renovado = await renovarTokenSessao(salva.refreshToken);
+    if (!renovado) return false;
+    firebaseAuthToken = renovado.idToken; firebaseRefreshToken = renovado.refreshToken; registroLogado = salva.registro; firebaseUid = salva.uid;
+    salvarSessao();
   }
+  agendarRenovacaoTokenSr();
+  return true;
 }
 function urlComAuthFirebase(url) {
   if (!firebaseAuthToken) return url;
@@ -687,7 +710,11 @@ function urlComAuthFirebase(url) {
 }
 
 async function loadState(){
-  await autenticarFirebaseAnonimo();
+  const logado = await autenticarComSessaoCompartilhada();
+  if (!logado) {
+    document.body.innerHTML = '<div style="padding:40px 20px;text-align:center;font-family:sans-serif;color:#666;"><div style="font-size:34px;margin-bottom:10px;">⚜</div><div style="font-weight:700;margin-bottom:6px;">Sessão não encontrada</div><div style="font-size:13px;">Abra a Tropa Sênior a partir da tela principal (Tropa Escoteira) depois de fazer login.</div></div>';
+    throw new Error('Sem sessão de login — Tropa Sênior precisa ser aberta a partir da tela principal.');
+  }
   try{
     const r = await Promise.race([
       fetch(urlComAuthFirebase(REST_URL_SR)),
