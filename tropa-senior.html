@@ -653,6 +653,7 @@ let S = {};
 
 const DB_URL = "https://joaninha-progressao-default-rtdb.firebaseio.com";
 const REST_URL_SR = DB_URL + "/tropaSenior/json.json";
+const MODO_VISUALIZACAO_SR = new URLSearchParams(location.search).get('view') === '1';
 
 // ── Autenticação: usa a mesma sessão de registro escoteiro criada em index.html ──
 const FIREBASE_WEB_API_KEY = "AIzaSyB50r7SU6qU_dwq03v_oQksLi1bAxbU614";
@@ -710,14 +711,18 @@ function urlComAuthFirebase(url) {
 }
 
 async function loadState(){
-  const logado = await autenticarComSessaoCompartilhada();
-  if (!logado) {
-    document.body.innerHTML = '<div style="padding:40px 20px;text-align:center;font-family:sans-serif;color:#666;"><div style="font-size:34px;margin-bottom:10px;">⚜</div><div style="font-weight:700;margin-bottom:6px;">Sessão não encontrada</div><div style="font-size:13px;">Abra a Tropa Sênior a partir da tela principal (Tropa Escoteira) depois de fazer login.</div></div>';
-    throw new Error('Sem sessão de login — Tropa Sênior precisa ser aberta a partir da tela principal.');
+  let urlFetch = REST_URL_SR;
+  if (!MODO_VISUALIZACAO_SR) {
+    const logado = await autenticarComSessaoCompartilhada();
+    if (!logado) {
+      document.body.innerHTML = '<div style="padding:40px 20px;text-align:center;font-family:sans-serif;color:#666;"><div style="font-size:34px;margin-bottom:10px;">⚜</div><div style="font-weight:700;margin-bottom:6px;">Sessão não encontrada</div><div style="font-size:13px;">Abra a Tropa Sênior a partir da tela principal (Tropa Escoteira) depois de fazer login.</div></div>';
+      throw new Error('Sem sessão de login — Tropa Sênior precisa ser aberta a partir da tela principal.');
+    }
+    urlFetch = urlComAuthFirebase(REST_URL_SR);
   }
   try{
     const r = await Promise.race([
-      fetch(urlComAuthFirebase(REST_URL_SR)),
+      fetch(urlFetch),
       new Promise((_, reject) => setTimeout(() => reject(new Error('Tempo limite ao buscar dados da Tropa Sênior')), 4000))
     ]);
     const val = await r.json();
@@ -1611,15 +1616,16 @@ function renderCal(events, containerId, pfx){
       <div class="strip-mon">${ev.mes}</div>
     </div>
     <div class="cal-body" style="flex:1;position:relative;">
-      <button class="evento-menu-btn-sr" style="position:absolute;top:0;right:0;" onclick="event.stopPropagation();toggleEventoMenuSr('${eid}')">⋮</button>
+      ${MODO_VISUALIZACAO_SR ? '' : `<button class="evento-menu-btn-sr" style="position:absolute;top:0;right:0;" onclick="event.stopPropagation();toggleEventoMenuSr('${eid}')">⋮</button>`}
       <div style="padding-right:20px;">${nomeHtml}${localHtml}${respHtml}${metaHtml}${specialHtml}<div class="cal-text">${ev.txt}</div></div>
-      ${menuAberto?`<div class="evento-dropdown-sr" onclick="event.stopPropagation()">
+      ${(!MODO_VISUALIZACAO_SR && menuAberto)?`<div class="evento-dropdown-sr" onclick="event.stopPropagation()">
         <button onclick="editarEventoSr('${eid}')">✏️ Editar</button>
         <button onclick="exportarPresencaSr('${eid}')">📄 Exportar presença</button>
         <button class="remover" onclick="removerEventoSr('${eid}')">🗑️ Excluir</button>
       </div>`:''}
     </div>`;
     card.appendChild(mainRow);
+    if (!MODO_VISUALIZACAO_SR) {
     // Attendance section
     const det=document.createElement('details');
     det.style.cssText='border-top:1px solid #F0EDE8;';
@@ -1632,6 +1638,7 @@ function renderCal(events, containerId, pfx){
       <div style="display:flex;flex-direction:column;gap:2px;" id="pg-${eid}"></div>
     </div>`;
     card.appendChild(det);
+    }
 
     // Anexo / link / avaliação
     const ex=getExtra(eid);
@@ -1644,7 +1651,7 @@ function renderCal(events, containerId, pfx){
     <div style="padding:6px 11px 12px;display:flex;flex-direction:column;gap:8px;">
       <div>
         <div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px;">Link (Google Drive, fotos, documento etc.)</div>
-        <input type="url" class="extra-link-input" placeholder="https://drive.google.com/..." value="${ex.link||''}" onchange="salvarLinkEvento('${eid}',this.value)">
+        <input type="url" class="extra-link-input" placeholder="https://drive.google.com/..." value="${ex.link||''}" ${MODO_VISUALIZACAO_SR ? 'readonly' : ''} onchange="salvarLinkEvento('${eid}',this.value)">
         ${ex.link?`<a class="evento-link-sr" href="${ex.link}" target="_blank" rel="noopener" style="display:inline-block;margin-top:4px;">🔗 Abrir link</a>`:''}
       </div>
       <div>
@@ -1794,6 +1801,11 @@ function removerBlocoCicloSr(sem, j) {
 }
 function construirCicloBlocoPickerSr(sem, j, blocoSel) {
   const def = blocoSel ? BLOCKS.find(b => b.id === blocoSel) : null;
+  if (MODO_VISUALIZACAO_SR) {
+    if (!def) return '';
+    const cor = EIXO_COLORS[def.eixo] || '#666';
+    return `<div class="picker-bloco-sr" style="border-color:${cor};margin-bottom:6px;padding:8px 10px;border-radius:8px;background:${cor}16;color:${cor};font-size:11px;font-weight:700;">${def.name}${def.campOnly ? ' ⛺' : ''}</div>`;
+  }
   const key = sem + '_' + j;
   const aberto = cicloPickerAbertoKeySr === key;
   const estiloBtn = def ? `background:${EIXO_COLORS[def.eixo]};color:#fff;border-color:${EIXO_COLORS[def.eixo]};` : '';
@@ -1832,7 +1844,7 @@ function blockRowsEditavelSr(sem) {
   const lista = blocosCicloSemY(sem);
   let h = lista.map((b, j) => construirCicloBlocoPickerSr(sem, j, b)).join('');
   if (!lista.length) h += `<div style="font-size:11px;color:var(--muted);padding:4px 0;">Nenhum bloco selecionado ainda.</div>`;
-  h += `<button class="btn-ic" style="width:100%;margin-top:4px;text-align:center;" onclick="adicionarBlocoCicloSr('${sem}')">+ Adicionar bloco</button>`;
+  if (!MODO_VISUALIZACAO_SR) h += `<button class="btn-ic" style="width:100%;margin-top:4px;text-align:center;" onclick="adicionarBlocoCicloSr('${sem}')">+ Adicionar bloco</button>`;
   return h;
 }
 
@@ -1934,8 +1946,8 @@ function renderSemCardSr(sem){
     headerHtml = `<div class="sem-header" style="background:linear-gradient(135deg,${sem.cor1},${sem.cor2});border-radius:${aberto ? 'var(--r) var(--r) 0 0' : 'var(--r)'};cursor:pointer;position:relative;box-shadow:${aberto ? 'none' : 'var(--shadow)'};" onclick="toggleSemCardSr('${sem.key}')">
       <h3 style="padding-right:70px;">📅 ${sem.titulo}</h3>
       <div class="period">${sem.periodo || 'Período não definido'}</div>
-      <button class="btn-ic" style="position:absolute;top:10px;right:${sem.origem ? '38px' : '66px'};background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.35);color:#fff;padding:3px 7px;" onclick="event.stopPropagation();abrirEdicaoSemSr('${sem.key}')" title="Editar semestre">✏️</button>
-      ${!sem.origem ? `<button class="btn-ic" style="position:absolute;top:10px;right:38px;background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.35);color:#fff;padding:3px 7px;" onclick="event.stopPropagation();removerSemestreSr('${sem.key}')" title="Remover semestre">🗑️</button>` : ''}
+      ${MODO_VISUALIZACAO_SR ? '' : `<button class="btn-ic" style="position:absolute;top:10px;right:${sem.origem ? '38px' : '66px'};background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.35);color:#fff;padding:3px 7px;" onclick="event.stopPropagation();abrirEdicaoSemSr('${sem.key}')" title="Editar semestre">✏️</button>`}
+      ${(!MODO_VISUALIZACAO_SR && !sem.origem) ? `<button class="btn-ic" style="position:absolute;top:10px;right:38px;background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.35);color:#fff;padding:3px 7px;" onclick="event.stopPropagation();removerSemestreSr('${sem.key}')" title="Remover semestre">🗑️</button>` : ''}
       <span style="position:absolute;top:11px;right:12px;color:#fff;font-size:13px;transition:transform .2s;transform:rotate(${aberto ? 180 : 0}deg);">▾</span>
     </div>`;
   }
@@ -1948,11 +1960,11 @@ function renderSemCardSr(sem){
       <div class="sem-blocks">${blockRowsEditavelSr(sem.key)}</div>
       ${especiaisHtml ? `<div class="sem-special">${especiaisHtml}</div>` : ''}
       ${renderExternasSemGenericoSr(sem)}
-      ${renderMetasBoxSr(sem.key, 'Metas — ' + sem.titulo)}
-      <div class="prog-overview">
+      ${MODO_VISUALIZACAO_SR ? '' : renderMetasBoxSr(sem.key, 'Metas — ' + sem.titulo)}
+      ${MODO_VISUALIZACAO_SR ? '' : `<div class="prog-overview">
         <div class="prog-overview-title">Previsão de blocos ao final de ${sem.titulo}</div>
         ${progRowsSemSr(sem.key)}
-      </div>
+      </div>`}
     </div>`;
   }
 
@@ -1962,7 +1974,7 @@ function renderSemCardSr(sem){
 function renderSemestres(){
   const c=document.getElementById('sem-content');
   c.innerHTML = SEMESTRES_SR.map(renderSemCardSr).join('')
-    + `<button class="btn-sec" style="display:block;width:calc(100% - 24px);margin:16px 12px 24px;padding:12px;font-size:13px;font-weight:700;text-align:center;" onclick="adicionarSemestreSr()">+ Adicionar novo semestre</button>`;
+    + (MODO_VISUALIZACAO_SR ? '' : `<button class="btn-sec" style="display:block;width:calc(100% - 24px);margin:16px 12px 24px;padding:12px;font-size:13px;font-weight:700;text-align:center;" onclick="adicionarSemestreSr()">+ Adicionar novo semestre</button>`);
 }
 
 // ╔═══════════════════════════════════════════════════╗
@@ -2921,6 +2933,20 @@ async function iniciarApp(){
   renderEP();
   restaurarUltimaAbaSr();
   restaurarScrollSalvoSr('senior_scrollY');
+  if (MODO_VISUALIZACAO_SR) aplicarModoVisualizacaoSr();
+}
+
+function aplicarModoVisualizacaoSr() {
+document.querySelectorAll('.tab-btn[data-tab="prog"], .tab-btn[data-tab="jovens"], .tab-btn[data-tab="ep"]').forEach(el => el.style.display = 'none');
+document.querySelectorAll('#cabecalhoAddEventoSr').forEach(el => { el.style.display = 'none'; const body = el.nextElementSibling; if (body) body.style.display = 'none'; });
+const saveBar = document.getElementById('saveBarSr');
+if (saveBar) saveBar.style.display = 'none';
+const badge = document.createElement('div');
+badge.textContent = '🔒 Modo somente leitura';
+badge.style.cssText = 'background:#FFF3CD;color:#8A6D00;font-size:10px;font-weight:800;text-align:center;padding:6px;';
+document.querySelector('.tabs').insertAdjacentElement('afterend', badge);
+const abaAtiva = document.querySelector('.tab-btn.active');
+if (!abaAtiva || abaAtiva.style.display === 'none') showTab('cal', document.querySelector('.tab-btn[data-tab="cal"]'));
 }
 
 let scrollSaveTimerSr = null;
@@ -2993,7 +3019,7 @@ iniciarObservadorHeaderCompacto();
   </div>
   <div id="ep-content"></div>
 </div>
-<div class="save-bar">
+<div class="save-bar" id="saveBarSr">
   <span id="save-status" class="save-bar-status">✓ Sistema carregado</span>
   <label class="sbar-btn" title="Importar backup">
     📥
