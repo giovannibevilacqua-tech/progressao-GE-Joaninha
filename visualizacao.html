@@ -228,36 +228,7 @@ const BLOCO_IDS = Object.keys(BLOCOS);
 
 const MESES_ABREV = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
 
-// ── Autenticação anônima do Firebase (mesma do app principal) ──
-const FIREBASE_WEB_API_KEY = "AIzaSyB50r7SU6qU_dwq03v_oQksLi1bAxbU614";
-let firebaseAuthToken = null;
-async function autenticarFirebaseAnonimo() {
-if (!FIREBASE_WEB_API_KEY || FIREBASE_WEB_API_KEY.indexOf('COLE_AQUI') === 0) {
-console.warn('Firebase: chave de API da Web não configurada.');
-return null;
-}
-try {
-const resp = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + FIREBASE_WEB_API_KEY, {
-method: 'POST',
-headers: {'Content-Type': 'application/json'},
-body: JSON.stringify({ returnSecureToken: true })
-});
-const data = await resp.json();
-if (data && data.idToken) {
-firebaseAuthToken = data.idToken;
-setTimeout(autenticarFirebaseAnonimo, 50 * 60 * 1000);
-}
-return firebaseAuthToken;
-} catch (e) {
-console.error('Falha ao autenticar no Firebase:', e);
-return null;
-}
-}
-function urlComAuthFirebase(url) {
-if (!firebaseAuthToken) return url;
-return url + (url.indexOf('?') !== -1 ? '&' : '?') + 'auth=' + firebaseAuthToken;
-}
-
+// ── Leitura pública (calendário e ciclo de programa não exigem login) ──
 const DB_URL = "https://joaninha-progressao-default-rtdb.firebaseio.com";
 const REST_URL = DB_URL + "/tropaProgressao/json.json";
 
@@ -266,10 +237,9 @@ let CICLO = [];
 let CICLO_INFO = {};
 
 async function carregarDadosView() {
-await autenticarFirebaseAnonimo();
 try {
 const r = await Promise.race([
-fetch(urlComAuthFirebase(REST_URL)),
+fetch(REST_URL),
 new Promise((_, reject) => setTimeout(() => reject(new Error('Tempo limite ao buscar dados')), 6000))
 ]);
 const valor = await r.json();
