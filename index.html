@@ -176,6 +176,7 @@ scrollbar-width: thin; scrollbar-color: rgba(0,0,0,.25) transparent;
 .chefe-badge-admin { font-size: 9px; font-weight: 800; background: #FDEBD0; color: #A85D00; padding: 2px 7px; border-radius: 10px; }
 .chefe-row-btn { border: 1px solid var(--border); background: var(--card); font-size: 10px; font-weight: 700; padding: 5px 8px; border-radius: 7px; cursor: pointer; white-space: nowrap; }
 .chefe-row-btn.remover { color: #E74C3C; border-color: #F5C6C0; }
+.chefe-row-btn[title="Editar nome"] { padding: 5px 7px; font-size: 12px; }
 .lis-modal-header { position: sticky; top: 0; z-index: 5; background: var(--card); padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
 .lis-modal-titulo { font-size: 15px; font-weight: 800; color: var(--vinho); }
 .lis-modal-fechar { background: none; border: none; font-size: 20px; color: var(--muted); cursor: pointer; padding: 0 4px; }
@@ -661,7 +662,7 @@ REGISTRO ESCOTEIRO
 
 <div class="cabecalho-fixo" id="cabecalhoFixo">
 <div class="conta-barra">
-<span class="conta-barra-registro">👤 Registro <strong id="contaRegistroTxt"></strong></span>
+<span class="conta-barra-registro">👤 <strong id="contaRegistroTxt"></strong></span>
 <button class="conta-barra-btn" id="btnGerenciarChefes" style="display:none;" onclick="abrirGerenciarChefes()">⚙️ Gerenciar Chefes</button>
 <button class="conta-barra-btn" onclick="if(confirm('Sair da sua conta neste navegador?'))fazerLogout()">🚪 Sair</button>
 </div>
@@ -1045,12 +1046,14 @@ agendarRenovacaoToken();
 return { erro: false };
 }
 
+let nomeLogado = '';
 async function checarSeSouAdmin() {
 try {
-const r = await fetch(urlComAuthFirebase(DB_URL + '/usuarios/' + firebaseUid + '/admin.json'));
+const r = await fetch(urlComAuthFirebase(DB_URL + '/usuarios/' + firebaseUid + '.json'));
 const v = await r.json();
-souAdmin = v === true;
-} catch (e) { souAdmin = false; }
+souAdmin = !!(v && v.admin === true);
+nomeLogado = (v && v.nome) || '';
+} catch (e) { souAdmin = false; nomeLogado = ''; }
 }
 
 // ── Painel Gerenciar Chefes (só admins) ──
@@ -1084,6 +1087,9 @@ return { erro: false };
 async function alterarAdminChefe(uid, novoValor) {
 await fetch(urlComAuthFirebase(DB_URL + '/usuarios/' + uid + '/admin.json'), { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(novoValor) });
 }
+async function alterarNomeChefe(uid, novoNome) {
+await fetch(urlComAuthFirebase(DB_URL + '/usuarios/' + uid + '/nome.json'), { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(novoNome) });
+}
 async function removerAcessoChefe(uid) {
 await fetch(urlComAuthFirebase(DB_URL + '/usuarios/' + uid + '.json'), { method: 'DELETE' });
 }
@@ -1110,16 +1116,19 @@ let html = `
 if (!uids.length) {
 html += '<div style="padding:14px;text-align:center;color:var(--muted);font-size:12px;">Nenhum chefe cadastrado ainda.</div>';
 } else {
+let chefesCache = {};
 html += uids.map(uid => {
 const c = chefes[uid];
 return `<div class="chefe-row">
 <span class="chefe-row-registro">${c.nome ? c.nome : c.registro || uid}${c.nome ? `<br><span style="font-size:10px;font-weight:500;color:var(--muted);">Registro ${c.registro || uid}</span>` : ''}</span>
 ${c.admin ? '<span class="chefe-badge-admin">admin</span>' : ''}
+<button class="chefe-row-btn" onclick="editarNomeChefeUI('${uid}')" title="Editar nome">✏️</button>
 <button class="chefe-row-btn" onclick="alterarAdminChefeUI('${uid}', ${!c.admin})">${c.admin ? 'Tirar admin' : 'Tornar admin'}</button>
 ${uid !== firebaseUid ? `<button class="chefe-row-btn remover" onclick="removerAcessoChefeUI('${uid}','${c.registro || ''}')">Remover</button>` : ''}
 </div>`;
 }).join('');
 }
+chefesCache = chefes;
 html += '<div style="font-size:10px;color:var(--muted);margin-top:12px;line-height:1.5;">⚠️ "Remover" tira o acesso do chefe aos dados, mas o registro dele continua funcionando como login se cadastrado de novo depois.</div>';
 document.getElementById('chefesModalBody').innerHTML = html;
 }
@@ -1136,6 +1145,14 @@ return;
 }
 inputNome.value = '';
 inputRegistro.value = '';
+await renderChefesModalBody();
+}
+async function editarNomeChefeUI(uid) {
+const atual = (chefesCache[uid] && chefesCache[uid].nome) || '';
+const novoNome = prompt('Nome do chefe (deixe em branco pra remover o nome):', atual);
+if (novoNome === null) return;
+await alterarNomeChefe(uid, novoNome.trim());
+if (uid === firebaseUid) { nomeLogado = novoNome.trim(); aplicarEstadoContaLogada(); }
 await renderChefesModalBody();
 }
 async function alterarAdminChefeUI(uid, novoValor) {
@@ -3837,7 +3854,7 @@ if (isNaN(y)) return;
 }
 function aplicarEstadoContaLogada() {
 const txt = document.getElementById('contaRegistroTxt');
-if (txt) txt.textContent = registroLogado || '';
+if (txt) txt.textContent = nomeLogado ? nomeLogado : ('Registro ' + (registroLogado || ''));
 const btnAdmin = document.getElementById('btnGerenciarChefes');
 if (btnAdmin) btnAdmin.style.display = souAdmin ? '' : 'none';
 const iframe = document.getElementById('iframeSenior');
