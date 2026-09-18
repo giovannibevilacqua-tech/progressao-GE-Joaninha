@@ -166,8 +166,10 @@ scrollbar-width: thin; scrollbar-color: rgba(0,0,0,.25) transparent;
 #fichaModalOv .lis-modal-box::-webkit-scrollbar-thumb { background: rgba(0,0,0,.25); border-radius: 10px; }
 #chefesModalOv { align-items: center; }
 #chefesModalOv .lis-modal-box { border-radius: 16px; margin: 20px auto; max-height: 85vh; max-height: 85dvh; }
-.chefe-add-row { display: flex; gap: 8px; margin-bottom: 14px; }
-.chefe-add-row input { flex: 1; }
+.chefe-add-row { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.chefe-add-row input { width: 100%; }
+.chefe-add-btn { align-self: flex-end; width: auto; background: var(--vinho); color: #fff; border: none; border-radius: 8px; padding: 8px 16px; font-size: 12px; font-weight: 800; cursor: pointer; white-space: nowrap; }
+.chefe-add-btn:hover { background: var(--vinho2); }
 .chefe-row { display: flex; align-items: center; gap: 8px; padding: 10px 4px; border-bottom: 1px solid #F0EDE8; }
 .chefe-row:last-child { border-bottom: none; }
 .chefe-row-registro { font-size: 13px; font-weight: 700; flex: 1; }
@@ -324,7 +326,7 @@ padding: 8px; background: var(--focus-y); border-radius: 8px;
 .especialidade-row label { font-size: 11px; color: #7A4A00; cursor: pointer; }
 .meta-note { font-size: 10px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
 .ramo-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 14px 0; }
-.conta-barra { display: flex; align-items: center; gap: 8px; margin: 8px 14px 0; flex-wrap: wrap; }
+.conta-barra { display: flex; align-items: center; gap: 8px; margin: 10px 14px; flex-wrap: wrap; }
 .conta-barra-registro { font-size: 11px; font-weight: 600; color: var(--muted); flex: 1; min-width: 0; }
 .conta-barra-btn { border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 11px; font-weight: 700; padding: 6px 10px; border-radius: 8px; cursor: pointer; white-space: nowrap; }
 .conta-barra-btn:hover { background: #F5F2EE; }
@@ -446,6 +448,7 @@ border-radius: 16px; padding: 7px 11px; font-size: 11px; font-weight: 700; curso
 width: 100%; font-size: 13px; padding: 9px 10px; border-radius: 8px;
 border: 1px solid var(--border); background: #FAFAF8; font-family: inherit; color: var(--text);
 }
+.campo-input::placeholder { color: #9A948C; opacity: 1; }
 .campo-input:focus { outline: none; border-color: var(--vinho); background: var(--card); }
 textarea.campo-input { resize: vertical; }
 .btn-primario {
@@ -657,6 +660,12 @@ REGISTRO ESCOTEIRO
 <div id="scrollSentinel" style="position:absolute;top:0;left:0;width:1px;height:1px;"></div>
 
 <div class="cabecalho-fixo" id="cabecalhoFixo">
+<div class="conta-barra">
+<span class="conta-barra-registro">👤 Registro <strong id="contaRegistroTxt"></strong></span>
+<button class="conta-barra-btn" id="btnGerenciarChefes" style="display:none;" onclick="abrirGerenciarChefes()">⚙️ Gerenciar Chefes</button>
+<button class="conta-barra-btn" onclick="if(confirm('Sair da sua conta neste navegador?'))fazerLogout()">🚪 Sair</button>
+</div>
+
 <header class="header">
 <div class="header-flor">⚜</div>
 <h1>PROGRESSÃO JOVENS<br>GE JOANINHA</h1>
@@ -668,12 +677,6 @@ REGISTRO ESCOTEIRO
 <div class="ramo-switch">
 <button class="ramo-btn active" id="ramoBtnEscoteira" onclick="mudarRamo('escoteira')">🏕️ Tropa Escoteira</button>
 <button class="ramo-btn" id="ramoBtnSenior" onclick="mudarRamo('senior')">🎓 Tropa Sênior</button>
-</div>
-
-<div class="conta-barra">
-<span class="conta-barra-registro">👤 Registro <strong id="contaRegistroTxt"></strong></span>
-<button class="conta-barra-btn" id="btnGerenciarChefes" style="display:none;" onclick="abrirGerenciarChefes()">⚙️ Gerenciar Chefes</button>
-<button class="conta-barra-btn" onclick="if(confirm('Sair da sua conta neste navegador?'))fazerLogout()">🚪 Sair</button>
 </div>
 
 <nav class="tabs-linha" id="tabsLinha">
@@ -1058,8 +1061,9 @@ const dados = await r.json();
 return dados || {};
 } catch (e) { return {}; }
 }
-async function criarNovoChefe(registro, comoAdmin) {
+async function criarNovoChefe(registro, comoAdmin, nome) {
 registro = (registro || '').trim();
+nome = (nome || '').trim();
 if (!registro) return { erro: true, mensagem: 'Digite o registro do novo chefe.' };
 const email = emailDoRegistro(registro);
 const resp = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + FIREBASE_WEB_API_KEY, {
@@ -1073,7 +1077,7 @@ return { erro: true, mensagem: 'Não foi possível criar o acesso. Tenta de novo
 }
 await fetch(urlComAuthFirebase(DB_URL + '/usuarios/' + data.localId + '.json'), {
 method: 'PUT', headers: {'Content-Type': 'application/json'},
-body: JSON.stringify({ registro: registro, admin: !!comoAdmin, criadoEm: new Date().toISOString() })
+body: JSON.stringify({ registro: registro, nome: nome, admin: !!comoAdmin, criadoEm: new Date().toISOString() })
 });
 return { erro: false };
 }
@@ -1097,8 +1101,9 @@ const chefes = await carregarListaChefes();
 const uids = Object.keys(chefes);
 let html = `
 <div class="chefe-add-row">
+<input type="text" class="campo-input" id="novoChefeNomeInput" autocomplete="off" placeholder="Nome do chefe (opcional)">
 <input type="text" class="campo-input" id="novoChefeRegistroInput" inputmode="numeric" autocomplete="off" placeholder="Registro do novo chefe" onkeydown="if(event.key==='Enter')criarNovoChefeUI()">
-<button class="btn-primario" style="white-space:nowrap;padding:0 14px;" onclick="criarNovoChefeUI()">+ Criar</button>
+<button class="chefe-add-btn" onclick="criarNovoChefeUI()">+ Criar</button>
 </div>
 <div id="novoChefeErro" class="login-erro-msg" style="display:none;margin-bottom:12px;"></div>
 `;
@@ -1108,7 +1113,7 @@ html += '<div style="padding:14px;text-align:center;color:var(--muted);font-size
 html += uids.map(uid => {
 const c = chefes[uid];
 return `<div class="chefe-row">
-<span class="chefe-row-registro">${c.registro || uid}</span>
+<span class="chefe-row-registro">${c.nome ? c.nome : c.registro || uid}${c.nome ? `<br><span style="font-size:10px;font-weight:500;color:var(--muted);">Registro ${c.registro || uid}</span>` : ''}</span>
 ${c.admin ? '<span class="chefe-badge-admin">admin</span>' : ''}
 <button class="chefe-row-btn" onclick="alterarAdminChefeUI('${uid}', ${!c.admin})">${c.admin ? 'Tirar admin' : 'Tornar admin'}</button>
 ${uid !== firebaseUid ? `<button class="chefe-row-btn remover" onclick="removerAcessoChefeUI('${uid}','${c.registro || ''}')">Remover</button>` : ''}
@@ -1119,16 +1124,18 @@ html += '<div style="font-size:10px;color:var(--muted);margin-top:12px;line-heig
 document.getElementById('chefesModalBody').innerHTML = html;
 }
 async function criarNovoChefeUI() {
-const input = document.getElementById('novoChefeRegistroInput');
+const inputNome = document.getElementById('novoChefeNomeInput');
+const inputRegistro = document.getElementById('novoChefeRegistroInput');
 const erroDiv = document.getElementById('novoChefeErro');
 erroDiv.style.display = 'none';
-const resultado = await criarNovoChefe(input.value, false);
+const resultado = await criarNovoChefe(inputRegistro.value, false, inputNome.value);
 if (resultado.erro) {
 erroDiv.textContent = resultado.mensagem;
 erroDiv.style.display = 'block';
 return;
 }
-input.value = '';
+inputNome.value = '';
+inputRegistro.value = '';
 await renderChefesModalBody();
 }
 async function alterarAdminChefeUI(uid, novoValor) {
