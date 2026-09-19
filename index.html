@@ -967,7 +967,12 @@ firebaseRefreshToken = salva.refreshToken;
 registroLogado = salva.registro;
 firebaseUid = salva.uid;
 } else {
-const renovado = await renovarTokenSessao(salva.refreshToken);
+let renovado = await renovarTokenSessao(salva.refreshToken);
+if (!renovado) {
+// Pode ser instabilidade passageira de rede (ex: computador acabou de acordar do sono) — tenta mais uma vez antes de desistir
+await new Promise(r => setTimeout(r, 1500));
+renovado = await renovarTokenSessao(salva.refreshToken);
+}
 if (!renovado) { limparSessao(); return false; }
 firebaseAuthToken = renovado.idToken;
 firebaseRefreshToken = renovado.refreshToken;
@@ -981,7 +986,9 @@ return true;
 }
 
 function agendarRenovacaoToken() {
-setTimeout(async () => {
+setTimeout(tentarRenovarTokenAgendado, 50 * 60 * 1000);
+}
+async function tentarRenovarTokenAgendado() {
 if (!firebaseRefreshToken) return;
 const renovado = await renovarTokenSessao(firebaseRefreshToken);
 if (renovado) {
@@ -989,9 +996,16 @@ firebaseAuthToken = renovado.idToken;
 firebaseRefreshToken = renovado.refreshToken;
 salvarSessao();
 agendarRenovacaoToken();
+} else {
+// Falhou (ex: computador estava dormindo, rede instável) — tenta de novo em 2 min em vez de desistir pra sempre
+setTimeout(tentarRenovarTokenAgendado, 2 * 60 * 1000);
 }
-}, 50 * 60 * 1000);
 }
+document.addEventListener('visibilitychange', () => {
+if (document.visibilityState !== 'visible' || !firebaseRefreshToken) return;
+const salva = lerSessaoSalva();
+if (salva && Date.now() >= salva.expiraEm) tentarRenovarTokenAgendado();
+});
 
 function mapearErroFirebaseLogin(codigo) {
 const mapa = {
@@ -1396,18 +1410,28 @@ async function saveState() {
   const payload = JSON.stringify({ S, extraJovens: extras, eventos: EVENTOS, ciclo: CICLO, nomesBase, datasNascimento: DATAS_NASC, excluidos: JOVENS_EXCLUIDOS, arquivados: JOVENS_ARQUIVADOS, justificativas: JUSTIFICATIVAS, patrulhas: PATRULHAS, patrulhaDe: PATRULHA_DE, cargoDe: CARGO_DE, observacoes: OBSERVACOES, lisOuroDe: LIS_OURO_DATA, cicloDestaque: CICLO_DESTAQUE, cicloInfo: CICLO_INFO, conversarCom: CONVERSAR_COM });
   temAlteracaoLocalPendente = false; // este payload já reflete tudo que foi clicado até agora
   mostrarStatusSalvando('Salvando…');
-  for (let tentativa = 1; tentativa <= 2; tentativa++) {
+  for (let tentativa = 1; tentativa <= 3; tentativa++) {
     try {
       const r = await fetch(urlComAuthFirebase(REST_URL), {
         method: 'PUT',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(payload)
       });
-      if (!r.ok) throw new Error('HTTP ' + r.status);
+      if (!r.ok) {
+        if ((r.status === 401 || r.status === 403) && firebaseRefreshToken) {
+          const renovado = await renovarTokenSessao(firebaseRefreshToken);
+          if (renovado) {
+            firebaseAuthToken = renovado.idToken;
+            firebaseRefreshToken = renovado.refreshToken;
+            salvarSessao();
+          }
+        }
+        throw new Error('HTTP ' + r.status);
+      }
       mostrarStatusSalvando(null);
       return;
     } catch(e) {
-      if (tentativa === 2) {
+      if (tentativa === 3) {
         console.error('Não foi possível salvar (verifique a conexão):', e);
         mostrarStatusSalvando('⚠️ Não salvou — toque aqui para tentar de novo', true);
       } else {
