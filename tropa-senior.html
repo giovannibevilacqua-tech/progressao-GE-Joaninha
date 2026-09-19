@@ -164,6 +164,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .picker-bloco-sr.open .chev{transform:rotate(180deg);}
 .picker-bloco-count-sr{font-size:9px;font-weight:800;padding:2px 6px;border-radius:10px;background:var(--done-bg);color:#1E8449;}
 .presenca-marcar-todos-sr{display:flex;gap:8px;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid #F0EDE8;}
+.presenca-grupo-label-sr{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;padding:8px 4px 4px;border-bottom:2px solid;margin-bottom:2px;}
 .presenca-marcar-todos-sr button{flex:1;font-size:10px;font-weight:700;padding:6px;border-radius:8px;border:1px solid var(--border);background:#FAFAF8;color:var(--text);cursor:pointer;}
 .presenca-marcar-todos-sr button:first-child:hover{border-color:#27AE60;color:#1E8449;background:var(--done-bg);}
 .presenca-marcar-todos-sr button:last-child:hover{border-color:#E74C3C;color:#E74C3C;background:#FDEBEA;}
@@ -1186,6 +1187,22 @@ function atualizarAnexoUI(eid){
   }
 }
 
+function ordenarAtivosPorPatrulhaSr() {
+const grupos = {};
+actJ().forEach(item => {
+const pid = PATRULHA_DE_SR[item.yid] || '_sem';
+if (!grupos[pid]) grupos[pid] = [];
+grupos[pid].push(item);
+});
+Object.keys(grupos).forEach(pid => grupos[pid].sort((a, b) => JNOMES[a.i].localeCompare(JNOMES[b.i], 'pt-BR')));
+const ordemIds = PATRULHAS_SR.map(p => p.id).filter(pid => grupos[pid]);
+if (grupos['_sem']) ordemIds.push('_sem');
+return ordemIds.map(pid => ({
+patrulha: pid === '_sem' ? { nome: 'Sem patrulha', cor: '#999' } : PATRULHAS_SR.find(p => p.id === pid),
+membros: grupos[pid]
+}));
+}
+
 function fillPresencaGrid(eid){
   const grid=document.getElementById('pg-'+eid);
   const badge=document.getElementById('pb-'+eid);
@@ -1200,7 +1217,13 @@ function fillPresencaGrid(eid){
 
   const total=actJ().length;
   let presentes=0,marcados=0;
-  actJ().forEach(function(item){var j=item.yid,i=item.i;
+  ordenarAtivosPorPatrulhaSr().forEach(function(grupo){
+    const rotulo=document.createElement('div');
+    rotulo.className='presenca-grupo-label-sr';
+    rotulo.style.cssText='color:'+grupo.patrulha.cor+';border-color:'+grupo.patrulha.cor+';';
+    rotulo.textContent=grupo.patrulha.nome;
+    grid.appendChild(rotulo);
+    grupo.membros.forEach(function(item){var j=item.yid,i=item.i;
     const val=PRESENCA[eid]?.[i];
     let bg,fg,lbl;
     if(val===1){bg='#27AE60';fg='#fff';lbl='✓';presentes++;marcados++;}
@@ -1214,6 +1237,7 @@ function fillPresencaGrid(eid){
       +`<span class="presenca-nome">${JNOMES[i]}</span>`
       +(val===0?`<button class="justificar-btn-sr${justificado?' justificado':''}" onclick="event.stopPropagation();toggleJustificativaSr('${eid}',${i})">${justificado?'✓ Justificada':'Justificar falta'}</button>`:'');
     grid.appendChild(row);
+    });
   });
   if(badge){
     if(marcados===0) badge.textContent='';
@@ -1641,6 +1665,7 @@ function renderCal(events, containerId, pfx){
     }
 
     // Anexo / link / avaliação
+    if (!MODO_VISUALIZACAO_SR) {
     const ex=getExtra(eid);
     const detExtra=document.createElement('details');
     detExtra.style.cssText='border-top:1px solid #F0EDE8;';
@@ -1651,7 +1676,7 @@ function renderCal(events, containerId, pfx){
     <div style="padding:6px 11px 12px;display:flex;flex-direction:column;gap:8px;">
       <div>
         <div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px;">Link (Google Drive, fotos, documento etc.)</div>
-        <input type="url" class="extra-link-input" placeholder="https://drive.google.com/..." value="${ex.link||''}" ${MODO_VISUALIZACAO_SR ? 'readonly' : ''} onchange="salvarLinkEvento('${eid}',this.value)">
+        <input type="url" class="extra-link-input" placeholder="https://drive.google.com/..." value="${ex.link||''}" onchange="salvarLinkEvento('${eid}',this.value)">
         ${ex.link?`<a class="evento-link-sr" href="${ex.link}" target="_blank" rel="noopener" style="display:inline-block;margin-top:4px;">🔗 Abrir link</a>`:''}
       </div>
       <div>
@@ -1664,11 +1689,12 @@ function renderCal(events, containerId, pfx){
       </div>
     </div>`;
     card.appendChild(detExtra);
+    }
 
     list.appendChild(card);
     // Fill initial attendance state
     fillPresencaGrid(eid);
-    atualizarAnexoUI(eid);
+    if (!MODO_VISUALIZACAO_SR) atualizarAnexoUI(eid);
   });
   renderPresencaSummary();
 }
@@ -2941,10 +2967,6 @@ document.querySelectorAll('.tab-btn[data-tab="prog"], .tab-btn[data-tab="jovens"
 document.querySelectorAll('#cabecalhoAddEventoSr').forEach(el => { el.style.display = 'none'; const body = el.nextElementSibling; if (body) body.style.display = 'none'; });
 const saveBar = document.getElementById('saveBarSr');
 if (saveBar) saveBar.style.display = 'none';
-const badge = document.createElement('div');
-badge.textContent = '🔒 Modo somente leitura';
-badge.style.cssText = 'background:#FFF3CD;color:#8A6D00;font-size:10px;font-weight:800;text-align:center;padding:6px;';
-document.querySelector('.tabs').insertAdjacentElement('afterend', badge);
 const abaAtiva = document.querySelector('.tab-btn.active');
 if (!abaAtiva || abaAtiva.style.display === 'none') showTab('cal', document.querySelector('.tab-btn[data-tab="cal"]'));
 }
