@@ -144,9 +144,9 @@ border: none; background: var(--card); color: var(--text); cursor: pointer;
 .obs-modal-titulo { font-size: 15px; font-weight: 800; color: var(--vinho); margin-bottom: 10px; }
 .obs-modal-texto { font-size: 13px; color: var(--text); line-height: 1.6; white-space: pre-line; }
 
-.lis-modal-ov { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1000; align-items: flex-end; justify-content: center; }
+.lis-modal-ov { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1000; align-items: flex-end; justify-content: center; padding: 0 10px; box-sizing: border-box; }
 .lis-modal-ov.open { display: flex; }
-.lis-modal-box { background: var(--bg); border-radius: 16px 16px 0 0; padding: 0; width: 100%; max-width: 560px; max-height: 92vh; overflow-y: auto; }
+.lis-modal-box { background: var(--bg); border-radius: 16px 16px 0 0; padding: 0; width: 100%; max-width: 560px; max-height: 92vh; max-height: 92dvh; overflow-y: auto; overflow-x: hidden; box-sizing: border-box; }
 #eventoModalOv .lis-modal-box {
 border-radius: 16px; margin: 0 auto 14px;
 scrollbar-width: thin; scrollbar-color: rgba(0,0,0,.25) transparent;
@@ -562,7 +562,7 @@ display: inline-flex; align-items: center; justify-content: center; gap: 5px; wh
 .presenca-row { display: flex; align-items: center; gap: 8px; padding: 8px 6px; border-radius: 6px; border-bottom: 1px solid #E3DCCF; cursor: pointer; }
 .presenca-list .presenca-row:last-child { border-bottom: none; }
 .presenca-row:hover { background: #ECE5D8; box-shadow: inset 3px 0 0 var(--vinho); }
-.presenca-nome { font-size: 12px; font-weight: 600; cursor: pointer; display: inline-block; }
+.presenca-nome { font-size: 12px; font-weight: 600; cursor: pointer; display: inline-block; min-width: 0; }
 .presenca-nome:hover { text-decoration: underline; color: var(--vinho); }
 .presenca-spacer { flex: 1; }
 .presenca-marcado { font-size: 9px; font-weight: 700; color: var(--done); }
@@ -1661,6 +1661,27 @@ let jovemMenuAbertoId = null;
 let patrulhaEditandoId = null;
 let jovemArrastado = null;
 
+function corIdadeGradual(mesesFaltantes) {
+if (mesesFaltantes <= 0) return '#9A0D18'; // Caminho — grená do ramo Sênior, sempre diferente do resto
+const stops = [
+{ m: 1, cor: [231, 76, 60] },   // vermelho
+{ m: 6, cor: [230, 126, 34] },  // laranja escuro
+{ m: 12, cor: [243, 156, 18] }, // laranja
+{ m: 18, cor: [154, 179, 60] }, // amarelo-esverdeado
+{ m: 24, cor: [39, 174, 96] }   // verde
+];
+if (mesesFaltantes <= stops[0].m) return `rgb(${stops[0].cor.join(',')})`;
+if (mesesFaltantes >= stops[stops.length - 1].m) return `rgb(${stops[stops.length - 1].cor.join(',')})`;
+for (let i = 0; i < stops.length - 1; i++) {
+if (mesesFaltantes >= stops[i].m && mesesFaltantes <= stops[i + 1].m) {
+const t = (mesesFaltantes - stops[i].m) / (stops[i + 1].m - stops[i].m);
+const c = stops[i].cor.map((v, idx) => Math.round(v + (stops[i + 1].cor[idx] - v) * t));
+return `rgb(${c.join(',')})`;
+}
+}
+return `rgb(${stops[stops.length - 1].cor.join(',')})`;
+}
+
 function calcularIdadeInfo(dataNascISO) {
 if (!dataNascISO) return null;
 const nasc = new Date(dataNascISO + 'T00:00:00');
@@ -1672,7 +1693,7 @@ let idadeMeses = (hoje.getFullYear() - nasc.getFullYear()) * 12 + (hoje.getMonth
 if (hoje.getDate() < nasc.getDate()) idadeMeses -= 1;
 const inicioJanela = 132, fimJanela = 174; // 11 anos até 14 anos e 6 meses
 const pct = Math.max(0, Math.min(100, (idadeMeses - inicioJanela) / (fimJanela - inicioJanela) * 100));
-const cor = mesesFaltantes <= 6 ? '#E74C3C' : (mesesFaltantes <= 12 ? '#F39C12' : '#27AE60');
+const cor = corIdadeGradual(mesesFaltantes);
 return { mesesFaltantes, pct, cor };
 }
 
