@@ -517,6 +517,7 @@ border: 1px solid var(--border); background: #FAFAF8; color: var(--text); cursor
 }
 .chip-toggle:hover { background: #F2EFEA; }
 .chip-toggle.selected { background: var(--vinho); color: #fff; border-color: var(--vinho); }
+.evento-blocos-row { display: flex; flex-wrap: wrap; gap: 6px; }
 .evento-bloco-tag {
 font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; color: #fff; white-space: nowrap;
 position: relative; cursor: pointer;
@@ -524,7 +525,7 @@ position: relative; cursor: pointer;
 .itens-popup {
 display: none; position: absolute; top: 100%; left: 0; margin-top: 0; z-index: 40;
 background: var(--card); color: var(--text); border: 1px solid var(--border); border-radius: 10px;
-box-shadow: var(--shadow); padding: 10px 12px; min-width: 220px; max-width: 300px;
+box-shadow: var(--shadow); padding: 10px 12px; min-width: 220px; max-width: min(300px, calc(100vw - 40px));
 font-size: 11px; font-weight: 500; white-space: normal; text-align: left; line-height: 1.5;
 }
 .evento-bloco-tag.aberto .itens-popup, .evento-bloco-tag.hover-aberto .itens-popup { display: block; }
