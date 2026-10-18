@@ -640,6 +640,85 @@ cursor: pointer; color: #fff;
 .ciclo-blocos-grid { display: flex; flex-direction: column; gap: 8px; }
 .ciclo-bloco-btn { }
 
+/* ─── Busca de Ações ─────────────────────────────── */
+.busca-wrap-esc{margin:12px 14px 0;position:relative;}
+.busca-input-esc{width:100%;box-sizing:border-box;padding:10px 38px 10px 38px;border:1.5px solid var(--border);border-radius:22px;font-size:13px;background:var(--card);color:var(--texto);outline:none;transition:border .2s;-webkit-appearance:none;appearance:none;}
+.busca-input-esc:focus{border-color:var(--vinho);}
+.busca-icon-esc{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none;line-height:1;}
+.busca-clear-esc{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:15px;color:var(--muted);cursor:pointer;background:none;border:none;padding:3px 6px;display:none;line-height:1;}
+.busca-results-esc{margin:8px 14px 0;display:none;}
+.busca-count-esc{font-size:10px;font-weight:700;color:var(--muted);margin-bottom:6px;padding:0 2px;}
+.busca-item-esc{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);margin-bottom:7px;padding:10px 13px;cursor:pointer;display:flex;align-items:flex-start;gap:10px;border:1.5px solid transparent;transition:border-color .15s;}
+.busca-item-esc:active{border-color:var(--vinho);}
+.busca-dot-esc{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.busca-body-esc{flex:1;min-width:0;}
+.busca-bloco-esc{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:3px;}
+.busca-acao-esc{font-size:12px;color:var(--texto);line-height:1.4;}
+.busca-tipo-esc{font-size:9px;font-weight:800;padding:2px 6px;border-radius:8px;flex-shrink:0;align-self:flex-start;white-space:nowrap;}
+.busca-tipo-esc.fxe{background:#E8F5E9;color:#27AE60;}
+.busca-tipo-esc.vxe{background:#E3F2FD;color:#1565C0;}
+.busca-nada-esc{text-align:center;padding:24px 12px;color:var(--muted);font-size:12px;}
+mark.hl-esc{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
+
+/* ─── Almoxarifado ─────────────────────────────── */
+.almo-section{padding:12px 14px 0;}
+.almo-titulo{font-size:16px;font-weight:800;color:var(--vinho);margin-bottom:2px;}
+.almo-sub{font-size:11px;color:var(--muted);margin-bottom:0;}
+.almo-form-card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:14px;}
+.almo-form-titulo{font-size:12px;font-weight:800;color:var(--texto);margin-bottom:10px;}
+.almo-campo-label{font-size:10px;font-weight:700;color:var(--muted);margin-bottom:3px;display:block;}
+.almo-input{width:100%;box-sizing:border-box;padding:9px 10px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;background:var(--card);color:var(--texto);outline:none;transition:border .2s;}
+.almo-input:focus{border-color:var(--vinho);}
+.almo-form-grid{display:grid;grid-template-columns:1fr 90px;gap:8px;margin:8px 0;}
+.almo-select{width:100%;box-sizing:border-box;padding:9px 8px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;background:var(--card);color:var(--texto);outline:none;-webkit-appearance:none;appearance:none;cursor:pointer;}
+.almo-select:focus{border-color:var(--vinho);}
+.almo-toggle-row{display:flex;align-items:center;gap:10px;margin:10px 0;}
+.almo-toggle-lbl-wrap{flex:1;}
+.almo-toggle-lbl{font-size:12px;font-weight:600;color:var(--texto);display:block;}
+.almo-toggle-sub{font-size:10px;color:var(--muted);}
+.almo-toggle{position:relative;width:40px;height:22px;flex-shrink:0;}
+.almo-toggle input{opacity:0;width:0;height:0;position:absolute;}
+.almo-toggle-slider{position:absolute;inset:0;background:#ccc;border-radius:22px;transition:.3s;cursor:pointer;}
+.almo-toggle input:checked+.almo-toggle-slider{background:var(--vinho);}
+.almo-toggle-slider:before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.3s;}
+.almo-toggle input:checked+.almo-toggle-slider:before{transform:translateX(18px);}
+.almo-btn-add{width:100%;padding:11px;border:none;border-radius:10px;background:var(--vinho);color:#fff;font-size:13px;font-weight:700;cursor:pointer;margin-top:4px;}
+.almo-chips-wrap{display:flex;gap:6px;overflow-x:auto;padding:8px 14px 2px;scrollbar-width:none;}
+.almo-chips-wrap::-webkit-scrollbar{display:none;}
+.almo-chip{padding:6px 13px;border-radius:22px;border:1.5px solid var(--border);font-size:11px;font-weight:700;background:var(--card);color:var(--muted);cursor:pointer;white-space:nowrap;outline:none;flex-shrink:0;}
+.almo-chip.ativo{border-color:var(--vinho);color:var(--vinho);}
+.almo-busca-wrap-a{position:relative;margin:6px 14px 6px;}
+.almo-busca-input-a{width:100%;box-sizing:border-box;padding:9px 36px 9px 38px;border:1.5px solid var(--border);border-radius:22px;font-size:13px;background:var(--card);color:var(--texto);outline:none;-webkit-appearance:none;appearance:none;transition:border .2s;}
+.almo-busca-input-a:focus{border-color:var(--vinho);}
+.almo-busca-icon-a{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:13px;pointer-events:none;}
+.almo-busca-clear-a{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:15px;cursor:pointer;color:var(--muted);padding:3px;display:none;}
+.almo-chart-card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:14px;margin:10px 14px 0;}
+.almo-chart-titulo{font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
+.almo-chart-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.almo-chart-label{font-size:11px;color:var(--texto);width:88px;flex-shrink:0;white-space:nowrap;}
+.almo-chart-track{flex:1;height:16px;background:var(--border);border-radius:8px;overflow:hidden;}
+.almo-chart-bar{height:100%;border-radius:8px;transition:width .5s ease;min-width:4px;}
+.almo-chart-val{font-size:11px;font-weight:800;color:var(--muted);width:24px;text-align:right;flex-shrink:0;}
+.almo-lista-wrap{padding:10px 14px 0;}
+.almo-lista-count{font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:7px;}
+.almo-item{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:9px;}
+.almo-item-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.almo-item-body{flex:1;min-width:0;}
+.almo-item-nome{font-size:13px;font-weight:700;color:var(--texto);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.almo-item-badges{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px;}
+.almo-badge{font-size:9px;font-weight:800;padding:2px 7px;border-radius:9px;white-space:nowrap;}
+.almo-badge-camping{background:#E3F2FD;color:#1565C0;}
+.almo-badge-jogos{background:#FFF3E0;color:#E65100;}
+.almo-badge-escritorio{background:#F3E5F5;color:#6A1B9A;}
+.almo-badge-distintivos{background:#E8F5E9;color:#2E7D32;}
+.almo-badge-comp{background:#E8F5E9;color:#2E7D32;}
+.almo-badge-ind{background:#FFF8E1;color:#F57F17;}
+.almo-qtd-row{display:flex;align-items:center;gap:4px;flex-shrink:0;}
+.almo-qtd-btn{width:26px;height:26px;border:1.5px solid var(--border);border-radius:50%;background:var(--card);color:var(--texto);font-size:17px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;}
+.almo-qtd-val{font-size:14px;font-weight:800;color:var(--texto);min-width:26px;text-align:center;}
+.almo-del-btn{background:none;border:none;font-size:15px;cursor:pointer;color:var(--muted);padding:4px;flex-shrink:0;opacity:.7;}
+.almo-del-btn:active{opacity:1;}
+.almo-vazio{text-align:center;padding:32px 14px;color:var(--muted);font-size:12px;}
 
 </style>
 </head>
@@ -654,7 +733,9 @@ cursor: pointer; color: #fff;
 REGISTRO ESCOTEIRO
 <span class="info-icone-tip">ℹ️<span class="info-icone-tip-balao">Registro escoteiro sem o dígito</span></span>
 </label>
-<input type="text" id="loginRegistroInput" class="campo-input" style="text-align:center;font-size:16px;letter-spacing:1px;" inputmode="numeric" autocomplete="off" placeholder="Ex: 123456" onkeydown="if(event.key==='Enter')tentarLoginTela()">
+<input type="text" id="loginRegistroInput" class="campo-input" style="text-align:center;font-size:16px;letter-spacing:1px;" inputmode="numeric" autocomplete="off" placeholder="Ex: 123456" onkeydown="if(event.key==='Enter')document.getElementById('loginSenhaInput').focus()">
+<label class="campo-label" style="margin-top:14px;">SENHA</label>
+<input type="password" id="loginSenhaInput" class="campo-input" style="text-align:center;font-size:16px;letter-spacing:1px;" autocomplete="current-password" placeholder="Padrão: número do registro" onkeydown="if(event.key==='Enter')tentarLoginTela()">
 <div id="loginErroMsg" class="login-erro-msg" style="display:none;"></div>
 <button class="btn-primario" id="loginEntrarBtn" style="width:100%;margin-top:14px;padding:12px;" onclick="tentarLoginTela()">Entrar</button>
 </div>
@@ -677,7 +758,7 @@ REGISTRO ESCOTEIRO
 </div>
 </header>
 
-<div class="ramo-switch">
+<div class="ramo-switch" id="ramoSwitch">
 <button class="ramo-btn active" id="ramoBtnEscoteira" onclick="mudarRamo('escoteira')">🏕️ Tropa Escoteira</button>
 <button class="ramo-btn" id="ramoBtnSenior" onclick="mudarRamo('senior')">🎓 Tropa Sênior</button>
 </div>
@@ -686,6 +767,7 @@ REGISTRO ESCOTEIRO
 <button class="tab-btn-linha active" id="tabTabela" onclick="mudarPagina('tabela')">📊 Progressão</button>
 <button class="tab-btn-linha" id="tabCalendario" onclick="mudarPagina('calendario')">📅 Calendário</button>
 <button class="tab-btn-linha" id="tabCiclo" onclick="mudarPagina('ciclo')">🔄 Ciclo de Programa</button>
+<button class="tab-btn-linha" id="tabAlmoxarifado" onclick="mudarPagina('almoxarifado')">📦 Almoxarifado</button>
 </nav>
 </div>
 
@@ -747,6 +829,16 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 <div id="chipsJovemPB" class="chips-jovem-pb"></div>
 <div id="indicadorDestaquePB" class="indicador-destaque-pb" style="display:none;"></div>
 </div>
+<div class="busca-wrap-esc">
+  <span class="busca-icon-esc">🔍</span>
+  <input type="search" class="busca-input-esc" id="buscaAcoesEsc"
+    placeholder="Buscar ação nos blocos..."
+    autocomplete="off"
+    oninput="filtrarAcoesEsc(this.value)"
+    onsearch="filtrarAcoesEsc(this.value)">
+  <button class="busca-clear-esc" id="buscaAcoesClearEsc" onclick="limparBuscaEsc()" aria-label="Limpar busca">✕</button>
+</div>
+<div class="busca-results-esc" id="buscaResultsEsc"></div>
 <div id="blocosPorEixoContainer"></div>
 </div>
 
@@ -838,6 +930,70 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 <div id="listaCiclo"></div>
 </div>
 
+<div id="pagina-almoxarifado" style="display:none;padding-bottom:32px;">
+  <div class="almo-section">
+    <div class="almo-titulo">📦 Almoxarifado</div>
+    <div class="almo-sub">Materiais da Tropa Escoteira. Itens compartilhados aparecem também no painel Sênior.</div>
+  </div>
+  <div class="almo-section">
+    <div class="almo-form-card" id="almoFormCardEsc">
+      <div class="almo-form-titulo">➕ Adicionar item</div>
+      <label class="almo-campo-label">Nome do item</label>
+      <input type="text" id="almoNomeEsc" class="almo-input" placeholder="Ex: Barraca Alpine, Jogo da memória…" autocomplete="off">
+      <div class="almo-form-grid">
+        <div>
+          <label class="almo-campo-label">Tipo</label>
+          <select id="almoTipoEsc" class="almo-select">
+            <option value="camping">⛺ Camping</option>
+            <option value="jogos">🎯 Jogos</option>
+            <option value="escritorio">📎 Escritório</option>
+            <option value="distintivos">🏅 Distintivos</option>
+          </select>
+        </div>
+        <div>
+          <label class="almo-campo-label">Qtd.</label>
+          <input type="number" id="almoQtdEsc" class="almo-input" value="1" min="0" style="text-align:center;">
+        </div>
+      </div>
+      <div class="almo-toggle-row">
+        <div class="almo-toggle-lbl-wrap">
+          <span class="almo-toggle-lbl">Compartilhado com Sênior</span>
+          <span class="almo-toggle-sub">Aparece nos dois painéis</span>
+        </div>
+        <label class="almo-toggle">
+          <input type="checkbox" id="almoCompEsc">
+          <span class="almo-toggle-slider"></span>
+        </label>
+      </div>
+      <button class="almo-btn-add" onclick="adicionarAlmoItemEsc()">+ Adicionar item</button>
+    </div>
+  </div>
+  <div class="almo-busca-wrap-a">
+    <span class="almo-busca-icon-a">🔍</span>
+    <input type="search" id="almoBuscaEsc" class="almo-busca-input-a"
+      placeholder="Buscar por nome ou tipo…"
+      autocomplete="off"
+      oninput="filtrarAlmoEsc()"
+      onsearch="filtrarAlmoEsc()">
+    <button class="almo-busca-clear-a" id="almoBuscaClearEsc" onclick="limparBuscaAlmoEsc()">✕</button>
+  </div>
+  <div class="almo-chips-wrap" id="almoChipsEsc">
+    <button class="almo-chip ativo" onclick="selecionarChipAlmoEsc(this,'')">Todos</button>
+    <button class="almo-chip" onclick="selecionarChipAlmoEsc(this,'camping')">⛺ Camping</button>
+    <button class="almo-chip" onclick="selecionarChipAlmoEsc(this,'jogos')">🎯 Jogos</button>
+    <button class="almo-chip" onclick="selecionarChipAlmoEsc(this,'escritorio')">📎 Escritório</button>
+    <button class="almo-chip" onclick="selecionarChipAlmoEsc(this,'distintivos')">🏅 Distintivos</button>
+  </div>
+  <div class="almo-chart-card">
+    <div class="almo-chart-titulo">Quantidade por tipo</div>
+    <div id="almoChartEsc"></div>
+  </div>
+  <div class="almo-lista-wrap">
+    <div class="almo-lista-count" id="almoCountEsc"></div>
+    <div id="almoListaEsc"></div>
+  </div>
+</div>
+
 <button class="reset-btn" id="btnLimparMarcacoes" onclick="confirmReset()">↺ LIMPAR MARCAÇÕES</button>
 
 <div class="backup-bar" id="backupBar">
@@ -919,6 +1075,7 @@ let firebaseAuthToken = null;
 let firebaseRefreshToken = null;
 let registroLogado = null;
 let souAdmin = false;
+let tropaDoChefeLogado = null; // 'escoteira' | 'senior' | null (admin não tem tropa)
 
 function emailDoRegistro(registro) { return registro + DOMINIO_LOGIN; }
 
@@ -931,13 +1088,15 @@ registro: registroLogado,
 uid: firebaseUid,
 idToken: firebaseAuthToken,
 refreshToken: firebaseRefreshToken,
-expiraEm: Date.now() + 55 * 60 * 1000
+expiraEm: Date.now() + 55 * 60 * 1000,
+admin: souAdmin,
+tropa: tropaDoChefeLogado
 }));
 } catch (e) {}
 }
 function limparSessao() {
 try { localStorage.removeItem('chefeSessao'); } catch (e) {}
-firebaseAuthToken = null; firebaseRefreshToken = null; registroLogado = null; firebaseUid = null; souAdmin = false;
+firebaseAuthToken = null; firebaseRefreshToken = null; registroLogado = null; firebaseUid = null; souAdmin = false; tropaDoChefeLogado = null;
 }
 function lerSessaoSalva() {
 try {
@@ -1019,10 +1178,13 @@ const mapa = {
 return mapa[codigo] || 'Não foi possível entrar. Confira o registro e tente de novo.';
 }
 
-async function fazerLoginRegistro(registro) {
+async function fazerLoginRegistro(registro, senha) {
 registro = (registro || '').trim();
 if (!registro) return { erro: true, mensagem: 'Digite o registro escoteiro.' };
+// Senha padrão = número do registro (retrocompatível)
+senha = (senha || '').trim() || registro;
 const email = emailDoRegistro(registro);
+// Firebase Auth usa SEMPRE o registro como senha (a "senha do app" é verificada via banco)
 let resp = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=' + FIREBASE_WEB_API_KEY, {
 method: 'POST', headers: {'Content-Type': 'application/json'},
 body: JSON.stringify({ email, password: registro, returnSecureToken: true })
@@ -1045,8 +1207,9 @@ registroLogado = registro;
 try {
 await fetch(urlComAuthFirebase(DB_URL + '/usuarios/' + firebaseUid + '.json'), { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ registro: registro, admin: true, criadoEm: new Date().toISOString() }) });
 } catch (e) {}
-salvarSessao();
 souAdmin = true;
+tropaDoChefeLogado = null;
+salvarSessao();
 agendarRenovacaoToken();
 return { erro: false };
 }
@@ -1056,8 +1219,13 @@ firebaseAuthToken = data.idToken;
 firebaseRefreshToken = data.refreshToken;
 firebaseUid = data.localId;
 registroLogado = registro;
-salvarSessao();
-await checarSeSouAdmin();
+// Lê dados do usuário (setar admin, tropa, nome) e verifica senha do app
+const userData = await checarSeSouAdmin(); // também chama salvarSessao()
+const senhaCorreta = (userData && userData.senha) ? userData.senha : registro;
+if (senha !== senhaCorreta) {
+limparSessao();
+return { erro: true, mensagem: 'Senha incorreta.' };
+}
 agendarRenovacaoToken();
 return { erro: false };
 }
@@ -1069,7 +1237,10 @@ const r = await fetch(urlComAuthFirebase(DB_URL + '/usuarios/' + firebaseUid + '
 const v = await r.json();
 souAdmin = !!(v && v.admin === true);
 nomeLogado = (v && v.nome) || '';
-} catch (e) { souAdmin = false; nomeLogado = ''; }
+tropaDoChefeLogado = (v && v.tropa) || null;
+salvarSessao(); // persiste tropa e admin na sessão para tropa-senior.html poder ler
+return v;
+} catch (e) { souAdmin = false; nomeLogado = ''; tropaDoChefeLogado = null; return null; }
 }
 
 // ── Painel Gerenciar Chefes (só admins) ──
@@ -1080,7 +1251,8 @@ const dados = await r.json();
 return dados || {};
 } catch (e) { return {}; }
 }
-async function criarNovoChefe(registro, comoAdmin, nome) {
+async function criarNovoChefe(registro, papel, nome) {
+// papel: 'escoteira' | 'senior' | 'admin'
 registro = (registro || '').trim();
 nome = (nome || '').trim();
 if (!registro) return { erro: true, mensagem: 'Digite o registro do novo chefe.' };
@@ -1094,14 +1266,32 @@ if (data.error) {
 if (data.error.message === 'EMAIL_EXISTS') return { erro: true, mensagem: 'Esse registro já tem acesso cadastrado.' };
 return { erro: true, mensagem: 'Não foi possível criar o acesso. Tenta de novo.' };
 }
+const admin = papel === 'admin';
+const tropa = papel !== 'admin' ? papel : null;
 await fetch(urlComAuthFirebase(DB_URL + '/usuarios/' + data.localId + '.json'), {
 method: 'PUT', headers: {'Content-Type': 'application/json'},
-body: JSON.stringify({ registro: registro, nome: nome, admin: !!comoAdmin, criadoEm: new Date().toISOString() })
+body: JSON.stringify({ registro, nome: nome || undefined, admin, tropa, criadoEm: new Date().toISOString() })
 });
 return { erro: false };
 }
 async function alterarAdminChefe(uid, novoValor) {
 await fetch(urlComAuthFirebase(DB_URL + '/usuarios/' + uid + '/admin.json'), { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(novoValor) });
+}
+async function alterarRoleChefe(uid, novoPapel) {
+// novoPapel: 'escoteira' | 'senior' | 'admin'
+const admin = novoPapel === 'admin';
+const tropa = novoPapel !== 'admin' ? novoPapel : null;
+await fetch(urlComAuthFirebase(DB_URL + '/usuarios/' + uid + '.json'), {
+method: 'PATCH', headers: {'Content-Type': 'application/json'},
+body: JSON.stringify({ admin, tropa })
+});
+}
+async function alterarSenhaChefe(uid, novaSenha) {
+// novaSenha: string ou null (null = usar registro como padrão)
+await fetch(urlComAuthFirebase(DB_URL + '/usuarios/' + uid + '/senha.json'), {
+method: 'PUT', headers: {'Content-Type': 'application/json'},
+body: JSON.stringify(novaSenha || null)
+});
 }
 async function alterarNomeChefe(uid, novoNome) {
 await fetch(urlComAuthFirebase(DB_URL + '/usuarios/' + uid + '/nome.json'), { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(novoNome) });
@@ -1122,9 +1312,14 @@ async function renderChefesModalBody() {
 const chefes = await carregarListaChefes();
 const uids = Object.keys(chefes);
 let html = `
-<div class="chefe-add-row">
-<input type="text" class="campo-input" id="novoChefeNomeInput" autocomplete="off" placeholder="Nome do chefe (opcional)">
-<input type="text" class="campo-input" id="novoChefeRegistroInput" inputmode="numeric" autocomplete="off" placeholder="Registro do novo chefe" onkeydown="if(event.key==='Enter')criarNovoChefeUI()">
+<div class="chefe-add-row" style="flex-wrap:wrap;gap:6px;">
+<input type="text" class="campo-input" id="novoChefeNomeInput" autocomplete="off" placeholder="Nome (opcional)" style="flex:1;min-width:120px;">
+<input type="text" class="campo-input" id="novoChefeRegistroInput" inputmode="numeric" autocomplete="off" placeholder="Registro" style="flex:1;min-width:100px;" onkeydown="if(event.key==='Enter')criarNovoChefeUI()">
+<select class="campo-input" id="novoChefeRoleSelect" style="flex:1;min-width:130px;">
+<option value="escoteira">🏕️ Tropa Escoteira</option>
+<option value="senior">🎓 Tropa Sênior</option>
+<option value="admin">⭐ Administrador</option>
+</select>
 <button class="chefe-add-btn" onclick="criarNovoChefeUI()">+ Criar</button>
 </div>
 <div id="novoChefeErro" class="login-erro-msg" style="display:none;margin-bottom:12px;"></div>
@@ -1132,28 +1327,34 @@ let html = `
 if (!uids.length) {
 html += '<div style="padding:14px;text-align:center;color:var(--muted);font-size:12px;">Nenhum chefe cadastrado ainda.</div>';
 } else {
-let chefesCache = {};
 html += uids.map(uid => {
 const c = chefes[uid];
-return `<div class="chefe-row">
-<span class="chefe-row-registro">${c.nome ? c.nome : c.registro || uid}${c.nome ? `<br><span style="font-size:10px;font-weight:500;color:var(--muted);">Registro ${c.registro || uid}</span>` : ''}</span>
-${c.admin ? '<span class="chefe-badge-admin">admin</span>' : ''}
+const papelAtual = c.admin ? 'admin' : (c.tropa || 'escoteira');
+const papelLabel = c.admin ? '⭐ Admin' : (c.tropa === 'senior' ? '🎓 Sênior' : '🏕️ Escoteira');
+return `<div class="chefe-row" style="flex-wrap:wrap;gap:5px;">
+<span class="chefe-row-registro" style="flex:1;min-width:120px;">${c.nome ? c.nome : c.registro || uid}${c.nome ? `<br><span style="font-size:10px;font-weight:500;color:var(--muted);">Registro ${c.registro || uid}</span>` : ''}</span>
+<select class="campo-input" style="font-size:11px;padding:4px 6px;flex:0 0 auto;" onchange="alterarRoleChefeUI('${uid}', this.value)" title="Alterar acesso">
+<option value="escoteira" ${papelAtual==='escoteira'?'selected':''}>🏕️ Escoteira</option>
+<option value="senior" ${papelAtual==='senior'?'selected':''}>🎓 Sênior</option>
+<option value="admin" ${papelAtual==='admin'?'selected':''}>⭐ Admin</option>
+</select>
 <button class="chefe-row-btn" onclick="editarNomeChefeUI('${uid}')" title="Editar nome">✏️</button>
-<button class="chefe-row-btn" onclick="alterarAdminChefeUI('${uid}', ${!c.admin})">${c.admin ? 'Tirar admin' : 'Tornar admin'}</button>
+<button class="chefe-row-btn" onclick="redefinirSenhaAdmin('${uid}','${c.registro || uid}')" title="Redefinir senha">🔑</button>
 ${uid !== firebaseUid ? `<button class="chefe-row-btn remover" onclick="removerAcessoChefeUI('${uid}','${c.registro || ''}')">Remover</button>` : ''}
 </div>`;
 }).join('');
 }
 chefesCache = chefes;
-html += '<div style="font-size:10px;color:var(--muted);margin-top:12px;line-height:1.5;">⚠️ "Remover" tira o acesso do chefe aos dados, mas o registro dele continua funcionando como login se cadastrado de novo depois.</div>';
+html += '<div style="font-size:10px;color:var(--muted);margin-top:12px;line-height:1.5;">⚠️ "Remover" tira o acesso, mas o registro continua como login se cadastrado de novo. 🔑 redefine a senha do usuário.</div>';
 document.getElementById('chefesModalBody').innerHTML = html;
 }
 async function criarNovoChefeUI() {
 const inputNome = document.getElementById('novoChefeNomeInput');
 const inputRegistro = document.getElementById('novoChefeRegistroInput');
+const roleSelect = document.getElementById('novoChefeRoleSelect');
 const erroDiv = document.getElementById('novoChefeErro');
 erroDiv.style.display = 'none';
-const resultado = await criarNovoChefe(inputRegistro.value, false, inputNome.value);
+const resultado = await criarNovoChefe(inputRegistro.value, roleSelect.value, inputNome.value);
 if (resultado.erro) {
 erroDiv.textContent = resultado.mensagem;
 erroDiv.style.display = 'block';
@@ -1162,6 +1363,30 @@ return;
 inputNome.value = '';
 inputRegistro.value = '';
 await renderChefesModalBody();
+}
+async function alterarRoleChefeUI(uid, novoPapel) {
+const label = novoPapel === 'admin' ? 'Administrador' : novoPapel === 'senior' ? 'Tropa Sênior' : 'Tropa Escoteira';
+const aviso = uid === firebaseUid ? `\n\n⚠️ Você está alterando seu PRÓPRIO acesso! Se remover o Admin, perderá acesso a esta tela.` : '';
+if (!confirm(`Alterar acesso para "${label}"?${aviso}`)) {
+await renderChefesModalBody(); // reverte select visual
+return;
+}
+await alterarRoleChefe(uid, novoPapel);
+if (uid === firebaseUid) {
+// Atualiza a sessão atual imediatamente
+await checarSeSouAdmin();
+fecharGerenciarChefes();
+aplicarEstadoContaLogada();
+return;
+}
+await renderChefesModalBody();
+}
+async function redefinirSenhaAdmin(uid, registro) {
+const novaSenha = prompt(`Redefinir senha de ${registro}:\n\n(Deixe em branco para redefinir ao número do registro)`);
+if (novaSenha === null) return; // cancelou
+const senhaFinal = novaSenha.trim() || null;
+await alterarSenhaChefe(uid, senhaFinal);
+alert(senhaFinal ? `Senha atualizada para "${senhaFinal}".` : `Senha redefinida para o número do registro (${registro}).`);
 }
 async function editarNomeChefeUI(uid) {
 const atual = (chefesCache[uid] && chefesCache[uid].nome) || '';
@@ -2445,13 +2670,16 @@ try { localStorage.setItem('escoteira_paginaAtiva', p); } catch (e) {}
 document.getElementById('pagina-tabela').style.display = p === 'tabela' ? '' : 'none';
 document.getElementById('pagina-calendario').style.display = p === 'calendario' ? '' : 'none';
 document.getElementById('pagina-ciclo').style.display = p === 'ciclo' ? '' : 'none';
+document.getElementById('pagina-almoxarifado').style.display = p === 'almoxarifado' ? '' : 'none';
 document.getElementById('tabTabela').classList.toggle('active', p === 'tabela');
 document.getElementById('tabCalendario').classList.toggle('active', p === 'calendario');
 document.getElementById('tabCiclo').classList.toggle('active', p === 'ciclo');
+document.getElementById('tabAlmoxarifado').classList.toggle('active', p === 'almoxarifado');
 document.getElementById('btnLimparMarcacoes').style.display = p === 'tabela' ? '' : 'none';
 if (p === 'tabela') renderPaginaTabela();
 if (p === 'calendario') renderPaginaCalendario();
 if (p === 'ciclo') renderPaginaCiclo();
+if (p === 'almoxarifado') abrirAlmoEsc();
 }
 
 function ajustarAlturaIframeSenior() {
@@ -3923,20 +4151,43 @@ const txt = document.getElementById('contaRegistroTxt');
 if (txt) txt.textContent = nomeLogado ? nomeLogado : ('Registro ' + (registroLogado || ''));
 const btnAdmin = document.getElementById('btnGerenciarChefes');
 if (btnAdmin) btnAdmin.style.display = souAdmin ? '' : 'none';
+
+// Restrição de acesso por tropa
+const ramoSwitch = document.getElementById('ramoSwitch');
+if (souAdmin || !tropaDoChefeLogado) {
+// Admin ou sem tropa definida: acesso total, mantém preferência salva
+if (ramoSwitch) ramoSwitch.style.display = '';
+const ramoPref = (function(){ try { return localStorage.getItem('escoteira_ramoAtivo') || 'escoteira'; } catch(e){ return 'escoteira'; } })();
+mudarRamo(ramoPref);
+} else if (tropaDoChefeLogado === 'senior') {
+// Apenas Tropa Sênior: oculta seletor, força seção senior
+if (ramoSwitch) ramoSwitch.style.display = 'none';
+mudarRamo('senior');
+} else {
+// Apenas Tropa Escoteira (ou valor desconhecido): oculta seletor, força escoteira
+if (ramoSwitch) ramoSwitch.style.display = 'none';
+mudarRamo('escoteira');
+}
+
+// Carrega iframe da Sênior apenas quando necessário (evita carregar para chefes Escoteira)
 const iframe = document.getElementById('iframeSenior');
-if (iframe && !iframe.src) iframe.src = 'tropa-senior.html';
+if (iframe && !iframe.src && tropaDoChefeLogado !== 'escoteira') {
+iframe.src = 'tropa-senior.html';
+}
 }
 
 async function tentarLoginTela() {
-const input = document.getElementById('loginRegistroInput');
+const inputReg = document.getElementById('loginRegistroInput');
+const inputSenha = document.getElementById('loginSenhaInput');
 const btn = document.getElementById('loginEntrarBtn');
 const erroDiv = document.getElementById('loginErroMsg');
 erroDiv.style.display = 'none';
-const registro = input.value.trim();
+const registro = inputReg.value.trim();
+const senha = inputSenha ? inputSenha.value.trim() : '';
 if (!registro) { erroDiv.textContent = 'Digite o registro escoteiro.'; erroDiv.style.display = 'block'; return; }
 btn.disabled = true;
 btn.textContent = 'Entrando...';
-const resultado = await fazerLoginRegistro(registro);
+const resultado = await fazerLoginRegistro(registro, senha);
 btn.disabled = false;
 btn.textContent = 'Entrar';
 if (resultado.erro) {
@@ -3960,6 +4211,241 @@ document.getElementById('loginRegistroInput').focus();
 }
 }
 iniciarComLogin();
+
+// ===== ALMOXARIFADO — TROPA ESCOTEIRA =====
+const ALMO_BASE_URL = DB_URL + '/almoxarifado';
+const ALMO_ALL_URL  = ALMO_BASE_URL + '.json';
+const ALMO_TROPA_ESC = 'escoteira';
+
+const ALMO_TIPOS_ESC = {
+  camping:    { label:'Camping',     emoji:'⛺', color:'#2196F3', badgeCls:'almo-badge-camping' },
+  jogos:      { label:'Jogos',       emoji:'🎯', color:'#FF9800', badgeCls:'almo-badge-jogos' },
+  escritorio: { label:'Escritório',  emoji:'📎', color:'#9C27B0', badgeCls:'almo-badge-escritorio' },
+  distintivos:{ label:'Distintivos', emoji:'🏅', color:'#4CAF50', badgeCls:'almo-badge-distintivos' }
+};
+
+let almoItensEsc = {};       // cache local: { firebaseId: {nome,quantidade,tipo,compartilhado,tropa} }
+let almoChipAtivoEsc = '';   // filtro por tipo
+let almoCarregadoEsc = false;
+
+async function carregarAlmoEsc() {
+  try {
+    const r = await fetch(urlComAuthFirebase(ALMO_ALL_URL));
+    const d = await r.json();
+    almoItensEsc = (d && typeof d === 'object' && !Array.isArray(d)) ? d : {};
+  } catch(e) { almoItensEsc = {}; }
+}
+
+function almoItensVisiveisEsc() {
+  return Object.entries(almoItensEsc)
+    .filter(([,v]) => v && (v.compartilhado === true || v.tropa === ALMO_TROPA_ESC))
+    .sort((a,b) => (a[1].nome||'').localeCompare(b[1].nome||'', 'pt'));
+}
+
+async function adicionarAlmoItemEsc() {
+  const nome = (document.getElementById('almoNomeEsc').value||'').trim();
+  const tipo = document.getElementById('almoTipoEsc').value;
+  const qtd  = Math.max(0, parseInt(document.getElementById('almoQtdEsc').value)||0);
+  const comp = document.getElementById('almoCompEsc').checked;
+  if (!nome) { document.getElementById('almoNomeEsc').focus(); return; }
+  const item = { nome, quantidade:qtd, tipo, compartilhado:comp, tropa:ALMO_TROPA_ESC, criadoEm:new Date().toISOString() };
+  try {
+    const r = await fetch(urlComAuthFirebase(ALMO_ALL_URL), {
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(item)
+    });
+    const res = await r.json();
+    almoItensEsc[res.name] = item;
+    document.getElementById('almoNomeEsc').value = '';
+    document.getElementById('almoQtdEsc').value = '1';
+    document.getElementById('almoCompEsc').checked = false;
+    renderAlmoEsc();
+  } catch(e) { alert('Erro ao salvar. Verifique a conexão.'); }
+}
+
+async function atualizarQtdAlmoEsc(id, delta) {
+  if (!almoItensEsc[id]) return;
+  const nova = Math.max(0, (almoItensEsc[id].quantidade||0) + delta);
+  almoItensEsc[id].quantidade = nova;
+  renderAlmoEsc();
+  try {
+    await fetch(urlComAuthFirebase(ALMO_BASE_URL+'/'+id+'.json'), {
+      method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({quantidade:nova})
+    });
+  } catch(e) {}
+}
+
+async function deletarAlmoItemEsc(id) {
+  if (!confirm('Remover este item do almoxarifado?')) return;
+  delete almoItensEsc[id];
+  renderAlmoEsc();
+  try { await fetch(urlComAuthFirebase(ALMO_BASE_URL+'/'+id+'.json'), { method:'DELETE' }); } catch(e) {}
+}
+
+function selecionarChipAlmoEsc(btn, tipo) {
+  almoChipAtivoEsc = tipo;
+  document.querySelectorAll('#almoChipsEsc .almo-chip').forEach(c=>c.classList.remove('ativo'));
+  btn.classList.add('ativo');
+  renderListaAlmoEsc();
+}
+
+function filtrarAlmoEsc() {
+  const q = (document.getElementById('almoBuscaEsc').value||'').trim();
+  const clr = document.getElementById('almoBuscaClearEsc');
+  if (clr) clr.style.display = q ? '' : 'none';
+  renderListaAlmoEsc();
+}
+
+function limparBuscaAlmoEsc() {
+  const inp = document.getElementById('almoBuscaEsc');
+  if (inp) { inp.value=''; inp.focus(); }
+  filtrarAlmoEsc();
+}
+
+function renderChartAlmoEsc() {
+  const el = document.getElementById('almoChartEsc');
+  if (!el) return;
+  const tots = { camping:0, jogos:0, escritorio:0, distintivos:0 };
+  almoItensVisiveisEsc().forEach(([,v])=>{ if(tots[v.tipo]!==undefined) tots[v.tipo]+=(v.quantidade||0); });
+  const max = Math.max(...Object.values(tots), 1);
+  el.innerHTML = Object.entries(ALMO_TIPOS_ESC).map(([k,t])=>{
+    const val=tots[k], pct=Math.round(val/max*100);
+    return `<div class="almo-chart-row">
+      <div class="almo-chart-label">${t.emoji} ${t.label}</div>
+      <div class="almo-chart-track"><div class="almo-chart-bar" style="width:${pct}%;background:${t.color}"></div></div>
+      <div class="almo-chart-val">${val}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderListaAlmoEsc() {
+  const el = document.getElementById('almoListaEsc');
+  const cnt = document.getElementById('almoCountEsc');
+  if (!el) return;
+  const q = ((document.getElementById('almoBuscaEsc')||{}).value||'').trim().toLowerCase();
+  let itens = almoItensVisiveisEsc();
+  if (almoChipAtivoEsc) itens = itens.filter(([,v])=>v.tipo===almoChipAtivoEsc);
+  if (q) itens = itens.filter(([,v])=>{
+    const t = ALMO_TIPOS_ESC[v.tipo];
+    return (v.nome||'').toLowerCase().includes(q)||(t&&t.label.toLowerCase().includes(q));
+  });
+  if (cnt) cnt.textContent = itens.length+' '+(itens.length===1?'item':'itens');
+  if (!itens.length) { el.innerHTML='<div class="almo-vazio">Nenhum item encontrado.</div>'; return; }
+  const _e=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  el.innerHTML = itens.map(([id,v])=>{
+    const t = ALMO_TIPOS_ESC[v.tipo]||{label:v.tipo,emoji:'📦',color:'#888',badgeCls:''};
+    const compBadge = v.compartilhado
+      ? '<span class="almo-badge almo-badge-comp">🔗 Compartilhado</span>'
+      : '<span class="almo-badge almo-badge-ind">🔒 Só Escoteira</span>';
+    return `<div class="almo-item">
+      <div class="almo-item-dot" style="background:${t.color}"></div>
+      <div class="almo-item-body">
+        <div class="almo-item-nome">${_e(v.nome||'')}</div>
+        <div class="almo-item-badges">
+          <span class="almo-badge ${t.badgeCls}">${t.emoji} ${t.label}</span>
+          ${compBadge}
+        </div>
+      </div>
+      <div class="almo-qtd-row">
+        <button class="almo-qtd-btn" onclick="atualizarQtdAlmoEsc('${_e(id)}',-1)">−</button>
+        <div class="almo-qtd-val">${v.quantidade||0}</div>
+        <button class="almo-qtd-btn" onclick="atualizarQtdAlmoEsc('${_e(id)}',1)">+</button>
+      </div>
+      <button class="almo-del-btn" onclick="deletarAlmoItemEsc('${_e(id)}')" title="Remover">🗑</button>
+    </div>`;
+  }).join('');
+}
+
+function renderAlmoEsc() {
+  renderChartAlmoEsc();
+  renderListaAlmoEsc();
+}
+
+async function abrirAlmoEsc() {
+  if (!almoCarregadoEsc) {
+    const el = document.getElementById('almoListaEsc');
+    if (el) el.innerHTML = '<div class="almo-vazio">Carregando…</div>';
+    await carregarAlmoEsc();
+    almoCarregadoEsc = true;
+  }
+  renderAlmoEsc();
+}
+
+// ===== BUSCA DE AÇÕES (index.html) =====
+const EIXO_COR_ESC = {};
+(function(){
+  EIXOS.forEach(e => { EIXO_COR_ESC[e.id] = e.cor; });
+})();
+
+function _bEscEsc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function _bHlEsc(text,q){
+  if(!q) return _bEscEsc(text);
+  const re=new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
+  return _bEscEsc(text).replace(re,'<mark class="hl-esc">$1</mark>');
+}
+
+function filtrarAcoesEsc(q){
+  const inp=document.getElementById('buscaAcoesEsc');
+  const clr=document.getElementById('buscaAcoesClearEsc');
+  const res=document.getElementById('buscaResultsEsc');
+  const cont=document.getElementById('blocosPorEixoContainer');
+  q=(q||'').trim();
+  if(clr) clr.style.display=q?'':'none';
+  if(!q){
+    if(res){ res.style.display='none'; res.innerHTML=''; }
+    if(cont) cont.style.display='';
+    return;
+  }
+  if(cont) cont.style.display='none';
+  const ql=q.toLowerCase();
+  const hits=[];
+  EIXOS.forEach(eixo=>{
+    eixo.blocos.forEach(bid=>{
+      const bloco=BLOCOS[bid];
+      if(!bloco) return;
+      const cor=EIXO_COR_ESC[eixo.id]||'#888';
+      (bloco.fixas||[]).forEach(acao=>{
+        if(typeof acao==='string' && acao.toLowerCase().includes(ql)){
+          hits.push({bid,blocoNome:bloco.nome,eixoId:eixo.id,acao,tipo:'f',cor});
+        }
+      });
+      (bloco.variaveis||[]).forEach(acao=>{
+        if(typeof acao==='string' && acao==='Especialidade - Equivalente a 1 item variável') return;
+        if(typeof acao==='string' && acao.toLowerCase().includes(ql)){
+          hits.push({bid,blocoNome:bloco.nome,eixoId:eixo.id,acao,tipo:'v',cor});
+        }
+      });
+    });
+  });
+  if(!res) return;
+  res.style.display='block';
+  if(!hits.length){
+    res.innerHTML='<div class="busca-nada-esc">Nenhuma ação encontrada para "<strong>'+_bEscEsc(q)+'</strong>"</div>';
+    return;
+  }
+  const plural=hits.length!==1?'s':'';
+  const tipoLabel={f:'Fixa',v:'Variável'};
+  res.innerHTML='<div class="busca-count-esc">'+hits.length+' resultado'+plural+'</div>'+
+    hits.map(h=>`<div class="busca-item-esc" onclick="irParaBlocoEsc('${_bEscEsc(h.eixoId)}','${_bEscEsc(h.bid)}')" title="Ir para o bloco">
+      <span class="busca-dot-esc" style="background:${h.cor}"></span>
+      <div class="busca-body-esc">
+        <div class="busca-bloco-esc">${_bHlEsc(h.blocoNome,q)}</div>
+        <div class="busca-acao-esc">${_bHlEsc(h.acao,q)}</div>
+      </div>
+      <span class="busca-tipo-esc ${h.tipo==='f'?'fxe':'vxe'}">${tipoLabel[h.tipo]||'?'}</span>
+    </div>`).join('');
+}
+
+function limparBuscaEsc(){
+  const inp=document.getElementById('buscaAcoesEsc');
+  if(inp){ inp.value=''; inp.focus(); }
+  filtrarAcoesEsc('');
+}
+
+function irParaBlocoEsc(eixoId, bid){
+  limparBuscaEsc();
+  if(paginaAtiva!=='tabela') mudarPagina('tabela');
+  abrirBlocoResumo(eixoId, bid);
+}
 </script>
 
 

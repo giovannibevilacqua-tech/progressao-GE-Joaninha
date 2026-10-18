@@ -292,6 +292,88 @@ body{padding-bottom:50px;}
 .obs-modal-box{background:var(--card);border-radius:16px 16px 0 0;padding:20px 18px 26px;width:100%;max-width:500px;max-height:80vh;overflow-y:auto;}
 .obs-modal-titulo{font-size:15px;font-weight:800;color:var(--vinho);margin-bottom:10px;}
 .obs-modal-texto{font-size:13px;color:var(--text);line-height:1.6;white-space:pre-line;}
+
+/* ─── Busca de Ações ─────────────────────────────── */
+.busca-wrap{margin:10px 12px 0;position:relative;}
+.busca-input{width:100%;box-sizing:border-box;padding:10px 38px 10px 38px;border:1.5px solid var(--border);border-radius:22px;font-size:13px;background:var(--card);color:var(--text);outline:none;transition:border .2s;-webkit-appearance:none;appearance:none;}
+.busca-input:focus{border-color:var(--vinho);}
+.busca-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none;line-height:1;}
+.busca-clear{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:15px;color:var(--muted);cursor:pointer;background:none;border:none;padding:3px 6px;display:none;line-height:1;}
+.busca-results{margin:8px 12px 0;display:none;}
+.busca-count{font-size:10px;font-weight:700;color:var(--muted);margin-bottom:6px;padding:0 2px;}
+.busca-item{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);margin-bottom:7px;padding:10px 13px;cursor:pointer;display:flex;align-items:flex-start;gap:10px;border:1.5px solid transparent;transition:border-color .15s;}
+.busca-item:active{border-color:var(--vinho);}
+.busca-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.busca-body{flex:1;min-width:0;}
+.busca-bloco{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:3px;}
+.busca-acao{font-size:12px;color:var(--text);line-height:1.4;}
+.busca-tipo{font-size:9px;font-weight:800;padding:2px 6px;border-radius:8px;flex-shrink:0;align-self:flex-start;white-space:nowrap;}
+.busca-tipo.f{background:#E8F5E9;color:#27AE60;}
+.busca-tipo.v{background:#E3F2FD;color:#1565C0;}
+.busca-tipo.s{background:#FFF8E1;color:#E67E22;}
+.busca-tipo.g{background:#F4ECF7;color:#8E44AD;}
+.busca-nada{text-align:center;padding:24px 12px;color:var(--muted);font-size:12px;}
+mark.hl{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
+
+/* ─── Almoxarifado (Sênior) ─────────────────────── */
+.almo-section{padding:12px 12px 0;}
+.almo-titulo{font-size:16px;font-weight:800;color:var(--vinho);margin-bottom:2px;}
+.almo-sub{font-size:11px;color:var(--muted);margin-bottom:0;}
+.almo-form-card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:14px;}
+.almo-form-titulo{font-size:12px;font-weight:800;color:var(--text);margin-bottom:10px;}
+.almo-campo-label{font-size:10px;font-weight:700;color:var(--muted);margin-bottom:3px;display:block;}
+.almo-input{width:100%;box-sizing:border-box;padding:9px 10px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;background:var(--card);color:var(--text);outline:none;transition:border .2s;}
+.almo-input:focus{border-color:var(--vinho);}
+.almo-form-grid{display:grid;grid-template-columns:1fr 90px;gap:8px;margin:8px 0;}
+.almo-select{width:100%;box-sizing:border-box;padding:9px 8px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;background:var(--card);color:var(--text);outline:none;-webkit-appearance:none;appearance:none;cursor:pointer;}
+.almo-select:focus{border-color:var(--vinho);}
+.almo-toggle-row{display:flex;align-items:center;gap:10px;margin:10px 0;}
+.almo-toggle-lbl-wrap{flex:1;}
+.almo-toggle-lbl{font-size:12px;font-weight:600;color:var(--text);display:block;}
+.almo-toggle-sub{font-size:10px;color:var(--muted);}
+.almo-toggle{position:relative;width:40px;height:22px;flex-shrink:0;}
+.almo-toggle input{opacity:0;width:0;height:0;position:absolute;}
+.almo-toggle-slider{position:absolute;inset:0;background:#ccc;border-radius:22px;transition:.3s;cursor:pointer;}
+.almo-toggle input:checked+.almo-toggle-slider{background:var(--vinho);}
+.almo-toggle-slider:before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.3s;}
+.almo-toggle input:checked+.almo-toggle-slider:before{transform:translateX(18px);}
+.almo-btn-add{width:100%;padding:11px;border:none;border-radius:10px;background:var(--vinho);color:#fff;font-size:13px;font-weight:700;cursor:pointer;margin-top:4px;}
+.almo-chips-wrap{display:flex;gap:6px;overflow-x:auto;padding:8px 12px 2px;scrollbar-width:none;}
+.almo-chips-wrap::-webkit-scrollbar{display:none;}
+.almo-chip{padding:6px 13px;border-radius:22px;border:1.5px solid var(--border);font-size:11px;font-weight:700;background:var(--card);color:var(--muted);cursor:pointer;white-space:nowrap;outline:none;flex-shrink:0;}
+.almo-chip.ativo{border-color:var(--vinho);color:var(--vinho);}
+.almo-busca-wrap-a{position:relative;margin:6px 12px 6px;}
+.almo-busca-input-a{width:100%;box-sizing:border-box;padding:9px 36px 9px 38px;border:1.5px solid var(--border);border-radius:22px;font-size:13px;background:var(--card);color:var(--text);outline:none;-webkit-appearance:none;appearance:none;transition:border .2s;}
+.almo-busca-input-a:focus{border-color:var(--vinho);}
+.almo-busca-icon-a{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:13px;pointer-events:none;}
+.almo-busca-clear-a{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:15px;cursor:pointer;color:var(--muted);padding:3px;display:none;}
+.almo-chart-card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:14px;margin:10px 12px 0;}
+.almo-chart-titulo{font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
+.almo-chart-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.almo-chart-label{font-size:11px;color:var(--text);width:88px;flex-shrink:0;white-space:nowrap;}
+.almo-chart-track{flex:1;height:16px;background:var(--border);border-radius:8px;overflow:hidden;}
+.almo-chart-bar{height:100%;border-radius:8px;transition:width .5s ease;min-width:4px;}
+.almo-chart-val{font-size:11px;font-weight:800;color:var(--muted);width:24px;text-align:right;flex-shrink:0;}
+.almo-lista-wrap{padding:10px 12px 0;}
+.almo-lista-count{font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:7px;}
+.almo-item{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:9px;}
+.almo-item-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.almo-item-body{flex:1;min-width:0;}
+.almo-item-nome{font-size:13px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.almo-item-badges{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px;}
+.almo-badge{font-size:9px;font-weight:800;padding:2px 7px;border-radius:9px;white-space:nowrap;}
+.almo-badge-camping{background:#E3F2FD;color:#1565C0;}
+.almo-badge-jogos{background:#FFF3E0;color:#E65100;}
+.almo-badge-escritorio{background:#F3E5F5;color:#6A1B9A;}
+.almo-badge-distintivos{background:#E8F5E9;color:#2E7D32;}
+.almo-badge-comp{background:#E8F5E9;color:#2E7D32;}
+.almo-badge-ind{background:#FFF8E1;color:#F57F17;}
+.almo-qtd-row{display:flex;align-items:center;gap:4px;flex-shrink:0;}
+.almo-qtd-btn{width:26px;height:26px;border:1.5px solid var(--border);border-radius:50%;background:var(--card);color:var(--text);font-size:17px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;}
+.almo-qtd-val{font-size:14px;font-weight:800;color:var(--text);min-width:26px;text-align:center;}
+.almo-del-btn{background:none;border:none;font-size:15px;cursor:pointer;color:var(--muted);padding:4px;flex-shrink:0;opacity:.7;}
+.almo-del-btn:active{opacity:1;}
+.almo-vazio{text-align:center;padding:32px 12px;color:var(--muted);font-size:12px;}
 </style>
 </head>
 <body>
@@ -304,6 +386,7 @@ body{padding-bottom:50px;}
   <button class="tab-btn" data-tab="sem" onclick="showTab('sem',this)">🗓 Semestres</button>
   <button class="tab-btn" data-tab="jovens" onclick="showTab('jovens',this)">👥 Jovens</button>
   <button class="tab-btn" data-tab="ep" onclick="showTab('ep',this);renderEP();">🏆 Escoteiro da Pátria</button>
+  <button class="tab-btn" data-tab="alm" onclick="showTab('alm',this);abrirAlmoSr();">📦 Almoxarifado</button>
 </nav>
 
 <!-- ═══ TAB: PROGRESSÃO ═══════════════════════════════ -->
@@ -311,6 +394,19 @@ body{padding-bottom:50px;}
   <div class="alert">
     Toque em ▶ para expandir um bloco e ver os sub-itens. Toque no ✓ para marcar ou desmarcar cada ação por jovem. Salvo automaticamente.
   </div>
+
+  <!-- Barra de busca de ações -->
+  <div class="busca-wrap">
+    <span class="busca-icon">🔍</span>
+    <input type="search" class="busca-input" id="buscaAcoesSr"
+      placeholder="Buscar ação nos blocos..."
+      autocomplete="off"
+      oninput="filtrarAcoesSr(this.value)"
+      onsearch="filtrarAcoesSr(this.value)">
+    <button class="busca-clear" id="buscaAcoesClearSr" onclick="limparBuscaSr()" aria-label="Limpar busca">✕</button>
+  </div>
+  <div class="busca-results" id="buscaResultsSr"></div>
+
   <div class="progress-section">
     <div class="section-label">Progresso por Jovem</div>
     <div id="pbars"></div>
@@ -718,6 +814,18 @@ async function autenticarComSessaoCompartilhada() {
     firebaseAuthToken = renovado.idToken; firebaseRefreshToken = renovado.refreshToken; registroLogado = salva.registro; firebaseUid = salva.uid;
     salvarSessao();
   }
+  // Verificação de acesso por tropa:
+  // salva.admin === true → acesso total
+  // salva.admin === undefined → sessão antiga (retrocompatível, permite acesso)
+  // salva.tropa === 'senior' → acesso permitido
+  // salva.tropa === 'escoteira' → redirecionar para index.html
+  const isAdmin = salva.admin === true || salva.admin === undefined;
+  const tropa = salva.tropa;
+  if (!isAdmin && tropa === 'escoteira') {
+    // Usuário da Tropa Escoteira tentando acessar Tropa Sênior → redireciona
+    try { window.top.location.href = 'index.html'; } catch(e) { window.location.href = 'index.html'; }
+    return false;
+  }
   agendarRenovacaoTokenSr();
   return true;
 }
@@ -1036,6 +1144,7 @@ function renderEixo(eixoId){
 
     const blockEl=document.createElement('details');
     blockEl.className='block-item';
+    blockEl.dataset.blockId=bid;
     blockEl.open = !!blocosAbertosSr[bid];
     blockEl.addEventListener('toggle', () => { blocosAbertosSr[bid] = blockEl.open; persistirEstadoSr('blocosAbertosSr', blocosAbertosSr); });
     blockEl.innerHTML=`
@@ -2998,6 +3107,7 @@ async function iniciarApp(){
 
 function aplicarModoVisualizacaoSr() {
 document.querySelectorAll('.tab-btn[data-tab="prog"], .tab-btn[data-tab="jovens"], .tab-btn[data-tab="ep"]').forEach(el => el.style.display = 'none');
+document.querySelectorAll('.tab-btn[data-tab="alm"]').forEach(el => el.style.display = '');
 document.querySelectorAll('#cabecalhoAddEventoSr').forEach(el => { el.style.display = 'none'; const body = el.nextElementSibling; if (body) body.style.display = 'none'; });
 const saveBar = document.getElementById('saveBarSr');
 if (saveBar) saveBar.style.display = 'none';
@@ -3038,6 +3148,261 @@ function iniciarObservadorHeaderCompacto() {
   observer.observe(sentinela);
 }
 iniciarObservadorHeaderCompacto();
+
+// ╔═══════════════════════════════════════════════════╗
+// ║            BUSCA DE AÇÕES (SÊNIOR)                ║
+// ╚═══════════════════════════════════════════════════╝
+const EIXO_CORES_SR={hv:'#E0355F',ma:'#5CB85C',pd:'#1B3B6F',sb:'#DB9270'};
+
+function _bEsc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function _bHl(txt,q){
+  if(!q)return _bEsc(txt);
+  const re=new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
+  return _bEsc(txt).replace(re,'<mark class="hl">$1</mark>');
+}
+
+function filtrarAcoesSr(q){
+  q=(q||'').trim();
+  const clr=document.getElementById('buscaAcoesClearSr');
+  const res=document.getElementById('buscaResultsSr');
+  if(clr) clr.style.display=q?'':'none';
+  if(!q){
+    res.style.display='none';
+    res.innerHTML='';
+    return;
+  }
+  const lq=q.toLowerCase();
+  const hits=[];
+  BLOCKS.forEach(function(bl){
+    const cor=EIXO_CORES_SR[bl.eixo]||'#999';
+    function chk(arr,type,tlabel){
+      (arr||[]).forEach(function(a){
+        if(a.name.toLowerCase().includes(lq)){
+          hits.push({bid:bl.id,bname:bl.name,cor:cor,aname:a.name,type:type,tlabel:tlabel});
+        }
+      });
+    }
+    chk(bl.fixed,'f','FIXA');
+    chk(bl.variable,'v','VARIÁVEL');
+    chk(bl.specialties,'s','ESPECIALIDADE');
+    chk(bl.insignias,'g','INSÍGNIA');
+  });
+  res.style.display='';
+  if(!hits.length){
+    res.innerHTML='<div class="busca-nada">Nenhuma ação encontrada para "<strong>'+_bEsc(q)+'</strong>"</div>';
+    return;
+  }
+  var h='<div class="busca-count">'+hits.length+' resultado'+(hits.length!==1?'s'||'':'')+'</div>';
+  hits.forEach(function(r){
+    h+='<div class="busca-item" onclick="irParaBlocoSr(\''+r.bid+'\')">'
+      +'<div class="busca-dot" style="background:'+r.cor+'"></div>'
+      +'<div class="busca-body">'
+      +'<div class="busca-bloco">'+_bEsc(r.bname)+'</div>'
+      +'<div class="busca-acao">'+_bHl(r.aname,q)+'</div>'
+      +'</div>'
+      +'<span class="busca-tipo '+r.type+'">'+r.tlabel+'</span>'
+      +'</div>';
+  });
+  res.innerHTML=h;
+}
+
+function limparBuscaSr(){
+  var i=document.getElementById('buscaAcoesSr');
+  if(i){i.value='';filtrarAcoesSr('');i.focus();}
+}
+
+function irParaBlocoSr(bid){
+  limparBuscaSr();
+  // Garantir que o eixo correspondente está aberto
+  var eixoId=null;
+  Object.keys(EIXOS).forEach(function(eid){
+    if(EIXOS[eid].blockIds.includes(bid)) eixoId=eid;
+  });
+  if(eixoId){
+    eixosAbertosSr[eixoId]=true;
+    persistirEstadoSr('eixosAbertosSr',eixosAbertosSr);
+    aplicarEstadoEixoSr(eixoId);
+  }
+  // Abrir o bloco
+  blocosAbertosSr[bid]=true;
+  persistirEstadoSr('blocosAbertosSr',blocosAbertosSr);
+  // Aguarda o DOM re-renderizar e rola até o bloco
+  setTimeout(function(){
+    var det=document.querySelector('.block-item[data-block-id="'+bid+'"]');
+    if(det){
+      det.open=true;
+      det.scrollIntoView({behavior:'smooth',block:'start'});
+    }
+  },80);
+}
+
+// ═══ ALMOXARIFADO — TROPA SÊNIOR ══════════════════════
+const ALMO_BASE_URL_SR = DB_URL + '/almoxarifado';
+const ALMO_ALL_URL_SR  = ALMO_BASE_URL_SR + '.json';
+const ALMO_TROPA_SR = 'senior';
+
+const ALMO_TIPOS_SR = {
+  camping:    { label:'Camping',     emoji:'⛺', color:'#2196F3', badgeCls:'almo-badge-camping' },
+  jogos:      { label:'Jogos',       emoji:'🎯', color:'#FF9800', badgeCls:'almo-badge-jogos' },
+  escritorio: { label:'Escritório',  emoji:'📎', color:'#9C27B0', badgeCls:'almo-badge-escritorio' },
+  distintivos:{ label:'Distintivos', emoji:'🏅', color:'#4CAF50', badgeCls:'almo-badge-distintivos' }
+};
+
+var almoItensSr = {};
+var almoChipAtivoSr = '';
+var almoCarregadoSr = false;
+
+async function carregarAlmoSr() {
+  try {
+    const r = await fetch(urlComAuthFirebase(ALMO_ALL_URL_SR));
+    const d = await r.json();
+    almoItensSr = (d && typeof d === 'object' && !Array.isArray(d)) ? d : {};
+  } catch(e) { almoItensSr = {}; }
+}
+
+function almoItensVisivelSr() {
+  return Object.entries(almoItensSr)
+    .filter(([,v]) => v && (v.compartilhado === true || v.tropa === ALMO_TROPA_SR))
+    .sort((a,b) => (a[1].nome||'').localeCompare(b[1].nome||'', 'pt'));
+}
+
+async function adicionarAlmoItemSr() {
+  if (MODO_VISUALIZACAO_SR) return;
+  const nome = (document.getElementById('almoNomeSr').value||'').trim();
+  const tipo = document.getElementById('almoTipoSr').value;
+  const qtd  = Math.max(0, parseInt(document.getElementById('almoQtdSr').value)||0);
+  const comp = document.getElementById('almoCompSr').checked;
+  if (!nome) { document.getElementById('almoNomeSr').focus(); return; }
+  const item = { nome, quantidade:qtd, tipo, compartilhado:comp, tropa:ALMO_TROPA_SR, criadoEm:new Date().toISOString() };
+  try {
+    const r = await fetch(urlComAuthFirebase(ALMO_ALL_URL_SR), {
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(item)
+    });
+    const res = await r.json();
+    almoItensSr[res.name] = item;
+    document.getElementById('almoNomeSr').value = '';
+    document.getElementById('almoQtdSr').value = '1';
+    document.getElementById('almoCompSr').checked = false;
+    renderAlmoSr();
+  } catch(e) { alert('Erro ao salvar. Verifique a conexão.'); }
+}
+
+async function atualizarQtdAlmoSr(id, delta) {
+  if (MODO_VISUALIZACAO_SR) return;
+  if (!almoItensSr[id]) return;
+  const nova = Math.max(0, (almoItensSr[id].quantidade||0) + delta);
+  almoItensSr[id].quantidade = nova;
+  renderAlmoSr();
+  try {
+    await fetch(urlComAuthFirebase(ALMO_BASE_URL_SR+'/'+id+'.json'), {
+      method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({quantidade:nova})
+    });
+  } catch(e) {}
+}
+
+async function deletarAlmoItemSr(id) {
+  if (MODO_VISUALIZACAO_SR) return;
+  if (!confirm('Remover este item do almoxarifado?')) return;
+  delete almoItensSr[id];
+  renderAlmoSr();
+  try { await fetch(urlComAuthFirebase(ALMO_BASE_URL_SR+'/'+id+'.json'), { method:'DELETE' }); } catch(e) {}
+}
+
+function selecionarChipAlmoSr(btn, tipo) {
+  almoChipAtivoSr = tipo;
+  document.querySelectorAll('#almoChipsSr .almo-chip').forEach(c=>c.classList.remove('ativo'));
+  btn.classList.add('ativo');
+  renderListaAlmoSr();
+}
+
+function filtrarAlmoSr() {
+  const q = (document.getElementById('almoBuscaSr').value||'').trim();
+  const clr = document.getElementById('almoBuscaClearSr');
+  if (clr) clr.style.display = q ? '' : 'none';
+  renderListaAlmoSr();
+}
+
+function limparBuscaAlmoSr() {
+  const inp = document.getElementById('almoBuscaSr');
+  if (inp) { inp.value=''; inp.focus(); }
+  filtrarAlmoSr();
+}
+
+function renderChartAlmoSr() {
+  const el = document.getElementById('almoChartSr');
+  if (!el) return;
+  const tots = { camping:0, jogos:0, escritorio:0, distintivos:0 };
+  almoItensVisivelSr().forEach(([,v])=>{ if(tots[v.tipo]!==undefined) tots[v.tipo]+=(v.quantidade||0); });
+  const max = Math.max(...Object.values(tots), 1);
+  el.innerHTML = Object.entries(ALMO_TIPOS_SR).map(([k,t])=>{
+    const val=tots[k], pct=Math.round(val/max*100);
+    return `<div class="almo-chart-row">
+      <div class="almo-chart-label">${t.emoji} ${t.label}</div>
+      <div class="almo-chart-track"><div class="almo-chart-bar" style="width:${pct}%;background:${t.color}"></div></div>
+      <div class="almo-chart-val">${val}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderListaAlmoSr() {
+  const el = document.getElementById('almoListaSr');
+  const cnt = document.getElementById('almoCountSr');
+  if (!el) return;
+  const q = ((document.getElementById('almoBuscaSr')||{}).value||'').trim().toLowerCase();
+  let itens = almoItensVisivelSr();
+  if (almoChipAtivoSr) itens = itens.filter(([,v])=>v.tipo===almoChipAtivoSr);
+  if (q) itens = itens.filter(([,v])=>{
+    const t = ALMO_TIPOS_SR[v.tipo];
+    return (v.nome||'').toLowerCase().includes(q)||(t&&t.label.toLowerCase().includes(q));
+  });
+  if (cnt) cnt.textContent = itens.length+' '+(itens.length===1?'item':'itens');
+  if (!itens.length) { el.innerHTML='<div class="almo-vazio">Nenhum item encontrado.</div>'; return; }
+  const _e=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const soLeitura = MODO_VISUALIZACAO_SR;
+  el.innerHTML = itens.map(([id,v])=>{
+    const t = ALMO_TIPOS_SR[v.tipo]||{label:v.tipo,emoji:'📦',color:'#888',badgeCls:''};
+    const compBadge = v.compartilhado
+      ? '<span class="almo-badge almo-badge-comp">🔗 Compartilhado</span>'
+      : '<span class="almo-badge almo-badge-ind">🔒 Só Sênior</span>';
+    const ctrlQtd = soLeitura
+      ? `<div class="almo-qtd-val" style="margin:0 8px">${v.quantidade||0}</div>`
+      : `<div class="almo-qtd-row">
+          <button class="almo-qtd-btn" onclick="atualizarQtdAlmoSr('${_e(id)}',-1)">−</button>
+          <div class="almo-qtd-val">${v.quantidade||0}</div>
+          <button class="almo-qtd-btn" onclick="atualizarQtdAlmoSr('${_e(id)}',1)">+</button>
+        </div>`;
+    const btnDel = soLeitura ? '' : `<button class="almo-del-btn" onclick="deletarAlmoItemSr('${_e(id)}')" title="Remover">🗑</button>`;
+    return `<div class="almo-item">
+      <div class="almo-item-dot" style="background:${t.color}"></div>
+      <div class="almo-item-body">
+        <div class="almo-item-nome">${_e(v.nome||'')}</div>
+        <div class="almo-item-badges">
+          <span class="almo-badge ${t.badgeCls}">${t.emoji} ${t.label}</span>
+          ${compBadge}
+        </div>
+      </div>
+      ${ctrlQtd}${btnDel}
+    </div>`;
+  }).join('');
+}
+
+function renderAlmoSr() {
+  renderChartAlmoSr();
+  renderListaAlmoSr();
+}
+
+async function abrirAlmoSr() {
+  if (!almoCarregadoSr) {
+    const el = document.getElementById('almoListaSr');
+    if (el) el.innerHTML = '<div class="almo-vazio">Carregando…</div>';
+    await carregarAlmoSr();
+    almoCarregadoSr = true;
+  }
+  // Esconder form em modo visualização
+  const formWrap = document.getElementById('almoFormWrapSr');
+  if (formWrap) formWrap.style.display = MODO_VISUALIZACAO_SR ? 'none' : '';
+  renderAlmoSr();
+}
 </script>
 
 <div class="modal-ov" id="youth-modal" onclick="if(event.target===this)hideModal()">
@@ -3075,6 +3440,71 @@ iniciarObservadorHeaderCompacto();
   </div>
   <div id="ep-content"></div>
 </div>
+<!-- ═══ TAB: ALMOXARIFADO ════════════════════════════ -->
+<div id="alm" class="tab-content" style="padding-bottom:80px;">
+  <div class="almo-section">
+    <div class="almo-titulo">📦 Almoxarifado</div>
+    <div class="almo-sub">Materiais da Tropa Sênior. Itens compartilhados aparecem também no painel Escoteira.</div>
+  </div>
+  <div class="almo-section" id="almoFormWrapSr">
+    <div class="almo-form-card">
+      <div class="almo-form-titulo">➕ Adicionar item</div>
+      <label class="almo-campo-label">Nome do item</label>
+      <input type="text" id="almoNomeSr" class="almo-input" placeholder="Ex: Barraca Alpine, Jogo da memória…" autocomplete="off">
+      <div class="almo-form-grid">
+        <div>
+          <label class="almo-campo-label">Tipo</label>
+          <select id="almoTipoSr" class="almo-select">
+            <option value="camping">⛺ Camping</option>
+            <option value="jogos">🎯 Jogos</option>
+            <option value="escritorio">📎 Escritório</option>
+            <option value="distintivos">🏅 Distintivos</option>
+          </select>
+        </div>
+        <div>
+          <label class="almo-campo-label">Qtd.</label>
+          <input type="number" id="almoQtdSr" class="almo-input" value="1" min="0" style="text-align:center;">
+        </div>
+      </div>
+      <div class="almo-toggle-row">
+        <div class="almo-toggle-lbl-wrap">
+          <span class="almo-toggle-lbl">Compartilhado com Escoteira</span>
+          <span class="almo-toggle-sub">Aparece nos dois painéis</span>
+        </div>
+        <label class="almo-toggle">
+          <input type="checkbox" id="almoCompSr">
+          <span class="almo-toggle-slider"></span>
+        </label>
+      </div>
+      <button class="almo-btn-add" onclick="adicionarAlmoItemSr()">+ Adicionar item</button>
+    </div>
+  </div>
+  <div class="almo-busca-wrap-a">
+    <span class="almo-busca-icon-a">🔍</span>
+    <input type="search" id="almoBuscaSr" class="almo-busca-input-a"
+      placeholder="Buscar por nome ou tipo…"
+      autocomplete="off"
+      oninput="filtrarAlmoSr()"
+      onsearch="filtrarAlmoSr()">
+    <button class="almo-busca-clear-a" id="almoBuscaClearSr" onclick="limparBuscaAlmoSr()">✕</button>
+  </div>
+  <div class="almo-chips-wrap" id="almoChipsSr">
+    <button class="almo-chip ativo" onclick="selecionarChipAlmoSr(this,'')">Todos</button>
+    <button class="almo-chip" onclick="selecionarChipAlmoSr(this,'camping')">⛺ Camping</button>
+    <button class="almo-chip" onclick="selecionarChipAlmoSr(this,'jogos')">🎯 Jogos</button>
+    <button class="almo-chip" onclick="selecionarChipAlmoSr(this,'escritorio')">📎 Escritório</button>
+    <button class="almo-chip" onclick="selecionarChipAlmoSr(this,'distintivos')">🏅 Distintivos</button>
+  </div>
+  <div class="almo-chart-card">
+    <div class="almo-chart-titulo">Quantidade por tipo</div>
+    <div id="almoChartSr"></div>
+  </div>
+  <div class="almo-lista-wrap">
+    <div class="almo-lista-count" id="almoCountSr"></div>
+    <div id="almoListaSr"></div>
+  </div>
+</div>
+
 <div class="save-bar" id="saveBarSr">
   <span id="save-status" class="save-bar-status">✓ Sistema carregado</span>
   <label class="sbar-btn" title="Importar backup">
