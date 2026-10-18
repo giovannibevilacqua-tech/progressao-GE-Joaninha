@@ -3279,6 +3279,10 @@ async function adicionarAlmoItemSr() {
       method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(item)
     });
     const res = await r.json();
+    if (!res || !res.name) {
+      alert('Erro ao salvar no Firebase: ' + (res && res.error ? res.error : 'permissão negada. Verifique as regras do banco de dados.'));
+      return;
+    }
     almoItensSr[res.name] = item;
     document.getElementById('almoNomeSr').value = '';
     document.getElementById('almoQtdSr').value = '1';
@@ -3392,12 +3396,12 @@ function renderAlmoSr() {
 }
 
 async function abrirAlmoSr() {
-  if (!almoCarregadoSr) {
+  // Sempre recarrega do Firebase para garantir que itens compartilhados apareçam
+  if (Object.keys(almoItensSr).length === 0) {
     const el = document.getElementById('almoListaSr');
     if (el) el.innerHTML = '<div class="almo-vazio">Carregando…</div>';
-    await carregarAlmoSr();
-    almoCarregadoSr = true;
   }
+  await carregarAlmoSr();
   // Esconder form em modo visualização
   const formWrap = document.getElementById('almoFormWrapSr');
   if (formWrap) formWrap.style.display = MODO_VISUALIZACAO_SR ? 'none' : '';

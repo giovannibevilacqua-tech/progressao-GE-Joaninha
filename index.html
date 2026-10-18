@@ -4254,6 +4254,10 @@ async function adicionarAlmoItemEsc() {
       method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(item)
     });
     const res = await r.json();
+    if (!res || !res.name) {
+      alert('Erro ao salvar no Firebase: ' + (res && res.error ? res.error : 'permissão negada. Verifique as regras do banco de dados.'));
+      return;
+    }
     almoItensEsc[res.name] = item;
     document.getElementById('almoNomeEsc').value = '';
     document.getElementById('almoQtdEsc').value = '1';
@@ -4361,12 +4365,12 @@ function renderAlmoEsc() {
 }
 
 async function abrirAlmoEsc() {
-  if (!almoCarregadoEsc) {
+  // Sempre recarrega do Firebase para garantir que itens compartilhados apareçam
+  if (Object.keys(almoItensEsc).length === 0) {
     const el = document.getElementById('almoListaEsc');
     if (el) el.innerHTML = '<div class="almo-vazio">Carregando…</div>';
-    await carregarAlmoEsc();
-    almoCarregadoEsc = true;
   }
+  await carregarAlmoEsc();
   renderAlmoEsc();
 }
 
