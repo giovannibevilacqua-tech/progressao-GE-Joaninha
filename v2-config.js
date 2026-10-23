@@ -11,10 +11,10 @@ window.V2_CONFIG = {
   RAIZ: "v2",
 
   // Nomes das páginas: "-v2" durante o teste; "" quando você for oficializar.
-  SUFIXO: "-v2",
+  SUFIXO: "",
 
   // true = mostra a faixa laranja "VERSÃO DE TESTE". Mude para false ao oficializar.
-  MODO_TESTE: true,
+  MODO_TESTE: false,
 
   // Listas de objetos que têm "id" próprio: viram nós pelo id (e não pela posição).
   ID_ARRAYS: {
