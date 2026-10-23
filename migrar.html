@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Migração para a v2</title>
+<script src="v2-config.js"></script>
+<script src="v2-core.js"></script>
+<style>
+  :root{--vinho:#6D1026;--bg:#F6F3EF;--card:#fff;--ok:#1E7B3A;--erro:#C0392B;--aviso:#B45309;--muted:#6b6b6b;--borda:#e4ded6}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#222;line-height:1.45}
+  main{max-width:760px;margin:0 auto;padding:18px 16px 60px}
+  h1{font-size:22px;margin:6px 0 2px;color:var(--vinho)}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:16px}
+  .card{background:var(--card);border:1px solid var(--borda);border-radius:12px;padding:14px 16px;margin:12px 0}
+  .card h2{font-size:15px;margin:0 0 4px}
+  .card p{margin:4px 0 10px;font-size:13px;color:#444}
+  button{font:700 14px inherit;font-family:inherit;border:none;border-radius:9px;padding:10px 16px;background:var(--vinho);color:#fff;cursor:pointer}
+  button:disabled{opacity:.45;cursor:default}
+  button.sec{background:#eee;color:#333}
+  button.perigo{background:var(--erro)}
+  .num{display:inline-block;background:var(--vinho);color:#fff;border-radius:50%;width:22px;height:22px;text-align:center;font-size:12px;line-height:22px;margin-right:6px}
+  #log{background:#14110f;color:#e8e2da;border-radius:10px;padding:10px 12px;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;max-height:340px;overflow:auto;min-height:60px}
+  .ok{color:#6fdc8c}.err{color:#ff8a7a}.warn{color:#ffc46b}
+  #sessao{font-size:13px}
+  label.chk{display:flex;gap:8px;align-items:flex-start;font-size:13px;margin:8px 0}
+  table{border-collapse:collapse;font-size:12px;width:100%}td,th{border-bottom:1px solid var(--borda);padding:4px 6px;text-align:left}
+</style>
+</head>
+<body>
+<main>
+  <h1>⚜ Migração para a v2</h1>
+  <div class="sub">Copia os dados do app atual para a pasta nova <b>/<span id="raiz"></span></b> do banco. Os anexos ficam separados, em <b>/<span id="raiz3"></span>/anexos</b> (sem Storage, sem custo). <b>Nada do app atual é alterado ou apagado.</b></div>
+
+  <div class="card" id="sessao">Verificando login…</div>
+
+  <div class="card">
+    <h2><span class="num">1</span>Conferir conexão</h2>
+    <p>Testa seu login, a leitura dos dados atuais e a escrita na pasta nova.</p>
+    <button id="b1" disabled>Conferir</button>
+  </div>
+  <div class="card">
+    <h2><span class="num">2</span>Simular (não grava nada)</h2>
+    <p>Lê os dados atuais, mostra quantos anexos existem e confere se a conversão não perde nenhuma informação.</p>
+    <button id="b2" disabled>Simular</button>
+  </div>
+  <div class="card">
+    <h2><span class="num">3</span>Migrar para o teste</h2>
+    <p>Move os anexos para a área de anexos e grava os dados na pasta <b>/<span class="raiz2"></span></b>. Pode repetir à vontade: cada vez, a cópia de teste é refeita a partir dos dados atuais.</p>
+    <label class="chk"><input type="checkbox" id="ciente"> Entendo que isso substitui o que estiver na pasta de teste (/<span class="raiz2"></span>), mas não mexe no app oficial.</label>
+    <button id="b3" disabled>Migrar</button>
+  </div>
+  <div class="card">
+    <h2><span class="num">4</span>Conferir se ficou igual</h2>
+    <p>Lê de volta a cópia de teste e compara com os dados atuais, campo por campo.</p>
+    <button id="b4" disabled>Conferir cópia</button>
+  </div>
+  <div class="card">
+    <h2><span class="num">5</span>Apagar a cópia de teste <span style="font-weight:400;color:var(--muted)">(opcional)</span></h2>
+    <p>Apaga só a pasta /<span class="raiz2"></span> do banco (dados e anexos de teste). Útil para recomeçar do zero.</p>
+    <button id="b5" class="perigo" disabled>Apagar cópia de teste</button>
+  </div>
+
+  <div class="card"><h2>Registro</h2><div id="log"></div></div>
+</main>
+<script>
+const C = window.V2_CONFIG, DB = C.DB_URL;
+const NOS = [
+  { chave: 'escoteira', antigo: '/tropaProgressao/json.json', nome: 'Tropa Escoteira' },
+  { chave: 'senior',    antigo: '/tropaSenior/json.json',     nome: 'Tropa Sênior' }
+];
+let sess = null, ocupado = false;
+const $ = id => document.getElementById(id);
+document.getElementById('raiz').textContent = C.RAIZ; const r3=document.getElementById('raiz3'); if(r3) r3.textContent = C.RAIZ;
+document.querySelectorAll('.raiz2').forEach(e => e.textContent = C.RAIZ);
+
+function log(t, cls) {
+  const d = document.createElement('div'); if (cls) d.className = cls; d.textContent = t;
+  $('log').appendChild(d); $('log').scrollTop = 1e9;
+}
+const MB = n => (n / 1048576).toFixed(2) + ' MB';
+
+/* ----- login (usa a mesma sessão do app) ----- */
+function lerSessao() { try { return JSON.parse(localStorage.getItem('chefeSessao')); } catch (e) { return null; } }
+async function renovar() {
+  const s = lerSessao(); if (!s || !s.refreshToken) throw new Error('Sem sessão');
+  const r = await fetch('https://securetoken.googleapis.com/v1/token?key=' + C.API_KEY, {
+    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(s.refreshToken)
+  });
+  const j = await r.json();
+  if (!j.id_token) throw new Error('Não consegui renovar o login');
+  s.idToken = j.id_token; s.refreshToken = j.refresh_token; s.expiraEm = Date.now() + 55 * 60 * 1000;
+  try { localStorage.setItem('chefeSessao', JSON.stringify(s)); } catch (e) {}
+  sess = s;
+}
+async function iniciarSessao() {
+  const s = lerSessao();
+  if (!s) return false;
+  sess = s;
+  if (Date.now() >= (s.expiraEm || 0) || !s.idToken) await renovar();
+  return true;
+}
+V2.configurarAuth({ getToken: () => sess && sess.idToken, renovar: renovar });
+const tok = () => sess.idToken;
+
+/* ----- helpers de banco ----- */
+async function dbFetch(caminho, opt) {
+  for (let t = 0; t < 2; t++) {
+    const r = await fetch(DB + caminho + (caminho.includes('?') ? '&' : '?') + 'auth=' + encodeURIComponent(tok()), opt);
+    if ((r.status === 401 || r.status === 403) && t === 0) { try { await renovar(); continue; } catch (e) {} }
+    return r;
+  }
+}
+async function lerAntigo(no) {
+  const r = await dbFetch(no.antigo);
+  if (!r.ok) throw new Error(no.nome + ': não consegui ler os dados atuais (HTTP ' + r.status + ')');
+  const v = await r.json();
+  if (v === null) return null;
+  return typeof v === 'string' ? JSON.parse(v) : v;
+}
+const clone = o => JSON.parse(JSON.stringify(o));
+
+function contarAnexos(obj) {
+  let n = 0, bytes = 0, grandes = [];
+  (function andar(v, cam) {
+    if (!v || typeof v !== 'object') return;
+    if (V2.ehAnexoInline(v)) { n++; bytes += v.size || 0; grandes.push([cam, v.name, v.size || 0]); return; }
+    Object.keys(v).forEach(k => andar(v[k], cam + '/' + k));
+  })(obj, '');
+  return { n, bytes, lista: grandes };
+}
+// remove o que muda de propósito (anexo vira link) antes de comparar
+function semBinario(v) {
+  if (Array.isArray(v)) return v.map(semBinario);
+  if (v && typeof v === 'object') {
+    if (typeof v.name === 'string' && ('data' in v || 'ref' in v) && 'size' in v) return { name: v.name, type: v.type, size: v.size };
+    const o = {}; Object.keys(v).forEach(k => o[k] = semBinario(v[k])); return o;
+  }
+  return v;
+}
+
+function travar(on) {
+  ocupado = on;
+  ['b1', 'b2', 'b3', 'b4', 'b5'].forEach(id => $(id).disabled = on || !sess);
+}
+async function rodar(fn) {
+  if (ocupado) return;
+  travar(true);
+  try { await fn(); } catch (e) { log('✖ ' + (e.message || e), 'err'); console.error(e); }
+  travar(false);
+}
+
+/* ----- 1. conferir ----- */
+$('b1').onclick = () => rodar(async () => {
+  log('— Conferindo conexão —');
+  log('✔ Login: registro ' + (sess.registro || '?'), 'ok');
+  for (const no of NOS) {
+    const d = await lerAntigo(no);
+    log(d ? `✔ ${no.nome}: dados atuais lidos (${Object.keys(d).length} campos)` : `⚠ ${no.nome}: ainda não há dados atuais`, d ? 'ok' : 'warn');
+  }
+  let r = await dbFetch('/' + C.RAIZ + '/_teste.json', { method: 'PUT', body: JSON.stringify(Date.now()) });
+  if (!r.ok) throw new Error('Não consegui GRAVAR em /' + C.RAIZ + ' (HTTP ' + r.status + '). Falta incluir as regras do passo 3 do tutorial.');
+  await dbFetch('/' + C.RAIZ + '/_teste.json', { method: 'DELETE' });
+  log('✔ Banco: leitura e escrita em /' + C.RAIZ + ' funcionando', 'ok');
+  try {
+    await V2.gravarAnexo('_teste', 'b2s=');
+    await V2.removerAnexo({ ref: '_teste' });
+    log('✔ Anexos: gravação na área de anexos funcionando', 'ok');
+  } catch (e) {
+    throw new Error('Anexos: ' + e.message + '\nConfira as regras do passo 2 do tutorial.');
+  }
+  log('Tudo certo para seguir.', 'ok');
+});
+
+/* ----- 2. simular ----- */
+async function analisar(no) {
+  const d = await lerAntigo(no);
+  if (!d) { log(`⚠ ${no.nome}: nada para migrar`, 'warn'); return null; }
+  const a = contarAnexos(d);
+  const copia = clone(d);
+  a.lista.forEach(([c]) => {}); // (os anexos ficam como estão na simulação)
+  const ids = C.ID_ARRAYS[no.chave];
+  const arvore = V2.encDados(copia, ids);
+  const volta = V2.decDados(JSON.parse(JSON.stringify(arvore)), ids);
+  const igual = V2.canonStr(volta) === V2.canonStr(copia);
+  const folhas = Object.keys(V2.flatten(arvore)).length;
+  log(`${igual ? '✔' : '✖'} ${no.nome}: ${Object.keys(d).length} campos → ${folhas} nós no banco; ${a.n} anexo(s) (${MB(a.bytes)}) serão movidos para a área de anexos; conversão ${igual ? 'sem perdas' : 'COM DIFERENÇAS'}`, igual ? 'ok' : 'err');
+  a.lista.forEach(x => log('    anexo: ' + x[1] + ' (' + MB(x[2]) + ')'));
+  if (!igual) throw new Error('A conversão de ' + no.nome + ' não bateu — NÃO migre e me avise.');
+  return d;
+}
+$('b2').onclick = () => rodar(async () => {
+  log('— Simulação (nada é gravado) —');
+  for (const no of NOS) await analisar(no);
+  log('Simulação concluída.', 'ok');
+});
+
+/* ----- 3. migrar ----- */
+$('b3').onclick = () => rodar(async () => {
+  if (!$('ciente').checked) { log('Marque a caixinha de ciência antes de migrar.', 'warn'); return; }
+  if (!confirm('Copiar os dados atuais para /' + C.RAIZ + ' (teste)?\nO app oficial não será alterado.')) return;
+  log('— Migrando —');
+  for (const no of NOS) {
+    const d = await analisar(no);
+    if (!d) continue;
+    const n = await V2.garantirAnexos(d, no.chave, (i, t, att) => log(`    ↑ anexo ${i}/${t}: ${att.name}`));
+    if (n) log(`✔ ${no.nome}: ${n} anexo(s) movidos para a área de anexos`, 'ok');
+    const arvore = V2.encDados(d, C.ID_ARRAYS[no.chave]);
+    const r = await dbFetch('/' + C.RAIZ + '/' + no.chave + '.json', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(arvore) });
+    if (!r.ok) throw new Error(no.nome + ': falha ao gravar (HTTP ' + r.status + ')');
+    log(`✔ ${no.nome}: dados gravados em /${C.RAIZ}/${no.chave}`, 'ok');
+  }
+  log('Migração concluída. Agora rode o passo 4 e depois abra index' + C.SUFIXO + '.html para testar.', 'ok');
+});
+
+/* ----- 4. conferir ----- */
+$('b4').onclick = () => rodar(async () => {
+  log('— Conferindo a cópia —');
+  let tudoOk = true;
+  for (const no of NOS) {
+    const antigo = await lerAntigo(no);
+    const r = await dbFetch('/' + C.RAIZ + '/' + no.chave + '.json');
+    if (!r.ok) throw new Error(no.nome + ': não consegui ler a cópia (HTTP ' + r.status + ')');
+    const arvore = await r.json();
+    if (!antigo && !arvore) { log(`${no.nome}: vazio dos dois lados`, 'warn'); continue; }
+    if (!arvore) { log(`✖ ${no.nome}: a cópia está vazia — rode o passo 3`, 'err'); tudoOk = false; continue; }
+    const novo = V2.decDados(arvore, C.ID_ARRAYS[no.chave]);
+    const a = V2.canon(semBinario(antigo)), b = V2.canon(semBinario(novo));
+    const campos = new Set([...Object.keys(a), ...Object.keys(b)]);
+    const difs = [...campos].filter(k => JSON.stringify(a[k]) !== JSON.stringify(b[k]));
+    if (!difs.length) log(`✔ ${no.nome}: IGUAL ao app atual (${campos.size} campos conferidos)`, 'ok');
+    else { tudoOk = false; log(`✖ ${no.nome}: diferenças nos campos: ${difs.join(', ')}`, 'err'); log('    (se alguém editou o app oficial depois da migração, é normal: rode o passo 3 de novo)', 'warn'); }
+    // anexos da cópia: o link responde?
+    let falhas = 0, total = 0;
+    const refs = []; (function andar(v) { if (v && typeof v === 'object') { if (typeof v.ref === 'string') refs.push(v.ref); else Object.values(v).forEach(andar); } })(novo);
+    for (const ref of refs) { total++; try { const h = await dbFetch('/' + C.RAIZ + '/anexos/' + ref + '.json?shallow=true'); const j = h.ok ? await h.json() : null; if (!j || !j.data) falhas++; } catch (e) { falhas++; } }
+    if (total) log(`    anexos na cópia: ${total} (${falhas ? falhas + ' NÃO encontrados' : 'todos presentes'})`, falhas ? 'err' : 'ok');
+  }
+  log(tudoOk ? 'Cópia conferida: pode testar o app v2.' : 'Há diferenças — veja acima.', tudoOk ? 'ok' : 'warn');
+});
+
+/* ----- 5. apagar teste ----- */
+$('b5').onclick = () => rodar(async () => {
+  if (!confirm('Apagar TODA a cópia de teste (/' + C.RAIZ + ', incluindo anexos de teste)?\nO app oficial não é afetado.')) return;
+  log('— Apagando cópia de teste —');
+  const r = await dbFetch('/' + C.RAIZ + '.json', { method: 'DELETE' });
+  if (!r.ok) throw new Error('Falha ao apagar o banco de teste (HTTP ' + r.status + ')');
+  log('✔ Banco de teste apagado', 'ok');
+  log('✔ Anexos de teste apagados junto', 'ok');
+});
+
+/* ----- início ----- */
+(async () => {
+  try {
+    if (!(await iniciarSessao())) {
+      $('sessao').innerHTML = '⚠ <b>Você não está logada.</b> Abra o <a href="index.html">app oficial (index.html)</a>, entre com seu registro e volte a esta página.';
+      return;
+    }
+    $('sessao').innerHTML = '✔ Logada como registro <b>' + (sess.registro || '?') + '</b>.';
+    travar(false);
+  } catch (e) {
+    $('sessao').innerHTML = '⚠ Sessão expirada. Abra o <a href="index.html">index.html</a>, faça login de novo e volte aqui.';
+  }
+})();
+</script>
+</body>
+</html>
