@@ -22,7 +22,10 @@ window.V2_CONFIG = {
     senior: ["PATRULHAS_SR"]
   },
 
-  LIMITE_ANEXO_MB: 3
+  LIMITE_ANEXO_MB: 3,
+
+  // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
+  VERSAO: "2026-10-23b"
 };
 
 /* ============================================================
@@ -471,7 +474,7 @@ window.V2_CONFIG = {
     var fim = aviso(texto || 'Enviando arquivo…');
     try { return await promessa; } finally { fim(); }
   }
-  function pagina(nome) { return nome + (CFG.SUFIXO || '') + '.html'; }
+  function pagina(nome, query) { return nome + (CFG.SUFIXO || '') + '.html?' + (query ? query + '&' : '') + 'v=' + encodeURIComponent(CFG.VERSAO || ''); }
 
   function bannerTeste() {
     if (typeof document === 'undefined' || !CFG.MODO_TESTE) return;

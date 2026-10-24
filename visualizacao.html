@@ -260,7 +260,7 @@ try { localStorage.setItem('visualizacao_ramoAtivo', r); } catch (e) {}
 window.scrollTo(0, 0);
 if (r === 'senior') {
 const iframe = document.getElementById('iframeSeniorView');
-if (!iframe.src) iframe.src = V2.pagina('tropa-senior') + '?view=1';
+if (!iframe.src) iframe.src = V2.pagina('tropa-senior', 'view=1');
 requestAnimationFrame(ajustarAlturaIframeSeniorView);
 setTimeout(ajustarAlturaIframeSeniorView, 50);
 } else if (r === 'escoteira') {
