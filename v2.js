@@ -54,7 +54,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-10-23f"
+  VERSAO: "2026-10-23g"
 };
 
 /* ============================================================
@@ -750,6 +750,38 @@ window.V2_CONFIG = {
     setTimeout(function () { try { w.focus(); w.print(); } catch (e) {} }, 500);
   }
 
+  // r = { tropa, resumo:{jovens, media, total}, etapas:[[nome,qtd]], colunas:[{nome,cor,total}], linhas:[{nome,patrulha,cargo,n,total,etapa,porEixo:[n],presenca}] }
+  function abrirRelatorioTropa(r) {
+    var w = window.open('', '_blank');
+    if (!w) { alert('O navegador bloqueou a janela do relatório. Permita pop-ups para este site e tente de novo.'); return; }
+    var hoje = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+    var h = '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Relatório da ' + escHtml(r.tropa) + '</title><style>' +
+      '*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#222;margin:0;padding:24px;max-width:1000px;margin:auto;font-size:12px;line-height:1.4}' +
+      'header{border-bottom:3px solid #6D1026;padding-bottom:10px;margin-bottom:14px}h1{margin:0;font-size:22px;color:#6D1026}.sub{color:#666;font-size:12px;margin-top:2px}' +
+      '.cards{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}.card{background:#F6EFEA;border-radius:8px;padding:10px 14px;min-width:120px}.card b{display:block;font-size:20px;color:#6D1026}' +
+      'table{width:100%;border-collapse:collapse;margin-top:8px}th{background:#6D1026;color:#fff;text-align:left;padding:6px 8px;font-size:11px}th.e{text-align:center;color:#fff}td{padding:6px 8px;border-bottom:1px solid #EEE;vertical-align:middle}td.c{text-align:center}' +
+      '.barra{height:7px;background:#E4D9D0;border-radius:4px;overflow:hidden;min-width:60px}.barra i{display:block;height:100%;background:#6D1026}tr{break-inside:avoid}' +
+      'footer{margin-top:20px;border-top:1px solid #DDD;padding-top:8px;color:#888;font-size:11px}.btn{position:fixed;right:14px;top:14px;background:#6D1026;color:#fff;border:0;border-radius:20px;padding:10px 16px;font-size:13px;cursor:pointer}' +
+      '@media print{.btn{display:none}body{padding:0}}@page{margin:12mm;size:A4 landscape}</style></head><body>' +
+      '<button class="btn" onclick="window.print()">🖨 Imprimir / Salvar como PDF</button>' +
+      '<header><h1>' + escHtml(r.tropa) + '</h1><div class="sub">GE Joaninha · Relatório de progressão da tropa · ' + escHtml(hoje) + '</div></header>' +
+      '<div class="cards"><div class="card"><b>' + r.resumo.jovens + '</b>jovens</div><div class="card"><b>' + r.resumo.media + '</b>média de blocos concluídos (de ' + r.resumo.total + ')</div>' +
+      (r.etapas || []).map(function (e) { return '<div class="card"><b>' + e[1] + '</b>' + escHtml(e[0]) + '</div>'; }).join('') + '</div>' +
+      '<table><thead><tr><th>Jovem</th><th>Patrulha</th><th>Cargo</th><th>Etapa</th><th>Blocos</th>' +
+      (r.colunas || []).map(function (c) { return '<th class="e" style="background:' + escHtml(c.cor) + '">' + escHtml(c.nome) + '</th>'; }).join('') +
+      '<th class="e">Presença</th></tr></thead><tbody>' +
+      r.linhas.map(function (l) {
+        var pct = l.total ? Math.round(l.n / l.total * 100) : 0;
+        return '<tr><td><b>' + escHtml(l.nome) + '</b></td><td>' + escHtml(l.patrulha) + '</td><td>' + escHtml(l.cargo) + '</td><td>' + escHtml(l.etapa) + '</td>' +
+          '<td style="min-width:110px">' + l.n + '/' + l.total + '<div class="barra"><i style="width:' + pct + '%"></i></div></td>' +
+          l.porEixo.map(function (n, i) { return '<td class="c">' + n + '/' + r.colunas[i].total + '</td>'; }).join('') +
+          '<td class="c">' + escHtml(l.presenca || '—') + '</td></tr>';
+      }).join('') + '</tbody></table>' +
+      '<footer>Relatório gerado pelo sistema de progressão do GE Joaninha. Os dados refletem o que estava registrado no momento da emissão.</footer></body></html>';
+    w.document.open(); w.document.write(h); w.document.close();
+    setTimeout(function () { try { w.focus(); w.print(); } catch (e) {} }, 500);
+  }
+
   /* ---------- lembrete mensal de backup (admins) ---------- */
   // Janela: últimos 5 dias do mês até o dia 5 do mês seguinte. Devolve "AAAA-MM" do mês a fechar, ou null fora da janela.
   function cicloBackup(d) {
@@ -808,7 +840,7 @@ window.V2_CONFIG = {
   }
 
   root.V2 = {
-    abrirRelatorio: abrirRelatorio,
+    abrirRelatorio: abrirRelatorio, abrirRelatorioTropa: abrirRelatorioTropa,
     snapshot: snapshot, listarSnapshots: listarSnapshots, lerSnapshot: lerSnapshot, protegerAntes: protegerAntes,
     resumirDiff: resumirDiff, registrarHistorico: registrarHistorico, lerHistorico: lerHistorico, podarHistorico: podarHistorico, limparCacheLocal: limparCacheLocal, temPendenciaLocal: temPendenciaLocal,
     hashSenha: hashSenha, conferirSenha: conferirSenha, senhaComHash: senhaComHash,

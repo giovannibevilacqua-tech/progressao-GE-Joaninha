@@ -412,6 +412,7 @@ mark.hl{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
   <div class="progress-section">
     <div class="section-label">Progresso por Jovem</div>
     <div id="pbars"></div>
+    <button class="btn-ic" style="width:100%;margin:8px 0;padding:9px;" onclick="relatorioTropaSr()">📄 Relatório da tropa em PDF</button>
     <div class="prog-hint">
       Escalada: 0–5 ✓ &nbsp;|&nbsp; Conquista: 6–11 ✓ &nbsp;|&nbsp; Azimute: 12–17 ✓ &nbsp;|&nbsp; Reconhecimento Escoteiro da Pátria: 18 ✓
     </div>
@@ -2638,6 +2639,31 @@ function saveYouth(){
   if(isNew){
     alert('Jovem adicionado com sucesso!\nEle aparece agora em Progressão, Calendário e Escoteiro da Pátria.');
   }
+}
+function relatorioTropaSr(){
+  const cores = { hv: '#E0355F', ma: '#5CB85C', pd: '#1B3B6F', sb: '#DB9270' };
+  const feito = (bl, yid) => bl && bl.concluded && bl.concluded[yid] === 1;
+  const marcadas = Object.values(PRESENCA).filter(ev => ev && typeof ev === 'object' && Object.keys(ev).length > 0);
+  const chaves = Object.keys(EIXOS);
+  const linhas = actJ().map(it => {
+    const yid = it.yid, y = YOUTH_DATA.find(v => v.id === yid) || {};
+    const n = BLOCKS.filter(b => feito(S[b.id], yid)).length;
+    const pat = (PATRULHAS_SR || []).find(p => p.id === (PATRULHA_DE_SR || {})[yid]);
+    return {
+      nome: y.name || JNOMES[it.i], patrulha: pat ? pat.nome : '', cargo: y.role || '', n, total: BLOCKS.length,
+      etapa: etapa(n).l.replace(/\s*⭐/, ''),
+      porEixo: chaves.map(k => EIXOS[k].blockIds.filter(id => feito(S[id], yid)).length),
+      presenca: marcadas.length ? Math.round(marcadas.filter(ev => ev[yid] === 1).length / marcadas.length * 100) + '%' : ''
+    };
+  }).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+  const cont = {}; linhas.forEach(l => { cont[l.etapa] = (cont[l.etapa] || 0) + 1; });
+  V2.abrirRelatorioTropa({
+    tropa: 'Tropa Sênior',
+    resumo: { jovens: linhas.length, media: linhas.length ? (linhas.reduce((s, l) => s + l.n, 0) / linhas.length).toFixed(1).replace('.', ',') : '0', total: BLOCKS.length },
+    etapas: Object.keys(cont).map(k => [k, cont[k]]),
+    colunas: chaves.map(k => ({ nome: EIXOS[k].label, cor: cores[k] || '#6D1026', total: EIXOS[k].blockIds.length })),
+    linhas
+  });
 }
 function relatorioJovemSr(yid){
   const y = YOUTH_DATA.find(v => v.id === yid); if (!y) return;
