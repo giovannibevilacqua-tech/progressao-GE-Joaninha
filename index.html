@@ -753,6 +753,7 @@ REGISTRO ESCOTEIRO
 <div class="conta-barra">
 <span class="conta-barra-registro">👤 <strong id="contaRegistroTxt"></strong></span>
 <button class="conta-barra-btn" id="btnGerenciarChefes" style="display:none;" onclick="abrirGerenciarChefes()">⚙️ Gerenciar Chefes</button>
+<button class="conta-barra-btn" id="btnRelatorioTropa" onclick="relatorioDaTropaAtual()">📄 Relatório da tropa</button>
 <button class="conta-barra-btn somente-admin" id="btnHistorico" onclick="abrirHistorico()">📜 Histórico</button>
 <button class="conta-barra-btn" onclick="if(confirm('Sair da sua conta neste navegador?'))fazerLogout()">🚪 Sair</button>
 </div>
@@ -1580,8 +1581,8 @@ function iniciarSync() {
         const nomeDe = (id) => (Object.prototype.hasOwnProperty.call(JNOMES, id) ? JNOMES[id] : null);
         V2.registrarHistorico('escoteira', registroLogado, nomeLogado, V2.resumirDiff(d, nomeDe), Object.keys(d.sets).length + Object.keys(d.dels).length);
       },
-      onErroCarga: () => {
-        alert('⚠️ Não consegui carregar os dados (versão v2).\n\nO app abriu vazio e o SALVAMENTO FICOU BLOQUEADO para não apagar nada. Recarregue a página; se continuar, confira a internet, o login e as regras do banco.');
+      onErroCarga: (e) => {
+        alert('⚠️ Não consegui carregar os dados (versão v2).\n\nO app abriu vazio e o SALVAMENTO FICOU BLOQUEADO para não apagar nada. Recarregue a página; se continuar, confira a internet, o login e as regras do banco.\n\nMotivo técnico: ' + String((e && e.message) || e));
       },
       onDados: (dados, primeira) => {
         try { aplicarDadosEscoteira(dados, primeira); }
@@ -2554,6 +2555,13 @@ function toggleFixa(j, b, i) { S[j][b].fixas[i] = S[j][b].fixas[i] ? 0 : 1; temA
 function toggleVar(j, b, i) { S[j][b].variaveis[i] = S[j][b].variaveis[i] ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); preservarScrollFicha(() => { renderRoster(); renderDetail(j); }); }
 function toggleEsp(j, b) { S[j][b].especialidade = S[j][b].especialidade ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); preservarScrollFicha(() => { renderRoster(); renderDetail(j); }); }
 
+function relatorioDaTropaAtual() {
+  const sr = document.getElementById('pagina-senior');
+  const noSenior = sr && sr.style.display !== 'none';
+  if (!noSenior) { relatorioTropa(); return; }
+  const f = document.getElementById('iframeSenior');
+  try { f.contentWindow.relatorioTropaSr(); } catch (e) { alert('Abra a aba da Tropa Sênior e espere carregar antes de gerar o relatório.'); }
+}
 function relatorioTropa() {
   const hoje = new Date().toISOString().slice(0, 10);
   const chamadas = EVENTOS.filter(e => e.data && e.data <= hoje && (e.presentes || []).length > 0);

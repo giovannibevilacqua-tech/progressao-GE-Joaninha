@@ -18,7 +18,7 @@ if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScop
     const u = new URL(r.url);
     if (u.origin !== location.origin) return; // Firebase e outros sites passam direto
     e.respondWith(
-      fetch(r).then((res) => {
+      fetch(r, { cache: 'no-cache' }).then((res) => { // 'no-cache': sempre confere se há versão nova (não usa a cópia temporária do navegador)
         if (res && res.ok) { const cp = res.clone(); caches.open(CACHE).then((c) => c.put(r, cp)); }
         return res;
       }).catch(() => caches.match(r, { ignoreSearch: true }).then((m) => m || caches.match('index.html')))
