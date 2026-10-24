@@ -54,7 +54,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-10-23g"
+  VERSAO: "2026-10-23h"
 };
 
 /* ============================================================
@@ -717,69 +717,193 @@ window.V2_CONFIG = {
 
   /* ---------- relatório de progressão (abre uma página pronta para imprimir / salvar como PDF) ---------- */
   function escHtml(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
-  // r = { tropa, nome, info:[[rotulo,valor]], resumo:{n,total,etapa}, eixos:[{nome,cor,feitos,total,blocos:[{nome,ok,detalhe}]}], presenca:{presentes,ausentes,total}|null }
-  // Chame direto do clique (antes de qualquer espera) para o navegador não bloquear a janela.
-  function abrirRelatorio(r) {
-    var w = window.open('', '_blank');
-    if (!w) { alert('O navegador bloqueou a janela do relatório. Permita pop-ups para este site e tente de novo.'); return; }
-    var pct = r.resumo.total ? Math.round(r.resumo.n / r.resumo.total * 100) : 0;
-    var hoje = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
-    var h = '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Relatório — ' + escHtml(r.nome) + '</title><style>' +
-      '*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#222;margin:0;padding:24px;max-width:820px;margin:auto;font-size:13px;line-height:1.4}' +
-      'header{border-bottom:3px solid #6D1026;padding-bottom:10px;margin-bottom:14px}h1{margin:0;font-size:22px;color:#6D1026}.sub{color:#666;font-size:12px;margin-top:2px}' +
-      '.info{display:grid;grid-template-columns:1fr 1fr;gap:4px 18px;margin:12px 0}.info div span{color:#777}' +
-      '.resumo{background:#F6EFEA;border-radius:8px;padding:12px 14px;margin:12px 0}.resumo b{font-size:16px}.barra{height:10px;background:#E4D9D0;border-radius:6px;margin-top:8px;overflow:hidden}.barra i{display:block;height:100%;background:#6D1026}' +
-      '.eixo{margin-top:14px;break-inside:avoid}.eixo h2{font-size:14px;margin:0 0 6px;padding:6px 10px;border-radius:6px;color:#fff;display:flex;justify-content:space-between}' +
-      'table{width:100%;border-collapse:collapse}td{padding:5px 8px;border-bottom:1px solid #EEE;vertical-align:top}td.s{width:26px;text-align:center;font-weight:bold}.ok{color:#1E8449}.pend{color:#B0A89F}td.d{color:#666;text-align:right;white-space:nowrap}' +
-      'footer{margin-top:22px;border-top:1px solid #DDD;padding-top:8px;color:#888;font-size:11px}.btn{position:fixed;right:14px;top:14px;background:#6D1026;color:#fff;border:0;border-radius:20px;padding:10px 16px;font-size:13px;cursor:pointer}' +
-      '@media print{.btn{display:none}body{padding:0}}@page{margin:14mm}</style></head><body>' +
-      '<button class="btn" onclick="window.print()">🖨 Imprimir / Salvar como PDF</button>' +
-      '<header><h1>' + escHtml(r.nome) + '</h1><div class="sub">' + escHtml(r.tropa) + ' · GE Joaninha · Relatório de progressão · ' + escHtml(hoje) + '</div></header>';
-    if (r.info && r.info.length) h += '<div class="info">' + r.info.filter(function (i) { return i[1]; }).map(function (i) { return '<div><span>' + escHtml(i[0]) + ':</span> ' + escHtml(i[1]) + '</div>'; }).join('') + '</div>';
-    h += '<div class="resumo"><b>' + r.resumo.n + ' de ' + r.resumo.total + ' blocos concluídos</b> (' + pct + '%)' + (r.resumo.etapa ? ' — etapa: <b>' + escHtml(r.resumo.etapa) + '</b>' : '') + '<div class="barra"><i style="width:' + pct + '%"></i></div></div>';
-    if (r.presenca && r.presenca.total) {
-      var pp = Math.round(r.presenca.presentes / r.presenca.total * 100);
-      h += '<div class="resumo"><b>Presença:</b> ' + r.presenca.presentes + ' presença(s) em ' + r.presenca.total + ' atividade(s) com chamada (' + pp + '%)' + (r.presenca.ausentes ? ' · ' + r.presenca.ausentes + ' falta(s)' : '') + '</div>';
+  /* ---------- relatórios em PDF (o arquivo PDF é montado aqui mesmo, sem janela de impressão: funciona no app instalado do celular) ---------- */
+  function criarPdf(W, H) {
+    var paginas = [], cur = null;
+    function nova() { cur = []; paginas.push(cur); }
+    nova();
+    function rgb(hex) { var n = parseInt(String(hex || '#000000').replace('#', ''), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(function (x) { return (x / 255).toFixed(3); }).join(' '); }
+    var MAPA = { '—': '-', '–': '-', '’': "'", '‘': "'", '“': '"', '”': '"', '…': '...', '•': '-' };
+    function lat1(s) {
+      var o = '';
+      String(s == null ? '' : s).split('').forEach(function (ch) {
+        var c = ch.charCodeAt(0);
+        if (MAPA[ch]) o += MAPA[ch]; else if (c >= 32 && c <= 126 || c >= 160 && c <= 255) o += ch; else if (c < 32) o += ' '; else o += '?';
+      });
+      return o.replace(/[\\()]/g, '\\$&');
     }
-    (r.eixos || []).forEach(function (e) {
-      h += '<div class="eixo"><h2 style="background:' + escHtml(e.cor) + '"><span>' + escHtml(e.nome) + '</span><span>' + e.feitos + '/' + e.total + '</span></h2><table>' +
-        e.blocos.map(function (b) { return '<tr><td class="s ' + (b.ok ? 'ok' : 'pend') + '">' + (b.ok ? '✓' : '○') + '</td><td>' + escHtml(b.nome) + '</td><td class="d">' + escHtml(b.detalhe) + '</td></tr>'; }).join('') + '</table></div>';
-    });
-    h += '<footer>Relatório gerado pelo sistema de progressão do GE Joaninha. Os dados refletem o que estava registrado no momento da emissão.</footer></body></html>';
-    w.document.open(); w.document.write(h); w.document.close();
-    setTimeout(function () { try { w.focus(); w.print(); } catch (e) {} }, 500);
+    var P = {
+      W: W, H: H,
+      nova: nova,
+      texto: function (x, y, s, o) {
+        o = o || {};
+        cur.push('BT /' + (o.b ? 'F2' : 'F1') + ' ' + (o.t || 10) + ' Tf ' + rgb(o.c || '#222222') + ' rg ' + x.toFixed(1) + ' ' + (H - y).toFixed(1) + ' Td (' + lat1(s) + ') Tj ET');
+      },
+      rect: function (x, y, w, h, c) { cur.push(rgb(c) + ' rg ' + x.toFixed(1) + ' ' + (H - y - h).toFixed(1) + ' ' + w.toFixed(1) + ' ' + h.toFixed(1) + ' re f'); },
+      // largura aproximada (conservadora) de um texto em Helvetica
+      larg: function (s, t, b) { return String(s).length * t * (b ? 0.56 : 0.52); },
+      cortar: function (s, max, t, b) {
+        s = String(s == null ? '' : s);
+        var n = Math.floor(max / (t * (b ? 0.56 : 0.52)));
+        return s.length <= n ? s : s.slice(0, Math.max(1, n - 1)) + '...';
+      },
+      quebrar: function (s, max, t, b) { // quebra em linhas por palavras
+        var pal = String(s).split(/\s+/), linhas = [], l = '';
+        var n = Math.floor(max / (t * (b ? 0.56 : 0.52)));
+        pal.forEach(function (p) { if ((l + ' ' + p).trim().length > n && l) { linhas.push(l); l = p; } else l = (l + ' ' + p).trim(); });
+        if (l) linhas.push(l);
+        return linhas;
+      },
+      paginaAtual: function () { return paginas.length; },
+      total: function () { return paginas.length; },
+      bytes: function () {
+        var objs = [], partes = [];
+        function add(s) { objs.push(s); return objs.length; }
+        add('<< /Type /Catalog /Pages 2 0 R >>');
+        add(''); // pages (preenchido depois)
+        add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
+        add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
+        var kids = [];
+        paginas.forEach(function (ops) {
+          var cont = ops.join('\n');
+          var c = add('<< /Length ' + cont.length + ' >>\nstream\n' + cont + '\nendstream');
+          var p = add('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + W + ' ' + H + '] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ' + c + ' 0 R >>');
+          kids.push(p + ' 0 R');
+        });
+        objs[1] = '<< /Type /Pages /Kids [' + kids.join(' ') + '] /Count ' + kids.length + ' >>';
+        var out = '%PDF-1.4\n', offs = [];
+        objs.forEach(function (o, i) { offs.push(out.length); out += (i + 1) + ' 0 obj\n' + o + '\nendobj\n'; });
+        var xref = out.length;
+        out += 'xref\n0 ' + (objs.length + 1) + '\n0000000000 65535 f \n' + offs.map(function (n) { return ('0000000000' + n).slice(-10) + ' 00000 n \n'; }).join('');
+        out += 'trailer\n<< /Size ' + (objs.length + 1) + ' /Root 1 0 R >>\nstartxref\n' + xref + '\n%%EOF';
+        var u = new Uint8Array(out.length);
+        for (var i = 0; i < out.length; i++) u[i] = out.charCodeAt(i) & 255;
+        return u;
+      }
+    };
+    return P;
+  }
+  async function entregarPdf(bytes, nomeArq) {
+    var file = new File([bytes], nomeArq, { type: 'application/pdf' });
+    var toque = window.matchMedia && matchMedia('(pointer:coarse)').matches;
+    if (toque && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file], title: nomeArq }); return; }
+      catch (e) { if (e && e.name === 'AbortError') return; }
+    }
+    var url = URL.createObjectURL(file), a = document.createElement('a');
+    a.href = url; a.download = nomeArq; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+  }
+  function dataExtenso() { return new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }); }
+  // r = { tropa, nome, info:[[rotulo,valor]], resumo:{n,total,etapa}, eixos:[{nome,cor,feitos,total,blocos:[{nome,ok,detalhe}]}], presenca:{presentes,ausentes,total}|null }
+  function abrirRelatorio(r) {
+    try {
+      var P = criarPdf(595, 842), M = 36, y = 0, VINHO = '#6D1026';
+      function novaPagina() { P.nova(); y = M + 6; }
+      function rod(num) { P.texto(M, P.H - 20, 'GE Joaninha · Relatório de progressão · ' + r.nome, { t: 7.5, c: '#888888' }); P.texto(P.W - M - 40, P.H - 20, 'Pág. ' + num, { t: 7.5, c: '#888888' }); }
+      var num = 1;
+      y = M + 4;
+      P.texto(M, y + 14, r.nome, { t: 20, b: 1, c: VINHO });
+      P.texto(M, y + 30, r.tropa + ' · GE Joaninha · Relatório de progressão · ' + dataExtenso(), { t: 9, c: '#666666' });
+      P.rect(M, y + 38, P.W - 2 * M, 2, VINHO);
+      y += 56;
+      var info = (r.info || []).filter(function (i) { return i[1]; });
+      info.forEach(function (i, k) {
+        var x = M + (k % 2) * 270, yy = y + Math.floor(k / 2) * 15;
+        P.texto(x, yy, i[0] + ':', { t: 9.5, c: '#777777' });
+        P.texto(x + P.larg(i[0] + ': ', 9.5), yy, P.cortar(i[1], 250 - P.larg(i[0] + ': ', 9.5), 9.5), { t: 9.5 });
+      });
+      y += Math.ceil(info.length / 2) * 15 + 8;
+      var pct = r.resumo.total ? Math.round(r.resumo.n / r.resumo.total * 100) : 0;
+      P.rect(M, y, P.W - 2 * M, 48, '#F6EFEA');
+      P.texto(M + 12, y + 20, r.resumo.n + ' de ' + r.resumo.total + ' blocos concluídos (' + pct + '%)' + (r.resumo.etapa ? ' - etapa: ' + r.resumo.etapa : ''), { t: 12, b: 1 });
+      P.rect(M + 12, y + 30, P.W - 2 * M - 24, 8, '#E4D9D0');
+      if (pct) P.rect(M + 12, y + 30, (P.W - 2 * M - 24) * pct / 100, 8, VINHO);
+      y += 60;
+      if (r.presenca && r.presenca.total) {
+        var pp = Math.round(r.presenca.presentes / r.presenca.total * 100);
+        P.rect(M, y, P.W - 2 * M, 26, '#F6EFEA');
+        P.texto(M + 12, y + 17, 'Presença: ' + r.presenca.presentes + ' em ' + r.presenca.total + ' atividade(s) com chamada (' + pp + '%)' + (r.presenca.ausentes ? ' - ' + r.presenca.ausentes + ' falta(s)' : ''), { t: 10 });
+        y += 38;
+      }
+      (r.eixos || []).forEach(function (e) {
+        if (y + 22 + 2 * 18 > P.H - 40) { rod(num++); novaPagina(); }
+        P.rect(M, y, P.W - 2 * M, 20, e.cor);
+        P.texto(M + 8, y + 14, e.nome, { t: 10.5, b: 1, c: '#FFFFFF' });
+        P.texto(P.W - M - 34, y + 14, e.feitos + '/' + e.total, { t: 10.5, b: 1, c: '#FFFFFF' });
+        y += 26;
+        e.blocos.forEach(function (b) {
+          if (y + 18 > P.H - 40) { rod(num++); novaPagina(); }
+          P.texto(M + 6, y + 8, b.ok ? 'OK' : '-', { t: 9, b: 1, c: b.ok ? '#1E8449' : '#AAAAAA' });
+          P.texto(M + 30, y + 8, P.cortar(b.nome, 290, 10), { t: 10 });
+          P.texto(M + 340, y + 8, P.cortar(b.detalhe, P.W - 2 * M - 340, 9.5), { t: 9.5, c: '#555555' });
+          P.rect(M, y + 13, P.W - 2 * M, 0.5, '#E6E0DA');
+          y += 18;
+        });
+        y += 10;
+      });
+      y += 4;
+      P.texto(M, y + 8, 'Os dados refletem o que estava registrado no momento da emissão.', { t: 8, c: '#888888' });
+      rod(num);
+      entregarPdf(P.bytes(), 'relatorio-' + nomeSeguro(r.nome) + '.pdf');
+    } catch (e) { console.error(e); alert('Não consegui gerar o PDF: ' + e.message); }
   }
 
   // r = { tropa, resumo:{jovens, media, total}, etapas:[[nome,qtd]], colunas:[{nome,cor,total}], linhas:[{nome,patrulha,cargo,n,total,etapa,porEixo:[n],presenca}] }
   function abrirRelatorioTropa(r) {
-    var w = window.open('', '_blank');
-    if (!w) { alert('O navegador bloqueou a janela do relatório. Permita pop-ups para este site e tente de novo.'); return; }
-    var hoje = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
-    var h = '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Relatório da ' + escHtml(r.tropa) + '</title><style>' +
-      '*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#222;margin:0;padding:24px;max-width:1000px;margin:auto;font-size:12px;line-height:1.4}' +
-      'header{border-bottom:3px solid #6D1026;padding-bottom:10px;margin-bottom:14px}h1{margin:0;font-size:22px;color:#6D1026}.sub{color:#666;font-size:12px;margin-top:2px}' +
-      '.cards{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}.card{background:#F6EFEA;border-radius:8px;padding:10px 14px;min-width:120px}.card b{display:block;font-size:20px;color:#6D1026}' +
-      'table{width:100%;border-collapse:collapse;margin-top:8px}th{background:#6D1026;color:#fff;text-align:left;padding:6px 8px;font-size:11px}th.e{text-align:center;color:#fff}td{padding:6px 8px;border-bottom:1px solid #EEE;vertical-align:middle}td.c{text-align:center}' +
-      '.barra{height:7px;background:#E4D9D0;border-radius:4px;overflow:hidden;min-width:60px}.barra i{display:block;height:100%;background:#6D1026}tr{break-inside:avoid}' +
-      'footer{margin-top:20px;border-top:1px solid #DDD;padding-top:8px;color:#888;font-size:11px}.btn{position:fixed;right:14px;top:14px;background:#6D1026;color:#fff;border:0;border-radius:20px;padding:10px 16px;font-size:13px;cursor:pointer}' +
-      '@media print{.btn{display:none}body{padding:0}}@page{margin:12mm;size:A4 landscape}</style></head><body>' +
-      '<button class="btn" onclick="window.print()">🖨 Imprimir / Salvar como PDF</button>' +
-      '<header><h1>' + escHtml(r.tropa) + '</h1><div class="sub">GE Joaninha · Relatório de progressão da tropa · ' + escHtml(hoje) + '</div></header>' +
-      '<div class="cards"><div class="card"><b>' + r.resumo.jovens + '</b>jovens</div><div class="card"><b>' + r.resumo.media + '</b>média de blocos concluídos (de ' + r.resumo.total + ')</div>' +
-      (r.etapas || []).map(function (e) { return '<div class="card"><b>' + e[1] + '</b>' + escHtml(e[0]) + '</div>'; }).join('') + '</div>' +
-      '<table><thead><tr><th>Jovem</th><th>Patrulha</th><th>Cargo</th><th>Etapa</th><th>Blocos</th>' +
-      (r.colunas || []).map(function (c) { return '<th class="e" style="background:' + escHtml(c.cor) + '">' + escHtml(c.nome) + '</th>'; }).join('') +
-      '<th class="e">Presença</th></tr></thead><tbody>' +
-      r.linhas.map(function (l) {
-        var pct = l.total ? Math.round(l.n / l.total * 100) : 0;
-        return '<tr><td><b>' + escHtml(l.nome) + '</b></td><td>' + escHtml(l.patrulha) + '</td><td>' + escHtml(l.cargo) + '</td><td>' + escHtml(l.etapa) + '</td>' +
-          '<td style="min-width:110px">' + l.n + '/' + l.total + '<div class="barra"><i style="width:' + pct + '%"></i></div></td>' +
-          l.porEixo.map(function (n, i) { return '<td class="c">' + n + '/' + r.colunas[i].total + '</td>'; }).join('') +
-          '<td class="c">' + escHtml(l.presenca || '—') + '</td></tr>';
-      }).join('') + '</tbody></table>' +
-      '<footer>Relatório gerado pelo sistema de progressão do GE Joaninha. Os dados refletem o que estava registrado no momento da emissão.</footer></body></html>';
-    w.document.open(); w.document.write(h); w.document.close();
-    setTimeout(function () { try { w.focus(); w.print(); } catch (e) {} }, 500);
+    try {
+      var P = criarPdf(842, 595), M = 30, y = 0, VINHO = '#6D1026', num = 1;
+      function rod(n) { P.texto(M, P.H - 16, 'GE Joaninha · Relatório da ' + r.tropa, { t: 7.5, c: '#888888' }); P.texto(P.W - M - 40, P.H - 16, 'Pág. ' + n, { t: 7.5, c: '#888888' }); }
+      y = M;
+      P.texto(M, y + 14, r.tropa, { t: 20, b: 1, c: VINHO });
+      P.texto(M, y + 30, 'GE Joaninha · Relatório de progressão da tropa · ' + dataExtenso(), { t: 9, c: '#666666' });
+      P.rect(M, y + 38, P.W - 2 * M, 2, VINHO);
+      y += 52;
+      var cartoes = [[String(r.resumo.jovens), 'jovens'], [String(r.resumo.media), 'média de blocos (de ' + r.resumo.total + ')']].concat((r.etapas || []).map(function (e) { return [String(e[1]), e[0]]; }));
+      var x = M;
+      cartoes.forEach(function (c) {
+        var w = Math.max(70, P.larg(c[1], 8.5) + 20);
+        if (x + w > P.W - M) return;
+        P.rect(x, y, w, 40, '#F6EFEA');
+        P.texto(x + 10, y + 18, c[0], { t: 16, b: 1, c: VINHO });
+        P.texto(x + 10, y + 32, c[1], { t: 8.5, c: '#555555' });
+        x += w + 8;
+      });
+      y += 54;
+      var col = { nome: M, pat: M + 140, cargo: M + 222, etapa: M + 294, bl: M + 362, eixo0: M + 452, w: 66 };
+      col.pres = col.eixo0 + 4 * col.w + 2;
+      function cabecalho() {
+        P.rect(M, y, P.W - 2 * M, 28, VINHO);
+        [['Jovem', col.nome], ['Patrulha', col.pat], ['Cargo', col.cargo], ['Etapa', col.etapa], ['Blocos', col.bl]].forEach(function (c) { P.texto(c[1] + 4, y + 17, c[0], { t: 9, b: 1, c: '#FFFFFF' }); });
+        r.colunas.forEach(function (c, i) {
+          var cx = col.eixo0 + i * col.w;
+          P.rect(cx, y, col.w - 2, 28, c.cor);
+          P.quebrar(c.nome, col.w - 8, 7, true).slice(0, 2).forEach(function (l, k) { P.texto(cx + 3, y + 11 + k * 9, l, { t: 7, b: 1, c: '#FFFFFF' }); });
+        });
+        P.texto(col.pres + 4, y + 17, 'Presença', { t: 8, b: 1, c: '#FFFFFF' });
+        y += 32;
+      }
+      cabecalho();
+      r.linhas.forEach(function (l, k) {
+        if (y + 22 > P.H - 30) { rod(num++); P.nova(); y = M; cabecalho(); }
+        if (k % 2) P.rect(M, y - 2, P.W - 2 * M, 22, '#FAF6F2');
+        P.texto(col.nome + 4, y + 11, P.cortar(l.nome, 132, 9.5, true), { t: 9.5, b: 1 });
+        P.texto(col.pat + 4, y + 11, P.cortar(l.patrulha, 74, 9), { t: 9 });
+        P.texto(col.cargo + 4, y + 11, P.cortar(l.cargo, 66, 9), { t: 9 });
+        P.texto(col.etapa + 4, y + 11, P.cortar(l.etapa, 64, 9), { t: 9 });
+        var pc = l.total ? l.n / l.total : 0;
+        P.texto(col.bl + 4, y + 8, l.n + '/' + l.total, { t: 9 });
+        P.rect(col.bl + 4, y + 11, 76, 5, '#E4D9D0');
+        if (pc) P.rect(col.bl + 4, y + 11, 76 * pc, 5, VINHO);
+        l.porEixo.forEach(function (n, i) { P.texto(col.eixo0 + i * col.w + 20, y + 11, n + '/' + r.colunas[i].total, { t: 9 }); });
+        P.texto(col.pres + 14, y + 11, l.presenca || '-', { t: 9 });
+        y += 22;
+      });
+      y += 10;
+      if (y + 12 < P.H - 30) P.texto(M, y + 8, 'Os dados refletem o que estava registrado no momento da emissão.', { t: 8, c: '#888888' });
+      rod(num);
+      entregarPdf(P.bytes(), 'relatorio-' + nomeSeguro(r.tropa) + '.pdf');
+    } catch (e) { console.error(e); alert('Não consegui gerar o PDF: ' + e.message); }
   }
 
   /* ---------- lembrete mensal de backup (admins) ---------- */
