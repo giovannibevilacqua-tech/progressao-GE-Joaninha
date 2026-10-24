@@ -3978,16 +3978,23 @@ document.addEventListener('dragend', function() { clearInterval(scrollAutoInterv
 document.addEventListener('drop', function() { clearInterval(scrollAutoIntervalo); });
 
 function iniciarObservadorHeaderCompacto() {
-const sentinela = document.getElementById('scrollSentinel');
 const header = document.querySelector('.header');
-if (!sentinela || !header) return;
-if (!('IntersectionObserver' in window)) return;
-const observer = new IntersectionObserver((entries) => {
-entries.forEach((entry) => {
-header.classList.toggle('compacto', !entry.isIntersecting);
-});
-}, { threshold: 0 });
-observer.observe(sentinela);
+if (!header) return;
+// Banner só contrai depois de rolar bastante (FECHA_APOS) e só expande de volta perto do topo (ABRE_ATE).
+// A folga entre os dois números (maior que a altura que o banner perde) evita o "pisca-pisca" e deixa a volta natural.
+const FECHA_APOS = 200, ABRE_ATE = 60;
+let agendado = false;
+function avaliar() {
+agendado = false;
+const ramoEsc = document.getElementById('ramo-escoteira');
+if (!ramoEsc || ramoEsc.style.display === 'none') return; // na Sênior quem manda é a própria página da Sênior
+const y = window.scrollY;
+const compacto = header.classList.contains('compacto');
+if (!compacto && y > FECHA_APOS) header.classList.add('compacto');
+else if (compacto && y < ABRE_ATE) header.classList.remove('compacto');
+}
+window.addEventListener('scroll', () => { if (!agendado) { agendado = true; requestAnimationFrame(avaliar); } }, { passive: true });
+avaliar();
 }
 iniciarObservadorHeaderCompacto();
 
@@ -3995,6 +4002,8 @@ window.addEventListener('message', function(ev) {
 const msg = ev.data;
 if (!msg || msg.tipo !== 'headerCompactoSr') return;
 const header = document.querySelector('.header');
+const paginaSenior = document.getElementById('pagina-senior');
+if (!paginaSenior || paginaSenior.style.display === 'none') return; // só vale quando a Sênior está na tela
 if (header) header.classList.toggle('compacto', !!msg.compacto);
 requestAnimationFrame(ajustarAlturaIframeSenior);
 setTimeout(ajustarAlturaIframeSenior, 260);
