@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#6D1026">
 <title>Progressão Jovens GE Joaninha</title>
 <style>
 :root {
@@ -751,6 +753,7 @@ REGISTRO ESCOTEIRO
 <div class="conta-barra">
 <span class="conta-barra-registro">👤 <strong id="contaRegistroTxt"></strong></span>
 <button class="conta-barra-btn" id="btnGerenciarChefes" style="display:none;" onclick="abrirGerenciarChefes()">⚙️ Gerenciar Chefes</button>
+<button class="conta-barra-btn somente-admin" id="btnHistorico" onclick="abrirHistorico()">📜 Histórico</button>
 <button class="conta-barra-btn" onclick="if(confirm('Sair da sua conta neste navegador?'))fazerLogout()">🚪 Sair</button>
 </div>
 
@@ -1007,6 +1010,7 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 </div>
 <div class="backup-bar-body" id="backupBarBody" style="display:none;">
 <button class="sbar-btn" onclick="exportarBackupEscoteira()">📤 Exportar backup</button>
+<button class="sbar-btn somente-admin" onclick="desfazerSnapshotEscoteira()">↩ Desfazer (snapshots)</button>
 <label class="sbar-btn somente-admin">
 📥 Importar backup
 <input type="file" accept=".json" onchange="importarBackupEscoteira(event)" style="display:none;">
@@ -1057,7 +1061,7 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 <div class="lis-modal-ov" id="chefesModalOv" onclick="if(event.target===this)fecharGerenciarChefes()">
 <div class="lis-modal-box">
 <div class="lis-modal-header">
-<span class="lis-modal-titulo">⚙️ Gerenciar Chefes</span>
+<span class="lis-modal-titulo" id="chefesModalTitulo">⚙️ Gerenciar Chefes</span>
 <button class="lis-modal-fechar" onclick="fecharGerenciarChefes()">✕</button>
 </div>
 <div class="lis-modal-body" id="chefesModalBody"></div>
@@ -1100,6 +1104,7 @@ tropa: tropaDoChefeLogado
 }
 function limparSessao() {
 try { localStorage.removeItem('chefeSessao'); } catch (e) {}
+V2.limparCacheLocal();
 firebaseAuthToken = null; firebaseRefreshToken = null; registroLogado = null; firebaseUid = null; souAdmin = false; tropaDoChefeLogado = null;
 }
 function lerSessaoSalva() {
@@ -1123,6 +1128,12 @@ if (!renovado) {
 // Pode ser instabilidade passageira de rede (ex: computador acabou de acordar do sono) — tenta mais uma vez antes de desistir
 await new Promise(r => setTimeout(r, 1500));
 renovado = await renovarTokenSessao(salva.refreshToken);
+}
+if (!renovado && navigator.onLine === false && salva.uid) {
+// sem internet: entra só para leitura (os dados vêm da cópia guardada neste aparelho)
+firebaseAuthToken = salva.idToken; firebaseRefreshToken = salva.refreshToken; registroLogado = salva.registro; firebaseUid = salva.uid;
+souAdmin = salva.admin === true; tropaDoChefeLogado = salva.tropa || null; nomeLogado = salva.nome || '';
+return true;
 }
 if (!renovado) { limparSessao(); return false; }
 firebaseAuthToken = renovado.idToken;
@@ -1304,7 +1315,24 @@ async function removerAcessoChefe(uid) {
 await fetch(urlComAuthFirebase(DB_URL + '/usuarios/' + uid + '.json'), { method: 'DELETE' });
 }
 
+async function abrirHistorico() {
+  document.getElementById('chefesModalTitulo').textContent = '📜 Histórico de alterações';
+  document.getElementById('chefesModalOv').classList.add('open');
+  const corpo = document.getElementById('chefesModalBody');
+  corpo.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">Carregando…</div>';
+  const esc = (t) => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const lista = await V2.lerHistorico(60);
+  if (!lista.length) { corpo.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">Ainda não há alterações registradas.</div>'; return; }
+  corpo.innerHTML = lista.map(e => {
+    const quando = new Date(e.em).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+    return '<div style="padding:8px 4px;border-bottom:1px solid var(--border);font-size:12px;line-height:1.4;">' +
+      '<div style="color:var(--muted);font-size:10px;">' + esc(quando) + ' · ' + (e.tropa === 'senior' ? 'Tropa Sênior' : 'Tropa Escoteira') + ' · ' + esc(e.nome || ('Registro ' + e.por)) + '</div>' +
+      '<div>' + esc(e.resumo) + '</div></div>';
+  }).join('') + '<div style="padding:10px;font-size:10px;color:var(--muted);text-align:center;">Mostrando as 60 mais recentes. O sistema guarda até 300 por tropa.</div>';
+  V2.podarHistorico(300);
+}
 async function abrirGerenciarChefes() {
+document.getElementById('chefesModalTitulo').textContent = '⚙️ Gerenciar Chefes';
 document.getElementById('chefesModalOv').classList.add('open');
 document.getElementById('chefesModalBody').innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">Carregando…</div>';
 await renderChefesModalBody();
@@ -1418,8 +1446,8 @@ window.location.reload();
 const V2_NODE = "escoteira"; // dados agora ficam em /v2/escoteira (nós reais)
 </script>
 <script>
-const JOVENS_BASE = ['miguel','sabrina','pedro','ivan','richard','anita','ashylley','sophiak','felipa','fernando','eduardo','larissa','safira','rafael','thaynara','sophiar','victor','maria','giovanna','sophiad'];
-const JNOMES_PADRAO = {miguel:'Miguel Silva',sabrina:'Sabrina Sigmaringa',pedro:'Pedro Andrade',ivan:'Ivan Moraes',richard:'Richard Fonseca',anita:'Anita Gomes',ashylley:'Ashylley Santos',sophiak:'Sophia Khatuanian',felipa:'Felipa Almeida',fernando:'Fernando Santos',eduardo:'Eduardo Dias',larissa:'Larissa Souza',safira:'Safira Fonseca',rafael:'Rafael Cruz',thaynara:'Thaynara Santos',sophiar:'Sophia Rodrigues',victor:'Victor Silva',maria:'Maria Santos',giovanna:'Giovanna Souza',sophiad:'Sophia Diniz'};
+const { JOVENS_BASE, JNOMES_PADRAO } = window.V2_DADOS_ESC; // dados fixos ficam no v2.js
+
 let JNOMES = Object.assign({}, JNOMES_PADRAO);
 let JOVENS = JOVENS_BASE.slice();
 let JOVENS_EXCLUIDOS = [];
@@ -1543,6 +1571,11 @@ function iniciarSync() {
       getToken: () => firebaseAuthToken,
       renovarToken: renovarSessaoV2,
       temPendente: () => temAlteracaoLocalPendente,
+      onModoLeitura: () => mostrarModoLeitura(),
+      onSalvo: (d) => {
+        const nomeDe = (id) => (Object.prototype.hasOwnProperty.call(JNOMES, id) ? JNOMES[id] : null);
+        V2.registrarHistorico('escoteira', registroLogado, nomeLogado, V2.resumirDiff(d, nomeDe), Object.keys(d.sets).length + Object.keys(d.dels).length);
+      },
       onErroCarga: () => {
         alert('⚠️ Não consegui carregar os dados (versão v2).\n\nO app abriu vazio e o SALVAMENTO FICOU BLOQUEADO para não apagar nada. Recarregue a página; se continuar, confira a internet, o login e as regras do banco.');
       },
@@ -1579,6 +1612,17 @@ function saveStateDebounced() {
   clearTimeout(__saveTimer);
   __saveTimer = setTimeout(saveState, 500);
 }
+function mostrarModoLeitura() {
+  if (document.getElementById('bannerLeitura')) return;
+  const d = document.createElement('div');
+  d.id = 'bannerLeitura';
+  d.style.cssText = 'position:sticky;top:0;z-index:9999;background:#E8EEF7;border-bottom:2px solid #1B3B6F;color:#1B3B6F;padding:8px 12px;font-size:12px;text-align:center;';
+  d.textContent = '📴 Sem conexão — mostrando a última versão guardada neste aparelho. Só leitura: nada será salvo. Volte a ter sinal e recarregue a página.';
+  document.body.insertBefore(d, document.body.firstChild);
+  window.__modoLeitura = true;
+}
+window.addEventListener('online', () => { if (window.__modoLeitura) location.reload(); });
+
 function mostrarStatusSalvando(texto, erro) {
   let el = document.getElementById('statusSalvar');
   if (!el) {
@@ -1644,7 +1688,7 @@ renderRoster();
 renderDetail(id);
 document.getElementById('fichaModalOv').classList.add('open');
 }
-function confirmReset() {
+async function confirmReset() {
 if (!souAdmin) { alert('Esta ação é só para administradores.'); return; }
 const senha = prompt('Ação sensível: isso apaga TODAS as marcações (fixas, variáveis e especialidades) de TODOS os jovens, pra todo mundo que usa este link. A lista de jovens é mantida.\n\nDigite a senha para confirmar:');
 if (senha === null) return;
@@ -1652,6 +1696,8 @@ if (senha !== '980070') {
 alert('Senha incorreta. Nada foi alterado.');
 return;
 }
+if (!(await V2.protegerAntes('escoteira', montarDadosEscoteira(), 'Antes de limpar todas as marcações', registroLogado))) return;
+V2.registrarHistorico('escoteira', registroLogado, nomeLogado, 'Limpou todas as marcações', 0);
 JOVENS.forEach(j => { S[j] = blocosEmBranco(); });
 saveState();
 ativo = null;
@@ -1694,6 +1740,28 @@ URL.revokeObjectURL(url);
 V2.registrarBackup('escoteira', registroLogado).then(() => atualizarLembreteBackup());
 }
 
+async function desfazerSnapshotEscoteira() {
+  if (!souAdmin) { alert('Esta ação é só para administradores.'); return; }
+  let lista;
+  try { lista = await V2.listarSnapshots('escoteira'); } catch (e) { alert('Não consegui ler os snapshots. Confira a conexão.'); return; }
+  if (!lista.length) { alert('Ainda não há snapshots.\n\nEles são criados automaticamente antes de excluir jovem, limpar marcações, importar backup ou restaurar.'); return; }
+  const fmt = (s) => new Date(s.em).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+  const r = prompt('Voltar a Tropa Escoteira para o estado de ANTES de:\n\n' + lista.map((s, i) => (i + 1) + ') ' + fmt(s) + ' — ' + s.motivo).join('\n') + '\n\nDigite o número:');
+  if (r === null || r === '') return;
+  const sel = lista[parseInt(r, 10) - 1];
+  if (!sel) { alert('Número inválido.'); return; }
+  if (!confirm('Restaurar o estado de ' + fmt(sel) + '?\n\nO estado atual também fica guardado como snapshot.')) return;
+  try {
+    const dados = await V2.lerSnapshot('escoteira', sel.id);
+    if (!(await V2.protegerAntes('escoteira', montarDadosEscoteira(), 'Antes de restaurar snapshot', registroLogado))) return;
+    V2.registrarHistorico('escoteira', registroLogado, nomeLogado, 'Restaurou o snapshot de ' + fmt(sel), 0);
+    aplicarDadosEscoteira(dados, false);
+    temAlteracaoLocalPendente = true;
+    await saveState();
+    alert('Dados restaurados.');
+  } catch (e) { alert('Não consegui restaurar: ' + e.message); }
+}
+
 function importarBackupEscoteira(event) {
 if (!souAdmin) { alert('Esta ação é só para administradores.'); if (event.target) event.target.value = ''; return; }
 const file = event.target.files[0];
@@ -1705,6 +1773,8 @@ const d = JSON.parse(e.target.result);
 if (!d.version) throw new Error('Arquivo não reconhecido');
 if (!confirm('Importar esse backup vai substituir TODOS os dados atuais da Tropa Escoteira (progressão, calendário, patrulhas, jovens, etc.) para todo mundo que usa este link.\n\nConfirma a importação?')) { event.target.value = ''; return; }
 
+if (!(await V2.protegerAntes('escoteira', montarDadosEscoteira(), 'Antes de importar backup', registroLogado))) { event.target.value = ''; return; }
+V2.registrarHistorico('escoteira', registroLogado, nomeLogado, 'Importou um backup', 0);
 S = d.S || {};
 EVENTOS = (d.eventos || []).map(normalizarEvento);
 CICLO = (d.ciclo && d.ciclo.length > 0 && d.ciclo.length % 6 === 0) ? d.ciclo : cicloEmBranco();
@@ -2116,10 +2186,12 @@ function fecharLisOuro() {
 document.getElementById('lisModalOv').classList.remove('open');
 }
 
-function excluirJovem(id) {
+async function excluirJovem(id) {
 if (!souAdmin) { alert('Esta ação é só para administradores.'); return; }
 jovemMenuAbertoId = null;
 if (!confirm(`Excluir o perfil de ${JNOMES[id]}? Isso apaga também todas as marcações dele(a). Essa ação não pode ser desfeita.`)) { renderRoster(); return; }
+if (!(await V2.protegerAntes('escoteira', montarDadosEscoteira(), 'Antes de excluir ' + JNOMES[id], registroLogado))) { renderRoster(); return; }
+V2.registrarHistorico('escoteira', registroLogado, nomeLogado, 'Excluiu o jovem ' + JNOMES[id], 0);
 if (JOVENS_BASE.includes(id)) { if (!JOVENS_EXCLUIDOS.includes(id)) JOVENS_EXCLUIDOS.push(id); }
 JOVENS = JOVENS.filter(x => x !== id);
 JOVENS_ARQUIVADOS = JOVENS_ARQUIVADOS.filter(x => x !== id);
@@ -4042,6 +4114,9 @@ const y = parseInt(scrollSalvo, 10);
 if (isNaN(y)) return;
 [50, 150, 300, 600, 1000].forEach(delay => setTimeout(() => window.scrollTo(0, y), delay));
 }
+if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('v2.js').catch(() => {}); }); }
+window.addEventListener('online', () => { if (temAlteracaoLocalPendente && !window.__modoLeitura) saveState(); });
+
 async function atualizarLembreteBackup() {
   const antigo = document.getElementById('lembreteBackup'); if (antigo) antigo.remove();
   if (!souAdmin) return;

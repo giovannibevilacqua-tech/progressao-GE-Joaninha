@@ -632,112 +632,13 @@ function renderAllTabs(){
 
 // Blocos: id, name, eixo, focus(bool), semester(0=nao foco,1=2S26,2=1S27), campoOnly(bool)
 // fixed: [{id,name}], variable: [{id,name}]
-const BLOCKS = [
-  {id:"criatividade",name:"Criatividade e Inovação",eixo:"hv",focus:true,semester:1,campOnly:false,minVariable:3,fixed:[{id:"f1",name:"Durante um acampamento, planejar e executar pioneirias inovadoras de médio ou grande porte"}],variable:[{id:"v1",name:"Organizar e conduzir Fogo de Conselho ou show de talentos para tropa, UEL ou comunidade"},{id:"v2",name:"Organizar uma noite cultural para a patrulha ou tropa"},{id:"v3",name:"Produzir curta metragem ou vídeo criativo sobre Escotismo"},{id:"v4",name:"Organizar apresentação artística ou cultural voltada à comunidade"},{id:"v5",name:"Planejar e realizar mostra sobre tema de interesse com registros variados para a tropa ou comunidade"},{id:"v6",name:"Participar de concursos culturais, literários ou artísticos locais representando a tropa"},{id:"v7",name:"Construir versão simplificada de horizonte artificial funcional com 2 eixos (arfagem e rolagem)"}],specialties:[{id:"s1",name:"Comunicações"}],insignias:[{id:"g1",name:"Inovadores de Impacto Sênior"}]},
-  {id:"inteligencia",name:"Inteligência Emocional",eixo:"hv",focus:false,semester:0,campOnly:false,minVariable:4,fixed:[{id:"f1",name:"Reconhecer situações que comprometam integridade física ou emocional, sabendo como agir e a quem recorrer"},{id:"f2",name:"Praticar feedback construtivo durante atividades, expressando opiniões de forma assertiva e respeitosa"}],variable:[{id:"v1",name:"Identificar mudanças de emoção repentinas, equilibrando decisões e reações de forma respeitosa"},{id:"v2",name:"Envolver-se em atividades aventureiras com segurança, conhecendo limites e enfrentando medos"},{id:"v3",name:"Identificar situações de estresse ou desconforto e ferramentas para solucioná-las, respeitando limites"},{id:"v4",name:"Negociar responsabilidades familiares e pessoais de forma respeitosa e madura"},{id:"v5",name:"Conduzir dinâmicas de confiança e cooperação lidando com frustrações e celebrando conquistas coletivas"}],specialties:[],insignias:[]},
-  {id:"aprendizagem",name:"Aprendizagem Contínua e Des. Vocacional",eixo:"hv",focus:false,semester:0,campOnly:false,minVariable:3,fixed:[{id:"f1",name:"Conquistar no Ramo Sênior uma especialidade sobre tema de interesse que seja conhecimento novo"}],variable:[{id:"v1",name:"Explorar áreas profissionais em Feira de Profissões ou entrevistando profissionais de interesse"},{id:"v2",name:"Engajar em voluntariado ou estágio em instituição de interesse para vivência prática e desenvolvimento"},{id:"v3",name:"Participar de palestras, workshops ou vivências de orientação vocacional e planejamento de carreira"},{id:"v4",name:"Organizar atividade para a patrulha ou tropa voltada para escolha vocacional"},{id:"v5",name:"Organizar oficina, curso ou palestra para a tropa sobre tema de interesse"},{id:"v6",name:"Participar de feiras, mostras ou eventos científicos/escolares apresentando trabalhos ou projetos"}],specialties:[{id:"s1",name:"Gastronomia"},{id:"s2",name:"Tecnologia"},{id:"s3",name:"Educação"},{id:"s4",name:"Idiomas"}],insignias:[{id:"g1",name:"Aprender Sênior"},{id:"g2",name:"Aeronauta"},{id:"g3",name:"Naval"}]},
-  {id:"autonomia",name:"Autonomia e Liderança",eixo:"hv",focus:false,semester:0,campOnly:false,minVariable:4,fixed:[{id:"f1",name:"Conhecer material individual e de patrulha para diferentes tipos de excursão e saber organizá-lo na mochila"}],variable:[{id:"v1",name:"Participar ativamente do planejamento, execução e avaliação de atividades da patrulha, tropa ou equipe de interesse"},{id:"v2",name:"Desenvolver o planejamento orçamentário de uma atividade de patrulha, equipe de interesse ou tropa"},{id:"v3",name:"Utilizar transporte coletivo urbano para atividade externa de patrulha"},{id:"v4",name:"Implementar estratégia financeira para alcançar meta pessoal, compartilhando com a patrulha"},{id:"v5",name:"Planejar e executar projeto de captação de recursos para atividade escoteira ou projeto pessoal"},{id:"v6",name:"Assumir e desempenhar diferentes encargos na patrulha, sendo bem avaliado pelos companheiros"},{id:"v7",name:"Planejar e conduzir um grande jogo para a tropa com apoio da patrulha ou equipe de interesse"}],specialties:[{id:"s1",name:"Empreendedorismo e Negócios"},{id:"s2",name:"Finanças e Economia"},{id:"s3",name:"Liderança e Gestão"},{id:"s4",name:"Viagens"}],insignias:[]},
-  {id:"consumo",name:"Consumo Responsável",eixo:"ma",focus:true,semester:2,campOnly:false,minVariable:4,fixed:[],variable:[{id:"v1",name:"Liderar separação de resíduos recicláveis e orgânicos em festa, comunidade ou eventos regionais/nacionais"},{id:"v2",name:"Visitar estação de tratamento de esgoto, aterro sanitário ou cooperativa de reciclagem e discutir questões ambientais"},{id:"v3",name:"Desenvolver projeto sobre descarte correto de materiais eletrônicos na UEL, comunidade ou escola"},{id:"v4",name:"Organizar oficina, debate ou workshop: Cruelty-free, Vegetarianismo, Upcycling, Obsolescência Programada ou Microplástico"},{id:"v5",name:"Em acampamento, executar receita com cascas, talos ou sobras de alimentos"},{id:"v6",name:"Organizar brechó beneficente ou feira de trocas em sua UEL ou comunidade"},{id:"v7",name:"Participar de visita a cooperativa de reciclagem ou projeto comunitário ligado à economia circular"}],specialties:[{id:"s1",name:"Agricultura Sustentável"}],insignias:[{id:"g1",name:"Reduzir, Reciclar, Reutilizar Sênior"}]},
-  {id:"mudancas",name:"Mudanças Climáticas",eixo:"ma",focus:true,semester:1,campOnly:false,minVariable:4,fixed:[],variable:[{id:"v1",name:"Utilizar ferramentas de acompanhamento meteorológico para planejamento de atividades ao ar livre"},{id:"v2",name:"Desenvolver iniciativas ou projetos sobre mudanças climáticas e soluções sustentáveis"},{id:"v3",name:"Organizar com a patrulha atividade ecológica em área urbana, identificando problemas e propondo soluções"},{id:"v4",name:"Participar de clubes ou projetos voltados para sustentabilidade e mudanças climáticas"},{id:"v5",name:"Utilizar e promover transporte coletivo, bicicleta ou caminhada em atividade escoteira e meio de energia renovável"},{id:"v6",name:"Planejar e executar projeto comunitário de reaproveitamento de recursos naturais ou uso de energias renováveis"}],specialties:[{id:"s1",name:"Sustentabilidade"}],insignias:[{id:"g1",name:"Escoteiros pela Energia Solar Sênior"}]},
-  {id:"preservacao",name:"Preservação da Biodiversidade",eixo:"ma",focus:true,semester:1,campOnly:false,minVariable:2,fixed:[{id:"f1",name:"Participar de atividade em Área de Proteção Ambiental, reconhecendo fauna, flora e bioma, identificando riscos e propondo soluções de preservação"}],variable:[{id:"v1",name:"Participar de eventos sobre preservação da biodiversidade organizados por ONGs, escolas ou parques naturais"},{id:"v2",name:"Colaborar em projeto ou ação promovido por alguma ONG ambiental"},{id:"v3",name:"Coletar e registrar dados sobre espécies locais, qualidade da água ou vegetação"},{id:"v4",name:"Organizar projeto: abrigos de animais silvestres, enriquecimento ambiental, reintegração ou preservação da fauna"},{id:"v5",name:"Organizar plantio de árvores nativas em parceria com órgãos ambientais ou ONGs"},{id:"v6",name:"Conduzir campanha de conscientização sobre preservação de fauna e flora em praças, escolas ou redes sociais"},{id:"v7",name:"Promover palestras ou oficinas à comunidade sobre redução de impactos ambientais e proteção da biodiversidade"}],specialties:[{id:"s1",name:"Natureza e Ciências Naturais"},{id:"s2",name:"Educação Ambiental"}],insignias:[{id:"g1",name:"Campeões da Natureza Sênior"}]},
-  {id:"vida_ar",name:"Vida ao Ar Livre",eixo:"ma",focus:true,semester:1,campOnly:true,minVariable:5,fixed:[{id:"f1",name:"Montar campo de patrulha com pioneirias (mesa, canto do lenhador, pórtico) usando amarras adequadas"},{id:"f2",name:"Aplicar nós: direito, correr, lais de guia, volta do fiel, nó em oito, balso pelo seio, catau, volta do salteador e boca de lobo em acampamento"},{id:"f3",name:"Escolher local correto para a barraca, montar, desmontar e acondicionar — em acampamento de tropa ou patrulha"},{id:"f4",name:"Manusear ferramentas de corte e sapa com segurança, realizando reparos — em acampamento de tropa ou patrulha"},{id:"f5",name:"Preparar e executar ao menos 3 tipos de fogueiras para refeição mateira, zelando pela segurança em acampamento"},{id:"f6",name:"Planejar e realizar ao menos uma excursão de patrulha em ambiente natural"},{id:"f7",name:"Planejar e realizar ao menos um acampamento de patrulha com técnicas de campismo de baixo impacto"},{id:"f8",name:"Em atividade ao ar livre, orientar-se com carta topográfica/náutica e bússola usando métodos naturais e tecnológicos"}],variable:[{id:"v1",name:"Participar de um acampamento volante"},{id:"v2",name:"Selecionar corretamente materiais de campo para acampamento de patrulha"},{id:"v3",name:"Planejar e construir com a patrulha: barraca suspensa, torre de observação ou ponte"},{id:"v4",name:"Demonstrar conhecimento sobre processos de ancoragem e estiramento de cabos"},{id:"v5",name:"Utilizar formas de acondicionamento de alimentos e técnicas de purificação de água em acampamento"},{id:"v6",name:"Durante acampamento de patrulha ou tropa, pernoitar em abrigo natural"},{id:"v7",name:"Durante atividade aventureira, pernoitar em bivaque, abrigo natural ou ao relento"},{id:"v8",name:"Participar de rafting, canoagem, rapel, espeleologia, escalada, trekking ou mountain bike"},{id:"v9",name:"Participar de atividades aquáticas de exploração de corpos d'água naturais respeitando segurança"},{id:"v10",name:"Participar de acampamento de média (3-5 dias) ou longa (6-10 dias) duração organizado pela patrulha ou tropa"}],specialties:[{id:"s1",name:"Esportes de Aventura"},{id:"s2",name:"Ecoturismo"},{id:"s3",name:"Habilidades Escoteiras"}],insignias:[]},
-  {id:"comunidade",name:"Comunidade",eixo:"pd",focus:true,semester:1,campOnly:false,minVariable:2,fixed:[{id:"f1",name:"Participar, sozinho ou em patrulha/equipe, de ao menos 10 horas de ação comunitária com instituições locais"},{id:"f2",name:"Capacitar-se em curso de entidade de referência (Defesa Civil, Cruz Vermelha, Bombeiros) para crises humanitárias"}],variable:[{id:"v1",name:"Identificar riscos de desastres naturais na comunidade, conhecer protocolos de segurança e atuar de acordo"},{id:"v2",name:"Planejar atividade comunitária: limpeza de praça, visita a instituição, revitalização de creche ou lar de idosos"},{id:"v3",name:"Criar uma biblioteca comunitária móvel com livros doados"},{id:"v4",name:"Organizar campanha de arrecadação (alimentos, roupas, livros) envolvendo diferentes setores da comunidade"},{id:"v5",name:"Representar a tropa em fóruns, conselhos ou encontros comunitários, contribuindo com ideias e propostas"},{id:"v6",name:"Promover ações de educação ambiental, saúde ou cidadania em parceria com outras instituições"}],specialties:[{id:"s1",name:"Desenvolvimento Comunitário"},{id:"s2",name:"Ações Humanitárias"},{id:"s3",name:"Inclusão e Acessibilidade"}],insignias:[{id:"g1",name:"Insígnia Desafio Comunitário"},{id:"g2",name:"Mensageiros da Paz Sênior"},{id:"g3",name:"Escoteiros do Mundo Sênior"}]},
-  {id:"democracia",name:"Democracia",eixo:"pd",focus:true,semester:1,campOnly:false,minVariable:4,fixed:[{id:"f1",name:"Participar ativamente das decisões do Conselho de Patrulha, contribuindo, votando e assumindo responsabilidades"},{id:"f2",name:"Participar ativamente das decisões da Assembleia de Tropa, contribuindo, votando e assumindo responsabilidades"},{id:"f3",name:"Participar da eleição do monitor da patrulha e das decisões dos encargos, respeitando os resultados"}],variable:[{id:"v1",name:"Participar de Audiência Pública ou consultas populares promovidas pelo poder legislativo"},{id:"v2",name:"Emitir título de eleitor e, em ano eleitoral, pesquisar candidatos e propostas compreendendo processos democráticos"},{id:"v3",name:"Planejar e executar campanha para educar jovens sobre voto consciente e direitos do cidadão"},{id:"v4",name:"Participar de ao menos uma Assembleia do Grupo Escoteiro"},{id:"v5",name:"Participar ativamente de um Fórum de Grupo Escoteiro"},{id:"v6",name:"Participar de grêmio estudantil ou conferências de juventude"},{id:"v7",name:"Participar de atividade da seção (debates, estudos de caso ou júri simulado) de forma respeitosa e contributiva"},{id:"v8",name:"Participar de dinâmicas de mediação de conflitos, praticando escuta ativa e construção de consensos"}],specialties:[{id:"s1",name:"Equidade"},{id:"s2",name:"Políticas Públicas"}],insignias:[]},
-  {id:"heranca",name:"Herança Cultural",eixo:"pd",focus:true,semester:2,campOnly:false,minVariable:5,fixed:[{id:"f1",name:"Conduzir a cerimônia de abertura de uma atividade de patrulha ou tropa"}],variable:[{id:"v1",name:"Organizar expedição com contato cultural: Povos originários, Comunidades quilombolas, Ribeirinhas ou Caiçaras"},{id:"v2",name:"Organizar recepção de membros do Movimento Escoteiro de outras localidades e apresentar pontos históricos da cidade"},{id:"v3",name:"Fazer tour explorando pontos históricos e culturais: centro cultural, biblioteca, mercado, feiras, museus, marcos históricos"},{id:"v4",name:"Identificar núcleos culturais da região e participar de atividades com eles"},{id:"v5",name:"Apresentar expressão artística da cultura popular brasileira em Fogo de Conselho"},{id:"v6",name:"Promover festival com música, poesia, dança e literatura típicas de uma região para o grupo ou comunidade"},{id:"v7",name:"Produzir com a patrulha peça de uso cotidiano utilizando técnicas de artesanato brasileiro"},{id:"v8",name:"Apresentar a cultura da cidade em evento regional, nacional ou internacional"}],specialties:[{id:"s1",name:"Cultura e Arte"}],insignias:[]},
-  {id:"paz",name:"Promoção da Paz",eixo:"pd",focus:true,semester:2,campOnly:false,minVariable:5,fixed:[{id:"f1",name:"Participar de ação colaborativa sobre cultura de paz: Direitos Humanos, Diálogo Inter-religioso, Refugiados, Diversidades ou Inclusão"}],variable:[{id:"v1",name:"Organizar mesa redonda sobre: Idolatria, Torcidas organizadas, Tribos urbanas, Intolerância religiosa ou Xenofobia"},{id:"v2",name:"Participar de atividades que promovam a paz e compreensão entre as pessoas"},{id:"v3",name:"Participar com patrulha de atividade inter-religiosa, conhecendo tradições de fé e refletindo sobre diversidade espiritual"},{id:"v4",name:"Participar de simulação das Nações Unidas debatendo questões globais sobre direitos humanos"},{id:"v5",name:"Organizar e realizar atividade com outra unidade escoteira, refletindo sobre fraternidade mundial escoteira"},{id:"v6",name:"Organizar \"Jantar Internacional\" apresentando culinária, trajes, músicas e Escotismo de diferentes países"},{id:"v7",name:"Participar de atividades e jogos ou ação de solidariedade com jovens da comunidade em local religioso ou espiritual"},{id:"v8",name:"Desenvolver momento inter-religioso na seção, grupo escoteiro ou comunidade"}],specialties:[{id:"s1",name:"Direitos Humanos"},{id:"s2",name:"Diversidades"}],insignias:[{id:"g1",name:"Lusofonia Sênior"},{id:"g2",name:"Cone Sul Sênior"}]},
-  {id:"valores",name:"Valores",eixo:"pd",focus:false,semester:0,campOnly:false,minVariable:2,fixed:[{id:"f1",name:"Avaliar com os pares a vivência da Promessa e da Lei Escoteira e realizar o Compromisso Sênior"}],variable:[{id:"v1",name:"Participar da avaliação da sua Progressão Pessoal e dos companheiros em patrulha"},{id:"v2",name:"Explicar o significado da Lei e da Promessa Escoteiras aos novos membros da patrulha"},{id:"v3",name:"Auxiliar um companheiro de patrulha a realizar seu Compromisso Sênior"},{id:"v4",name:"Participar de debate de casos reais ou situações sociais analisando-os à luz dos valores escoteiros"}],specialties:[],insignias:[]},
-  {id:"cuidado",name:"Cuidado com o Corpo",eixo:"sb",focus:true,semester:2,campOnly:false,minVariable:3,fixed:[{id:"f1",name:"Capacitar-se em primeiros socorros: cortes, contusões, queimaduras, picadas, hemorragias, fraturas, RCP, AVC, engasgo e emergências"},{id:"f2",name:"Nas atividades da patrulha ou tropa, identificar condutas de risco à saúde física e mental e propor medidas de mitigação"}],variable:[{id:"v1",name:"Experimentar atividades físicas ou modalidades esportivas diversas (coletivas, individuais, adaptadas) e refletir sobre a experiência"},{id:"v2",name:"Pesquisar sobre saúde física e mental na juventude e apresentar propostas à tropa para melhorar hábitos"},{id:"v3",name:"Conduzir oficinas ou jogos inclusivos que valorizem a diversidade de habilidades físicas do grupo"},{id:"v4",name:"Participar de workshop sobre: Perigos de anabolizantes, drogas, álcool, tabaco, cigarro eletrônico ou Distúrbios Alimentares"},{id:"v5",name:"Organizar o material de primeiros socorros da patrulha para diferentes atividades"},{id:"v6",name:"Participar de workshop ou atividade relacionada à prevenção de IST (Infecções Sexualmente Transmissíveis)"}],specialties:[{id:"s1",name:"Saúde"}],insignias:[]},
-  {id:"espiritualidade",name:"Espiritualidade",eixo:"sb",focus:true,semester:2,campOnly:false,minVariable:3,fixed:[],variable:[{id:"v1",name:"Conduzir momentos de silêncio, oração ou meditação em atividades da tropa, valorizando diversidade espiritual"},{id:"v2",name:"Participar de projetos e atividades para conhecer, atuar e dialogar com jovens de diferentes crenças e opções de fé"},{id:"v3",name:"Colaborar em celebrações religiosas ou outras expressões de fé e espiritualidade da comunidade"},{id:"v4",name:"Organizar momento de reflexão e conexão com ambiente natural: banho de floresta, dia da gratidão, artes ou culto"}],specialties:[],insignias:[]},
-  {id:"habitos",name:"Hábitos Saudáveis",eixo:"sb",focus:true,semester:1,campOnly:false,minVariable:2,fixed:[{id:"f1",name:"Planejar cardápio de acampamento para a patrulha priorizando alimentação sustentável e redução de resíduos, avaliando resultados"},{id:"f2",name:"Praticar atividades físicas regularmente"}],variable:[{id:"v1",name:"Manter o canto da patrulha limpo e organizado, colaborando com a limpeza da sede"},{id:"v2",name:"Planejar e realizar almoço ou jantar equilibrado e saudável para a patrulha, elaborando cardápio e avaliando"},{id:"v3",name:"Praticar meditação, yoga ou técnicas de relaxamento na natureza"},{id:"v4",name:"Elaborar plano pessoal de hábitos saudáveis e avaliar seu cumprimento ao longo do ciclo"},{id:"v5",name:"Demonstrar manter rotina de cuidado com ambiente doméstico, com autonomia e cooperação nas responsabilidades"}],specialties:[{id:"s1",name:"Esportes"},{id:"s2",name:"Educação Alimentar e Nutricional"}],insignias:[]},
-  {id:"saude_mental",name:"Saúde Mental",eixo:"sb",focus:false,semester:0,campOnly:false,minVariable:3,fixed:[{id:"f1",name:"Buscar informações sobre Espaços Seguros no Movimento Escoteiro e promover seus conceitos em todas as atividades"},{id:"f2",name:"Reconhecer sinais de estresse, ansiedade ou tristeza em colegas e praticar primeiros socorros em saúde mental"}],variable:[{id:"v1",name:"Realizar com patrulha campanha de saúde mental como Setembro Amarelo ou Janeiro Branco"},{id:"v2",name:"Desenvolver hábitos e atividades para aliviar tensão do dia a dia, proporcionando bem-estar e equilíbrio"},{id:"v3",name:"Convidar profissionais de saúde e saúde mental para falar sobre o assunto na tropa"},{id:"v4",name:"Organizar rotina de atividades mensais equilibrando mundo digital e real, incluindo atividade offline"},{id:"v5",name:"Utilizar técnicas de auto expressão e contato com emoções: Mindfulness, meditação, terapia, teatro ou dança"}],specialties:[{id:"s1",name:"Saúde Mental e Bem-estar Emocional"},{id:"s2",name:"Hobbies e Lazer"}],insignias:[]},
-  {id:"vinculos",name:"Vínculos Saudáveis",eixo:"sb",focus:false,semester:0,campOnly:false,minVariable:3,fixed:[{id:"f1",name:"Identificar e discutir com patrulha manifestações de bullying e cyberbullying, elaborando e implementando estratégias de prevenção"}],variable:[{id:"v1",name:"Promover encontro social reunindo jovens de diferentes realidades, criando ambiente de convivência e respeito à diversidade"},{id:"v2",name:"Realizar roda de conversa sobre confiança, respeito e equilíbrio nas relações"},{id:"v3",name:"Engajar em equipe de interesse para planejar e executar projetos, fortalecendo vínculos positivos no grupo"},{id:"v4",name:"Promover reuniões regulares na patrulha com espaços de escuta e apoio, incentivando empatia e soluções conjuntas"},{id:"v5",name:"Assumir responsabilidades no ambiente familiar, contribuindo com tarefas e promovendo diálogo respeitoso"},{id:"v6",name:"Convidar colega da mesma faixa etária para participar de Fogo de Conselho com Registro de Visitante"}],specialties:[{id:"s1",name:"Saúde Sexual e Reprodutiva"}],insignias:[]}
-];;
+const { BLOCKS, EIXOS, CAL_2S26, CAL_1S27, DEFAULT_YOUTH } = window.V2_DADOS_SR; // dados fixos ficam no v2.js
 
 // [paulo, thauany, clara, matheus]  1=feito, 0=não feito
 const INICIAL = {};;
 
-const EIXOS = {
-  hv:{label:'Habilidades para a Vida',icon:'⚙',color:'--hv',border:'--hv-b',text:'--hv-t',blockIds:['aprendizagem','autonomia','criatividade','inteligencia']},
-  ma:{label:'Meio Ambiente',icon:'🌿',color:'--ma',border:'--ma-b',text:'--ma-t',blockIds:['consumo','mudancas','preservacao','vida_ar']},
-  pd:{label:'Paz e Desenvolvimento',icon:'🕊',color:'--pd',border:'--pd-b',text:'--pd-t',blockIds:['comunidade','democracia','heranca','paz','valores']},
-  sb:{label:'Saúde e Bem-estar',icon:'💪',color:'--sb',border:'--sb-b',text:'--sb-t',blockIds:['cuidado','espiritualidade','habitos','saude_mental','vinculos']},
-};
 
-const CAL_2S26 = [
-  {n:1,dia:'01',mes:'AGO',tipo:'planejar',fmt:'T',blocos:'',comp:'',
-   txt:'Boas-vindas e abertura do ciclo: apresentação do plano de 1 ano, ratificação dos blocos-foco, distribuição de encargos. Cerimônia de Passagem da Isis <em>(a definir — antes de 06/08)</em>.',special:''},
-  {n:2,dia:'08',mes:'AGO',tipo:'normal',fmt:'T',blocos:'Preservação da Biodiversidade',comp:'1º Compromisso Sênior',
-   txt:'Bloco Preservação da Biodiversidade: coleta de dados sobre espécies locais e planejamento de visita à APA.',special:''},
-  {n:3,dia:'15',mes:'AGO',tipo:'normal',fmt:'T',blocos:'Democracia',comp:'2º Compromisso Sênior',
-   txt:'Bloco Democracia: Conselho de Patrulha, Assembleia de Tropa e eleição de encargos (Ações Fixas obrigatórias).',special:''},
-  {n:4,dia:'22',mes:'AGO',tipo:'normal',fmt:'T',blocos:'Democracia + Comunidade',comp:'3º Compromisso Sênior',
-   txt:'Bloco Democracia: dinâmicas de mediação e debate sobre voto consciente. Início do bloco Comunidade: identificação de necessidades comunitárias.',special:''},
-  {n:5,dia:'29–30',mes:'AGO',tipo:'pernoite',fmt:'PN',blocos:'',comp:'4º Compromisso Sênior',
-   txt:'ENDURO DISTRITAL SÊNIOR (sáb + dom — 1º pernoite). Atividade de aventura e resistência com outras unidades do distrito.',special:'enduro'},
-  {n:6,dia:'05',mes:'SET',tipo:'normal',fmt:'T',blocos:'Comunidade',comp:'5º Compromisso Sênior',
-   txt:'Bloco Comunidade: planejamento e início das 10h de ação comunitária. Contato com entidade de referência para capacitação.',special:''},
-  {n:7,dia:'12',mes:'SET',tipo:'normal',fmt:'T',blocos:'',comp:'',
-   txt:'RADICAL DAY DISTRITAL. Atividade radical e aventureira promovida pelo distrito.',special:'radical'},
-  {n:8,dia:'19',mes:'SET',tipo:'normal',fmt:'T',blocos:'Preservação da Biodiversidade',comp:'',
-   txt:'Bloco Preservação da Biodiversidade: visita à Área de Proteção Ambiental (Ação Fixa) e atividade com ONG ambiental.',special:''},
-  {n:9,dia:'26',mes:'SET',tipo:'normal',fmt:'T',blocos:'Mudanças Climáticas',comp:'',
-   txt:'Bloco Mudanças Climáticas: ferramentas meteorológicas, debate sobre impactos e soluções sustentáveis.',special:''},
-  {n:10,dia:'03',mes:'OUT',tipo:'normal',fmt:'T',blocos:'Hábitos Saudáveis + Mudanças Climáticas',comp:'',
-   txt:'Bloco Hábitos Saudáveis: planejamento de cardápio sustentável (Ação Fixa) + atividades físicas. Bloco Mudanças Climáticas: atividade ecológica urbana.',special:''},
-  {n:11,dia:'10',mes:'OUT',tipo:'normal',fmt:'T',blocos:'Hábitos Saudáveis + Criatividade e Inovação',comp:'',
-   txt:'Bloco Hábitos Saudáveis: avaliação de hábitos. Início do Bloco Criatividade e Inovação: noite cultural ou mostra de interesse.',special:''},
-  {n:12,dia:'17',mes:'OUT',tipo:'normal',fmt:'T',blocos:'Criatividade e Inovação',comp:'',
-   txt:'Bloco Criatividade e Inovação: fogo de conselho criativo, show de talentos ou produção de vídeo.',special:''},
-  {n:13,dia:'24',mes:'OUT',tipo:'normal',fmt:'T',blocos:'Comunidade + Mudanças Climáticas',comp:'',
-   txt:'Bloco Comunidade: conclusão das 10h de ação comunitária + capacitação para crises humanitárias. Bloco Mudanças Climáticas: projeto de reaproveitamento.',special:''},
-  {n:'—',dia:'31',mes:'OUT',tipo:'sem',fmt:'',blocos:'',comp:'',
-   txt:'Sem atividade — chefia em curso (30/10/2026).',special:'sem'},
-  {n:14,dia:'07',mes:'NOV',tipo:'normal',fmt:'T',blocos:'Democracia + Hábitos Saudáveis',comp:'',
-   txt:'Bloco Democracia: atividades da seção e assembleia/fórum do grupo. Bloco Hábitos Saudáveis: plano de hábitos pessoais.',special:''},
-  {n:15,dia:'14',mes:'NOV',tipo:'normal',fmt:'T',blocos:'',comp:'',
-   txt:'Preparação e planejamento final do Acampamento de Grupo. Conselho de Patrulha + revisão de pendências dos blocos.',special:''},
-  {n:'⛺',dia:'20–22',mes:'NOV',tipo:'pernoite',fmt:'PN',blocos:'Vida ao Ar Livre',comp:'',
-   txt:'ACAMPAMENTO DE GRUPO: Bloco Vida ao Ar Livre concluído integralmente. Todas as 8 Ações Fixas e mínimo de 5 Variáveis realizadas neste acampamento de 3 dias.',special:'camp'},
-  {n:16,dia:'28',mes:'NOV',tipo:'avaliar',fmt:'Av',blocos:'',comp:'',
-   txt:'Avaliação do 2S2026: o que funcionou, o que melhorar. Celebração das conquistas. Insumos para o 1S2027.',special:''},
-];
 
-const CAL_1S27 = [
-  {n:1,dia:'06',mes:'FEV',tipo:'planejar',fmt:'T',blocos:'',comp:'',
-   txt:'Abertura do 1S2027: revisão das conquistas do semestre anterior, planejamento do ciclo e distribuição de encargos.',special:''},
-  {n:2,dia:'13',mes:'FEV',tipo:'normal',fmt:'T',blocos:'Mudanças Climáticas',comp:'',
-   txt:'Bloco 8 — Mudanças Climáticas: ferramentas meteorológicas + debate sobre impactos climáticos.',special:''},
-  {n:3,dia:'20',mes:'FEV',tipo:'normal',fmt:'T',blocos:'Mudanças Climáticas',comp:'',
-   txt:'Bloco 8 — Mudanças Climáticas: atividade ecológica urbana + projeto de reaproveitamento.',special:''},
-  {n:4,dia:'27',mes:'FEV',tipo:'normal',fmt:'T',blocos:'Preservação da Biodiversidade',comp:'',
-   txt:'Bloco 9 — Preservação da Biodiversidade: colaboração com ONG ambiental + coleta de dados.',special:''},
-  {n:5,dia:'06',mes:'MAR',tipo:'normal',fmt:'T',blocos:'Preservação da Biodiversidade',comp:'',
-   txt:'Bloco 9 — Preservação da Biodiversidade: visita à APA (Ação Fixa) + plantio de árvores.',special:''},
-  {n:6,dia:'13',mes:'MAR',tipo:'normal',fmt:'T',blocos:'Preservação da Biodiversidade',comp:'',
-   txt:'Bloco 9 — Preservação da Biodiversidade: campanha de conscientização ou palestra.',special:''},
-  {n:7,dia:'20',mes:'MAR',tipo:'normal',fmt:'T',blocos:'Democracia',comp:'',
-   txt:'Bloco 10 — Democracia: debate democrático + atividade sobre participação cidadã.',special:''},
-  {n:8,dia:'27',mes:'MAR',tipo:'normal',fmt:'T',blocos:'Democracia',comp:'',
-   txt:'Bloco 10 — Democracia: campanha educativa + visita a espaço de representação pública.',special:''},
-  {n:9,dia:'03',mes:'ABR',tipo:'normal',fmt:'T',blocos:'Hábitos Saudáveis',comp:'',
-   txt:'Bloco 11 — Hábitos Saudáveis: Primeiros Socorros + planejamento de cardápio saudável (Ação Fixa).',special:''},
-  {n:10,dia:'10',mes:'ABR',tipo:'normal',fmt:'T',blocos:'Hábitos Saudáveis',comp:'',
-   txt:'Bloco 11 — Hábitos Saudáveis: circuito físico (Ação Fixa) + meditação e plano de hábitos.',special:''},
-  {n:11,dia:'17',mes:'ABR',tipo:'normal',fmt:'T',blocos:'Hábitos Saudáveis',comp:'',
-   txt:'Bloco 11 — Hábitos Saudáveis: atividades físicas variadas + higiene em campo.',special:''},
-  {n:12,dia:'24',mes:'ABR',tipo:'leve',fmt:'T',blocos:'',comp:'',
-   txt:'Atividade leve de patrulha: Conselho de Patrulha + revisão de pendências dos blocos do ciclo.',special:''},
-  {n:13,dia:'01',mes:'MAI',tipo:'normal',fmt:'T',blocos:'',comp:'',
-   txt:'Semana de finalização de pendências: ações variáveis que faltam para completar blocos de Paulo e Thauany.',special:''},
-  {n:14,dia:'08',mes:'MAI',tipo:'normal',fmt:'T',blocos:'',comp:'',
-   txt:'Avaliação individual de progressão + autoavaliação de Paulo e Thauany com a Corte de Honra.',special:''},
-  {n:15,dia:'15',mes:'MAI',tipo:'normal',fmt:'T',blocos:'',comp:'',
-   txt:'Atividade de patrulha + preparação da Cerimônia de Passagem de Paulo e Thauany.',special:''},
-  {n:'🏆',dia:'MAI/',mes:'JUN',tipo:'avaliar',fmt:'Esp',blocos:'',comp:'',
-   txt:'CERIMÔNIA DE PASSAGEM — Paulo e Thauany: Reconhecimento de Escoteiro da Pátria + passagem para o Ramo Pioneiro. Data exata a definir conforme conclusão dos 18 blocos.',special:'cerimonia'},
-  {n:16,dia:'JUN',mes:'2027',tipo:'avaliar',fmt:'Av',blocos:'',comp:'',
-   txt:'Avaliação final do 1S2027 + encerramento do ciclo de 1 ano. Planejamento do 2S2027.',special:''},
-];
 
 // Garante id estável em cada atividade pré-existente (compatível com PRESENCA/CAL_EXTRAS já salvos)
 CAL_2S26.forEach((ev,i) => { if (!ev.id) ev.id = '2s26_' + i; });
@@ -827,6 +728,16 @@ async function autenticarComSessaoCompartilhada() {
 }
 
 let __store = null;
+function mostrarModoLeitura() {
+  if (document.getElementById('bannerLeitura')) return;
+  const d = document.createElement('div');
+  d.id = 'bannerLeitura';
+  d.style.cssText = 'position:sticky;top:0;z-index:9999;background:#E8EEF7;border-bottom:2px solid #1B3B6F;color:#1B3B6F;padding:8px 12px;font-size:12px;text-align:center;';
+  d.textContent = '📴 Sem conexão — mostrando a última versão guardada neste aparelho. Só leitura: nada será salvo. Volte a ter sinal e recarregue a página.';
+  document.body.insertBefore(d, document.body.firstChild);
+  window.__modoLeitura = true;
+}
+window.addEventListener('online', () => { if (window.__modoLeitura) location.reload(); });
 async function renovarSessaoV2() {
   if (!firebaseRefreshToken) return;
   const renovado = await renovarTokenSessao(firebaseRefreshToken);
@@ -848,6 +759,12 @@ async function loadState(){
     node: V2_NODE_SR, stream: !MODO_VISUALIZACAO_SR,
     getToken: () => MODO_VISUALIZACAO_SR ? null : firebaseAuthToken,
     renovarToken: renovarSessaoV2,
+    onModoLeitura: () => mostrarModoLeitura(),
+    onSalvo: (d) => {
+      if (MODO_VISUALIZACAO_SR) return;
+      const nomeDe = (id) => { const y = YOUTH_DATA.find(v => v.id === id); return y ? y.name : null; };
+      V2.registrarHistorico('senior', registroLogado, '', V2.resumirDiff(d, nomeDe), Object.keys(d.sets).length + Object.keys(d.dels).length);
+    },
     // não troca os dados na tela enquanto alguém está digitando; tenta de novo logo depois
     temPendente: () => { const a = document.activeElement; return !!(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)); },
     onErroCarga: (e) => {
@@ -903,11 +820,13 @@ async function saveState(){
     if (el) el.innerHTML = '<span style="color:#E74C3C;cursor:pointer;" onclick="saveState()">⚠️ Não salvou — toque para tentar de novo</span>';
   }
 }
-function confirmReset(){
+async function confirmReset(){
   if(!souAdminSr){ alert('Esta ação é só para administradores.'); return; }
   const senha = prompt('Ação sensível: isso apaga os registros de progressão feitos durante o ciclo, pra todo mundo.\n\nDigite a senha para confirmar:');
   if (senha === null) return;
   if (senha !== '980070') { alert('Senha incorreta. Nada foi alterado.'); return; }
+  if (!(await V2.protegerAntes('senior', montarDadosSr(), 'Antes de restaurar dados iniciais', registroLogado))) return;
+  V2.registrarHistorico('senior', registroLogado, '', 'Restaurou os dados iniciais (limpou a progressão)', 0);
   S=deepCopy(INICIAL);saveState();renderAll();
   alert('Dados da Tropa Sênior restaurados.');
 }
@@ -1222,32 +1141,10 @@ let CICLO_BLOCOS_SR = {
   '1s27': BLOCKS.filter(b => b.focus && b.semester === 2).map(b => b.id)
 };
 let cicloPickerAbertoKeySr = null;
-let SEMESTRES_SR = [
-  { key: '2s26', titulo: '2º Semestre 2026', periodo: '01/08/2026 → 28/11/2026', cor1: '#6D1026', cor2: '#9C1B3A', origem: true,
-    especiais: [
-      { icone: '⚡', destaque: '22-23/ago:', texto: 'Enduro Distrital Sênior' },
-      { icone: '⚠', destaque: '31/out:', texto: 'Sem atividade (chefia em curso 30/10)' },
-      { icone: '⛺', destaque: '20-22/nov:', texto: 'Acampamento de Grupo — Bloco 7 (Vida ao Ar Livre) concluído integralmente' }
-    ]
-  },
-  { key: '1s27', titulo: '1º Semestre 2027', periodo: 'fev/2027 → jun/2027', cor1: '#1B3B6F', cor2: '#2A5298', origem: true,
-    especiais: [
-      { icone: '🏆', destaque: 'Mai/Jun 2027:', texto: 'Cerimônia de Passagem de Paulo e Thauany — Reconhecimento de Escoteiro da Pátria + passagem para o Ramo Pioneiro' }
-    ]
-  }
-];
+let SEMESTRES_SR = window.V2_DADOS_SR.SEMESTRES_SR;
 let semAbertoSr = { '2s26': true, '1s27': true };
 let semEditandoSr = null;
-let METAS_SR = {
-  '2s26': [
-    { icone: '⭐', texto: 'Paulo: alcança Azimute (blocos 11→12: Consumo + Comunidade)' },
-    { icone: '⭐', texto: 'Thauany: alcança Azimute (blocos 12→15)' }
-  ],
-  '1s27': [
-    { icone: '🏆', texto: 'Paulo: 18 blocos — Reconhecimento de Escoteiro da Pátria' },
-    { icone: '🏆', texto: 'Thauany: 18 blocos — Reconhecimento de Escoteiro da Pátria' }
-  ]
-};
+let METAS_SR = window.V2_DADOS_SR.METAS_SR;
 let metaEditandoSr = null;
 let metaFormAbertoSr = null;
 
@@ -2263,6 +2160,29 @@ async function exportData(){
   V2.registrarBackup('senior', registroLogado).then(()=>{ try{ window.parent.postMessage({backupFeitoSr:true},'*'); }catch(e){} });
 }
 
+async function desfazerSnapshotSr(){
+  if(!souAdminSr){ alert('Esta ação é só para administradores.'); return; }
+  let lista;
+  try { lista = await V2.listarSnapshots('senior'); } catch(e){ alert('Não consegui ler os snapshots. Confira a conexão.'); return; }
+  if(!lista.length){ alert('Ainda não há snapshots.\n\nEles são criados automaticamente antes de excluir jovem, restaurar dados iniciais, importar backup ou restaurar.'); return; }
+  const fmt = (s) => new Date(s.em).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'});
+  const r = prompt('Voltar a Tropa Sênior para o estado de ANTES de:\n\n'+lista.map((s,i)=>(i+1)+') '+fmt(s)+' — '+s.motivo).join('\n')+'\n\nDigite o número:');
+  if(r===null || r==='') return;
+  const sel = lista[parseInt(r,10)-1];
+  if(!sel){ alert('Número inválido.'); return; }
+  if(!confirm('Restaurar o estado de '+fmt(sel)+'?\n\nO estado atual também fica guardado como snapshot.')) return;
+  try{
+    const dados = await V2.lerSnapshot('senior', sel.id);
+    if (!(await V2.protegerAntes('senior', montarDadosSr(), 'Antes de restaurar snapshot', registroLogado))) return;
+    V2.registrarHistorico('senior', registroLogado, '', 'Restaurou o snapshot de '+fmt(sel), 0);
+    aplicarDadosSr(dados, false);
+    syncJovens();
+    await saveState();
+    renderAllTabs();
+    alert('Dados restaurados.');
+  }catch(e){ alert('Não consegui restaurar: '+e.message); }
+}
+
 function importData(event){
   if(!souAdminSr){ alert('Esta ação é só para administradores.'); if(event.target) event.target.value=''; return; }
   const file = event.target.files[0];
@@ -2272,6 +2192,8 @@ function importData(event){
     try{
       const d = JSON.parse(e.target.result);
       if(!d.version) throw new Error('Arquivo não reconhecido');
+      if (!(await V2.protegerAntes('senior', montarDadosSr(), 'Antes de importar backup', registroLogado))) { event.target.value=''; return; }
+      V2.registrarHistorico('senior', registroLogado, '', 'Importou um backup', 0);
       if(d.state)   S = d.state;
       if(d.presenca) PRESENCA = d.presenca;
       if(d.youth)   YOUTH_DATA = d.youth;
@@ -2650,13 +2572,6 @@ function checkAutoComplete(blockId,jovemIdx){
 // ║                    JOVENS                        ║
 // ╚═══════════════════════════════════════════════════╝
 // ─── GESTÃO DE JOVENS ───────────────────────────────────
-const DEFAULT_YOUTH = [
-  {id:'paulo',   name:'Paulo Soares Semedo dos Santos',             born:'2009-07-28', role:'',             archived:false, color:'#6D1026'},
-  {id:'isis',    name:'Isis Oliveira Cavalcante do Nascimento',     born:'2008-08-06', role:'Fora do ciclo', archived:false, color:'#888888'},
-  {id:'clara',   name:'Clara Garcia Santos',                        born:'2010-02-15', role:'',             archived:false, color:'#2D6E3E'},
-  {id:'thauany', name:'Thauany Nascimento',                         born:'2009-05-24', role:'Monitora',      archived:false, color:'#1B3B6F'},
-  {id:'matheus', name:'Matheus Gomes dos Reis',                     born:'2010-09-13', role:'Submonitor',    archived:false, color:'#6A1B9A'},
-];
 let YOUTH_DATA = [];
 function loadYouthData(){
   syncJovens();
@@ -2732,7 +2647,7 @@ function unarchiveYouth(yid){
   saveYouthData();renderAllTabs();
 }
 
-function deleteYouth(yid){
+async function deleteYouth(yid){
   if(!souAdminSr){ alert('Esta ação é só para administradores.'); return; }
   // ── Verificação de senha ──────────────────────────
   const pwd=prompt('Para excluir permanentemente, digite a senha de autorização:');
@@ -2745,6 +2660,8 @@ function deleteYouth(yid){
   const nome=y?y.name:'este jovem';
   if(!confirm('⚠ EXCLUSÃO PERMANENTE\n\nTodos os dados de "'+nome+'" serão removidos do sistema.\nEsta ação não pode ser desfeita.\n\nConfirmar exclusão?')) return;
 
+  if (!(await V2.protegerAntes('senior', montarDadosSr(), 'Antes de excluir ' + nome, registroLogado))) return;
+  V2.registrarHistorico('senior', registroLogado, '', 'Excluiu o jovem ' + nome, 0);
   const idx=JOVENS.indexOf(yid);
 
   // ── 1. Remove da progressão (tudo é guardado pelo ID: basta apagar a chave) ──
@@ -3524,6 +3441,7 @@ async function abrirAlmoSr() {
 
 <div class="save-bar" id="saveBarSr">
   <span id="save-status" class="save-bar-status">✓ Sistema carregado</span>
+  <button class="sbar-btn somente-admin" onclick="desfazerSnapshotSr()" title="Voltar a um snapshot automático">↩</button>
   <label class="sbar-btn somente-admin" title="Importar backup">
     📥
     <input type="file" accept=".json" onchange="importData(event)" style="display:none;">
