@@ -54,7 +54,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-10-23i"
+  VERSAO: "2026-10-23j"
 };
 
 /* ============================================================
@@ -803,7 +803,7 @@ window.V2_CONFIG = {
   }
   function dataExtenso() { return new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }); }
   // r = { tropa, nome, info:[[rotulo,valor]], resumo:{n,total,etapa}, eixos:[{nome,cor,feitos,total,blocos:[{nome,ok,detalhe}]}], presenca:{presentes,ausentes,total}|null }
-  function abrirRelatorio(r) {
+  function montarPdfJovem(r) {
     try {
       var P = criarPdf(595, 842), M = 36, y = 0, VINHO = '#6D1026';
       function novaPagina() { P.nova(); y = M + 6; }
@@ -852,12 +852,12 @@ window.V2_CONFIG = {
       y += 4;
       P.texto(M, y + 8, 'Os dados refletem o que estava registrado no momento da emissão.', { t: 8, c: '#888888' });
       rod(num);
-      entregarPdf(P.bytes(), 'relatorio-' + nomeSeguro(r.nome) + '.pdf');
-    } catch (e) { console.error(e); alert('Não consegui gerar o PDF: ' + e.message); }
+      return { bytes: P.bytes(), nome: 'relatorio-' + nomeSeguro(r.nome) + '.pdf' };
+    } catch (e) { console.error(e); throw e; }
   }
 
   // r = { tropa, resumo:{jovens, media, total}, etapas:[[nome,qtd]], colunas:[{nome,cor,total}], linhas:[{nome,patrulha,cargo,n,total,etapa,porEixo:[n],presenca}] }
-  function abrirRelatorioTropa(r) {
+  function montarPdfTropa(r) {
     try {
       var P = criarPdf(842, 595), M = 30, y = 0, VINHO = '#6D1026', num = 1;
       function rod(n) { P.texto(M, P.H - 16, 'GE Joaninha · Relatório da ' + r.tropa, { t: 7.5, c: '#888888' }); P.texto(P.W - M - 40, P.H - 16, 'Pág. ' + n, { t: 7.5, c: '#888888' }); }
@@ -909,9 +909,81 @@ window.V2_CONFIG = {
       y += 10;
       if (y + 12 < P.H - 30) P.texto(M, y + 8, 'Os dados refletem o que estava registrado no momento da emissão.', { t: 8, c: '#888888' });
       rod(num);
-      entregarPdf(P.bytes(), 'relatorio-' + nomeSeguro(r.tropa) + '.pdf');
-    } catch (e) { console.error(e); alert('Não consegui gerar o PDF: ' + e.message); }
+      return { bytes: P.bytes(), nome: 'relatorio-' + nomeSeguro(r.tropa) + '.pdf' };
+    } catch (e) { console.error(e); throw e; }
   }
+
+
+  /* ---------- tela de visualização do relatório (abre dentro do app; daqui dá para baixar o PDF ou imprimir) ---------- */
+  var CSS_REL = '*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#222;margin:0;padding:18px;max-width:900px;margin:auto;font-size:13px;line-height:1.4}' +
+    'header{border-bottom:3px solid #6D1026;padding-bottom:10px;margin-bottom:14px}h1{margin:0;font-size:22px;color:#6D1026}.sub{color:#666;font-size:12px;margin-top:2px}' +
+    '.info{display:grid;grid-template-columns:1fr 1fr;gap:4px 18px;margin:12px 0}.info div span{color:#777}' +
+    '.resumo{background:#F6EFEA;border-radius:8px;padding:12px 14px;margin:12px 0}.resumo b{font-size:15px}.barra{height:10px;background:#E4D9D0;border-radius:6px;margin-top:8px;overflow:hidden}.barra i{display:block;height:100%;background:#6D1026}' +
+    '.eixo{margin-top:14px;break-inside:avoid}.eixo h2{font-size:14px;margin:0 0 6px;padding:6px 10px;border-radius:6px;color:#fff;display:flex;justify-content:space-between}' +
+    'table{width:100%;border-collapse:collapse}td{padding:5px 8px;border-bottom:1px solid #EEE;vertical-align:top}td.s{width:26px;text-align:center;font-weight:bold}.ok{color:#1E8449}.pend{color:#B0A89F}td.d{color:#666;text-align:right}' +
+    '.cards{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}.card{background:#F6EFEA;border-radius:8px;padding:10px 14px;min-width:110px}.card b{display:block;font-size:20px;color:#6D1026}' +
+    'th{background:#6D1026;color:#fff;text-align:left;padding:6px 8px;font-size:11px}th.e{text-align:center}td.c{text-align:center}.tb{overflow-x:auto}.tb table{min-width:720px}tr{break-inside:avoid}' +
+    'footer{margin-top:20px;border-top:1px solid #DDD;padding-top:8px;color:#888;font-size:11px}';
+  function htmlJovem(r) {
+    var pct = r.resumo.total ? Math.round(r.resumo.n / r.resumo.total * 100) : 0;
+    var h = '<header><h1>' + escHtml(r.nome) + '</h1><div class="sub">' + escHtml(r.tropa) + ' · GE Joaninha · Relatório de progressão · ' + escHtml(dataExtenso()) + '</div></header>';
+    var info = (r.info || []).filter(function (i) { return i[1]; });
+    if (info.length) h += '<div class="info">' + info.map(function (i) { return '<div><span>' + escHtml(i[0]) + ':</span> ' + escHtml(i[1]) + '</div>'; }).join('') + '</div>';
+    h += '<div class="resumo"><b>' + r.resumo.n + ' de ' + r.resumo.total + ' blocos concluídos</b> (' + pct + '%)' + (r.resumo.etapa ? ' — etapa: <b>' + escHtml(r.resumo.etapa) + '</b>' : '') + '<div class="barra"><i style="width:' + pct + '%"></i></div></div>';
+    if (r.presenca && r.presenca.total) {
+      var pp = Math.round(r.presenca.presentes / r.presenca.total * 100);
+      h += '<div class="resumo"><b>Presença:</b> ' + r.presenca.presentes + ' em ' + r.presenca.total + ' atividade(s) com chamada (' + pp + '%)' + (r.presenca.ausentes ? ' · ' + r.presenca.ausentes + ' falta(s)' : '') + '</div>';
+    }
+    (r.eixos || []).forEach(function (e) {
+      h += '<div class="eixo"><h2 style="background:' + escHtml(e.cor) + '"><span>' + escHtml(e.nome) + '</span><span>' + e.feitos + '/' + e.total + '</span></h2><table>' +
+        e.blocos.map(function (b) { return '<tr><td class="s ' + (b.ok ? 'ok' : 'pend') + '">' + (b.ok ? '✓' : '○') + '</td><td>' + escHtml(b.nome) + '</td><td class="d">' + escHtml(b.detalhe) + '</td></tr>'; }).join('') + '</table></div>';
+    });
+    return h + '<footer>Os dados refletem o que estava registrado no momento da emissão.</footer>';
+  }
+  function htmlTropa(r) {
+    var h = '<header><h1>' + escHtml(r.tropa) + '</h1><div class="sub">GE Joaninha · Relatório de progressão da tropa · ' + escHtml(dataExtenso()) + '</div></header>' +
+      '<div class="cards"><div class="card"><b>' + r.resumo.jovens + '</b>jovens</div><div class="card"><b>' + r.resumo.media + '</b>média de blocos (de ' + r.resumo.total + ')</div>' +
+      (r.etapas || []).map(function (e) { return '<div class="card"><b>' + e[1] + '</b>' + escHtml(e[0]) + '</div>'; }).join('') + '</div>' +
+      '<div class="tb"><table><thead><tr><th>Jovem</th><th>Patrulha</th><th>Cargo</th><th>Etapa</th><th>Blocos</th>' +
+      (r.colunas || []).map(function (c) { return '<th class="e" style="background:' + escHtml(c.cor) + '">' + escHtml(c.nome) + '</th>'; }).join('') + '<th class="e">Presença</th></tr></thead><tbody>' +
+      r.linhas.map(function (l) {
+        var pct = l.total ? Math.round(l.n / l.total * 100) : 0;
+        return '<tr><td><b>' + escHtml(l.nome) + '</b></td><td>' + escHtml(l.patrulha) + '</td><td>' + escHtml(l.cargo) + '</td><td>' + escHtml(l.etapa) + '</td>' +
+          '<td style="min-width:100px">' + l.n + '/' + l.total + '<div class="barra" style="height:6px;margin-top:3px"><i style="width:' + pct + '%"></i></div></td>' +
+          l.porEixo.map(function (n, i) { return '<td class="c">' + n + '/' + r.colunas[i].total + '</td>'; }).join('') + '<td class="c">' + escHtml(l.presenca || '—') + '</td></tr>';
+      }).join('') + '</tbody></table></div><footer>Os dados refletem o que estava registrado no momento da emissão.</footer>';
+    return h;
+  }
+  function visualizarRelatorio(titulo, corpoHtml, gerarPdf, paisagem) {
+    var ant = document.getElementById('v2RelatorioOv'); if (ant) ant.remove();
+    var toque = window.matchMedia && matchMedia('(pointer:coarse)').matches;
+    var ov = document.createElement('div');
+    ov.id = 'v2RelatorioOv';
+    ov.style.cssText = 'position:fixed;left:0;top:0;right:0;bottom:0;z-index:100000;background:#EDE7E0;display:flex;flex-direction:column;font-family:Arial,sans-serif';
+    var btn = 'border:0;border-radius:18px;padding:9px 14px;font-size:13px;font-weight:bold;cursor:pointer;';
+    ov.innerHTML = '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 12px;background:#6D1026;color:#fff">' +
+      '<span style="flex:1;min-width:140px;font-size:14px;font-weight:bold">' + escHtml(titulo) + '</span>' +
+      '<button id="v2RelBaixar" style="' + btn + 'background:#fff;color:#6D1026">' + (toque ? '⬇ Baixar / compartilhar PDF' : '⬇ Baixar PDF') + '</button>' +
+      (toque ? '' : '<button id="v2RelImprimir" style="' + btn + 'background:#fff;color:#6D1026">🖨 Imprimir</button>') +
+      '<button id="v2RelFechar" style="' + btn + 'background:transparent;color:#fff;border:1px solid #fff">✕ Fechar</button></div>' +
+      (toque ? '<div style="padding:6px 12px;font-size:11px;color:#555;background:#F6EFEA">Para imprimir no celular: toque em Baixar / compartilhar PDF e escolha "Imprimir".</div>' : '') +
+      '<iframe id="v2RelFrame" style="flex:1;border:0;width:100%;background:#fff"></iframe>';
+    document.body.appendChild(ov);
+    var fr = document.getElementById('v2RelFrame');
+    fr.srcdoc = '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' + escHtml(titulo) + '</title><style>' + CSS_REL +
+      '@media print{body{padding:0}}@page{margin:12mm;size:A4 ' + (paisagem ? 'landscape' : 'portrait') + '}</style></head><body>' + corpoHtml + '</body></html>';
+    function fechar() { ov.remove(); document.removeEventListener('keydown', esc); }
+    function esc(e) { if (e.key === 'Escape') fechar(); }
+    document.addEventListener('keydown', esc);
+    document.getElementById('v2RelFechar').onclick = fechar;
+    document.getElementById('v2RelBaixar').onclick = function () {
+      try { var p = gerarPdf(); entregarPdf(p.bytes, p.nome); } catch (e) { alert('Não consegui gerar o PDF: ' + e.message); }
+    };
+    var bi = document.getElementById('v2RelImprimir');
+    if (bi) bi.onclick = function () { try { fr.contentWindow.focus(); fr.contentWindow.print(); } catch (e) { alert('Não consegui abrir a impressão. Use "Baixar PDF" e imprima o arquivo.'); } };
+  }
+  function abrirRelatorio(r) { visualizarRelatorio('Relatório — ' + r.nome, htmlJovem(r), function () { return montarPdfJovem(r); }, false); }
+  function abrirRelatorioTropa(r) { visualizarRelatorio('Relatório — ' + r.tropa, htmlTropa(r), function () { return montarPdfTropa(r); }, true); }
 
   /* ---------- lembrete mensal de backup (admins) ---------- */
   // Janela: últimos 5 dias do mês até o dia 5 do mês seguinte. Devolve "AAAA-MM" do mês a fechar, ou null fora da janela.
