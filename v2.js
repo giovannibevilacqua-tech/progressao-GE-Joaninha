@@ -54,7 +54,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-10-23k"
+  VERSAO: "2026-10-23l"
 };
 
 /* ============================================================
@@ -1003,7 +1003,10 @@ window.V2_CONFIG = {
       '<div class="acoes"><span>' + escHtml(titulo) + '</span><button style="' + btn + '" onclick="baixar()">⬇ Baixar PDF</button><button style="' + btn + '" onclick="imprimir()">🖨 Imprimir</button></div>' +
       corpoHtml + '<script>' + script + '<\/script></body></html>';
     var url = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
-    var w = window.open(url, '_blank');
+    // se este código roda dentro do iframe da Sênior, abre a aba a partir da página principal (como a Escoteira faz)
+    var abridor = window;
+    try { if (window.top && window.top !== window && window.top.document) abridor = window.top; } catch (e) {}
+    var w = abridor.open(url, '_blank');
     if (!w) { visualizarRelatorio(titulo, corpoHtml, function () { return pdf; }, paisagem); } // navegador não deixou abrir outra aba: mostra dentro do app
     setTimeout(function () { URL.revokeObjectURL(url); }, 600000);
   }
