@@ -54,7 +54,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-10-23j"
+  VERSAO: "2026-10-23k"
 };
 
 /* ============================================================
@@ -982,8 +982,33 @@ window.V2_CONFIG = {
     var bi = document.getElementById('v2RelImprimir');
     if (bi) bi.onclick = function () { try { fr.contentWindow.focus(); fr.contentWindow.print(); } catch (e) { alert('Não consegui abrir a impressão. Use "Baixar PDF" e imprima o arquivo.'); } };
   }
-  function abrirRelatorio(r) { visualizarRelatorio('Relatório — ' + r.nome, htmlJovem(r), function () { return montarPdfJovem(r); }, false); }
-  function abrirRelatorioTropa(r) { visualizarRelatorio('Relatório — ' + r.tropa, htmlTropa(r), function () { return montarPdfTropa(r); }, true); }
+  // Abre o relatório em outra aba do navegador (página própria, com botões de baixar PDF e imprimir).
+  // O PDF já vai dentro da página, então os botões funcionam mesmo se a aba ficar aberta sem o app.
+  function abrirNovaAba(titulo, corpoHtml, gerarPdf, paisagem) {
+    var pdf;
+    try { pdf = gerarPdf(); } catch (e) { alert('Não consegui gerar o relatório: ' + e.message); return; }
+    var bin = '', CH = 8192;
+    for (var i = 0; i < pdf.bytes.length; i += CH) bin += String.fromCharCode.apply(null, pdf.bytes.subarray(i, i + CH));
+    var b64 = btoa(bin);
+    var script = 'var B64="' + b64 + '",NOME=' + JSON.stringify(pdf.nome) + ';' +
+      'function arq(){var s=atob(B64),u=new Uint8Array(s.length);for(var i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return new File([u],NOME,{type:"application/pdf"});}' +
+      'async function baixar(){var f=arq();var toque=matchMedia("(pointer:coarse)").matches;' +
+      'if(toque&&navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:NOME});return;}catch(e){if(e&&e.name==="AbortError")return;}}' +
+      'var a=document.createElement("a");a.href=URL.createObjectURL(f);a.download=NOME;document.body.appendChild(a);a.click();a.remove();}' +
+      'function imprimir(){window.print();}';
+    var btn = 'border:0;border-radius:18px;padding:9px 14px;font-size:13px;font-weight:bold;cursor:pointer;background:#fff;color:#6D1026;';
+    var html = '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' + escHtml(titulo) + '</title><style>' + CSS_REL +
+      '.acoes{position:sticky;top:0;z-index:5;display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 14px;background:#6D1026;color:#fff;margin:-18px -18px 14px}.acoes span{flex:1;min-width:140px;font-weight:bold;font-size:14px}' +
+      '@media print{.acoes{display:none}body{padding:0}}@page{margin:12mm;size:A4 ' + (paisagem ? 'landscape' : 'portrait') + '}</style></head><body>' +
+      '<div class="acoes"><span>' + escHtml(titulo) + '</span><button style="' + btn + '" onclick="baixar()">⬇ Baixar PDF</button><button style="' + btn + '" onclick="imprimir()">🖨 Imprimir</button></div>' +
+      corpoHtml + '<script>' + script + '<\/script></body></html>';
+    var url = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
+    var w = window.open(url, '_blank');
+    if (!w) { visualizarRelatorio(titulo, corpoHtml, function () { return pdf; }, paisagem); } // navegador não deixou abrir outra aba: mostra dentro do app
+    setTimeout(function () { URL.revokeObjectURL(url); }, 600000);
+  }
+  function abrirRelatorio(r) { abrirNovaAba('Relatório — ' + r.nome, htmlJovem(r), function () { return montarPdfJovem(r); }, false); }
+  function abrirRelatorioTropa(r) { abrirNovaAba('Relatório — ' + r.tropa, htmlTropa(r), function () { return montarPdfTropa(r); }, true); }
 
   /* ---------- lembrete mensal de backup (admins) ---------- */
   // Janela: últimos 5 dias do mês até o dia 5 do mês seguinte. Devolve "AAAA-MM" do mês a fechar, ou null fora da janela.
