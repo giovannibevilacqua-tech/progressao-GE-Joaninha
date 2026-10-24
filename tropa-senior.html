@@ -412,7 +412,6 @@ mark.hl{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
   <div class="progress-section">
     <div class="section-label">Progresso por Jovem</div>
     <div id="pbars"></div>
-    <button class="btn-ic" style="width:100%;margin:8px 0;padding:9px;" onclick="relatorioTropaSr()">📄 Relatório da tropa em PDF</button>
     <div class="prog-hint">
       Escalada: 0–5 ✓ &nbsp;|&nbsp; Conquista: 6–11 ✓ &nbsp;|&nbsp; Azimute: 12–17 ✓ &nbsp;|&nbsp; Reconhecimento Escoteiro da Pátria: 18 ✓
     </div>
@@ -562,6 +561,8 @@ mark.hl{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
     </div>
     <button onclick="renderJovens()" style="background:var(--vinho);color:#fff;border:none;border-radius:20px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 2px 6px rgba(109,16,38,.3);">↺ Atualizar</button>
   </div>
+
+  <button type="button" class="btn-ic" id="btnRelatorioTropaSr" style="display:block;width:calc(100% - 24px);margin:12px 12px 0;padding:12px;font-weight:700;" onclick="relatorioTropaSr()">📄 Relatório da tropa</button>
 
   <div style="margin:12px 12px 0;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">🏕️ Patrulhas</div>
   <div id="patrulhasContainerSr" style="margin:6px 12px 0;"></div>
