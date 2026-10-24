@@ -25,7 +25,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-10-23b"
+  VERSAO: "2026-10-23c"
 };
 
 /* ============================================================
@@ -236,7 +236,7 @@ window.V2_CONFIG = {
     var ids = (CFG.ID_ARRAYS || {})[o.node] || [];
     var raiz = CFG.DB_URL + '/' + CFG.RAIZ + '/' + o.node;
     var cache = null, baseFlat = {}, carregou = false, bloqueado = false;
-    var es = null, fila = Promise.resolve(), salvando = 0, sujo = false, timerAp = null, fechado = false;
+    var es = null, fila = Promise.resolve(), salvando = 0, sujo = false, timerAp = null, timerRetry = null, fechado = false;
 
     function token() { return (o.getToken ? o.getToken() : null) || auth.getToken(); }
     function renovar() { return o.renovarToken ? o.renovarToken() : (auth.renovar ? auth.renovar() : Promise.resolve()); }
@@ -269,7 +269,8 @@ window.V2_CONFIG = {
 
     function aplicarRemoto() {
       if (fechado) return;
-      if (salvando > 0 || (o.temPendente && o.temPendente())) { sujo = true; return; }
+      if (salvando > 0) { sujo = true; return; }
+      if (o.temPendente && o.temPendente()) { sujo = true; clearTimeout(timerRetry); timerRetry = setTimeout(aplicarRemoto, 1500); return; }
       sujo = false;
       var dados = cache ? decDados(cache, ids) : null;
       var novoFlat = cache ? flatten(encDados(dados, ids)) : {};
@@ -488,7 +489,66 @@ window.V2_CONFIG = {
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bannerTeste); else bannerTeste();
   }
 
+  /* ---------- lembrete mensal de backup (admins) ---------- */
+  // Janela: últimos 5 dias do mês até o dia 5 do mês seguinte. Devolve "AAAA-MM" do mês a fechar, ou null fora da janela.
+  function cicloBackup(d) {
+    d = d || new Date();
+    var dia = d.getDate(), ultimo = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    var y = d.getFullYear(), m = d.getMonth();
+    if (dia >= ultimo - 4) { /* mês atual */ }
+    else if (dia <= 5) { m--; if (m < 0) { m = 11; y--; } }
+    else return null;
+    return y + '-' + String(m + 1).padStart(2, '0');
+  }
+  function urlBackup(ciclo, tropa) {
+    var t = auth.getToken();
+    return CFG.DB_URL + '/' + CFG.RAIZ + '/meta/backups/' + ciclo + (tropa ? '/' + tropa : '') + '.json' + (t ? '?auth=' + encodeURIComponent(t) : '');
+  }
+  // Devolve { ciclo, pendentes:['escoteira','senior'] } ou null se não é hora / já foi tudo feito.
+  async function lembreteBackup() {
+    var ciclo = cicloBackup();
+    if (!ciclo) return null;
+    try {
+      var r = await fetch(urlBackup(ciclo));
+      if (!r.ok) return null;
+      var feito = (await r.json()) || {};
+      var pend = ['escoteira', 'senior'].filter(function (t) { return !feito[t]; });
+      return pend.length ? { ciclo: ciclo, pendentes: pend } : null;
+    } catch (e) { return null; }
+  }
+  async function registrarBackup(tropa, registro) {
+    var ciclo = cicloBackup();
+    if (!ciclo) return;
+    try {
+      await fetch(urlBackup(ciclo, tropa), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ por: String(registro || ''), em: new Date().toISOString() }) });
+    } catch (e) {}
+  }
+
+  /* ---------- senha do app (guardada com hash PBKDF2; senhas antigas em texto continuam valendo até serem convertidas) ---------- */
+  function b64(buf) { var s = ''; new Uint8Array(buf).forEach(function (b) { s += String.fromCharCode(b); }); return btoa(s); }
+  function deB64(t) { var s = atob(t), a = new Uint8Array(s.length); for (var i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); return a; }
+  async function derivar(senha, salt, iter) {
+    var k = await crypto.subtle.importKey('raw', new TextEncoder().encode(senha), 'PBKDF2', false, ['deriveBits']);
+    return b64(await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: salt, iterations: iter }, k, 256));
+  }
+  async function hashSenha(senha) {
+    var salt = crypto.getRandomValues(new Uint8Array(16)), iter = 100000;
+    return 'pbkdf2$' + iter + '$' + b64(salt) + '$' + await derivar(String(senha), salt, iter);
+  }
+  function senhaComHash(g) { return typeof g === 'string' && g.indexOf('pbkdf2$') === 0; }
+  // guardada vazia → vale o número do registro; com hash → confere o hash; senão (antigo) → compara o texto
+  async function conferirSenha(digitada, guardada, registro) {
+    if (!guardada) return digitada === registro;
+    if (!senhaComHash(guardada)) return digitada === guardada;
+    try {
+      var p = guardada.split('$');
+      return (await derivar(String(digitada), deB64(p[2]), parseInt(p[1], 10))) === p[3];
+    } catch (e) { return false; }
+  }
+
   root.V2 = {
+    hashSenha: hashSenha, conferirSenha: conferirSenha, senhaComHash: senhaComHash,
+    cicloBackup: cicloBackup, lembreteBackup: lembreteBackup, registrarBackup: registrarBackup,
     CFG: CFG, escKey: escKey, unescKey: unescKey, enc: enc, dec: dec, encDados: encDados, decDados: decDados, decCampo: decCampo,
     flatten: flatten, diff: diff, canon: canon, canonStr: canonStr, setAt: setAt, podar: podar, aplicarMulti: aplicarMulti,
     configurarAuth: configurarAuth, criarStore: criarStore,
@@ -579,3 +639,19 @@ const BLOCO_IDS = Object.keys(BLOCOS);
 
   return { EIXOS: EIXOS, BLOCOS: BLOCOS, BLOCO_IDS: BLOCO_IDS };
 })();
+
+/* ---------- funções que index.html e tropa-senior.html usavam repetidas ---------- */
+function deepCopy(o) { return JSON.parse(JSON.stringify(o)); }
+function urlComAuthFirebase(url) {
+  if (typeof firebaseAuthToken === 'undefined' || !firebaseAuthToken) return url;
+  return url + (url.indexOf('?') !== -1 ? '&' : '?') + 'auth=' + firebaseAuthToken;
+}
+async function renovarTokenSessao(refreshToken) {
+  const resp = await fetch('https://securetoken.googleapis.com/v1/token?key=' + window.V2_CONFIG.API_KEY, {
+    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(refreshToken)
+  });
+  const data = await resp.json();
+  if (data && data.id_token) return { idToken: data.id_token, refreshToken: data.refresh_token };
+  return null;
+}

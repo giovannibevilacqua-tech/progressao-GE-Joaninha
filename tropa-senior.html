@@ -98,6 +98,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .cb.camp-only{background:#E3F2FD;color:#1565C0;border-color:#BBDEFB;cursor:default;}
 
 /* RESET BTN */
+body:not(.eh-admin) .somente-admin{display:none !important;}
 .reset-btn{display:block;margin:14px auto 0;background:none;border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:11px;color:var(--muted);cursor:pointer;}
 .reset-btn:hover{border-color:#E74C3C;color:#E74C3C;}
 
@@ -444,7 +445,7 @@ mark.hl{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
   </div>
   <div class="block-list" id="bl-sb"></div>
 
-  <button class="reset-btn" onclick="confirmReset()">↺ Restaurar dados iniciais</button>
+  <button class="reset-btn somente-admin" onclick="confirmReset()">↺ Restaurar dados iniciais</button>
 </div>
 
 <!-- ═══ TAB: CALENDÁRIO ═══════════════════════════════ -->
@@ -773,15 +774,6 @@ function salvarSessao() {
     }));
   } catch (e) {}
 }
-async function renovarTokenSessao(refreshToken) {
-  const resp = await fetch('https://securetoken.googleapis.com/v1/token?key=' + FIREBASE_WEB_API_KEY, {
-    method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-    body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(refreshToken)
-  });
-  const data = await resp.json();
-  if (data && data.id_token) return { idToken: data.id_token, refreshToken: data.refresh_token };
-  return null;
-}
 function agendarRenovacaoTokenSr() {
   setTimeout(tentarRenovarTokenAgendadoSr, 50 * 60 * 1000);
 }
@@ -800,6 +792,7 @@ document.addEventListener('visibilitychange', () => {
   const salva = lerSessaoSalva();
   if (salva && Date.now() >= salva.expiraEm) tentarRenovarTokenAgendadoSr();
 });
+let souAdminSr = false;
 async function autenticarComSessaoCompartilhada() {
   const salva = lerSessaoSalva();
   if (!salva) return false;
@@ -821,6 +814,8 @@ async function autenticarComSessaoCompartilhada() {
   // salva.tropa === 'senior' → acesso permitido
   // salva.tropa === 'escoteira' → redirecionar para index.html
   const isAdmin = salva.admin === true || salva.admin === undefined;
+  souAdminSr = salva.admin === true;
+  document.body.classList.toggle('eh-admin', souAdminSr);
   const tropa = salva.tropa;
   if (!isAdmin && tropa === 'escoteira') {
     // Usuário da Tropa Escoteira tentando acessar Tropa Sênior → redireciona
@@ -829,10 +824,6 @@ async function autenticarComSessaoCompartilhada() {
   }
   agendarRenovacaoTokenSr();
   return true;
-}
-function urlComAuthFirebase(url) {
-  if (!firebaseAuthToken) return url;
-  return url + (url.indexOf('?') !== -1 ? '&' : '?') + 'auth=' + firebaseAuthToken;
 }
 
 let __store = null;
@@ -854,18 +845,25 @@ async function loadState(){
   }
   V2.configurarAuth({ getToken: () => MODO_VISUALIZACAO_SR ? null : firebaseAuthToken, renovar: renovarSessaoV2 });
   __store = V2.criarStore({
-    node: V2_NODE_SR, stream: false,
+    node: V2_NODE_SR, stream: !MODO_VISUALIZACAO_SR,
     getToken: () => MODO_VISUALIZACAO_SR ? null : firebaseAuthToken,
-    renovarToken: renovarSessaoV2
+    renovarToken: renovarSessaoV2,
+    // não troca os dados na tela enquanto alguém está digitando; tenta de novo logo depois
+    temPendente: () => { const a = document.activeElement; return !!(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)); },
+    onErroCarga: (e) => {
+      console.error('Tropa Sênior: falha ao carregar dados (v2):', e);
+      if (!MODO_VISUALIZACAO_SR) alert('⚠️ Não consegui carregar os dados da Tropa Sênior (v2).\n\nO app abriu com dados padrão e o SALVAMENTO FICOU BLOQUEADO para não apagar nada. Recarregue a página.');
+    },
+    onDados: (dados, primeira) => {
+      try { aplicarDadosSr(dados, primeira); } catch (e) { console.error(e); if (primeira) S = deepCopy(INICIAL); }
+      if (primeira) { if (__resolverPrimeira) __resolverPrimeira(); }
+      else preservarScrollSr(() => { if (typeof syncJovens === 'function') syncJovens(); renderAllTabs(); });
+    }
   });
-  let dados = null;
-  try { dados = await __store.carregar(); }
-  catch (e) {
-    console.error('Tropa Sênior: falha ao carregar dados (v2):', e);
-    if (!MODO_VISUALIZACAO_SR) alert('⚠️ Não consegui carregar os dados da Tropa Sênior (v2).\n\nO app abriu com dados padrão e o SALVAMENTO FICOU BLOQUEADO para não apagar nada. Recarregue a página.');
-    S = deepCopy(INICIAL);
-    return;
-  }
+  await new Promise(res => { __resolverPrimeira = res; __store.iniciar(); });
+}
+let __resolverPrimeira = null;
+function aplicarDadosSr(dados, primeira){
   if (dados) {
     S = dados.S || deepCopy(INICIAL);
     if (dados.JOVENS) { JOVENS.length = 0; dados.JOVENS.forEach(x => JOVENS.push(x)); }
@@ -888,7 +886,7 @@ async function loadState(){
     if (converterIndicesParaIdsSr((dados.JOVENS || JOVENS).slice()) && !MODO_VISUALIZACAO_SR) {
       setTimeout(() => saveState(), 1500);
     }
-  } else {
+  } else if (primeira) {
     S = deepCopy(INICIAL);
   }
 }
@@ -905,8 +903,8 @@ async function saveState(){
     if (el) el.innerHTML = '<span style="color:#E74C3C;cursor:pointer;" onclick="saveState()">⚠️ Não salvou — toque para tentar de novo</span>';
   }
 }
-function deepCopy(o){return JSON.parse(JSON.stringify(o));}
 function confirmReset(){
+  if(!souAdminSr){ alert('Esta ação é só para administradores.'); return; }
   const senha = prompt('Ação sensível: isso apaga os registros de progressão feitos durante o ciclo, pra todo mundo.\n\nDigite a senha para confirmar:');
   if (senha === null) return;
   if (senha !== '980070') { alert('Senha incorreta. Nada foi alterado.'); return; }
@@ -2262,9 +2260,11 @@ async function exportData(){
   URL.revokeObjectURL(url);
   const el = document.getElementById('save-status');
   if(el) el.textContent = '✓ Backup exportado com sucesso!';
+  V2.registrarBackup('senior', registroLogado).then(()=>{ try{ window.parent.postMessage({backupFeitoSr:true},'*'); }catch(e){} });
 }
 
 function importData(event){
+  if(!souAdminSr){ alert('Esta ação é só para administradores.'); if(event.target) event.target.value=''; return; }
   const file = event.target.files[0];
   if(!file) return;
   const reader = new FileReader();
@@ -2733,6 +2733,7 @@ function unarchiveYouth(yid){
 }
 
 function deleteYouth(yid){
+  if(!souAdminSr){ alert('Esta ação é só para administradores.'); return; }
   // ── Verificação de senha ──────────────────────────
   const pwd=prompt('Para excluir permanentemente, digite a senha de autorização:');
   if(pwd===null) return; // cancelou
@@ -3027,7 +3028,7 @@ function renderJovens(){
         <button class="btn-ic" onclick="showModal('${y.id}')" style="margin-right:4px;">✏ Editar</button>
         <button class="btn-ic" onclick="verObservacaoSenior('${y.id}')" title="Observação" style="margin-right:4px;">📋${y.observacoes?' •':''}</button>
         <button class="btn-ic" onclick="unarchiveYouth('${y.id}')" title="Restaurar" style="margin-right:4px;">↩ Restaurar</button>
-        <button class="btn-ic" onclick="deleteYouth('${y.id}')" title="Excluir permanentemente"
+        <button class="btn-ic somente-admin" onclick="deleteYouth('${y.id}')" title="Excluir permanentemente"
           style="color:#E74C3C;border-color:#E74C3C;">🗑 Excluir</button>`;
       body.appendChild(row);
     });
@@ -3523,7 +3524,7 @@ async function abrirAlmoSr() {
 
 <div class="save-bar" id="saveBarSr">
   <span id="save-status" class="save-bar-status">✓ Sistema carregado</span>
-  <label class="sbar-btn" title="Importar backup">
+  <label class="sbar-btn somente-admin" title="Importar backup">
     📥
     <input type="file" accept=".json" onchange="importData(event)" style="display:none;">
   </label>
