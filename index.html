@@ -1573,7 +1573,8 @@ function iniciarSync() {
       getToken: () => firebaseAuthToken,
       renovarToken: renovarSessaoV2,
       temPendente: () => temAlteracaoLocalPendente,
-      onModoOffline: () => mostrarModoLeitura(),
+      onModoOffline: (m) => mostrarModoLeitura(m),
+      onSessaoInvalida: () => { alert('Sua sessão expirou ou não tem mais permissão para ler os dados. Entre de novo.'); try { localStorage.removeItem('chefeSessao'); } catch (e) {} try { window.top.location.reload(); } catch (e) { location.reload(); } },
       onSincronizado: (res, recarregar) => sincronizadoOffline(res, recarregar),
       onSalvo: (d) => {
         const nomeDe = (id) => (Object.prototype.hasOwnProperty.call(JNOMES, id) ? JNOMES[id] : null);
@@ -1622,12 +1623,12 @@ function sincronizadoOffline(res, recarregar) {
   }
   if (recarregar) location.reload();
 }
-function mostrarModoLeitura() {
+function mostrarModoLeitura(motivo) {
   if (document.getElementById('bannerLeitura')) return;
   const d = document.createElement('div');
   d.id = 'bannerLeitura';
   d.style.cssText = 'position:sticky;top:0;z-index:9999;background:#E8EEF7;border-bottom:2px solid #1B3B6F;color:#1B3B6F;padding:8px 12px;font-size:12px;text-align:center;';
-  d.textContent = '📴 Sem conexão — você pode continuar usando e marcando. As alterações ficam guardadas neste aparelho e são enviadas sozinhas quando o sinal voltar (não feche o app antes disso, nem saia da conta).';
+  d.textContent = '📴 Sem conexão — você pode continuar usando e marcando. As alterações ficam guardadas neste aparelho e são enviadas sozinhas quando o sinal voltar (não feche o app antes disso, nem saia da conta).' + (motivo ? ' [motivo técnico: ' + motivo + ']' : '');
   document.body.insertBefore(d, document.body.firstChild);
   window.__modoLeitura = true;
 }

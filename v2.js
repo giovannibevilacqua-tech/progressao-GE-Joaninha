@@ -54,7 +54,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-10-23h"
+  VERSAO: "2026-10-23i"
 };
 
 /* ============================================================
@@ -287,7 +287,7 @@ window.V2_CONFIG = {
       var ultimo;
       for (var i = 1; i <= 3; i++) {
         try {
-          var r = await fetchTimeout(url(''), {}, 10000);
+          var r = await fetchTimeout(url(''), {}, 15000);
           if (r.status === 401 || r.status === 403) { try { await renovar(); } catch (e) {} throw new Error('HTTP ' + r.status); }
           if (!r.ok) throw new Error('HTTP ' + r.status);
           cache = await r.json();
@@ -296,6 +296,12 @@ window.V2_CONFIG = {
           try { localStorage.setItem('v2cache_' + o.node, JSON.stringify(cache)); } catch (e) {}
           return lerCache();
         } catch (e) { ultimo = e; await sleep(1200 * i); }
+      }
+      // o banco respondeu, mas recusou a sessão (não é falta de internet): pede para entrar de novo
+      if (ultimo && /^HTTP (401|403)/.test(String(ultimo.message)) && o.onSessaoInvalida) {
+        bloqueado = true;
+        o.onSessaoInvalida(String(ultimo.message));
+        throw ultimo;
       }
       // sem conexão: abre a última cópia guardada neste aparelho e deixa editar; as mudanças ficam guardadas aqui
       // (como pendência) e são enviadas quando o sinal voltar
@@ -315,7 +321,8 @@ window.V2_CONFIG = {
               cache = JSON.parse(guardado); // a base continua sendo a cópia original
             }
             clearInterval(timerSinc); timerSinc = setInterval(sincronizar, 20000);
-            if (o.onModoOffline) o.onModoOffline(); else if (o.onModoLeitura) o.onModoLeitura();
+            var motivo = String((ultimo && ultimo.message) || ultimo || 'sem resposta do banco');
+            if (o.onModoOffline) o.onModoOffline(motivo); else if (o.onModoLeitura) o.onModoLeitura();
             return dOff;
           }
         }
