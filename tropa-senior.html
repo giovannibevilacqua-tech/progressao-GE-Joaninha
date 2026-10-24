@@ -884,6 +884,10 @@ async function loadState(){
     if (dados.PATRULHA_DE_SR) PATRULHA_DE_SR = dados.PATRULHA_DE_SR;
     if (dados.SEMESTRES_SR) SEMESTRES_SR = dados.SEMESTRES_SR;
     if (dados.semAbertoSr) semAbertoSr = dados.semAbertoSr;
+    // dados antigos guardavam progressão/presença pela posição do jovem: converte para ID (uma única vez)
+    if (converterIndicesParaIdsSr((dados.JOVENS || JOVENS).slice()) && !MODO_VISUALIZACAO_SR) {
+      setTimeout(() => saveState(), 1500);
+    }
   } else {
     S = deepCopy(INICIAL);
   }
@@ -916,8 +920,11 @@ function confirmReset(){
 function getBlockData(blockId){
   return BLOCKS.find(b=>b.id===blockId);
 }
+// Os dados são guardados pelo ID do jovem (não pela posição). Estas funções recebem a posição
+// só por conveniência da tela e a traduzem para o ID aqui.
+function idDoJovem(jovemIdx){ return JOVENS[jovemIdx]; }
 function isBlockConcluded(blockId,jovemIdx){
-  return S[blockId]?.concluded?.[jovemIdx]===1;
+  return S[blockId]?.concluded?.[idDoJovem(jovemIdx)]===1;
 }
 function getTotalConcluded(jovemIdx){
   return BLOCKS.filter(b=>isBlockConcluded(b.id,jovemIdx)).length;
@@ -929,11 +936,12 @@ function etapa(n){
   return{l:'Escalada',c:'#CC6C00'};
 }
 function getActionDone(blockId,type,actionId,jovemIdx){
-  return S[blockId]?.[type]?.[actionId]?.[jovemIdx]===1;
+  return S[blockId]?.[type]?.[actionId]?.[idDoJovem(jovemIdx)]===1;
 }
 function countActionsDone(blockId,type,jovemIdx){
   const bl=S[blockId]?.[type]||{};
-  return Object.values(bl).filter(arr=>arr[jovemIdx]===1).length;
+  const k=idDoJovem(jovemIdx);
+  return Object.values(bl).filter(m=>m&&m[k]===1).length;
 }
 
 // ── Persistência genérica de estado colapsável (localStorage) ──
@@ -971,20 +979,48 @@ window.scrollTo(0, y);
 requestAnimationFrame(() => window.scrollTo(0, y));
 requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo(0, y)));
 }
+// Converte dados antigos (guardados pela POSIÇÃO do jovem) para o formato por ID.
+// Seguro rodar sempre: o que já está por ID não muda. Devolve true se converteu algo.
+function converterIndicesParaIdsSr(lista){
+  let mudou=false;
+  const arrParaMapa=arr=>{ const m={}; arr.forEach((v,i)=>{ const id=lista[i]; if(id!==undefined&&v!==null&&v!==undefined) m[id]=v; }); mudou=true; return m; };
+  for(const b in S){
+    const bl=S[b]; if(!bl||typeof bl!=='object') continue;
+    if(Array.isArray(bl.concluded)) bl.concluded=arrParaMapa(bl.concluded);
+    ['f','v','s','g'].forEach(t=>{ if(bl[t]&&typeof bl[t]==='object') for(const a in bl[t]) if(Array.isArray(bl[t][a])) bl[t][a]=arrParaMapa(bl[t][a]); });
+  }
+  const remapChaves=obj=>{
+    const novo={}; let alterou=false;
+    for(const k in obj){
+      if(/^\d+$/.test(k)){ alterou=true; const id=lista[parseInt(k,10)]; if(id!==undefined) novo[id]=obj[k]; }
+      else novo[k]=obj[k];
+    }
+    if(alterou) mudou=true;
+    return alterou?novo:obj;
+  };
+  for(const eid in PRESENCA) if(PRESENCA[eid]&&typeof PRESENCA[eid]==='object') PRESENCA[eid]=remapChaves(PRESENCA[eid]);
+  JUSTIFICATIVAS_SR=remapChaves(JUSTIFICATIVAS_SR||{});
+  return mudou;
+}
+function garantirBlocoSr(blockId){
+  if(!S[blockId]) S[blockId]={concluded:{},f:{},v:{},s:{},g:{}};
+  if(!S[blockId].concluded||Array.isArray(S[blockId].concluded)) S[blockId].concluded={};
+  return S[blockId];
+}
 function toggle(blockId,type,actionId,jovemIdx){
-  if(!S[blockId]) S[blockId]={concluded:[],f:{},v:{},s:{},g:{}};
-  if(!S[blockId][type]) S[blockId][type]={};
-  if(!S[blockId][type][actionId]) S[blockId][type][actionId]=[];
-  while(S[blockId][type][actionId].length<=jovemIdx) S[blockId][type][actionId].push(0);
-  S[blockId][type][actionId][jovemIdx] ^= 1;
+  const k=idDoJovem(jovemIdx);
+  const bl=garantirBlocoSr(blockId);
+  if(!bl[type]) bl[type]={};
+  if(!bl[type][actionId]||Array.isArray(bl[type][actionId])) bl[type][actionId]={};
+  bl[type][actionId][k] = bl[type][actionId][k]===1 ? 0 : 1;
   checkAutoComplete(blockId,jovemIdx);
   saveState();
   preservarScrollSr(renderAll);
 }
 function toggleConcluded(blockId,jovemIdx){
-  if(!S[blockId]) S[blockId]=deepCopy(INICIAL[blockId]||{concluded:[0,0,0,0],f:{},v:{}});
-  if(!S[blockId].concluded) S[blockId].concluded=[0,0,0,0];
-  S[blockId].concluded[jovemIdx] ^= 1;
+  const k=idDoJovem(jovemIdx);
+  const bl=garantirBlocoSr(blockId);
+  bl.concluded[k] = bl.concluded[k]===1 ? 0 : 1;
   saveState();
   preservarScrollSr(renderAll);
 }
@@ -1224,7 +1260,8 @@ function savePresenca(){
   saveState();
 }
 function countAbsences(jovemIdx){
-  return Object.values(PRESENCA).filter(ev=>ev[jovemIdx]===0).length;
+  const k=idDoJovem(jovemIdx);
+  return Object.values(PRESENCA).filter(ev=>ev[k]===0).length;
 }
 let resumoPresencasAbertoSr = restaurarEstadoSr('resumoPresencasAbertoSr', false);
 function toggleResumoPresencasSr() {
@@ -1249,8 +1286,8 @@ function renderPresencaSummary(){
     let note='';
     if(abs>=3) note=' &nbsp;<span style="background:#E74C3C;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:20px;">⚠ INSCRIÇÃO EM REVISÃO</span>';
     else if(abs===2) note=' &nbsp;<span style="background:#E67E22;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:20px;">atenção</span>';
-    const pres=Object.values(PRESENCA).filter(ev=>ev[i]===1).length;
-    const total=Object.values(PRESENCA).filter(ev=>ev[i]!==undefined).length;
+    const pres=Object.values(PRESENCA).filter(ev=>ev[j]===1).length;
+    const total=Object.values(PRESENCA).filter(ev=>ev[j]!==undefined).length;
     html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #F0EDE8;">
       <span style="font-size:12px;font-weight:700;">${JNOMES[i]}${flag}</span>
       <div style="display:flex;align-items:center;gap:5px;">
@@ -1264,14 +1301,15 @@ function renderPresencaSummary(){
 }
 function togglePresenca(eid,jovemIdx){
   if(!PRESENCA[eid]) PRESENCA[eid]={};
-  const cur=PRESENCA[eid][jovemIdx];
+  const k=idDoJovem(jovemIdx);
+  const cur=PRESENCA[eid][k];
   if(cur===undefined||cur===null) {
-    PRESENCA[eid][jovemIdx]=1;   // pendente → presente
+    PRESENCA[eid][k]=1;   // pendente → presente
     const ev = encontrarEventoSr(eid);
     if (ev && ev.itens && ev.itens.length) { marcarProgressoPorPresencaSr(jovemIdx, ev.itens); renderAll(); }
   }
-  else if(cur===1)                 PRESENCA[eid][jovemIdx]=0;   // presente → ausente
-  else                             delete PRESENCA[eid][jovemIdx]; // ausente → pendente
+  else if(cur===1)                 PRESENCA[eid][k]=0;   // presente → ausente
+  else                             delete PRESENCA[eid][k]; // ausente → pendente
   savePresenca();
   fillPresencaGrid(eid);
   renderPresencaSummary();
@@ -1359,12 +1397,12 @@ function fillPresencaGrid(eid){
     rotulo.textContent=grupo.patrulha.nome;
     grid.appendChild(rotulo);
     grupo.membros.forEach(function(item){var j=item.yid,i=item.i;
-    const val=PRESENCA[eid]?.[i];
+    const val=PRESENCA[eid]?.[j];
     let bg,fg,lbl;
     if(val===1){bg='#27AE60';fg='#fff';lbl='✓';presentes++;marcados++;}
     else if(val===0){bg='#E74C3C';fg='#fff';lbl='✗';marcados++;}
     else{bg='#E8E5E0';fg='#999';lbl='·';}
-    const justificado=(JUSTIFICATIVAS_SR[i]||[]).includes(eid);
+    const justificado=(JUSTIFICATIVAS_SR[j]||[]).includes(eid);
     const row=document.createElement('div');
     row.className='presenca-row';
     row.onclick=()=>togglePresenca(eid,i);
@@ -1626,13 +1664,13 @@ function toggleEventoMenuSr(id) {
 
 // ── Marcação automática de progressão pela presença ──────
 function marcarProgressoPorPresencaSr(jovemIdx, itens) {
+  const k = idDoJovem(jovemIdx);
   (itens || []).forEach(itemId => {
     const [blocoId, tipo, aid] = itemId.split('|');
-    if (!S[blocoId]) S[blocoId] = { concluded: [], f: {}, v: {}, s: {}, g: {} };
-    if (!S[blocoId][tipo]) S[blocoId][tipo] = {};
-    if (!S[blocoId][tipo][aid]) S[blocoId][tipo][aid] = [];
-    while (S[blocoId][tipo][aid].length <= jovemIdx) S[blocoId][tipo][aid].push(0);
-    S[blocoId][tipo][aid][jovemIdx] = 1;
+    const bl = garantirBlocoSr(blocoId);
+    if (!bl[tipo]) bl[tipo] = {};
+    if (!bl[tipo][aid] || Array.isArray(bl[tipo][aid])) bl[tipo][aid] = {};
+    bl[tipo][aid][k] = 1;
     checkAutoComplete(blocoId, jovemIdx);
   });
 }
@@ -1642,12 +1680,12 @@ function marcarTodosPresentesSr(eid, presente) {
   const ev = encontrarEventoSr(eid);
   actJ().forEach(({ i }) => {
     if (presente) {
-      if (PRESENCA[eid][i] !== 1) {
-        PRESENCA[eid][i] = 1;
+      if (PRESENCA[eid][idDoJovem(i)] !== 1) {
+        PRESENCA[eid][idDoJovem(i)] = 1;
         if (ev && ev.itens && ev.itens.length) marcarProgressoPorPresencaSr(i, ev.itens);
       }
     } else {
-      delete PRESENCA[eid][i];
+      delete PRESENCA[eid][idDoJovem(i)];
     }
   });
   savePresenca();
@@ -1658,10 +1696,11 @@ function marcarTodosPresentesSr(eid, presente) {
 
 // ── Justificativa de falta ────────────────────────────────
 function toggleJustificativaSr(eid, jovemIdx) {
-  JUSTIFICATIVAS_SR[jovemIdx] = JUSTIFICATIVAS_SR[jovemIdx] || [];
-  const idx = JUSTIFICATIVAS_SR[jovemIdx].indexOf(eid);
-  if (idx !== -1) JUSTIFICATIVAS_SR[jovemIdx].splice(idx, 1);
-  else JUSTIFICATIVAS_SR[jovemIdx].push(eid);
+  const k = idDoJovem(jovemIdx);
+  JUSTIFICATIVAS_SR[k] = JUSTIFICATIVAS_SR[k] || [];
+  const idx = JUSTIFICATIVAS_SR[k].indexOf(eid);
+  if (idx !== -1) JUSTIFICATIVAS_SR[k].splice(idx, 1);
+  else JUSTIFICATIVAS_SR[k].push(eid);
   saveState();
   fillPresencaGrid(eid);
   renderPresencaSummary();
@@ -1685,7 +1724,7 @@ function exportarPresencaSr(eid) {
   }
   const presentesNomes = [], ausentesNomes = [];
   actJ().forEach(({ i }) => {
-    const val = PRESENCA[eid] ? PRESENCA[eid][i] : undefined;
+    const val = PRESENCA[eid] ? PRESENCA[eid][idDoJovem(i)] : undefined;
     if (val === 1) presentesNomes.push(JNOMES[i]); else ausentesNomes.push(JNOMES[i]);
   });
   txt += `\nPRESENTES (${presentesNomes.length}/${actJ().length}):\n`;
@@ -2236,6 +2275,7 @@ function importData(event){
       if(d.state)   S = d.state;
       if(d.presenca) PRESENCA = d.presenca;
       if(d.youth)   YOUTH_DATA = d.youth;
+      converterIndicesParaIdsSr(JOVENS.slice()); // backups antigos eram por posição
       if(d.ep)      EP_DATA = d.ep;
       await saveState();
       alert('✓ Dados importados com sucesso!\nA página será recarregada para aplicar as alterações.');
@@ -2601,10 +2641,7 @@ function computeBlockConcluded(blockId,jovemIdx){
 
 function checkAutoComplete(blockId,jovemIdx){
   const done=computeBlockConcluded(blockId,jovemIdx);
-  if(!S[blockId]) S[blockId]={concluded:[],f:{},v:{},s:{},g:{}};
-  if(!Array.isArray(S[blockId].concluded)) S[blockId].concluded=[];
-  while(S[blockId].concluded.length<=jovemIdx) S[blockId].concluded.push(0);
-  S[blockId].concluded[jovemIdx]=done?1:0;
+  garantirBlocoSr(blockId).concluded[idDoJovem(jovemIdx)]=done?1:0;
 }
 
 // (chamado dentro de iniciarApp())
@@ -2709,37 +2746,16 @@ function deleteYouth(yid){
 
   const idx=JOVENS.indexOf(yid);
 
-  // ── 1. Remove da progressão (arrays de estado S) ──
-  if(idx>=0){
-    for(const blockId in S){
-      const bl=S[blockId];
-      if(Array.isArray(bl.concluded)) bl.concluded.splice(idx,1);
-      const rm=sec=>{if(!sec)return;for(const aid in sec)if(Array.isArray(sec[aid]))sec[aid].splice(idx,1);};
-      rm(bl.f);rm(bl.v);rm(bl.s);rm(bl.g);
-    }
+  // ── 1. Remove da progressão (tudo é guardado pelo ID: basta apagar a chave) ──
+  for(const blockId in S){
+    const bl=S[blockId];
+    if(bl.concluded) delete bl.concluded[yid];
+    ['f','v','s','g'].forEach(t=>{ if(bl[t]) for(const aid in bl[t]) if(bl[t][aid]) delete bl[t][aid][yid]; });
   }
 
-  // ── 2. Remove da presença (reindexar) ────────────
-  if(idx>=0){
-    for(const eid in PRESENCA){
-      const ev=PRESENCA[eid];
-      const novo={};
-      for(const k in ev){
-        const ki=parseInt(k);
-        if(ki<idx) novo[k]=ev[k];
-        else if(ki>idx) novo[String(ki-1)]=ev[k];
-      }
-      PRESENCA[eid]=novo;
-    }
-    // Reindexar justificativas de falta também
-    const novasJust={};
-    for(const k in JUSTIFICATIVAS_SR){
-      const ki=parseInt(k);
-      if(ki<idx) novasJust[k]=JUSTIFICATIVAS_SR[k];
-      else if(ki>idx) novasJust[String(ki-1)]=JUSTIFICATIVAS_SR[k];
-    }
-    JUSTIFICATIVAS_SR=novasJust;
-  }
+  // ── 2. Remove da presença e das justificativas ───
+  for(const eid in PRESENCA){ if(PRESENCA[eid]) delete PRESENCA[eid][yid]; }
+  delete JUSTIFICATIVAS_SR[yid];
 
   // ── 3. Remove do EP_DATA ──────────────────────────
   if(typeof EP_DATA!=='undefined') delete EP_DATA[yid];
@@ -2815,14 +2831,32 @@ function initials(name){
 }
 
 // ─── FALTAS CONSECUTIVAS ─────────────────────────────────
+// Ordem cronológica das atividades (usa a data real; as atividades antigas só têm dia/mês)
+function chaveDataEventoSr(ev,sem){
+  if(ev.dataISO) return ev.dataISO;
+  const dia=parseInt(String(ev.dia||'').replace(/\D/g,''),10);
+  const m=MESES_ABREV_SR.indexOf(String(ev.mes||'').toUpperCase().slice(0,3));
+  if(!dia||m<0) return null;
+  const ano=(sem==='2s26')?(m>=6?2026:2027):(m>=6?2027:2027);
+  return ano+'-'+String(m+1).padStart(2,'0')+'-'+String(dia).padStart(2,'0');
+}
+function eventosOrdenadosSr(){
+  const lista=[];
+  let ultima='0000-00-00';
+  [['2s26',CAL_2S26],['1s27',CAL_1S27]].forEach(([sem,arr])=>arr.forEach((ev,pos)=>{
+    const k=chaveDataEventoSr(ev,sem)||ultima; // sem data legível: fica junto da anterior
+    ultima=k;
+    lista.push({ev,k,ord:lista.length});
+  }));
+  lista.sort((a,b)=>a.k<b.k?-1:a.k>b.k?1:a.ord-b.ord);
+  return lista.map(x=>x.ev);
+}
 function hasConsecutiveAbsences(jovemIdx,threshold=3){
-  const allEids=[
-    ...CAL_2S26.map((ev,i)=>({ev,eid:'2s26_'+i})),
-    ...CAL_1S27.map((ev,i)=>({ev,eid:'1s27_'+i}))
-  ].filter(({ev})=>ev.special!=='sem').map(({eid})=>eid);
+  const k=idDoJovem(jovemIdx);
+  const allEids=eventosOrdenadosSr().filter(ev=>ev.special!=='sem').map(ev=>ev.id);
   let consec=0;
   for(const eid of allEids){
-    const val=PRESENCA[eid]?.[jovemIdx];
+    const val=PRESENCA[eid]?.[k];
     if(val===0){consec++;if(consec>=threshold)return true;}
     else if(val===1){consec=0;}
     // undefined = não registrado → ignora sem resetar
@@ -3085,8 +3119,7 @@ async function iniciarApp(){
 }
 
 function aplicarModoVisualizacaoSr() {
-document.querySelectorAll('.tab-btn[data-tab="prog"], .tab-btn[data-tab="jovens"], .tab-btn[data-tab="ep"]').forEach(el => el.style.display = 'none');
-document.querySelectorAll('.tab-btn[data-tab="alm"]').forEach(el => el.style.display = '');
+document.querySelectorAll('.tab-btn[data-tab="prog"], .tab-btn[data-tab="jovens"], .tab-btn[data-tab="ep"], .tab-btn[data-tab="alm"]').forEach(el => el.style.display = 'none');
 document.querySelectorAll('#cabecalhoAddEventoSr').forEach(el => { el.style.display = 'none'; const body = el.nextElementSibling; if (body) body.style.display = 'none'; });
 const saveBar = document.getElementById('saveBarSr');
 if (saveBar) saveBar.style.display = 'none';
