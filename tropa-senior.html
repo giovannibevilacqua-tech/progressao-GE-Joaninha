@@ -705,9 +705,14 @@ async function autenticarComSessaoCompartilhada() {
       await new Promise(r => setTimeout(r, 1500));
       renovado = await renovarTokenSessao(salva.refreshToken);
     }
-    if (!renovado) return false;
-    firebaseAuthToken = renovado.idToken; firebaseRefreshToken = renovado.refreshToken; registroLogado = salva.registro; firebaseUid = salva.uid;
-    salvarSessao();
+    if (!renovado && navigator.onLine === false) {
+      // sem internet: segue com a sessão guardada (os dados vêm da cópia guardada neste aparelho)
+      firebaseAuthToken = salva.idToken; firebaseRefreshToken = salva.refreshToken; registroLogado = salva.registro; firebaseUid = salva.uid;
+    } else {
+      if (!renovado) return false;
+      firebaseAuthToken = renovado.idToken; firebaseRefreshToken = renovado.refreshToken; registroLogado = salva.registro; firebaseUid = salva.uid;
+      salvarSessao();
+    }
   }
   // Verificação de acesso por tropa:
   // salva.admin === true → acesso total
@@ -728,16 +733,23 @@ async function autenticarComSessaoCompartilhada() {
 }
 
 let __store = null;
+function sincronizadoOffline(res, recarregar) {
+  if (res && res.n) {
+    V2.registrarHistorico('senior', registroLogado, '', 'Enviou ' + res.n + ' alteração(ões) feitas sem internet' + (res.conflitos ? ' (' + res.conflitos + ' em conflito com mudanças de outras pessoas: valeu a versão feita offline)' : ''), res.n);
+    alert('✓ ' + res.n + ' alteração(ões) feitas sem internet foram enviadas.' + (res.conflitos ? '\n\n' + res.conflitos + ' delas mexiam em algo que outra pessoa também mudou nesse meio tempo; ficou a versão feita offline. Confira em 📜 Histórico se precisar.' : ''));
+  }
+  if (recarregar) location.reload();
+}
 function mostrarModoLeitura() {
   if (document.getElementById('bannerLeitura')) return;
   const d = document.createElement('div');
   d.id = 'bannerLeitura';
   d.style.cssText = 'position:sticky;top:0;z-index:9999;background:#E8EEF7;border-bottom:2px solid #1B3B6F;color:#1B3B6F;padding:8px 12px;font-size:12px;text-align:center;';
-  d.textContent = '📴 Sem conexão — mostrando a última versão guardada neste aparelho. Só leitura: nada será salvo. Volte a ter sinal e recarregue a página.';
+  d.textContent = '📴 Sem conexão — você pode continuar usando e marcando. As alterações ficam guardadas neste aparelho e são enviadas sozinhas quando o sinal voltar (não feche o app antes disso, nem saia da conta).';
   document.body.insertBefore(d, document.body.firstChild);
   window.__modoLeitura = true;
 }
-window.addEventListener('online', () => { if (window.__modoLeitura) location.reload(); });
+window.addEventListener('online', () => { if (typeof __store !== 'undefined' && __store && __store.offline) __store.sincronizar(); });
 async function renovarSessaoV2() {
   if (!firebaseRefreshToken) return;
   const renovado = await renovarTokenSessao(firebaseRefreshToken);
@@ -759,7 +771,8 @@ async function loadState(){
     node: V2_NODE_SR, stream: !MODO_VISUALIZACAO_SR,
     getToken: () => MODO_VISUALIZACAO_SR ? null : firebaseAuthToken,
     renovarToken: renovarSessaoV2,
-    onModoLeitura: () => mostrarModoLeitura(),
+    onModoOffline: () => mostrarModoLeitura(),
+    onSincronizado: (res, recarregar) => sincronizadoOffline(res, recarregar),
     onSalvo: (d) => {
       if (MODO_VISUALIZACAO_SR) return;
       const nomeDe = (id) => { const y = YOUTH_DATA.find(v => v.id === id); return y ? y.name : null; };
@@ -2626,6 +2639,37 @@ function saveYouth(){
     alert('Jovem adicionado com sucesso!\nEle aparece agora em Progressão, Calendário e Escoteiro da Pátria.');
   }
 }
+function relatorioJovemSr(yid){
+  const y = YOUTH_DATA.find(v => v.id === yid); if (!y) return;
+  const cores = { hv: '#E0355F', ma: '#5CB85C', pd: '#1B3B6F', sb: '#DB9270' };
+  const feito = (bl, yid) => bl && bl.concluded && bl.concluded[yid] === 1;
+  const total = BLOCKS.length;
+  const n = BLOCKS.filter(b => feito(S[b.id], yid)).length;
+  const et = etapa(n);
+  const nasc = y.born ? new Date(y.born) : null;
+  const idade = nasc && !isNaN(nasc) ? calcAge(y.born, new Date()).years + ' anos' : '';
+  const pat = (PATRULHAS_SR || []).find(p => p.id === (PATRULHA_DE_SR || {})[yid]);
+  const marcadas = Object.values(PRESENCA).filter(ev => ev && typeof ev === 'object' && Object.keys(ev).length > 0);
+  const presenca = marcadas.length ? { total: marcadas.length, presentes: marcadas.filter(ev => ev[yid] === 1).length, ausentes: marcadas.filter(ev => ev[yid] === 0).length } : null;
+  const cont = (obj, ids) => ids.filter(id => obj && obj[id] && obj[id][yid] === 1).length;
+  V2.abrirRelatorio({
+    tropa: 'Tropa Sênior', nome: y.name,
+    info: [['Nascimento', y.born ? fmtDate(new Date(y.born)) + (idade ? ' (' + idade + ')' : '') : ''], ['Passagem para o Pioneiro', y.born ? fmtDate(turn18(y.born)) : ''], ['Patrulha', pat ? pat.nome : ''], ['Cargo', y.role || '']],
+    resumo: { n, total, etapa: et.l.replace(/\s*⭐/, '') },
+    presenca,
+    eixos: Object.keys(EIXOS).map(k => {
+      const blocos = EIXOS[k].blockIds.map(id => BLOCKS.find(b => b.id === id)).filter(Boolean);
+      return {
+        nome: EIXOS[k].label, cor: cores[k] || '#6D1026', feitos: blocos.filter(b => feito(S[b.id], yid)).length, total: blocos.length,
+        blocos: blocos.map(b => {
+          const bl = S[b.id] || {};
+          const fx = cont(bl.f, b.fixed.map(a => a.id)), vr = cont(bl.v, b.variable.map(a => a.id));
+          return { nome: b.name, ok: feito(bl, yid), detalhe: (b.fixed.length ? 'Fixas ' + fx + '/' + b.fixed.length + ' · ' : '') + 'Variáveis ' + vr + '/' + b.minVariable };
+        })
+      };
+    })
+  });
+}
 function verObservacaoSenior(yid){
   const y=YOUTH_DATA.find(x=>x.id===yid);
   document.getElementById('obsModalTitulo').textContent=y?y.name:'';
@@ -2979,6 +3023,7 @@ function makeYouthCard(e,today,maxDays){
         <div style="display:flex;gap:4px;">
           <button class="btn-ic" onclick="showModal('${e.id}')" title="Editar">✏ Editar</button>
           <button class="btn-ic" onclick="verObservacaoSenior('${e.id}')" title="Observação">📋${e.observacoes?' •':''}</button>
+          <button class="btn-ic" onclick="relatorioJovemSr('${e.id}')" title="Relatório em PDF">📄</button>
           <button class="btn-ic" style="color:#E74C3C;" onclick="archiveYouth('${e.id}')" title="Arquivar">📦</button>
         </div>
       </div>

@@ -1439,6 +1439,7 @@ await renderChefesModalBody();
 }
 
 function fazerLogout() {
+if (V2.temPendenciaLocal() && !confirm('Há alterações feitas sem internet que ainda NÃO foram enviadas. Se você sair agora, elas serão apagadas.\n\nSair mesmo assim?')) return;
 limparSessao();
 window.location.reload();
 }
@@ -1571,7 +1572,8 @@ function iniciarSync() {
       getToken: () => firebaseAuthToken,
       renovarToken: renovarSessaoV2,
       temPendente: () => temAlteracaoLocalPendente,
-      onModoLeitura: () => mostrarModoLeitura(),
+      onModoOffline: () => mostrarModoLeitura(),
+      onSincronizado: (res, recarregar) => sincronizadoOffline(res, recarregar),
       onSalvo: (d) => {
         const nomeDe = (id) => (Object.prototype.hasOwnProperty.call(JNOMES, id) ? JNOMES[id] : null);
         V2.registrarHistorico('escoteira', registroLogado, nomeLogado, V2.resumirDiff(d, nomeDe), Object.keys(d.sets).length + Object.keys(d.dels).length);
@@ -1612,16 +1614,23 @@ function saveStateDebounced() {
   clearTimeout(__saveTimer);
   __saveTimer = setTimeout(saveState, 500);
 }
+function sincronizadoOffline(res, recarregar) {
+  if (res && res.n) {
+    V2.registrarHistorico('escoteira', registroLogado, nomeLogado, 'Enviou ' + res.n + ' alteração(ões) feitas sem internet' + (res.conflitos ? ' (' + res.conflitos + ' em conflito com mudanças de outras pessoas: valeu a versão feita offline)' : ''), res.n);
+    alert('✓ ' + res.n + ' alteração(ões) feitas sem internet foram enviadas.' + (res.conflitos ? '\n\n' + res.conflitos + ' delas mexiam em algo que outra pessoa também mudou nesse meio tempo; ficou a versão feita offline. Confira em 📜 Histórico se precisar.' : ''));
+  }
+  if (recarregar) location.reload();
+}
 function mostrarModoLeitura() {
   if (document.getElementById('bannerLeitura')) return;
   const d = document.createElement('div');
   d.id = 'bannerLeitura';
   d.style.cssText = 'position:sticky;top:0;z-index:9999;background:#E8EEF7;border-bottom:2px solid #1B3B6F;color:#1B3B6F;padding:8px 12px;font-size:12px;text-align:center;';
-  d.textContent = '📴 Sem conexão — mostrando a última versão guardada neste aparelho. Só leitura: nada será salvo. Volte a ter sinal e recarregue a página.';
+  d.textContent = '📴 Sem conexão — você pode continuar usando e marcando. As alterações ficam guardadas neste aparelho e são enviadas sozinhas quando o sinal voltar (não feche o app antes disso, nem saia da conta).';
   document.body.insertBefore(d, document.body.firstChild);
   window.__modoLeitura = true;
 }
-window.addEventListener('online', () => { if (window.__modoLeitura) location.reload(); });
+window.addEventListener('online', () => { if (typeof __store !== 'undefined' && __store && __store.offline) __store.sincronizar(); });
 
 function mostrarStatusSalvando(texto, erro) {
   let el = document.getElementById('statusSalvar');
@@ -2543,6 +2552,33 @@ function toggleFixa(j, b, i) { S[j][b].fixas[i] = S[j][b].fixas[i] ? 0 : 1; temA
 function toggleVar(j, b, i) { S[j][b].variaveis[i] = S[j][b].variaveis[i] ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); preservarScrollFicha(() => { renderRoster(); renderDetail(j); }); }
 function toggleEsp(j, b) { S[j][b].especialidade = S[j][b].especialidade ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); preservarScrollFicha(() => { renderRoster(); renderDetail(j); }); }
 
+function relatorioJovem(j) {
+  if (!S[j]) return;
+  const n = countConcluidos(j), et = etapa(n);
+  const fmt = (iso) => /^\d{4}-\d{2}-\d{2}/.test(iso || '') ? iso.slice(8, 10) + '/' + iso.slice(5, 7) + '/' + iso.slice(0, 4) : (iso || '');
+  const nasc = DATAS_NASC[j];
+  let idade = '';
+  if (/^\d{4}-\d{2}-\d{2}/.test(nasc || '')) { const b = new Date(nasc), h = new Date(); let a = h.getFullYear() - b.getFullYear(); if (h.getMonth() < b.getMonth() || (h.getMonth() === b.getMonth() && h.getDate() < b.getDate())) a--; idade = a + ' anos'; }
+  const pat = PATRULHAS.find(p => p.id === PATRULHA_DE[j]);
+  const hoje = new Date().toISOString().slice(0, 10);
+  const chamadas = EVENTOS.filter(e => e.data && e.data <= hoje && (e.presentes || []).length > 0);
+  const presenca = chamadas.length ? { total: chamadas.length, presentes: chamadas.filter(e => e.presentes.includes(j)).length, ausentes: chamadas.filter(e => !e.presentes.includes(j)).length } : null;
+  V2.abrirRelatorio({
+    tropa: 'Tropa Escoteira', nome: JNOMES[j],
+    info: [['Nascimento', fmt(nasc) + (idade ? ' (' + idade + ')' : '')], ['Patrulha', pat ? pat.nome : ''], ['Cargo', CARGO_DE[j] || '']],
+    resumo: { n, total: BLOCO_IDS.length, etapa: et.l.replace(/^🏅\s*/, '') },
+    presenca,
+    eixos: EIXOS.map(eixo => ({
+      nome: eixo.nome, cor: eixo.cor, feitos: eixo.blocos.filter(b => blocoConcluido(j, b)).length, total: eixo.blocos.length,
+      blocos: eixo.blocos.map(b => {
+        const def = BLOCOS[b], st = S[j][b];
+        const fix = st.fixas.filter(v => v).length, vr = st.variaveis.filter(v => v).length;
+        return { nome: def.nome, ok: blocoConcluido(j, b), detalhe: (def.fixas.length ? 'Fixas ' + fix + '/' + def.fixas.length + ' · ' : '') + (st.especialidade ? 'Especialidade' : 'Variáveis ' + vr + '/' + def.metaVar) };
+      })
+    }))
+  });
+}
+
 function renderDetail(j) {
 const el = document.getElementById('detail');
 const n = countConcluidos(j);
@@ -2552,6 +2588,7 @@ let html = `
 <div class="detail-name">${JNOMES[j]}</div>
 <span class="detail-etapa" style="background:${et.bg || et.c+'22'};color:${et.c}">${n}/18 blocos &mdash; ${et.l}</span>
 <div class="detail-track"><div class="detail-bar" style="width:${Math.round(n/18*100)}%"></div></div>
+<button type="button" class="btn-secundario" style="margin:6px 0 2px;font-size:11px;padding:5px 10px;" onclick="relatorioJovem('${j}')">📄 Relatório em PDF</button>
 <div class="detail-hint">Pistas: 0-3 &nbsp;|&nbsp; Trilha: 4 &nbsp;|&nbsp; Rumo: 8 &nbsp;|&nbsp; Travessia: 13 &nbsp;|&nbsp; 🏅 Lis de Ouro: 18</div>
 <div class="eixo-grid">`;
 EIXOS.forEach(eixo => {
@@ -4115,7 +4152,7 @@ if (isNaN(y)) return;
 [50, 150, 300, 600, 1000].forEach(delay => setTimeout(() => window.scrollTo(0, y), delay));
 }
 if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('v2.js').catch(() => {}); }); }
-window.addEventListener('online', () => { if (temAlteracaoLocalPendente && !window.__modoLeitura) saveState(); });
+window.addEventListener('online', () => { if (temAlteracaoLocalPendente && !(__store && __store.offline)) saveState(); });
 
 async function atualizarLembreteBackup() {
   const antigo = document.getElementById('lembreteBackup'); if (antigo) antigo.remove();

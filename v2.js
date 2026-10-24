@@ -54,7 +54,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-10-23e"
+  VERSAO: "2026-10-23f"
 };
 
 /* ============================================================
@@ -264,7 +264,7 @@ window.V2_CONFIG = {
   function criarStore(o) {
     var ids = (CFG.ID_ARRAYS || {})[o.node] || [];
     var raiz = CFG.DB_URL + '/' + CFG.RAIZ + '/' + o.node;
-    var cache = null, baseFlat = {}, carregou = false, bloqueado = false, timerCache = null;
+    var cache = null, baseFlat = {}, carregou = false, bloqueado = false, timerCache = null, offline = false, sincronizando = false, timerSinc = null;
     var es = null, fila = Promise.resolve(), salvando = 0, sujo = false, timerAp = null, timerRetry = null, fechado = false;
 
     function token() { return (o.getToken ? o.getToken() : null) || auth.getToken(); }
@@ -297,19 +297,76 @@ window.V2_CONFIG = {
           return lerCache();
         } catch (e) { ultimo = e; await sleep(1200 * i); }
       }
-      bloqueado = true;
-      // sem conexão: mostra a última cópia guardada neste aparelho (somente leitura, o salvamento continua bloqueado)
+      // sem conexão: abre a última cópia guardada neste aparelho e deixa editar; as mudanças ficam guardadas aqui
+      // (como pendência) e são enviadas quando o sinal voltar
       try {
         var guardado = localStorage.getItem('v2cache_' + o.node);
         if (guardado) {
           cache = JSON.parse(guardado);
           if (cache && typeof cache === 'object') {
-            if (o.onModoLeitura) o.onModoLeitura();
-            return lerCache();
+            offline = true; carregou = true; bloqueado = false;
+            var dOff = lerCache();
+            // se já havia pendência guardada de uma sessão anterior, ela volta para a tela
+            var pOff = lerPend();
+            if (pOff) {
+              Object.keys(pOff.dels || {}).forEach(function (k) { cache = setAt(cache, k.split('/'), null); });
+              Object.keys(pOff.sets || {}).forEach(function (k) { cache = setAt(cache, k.split('/'), pOff.sets[k]); });
+              dOff = cache ? decDados(cache, ids) : null;
+              cache = JSON.parse(guardado); // a base continua sendo a cópia original
+            }
+            clearInterval(timerSinc); timerSinc = setInterval(sincronizar, 20000);
+            if (o.onModoOffline) o.onModoOffline(); else if (o.onModoLeitura) o.onModoLeitura();
+            return dOff;
           }
         }
       } catch (e) {}
+      bloqueado = true;
       throw ultimo;
+    }
+
+    /* ---- pendências (mudanças que não chegaram ao banco) ---- */
+    function chavePend() { return 'v2pend_' + o.node; }
+    function lerPend() { try { var t = localStorage.getItem(chavePend()); return t ? JSON.parse(t) : null; } catch (e) { return null; } }
+    function limparPend() { try { localStorage.removeItem(chavePend()); } catch (e) {} }
+    function guardarPend(d) {
+      var base = {};
+      Object.keys(d.sets).concat(Object.keys(d.dels)).forEach(function (k) { base[k] = (k in baseFlat) ? baseFlat[k] : null; });
+      try { localStorage.setItem(chavePend(), JSON.stringify({ em: new Date().toISOString(), sets: d.sets, dels: d.dels, base: base })); } catch (e) {}
+    }
+    // envia as pendências ao banco, trocando só os caminhos que mudaram (o que outras pessoas mexeram em outros pontos é preservado)
+    async function enviarPend() {
+      var p = lerPend();
+      if (!p) return null;
+      var remoto = cache ? flatten(cache) : {};
+      var conflitos = 0;
+      Object.keys(p.sets).concat(Object.keys(p.dels)).forEach(function (k) {
+        var b = p.base[k] === null ? undefined : p.base[k], r = remoto[k], m = (k in p.sets) ? p.sets[k] : undefined;
+        if (r !== b && r !== m) conflitos++;
+      });
+      var n = Object.keys(p.sets).length + Object.keys(p.dels).length;
+      if (n) {
+        if (Object.keys(p.dels).length) await enviar(p.dels);
+        if (Object.keys(p.sets).length) await enviar(p.sets);
+      }
+      limparPend();
+      return { n: n, conflitos: conflitos };
+    }
+    async function sincronizar() {
+      if (sincronizando || fechado) return false;
+      if (!offline && !lerPend()) return false;
+      sincronizando = true;
+      try {
+        var r = await fetchTimeout(url(''), {}, 8000);
+        if (r.status === 401 || r.status === 403) { try { await renovar(); } catch (e) {} r = await fetchTimeout(url(''), {}, 8000); }
+        if (!r.ok) return false;
+        cache = await r.json();
+        if (cache && typeof cache !== 'object') cache = null;
+        var res = await enviarPend();
+        clearInterval(timerSinc);
+        if (o.onSincronizado) o.onSincronizado(res || { n: 0, conflitos: 0 }, true);
+        return true;
+      } catch (e) { return false; }
+      finally { sincronizando = false; }
     }
 
     function aplicarRemoto() {
@@ -360,8 +417,15 @@ window.V2_CONFIG = {
       var dados = null;
       try { dados = await carregar(); }
       catch (e) { console.error('Não consegui carregar:', e); if (o.onErroCarga) o.onErroCarga(e); }
+      // online de novo e sobrou algo que não tinha sido enviado (ex.: a pessoa fechou o app sem sinal): envia agora
+      if (!offline && !bloqueado && lerPend()) {
+        try {
+          var res = await enviarPend();
+          if (res) { dados = await carregar(); if (o.onSincronizado) o.onSincronizado(res, false); }
+        } catch (e) { console.error('Pendências não enviadas:', e); }
+      }
       if (o.onDados) o.onDados(dados, true);
-      if (o.stream && !bloqueado) abrirStream();
+      if (o.stream && !bloqueado && !offline) abrirStream();
     }
 
     async function enviar(mapa) {
@@ -380,17 +444,20 @@ window.V2_CONFIG = {
       if (bloqueado || !carregou) throw new Error('Salvamento bloqueado: os dados não foram carregados com sucesso.');
       var novo = flatten(encDados(dados, ids));
       var d = diff(baseFlat, novo);
-      if (!d.nSets && !d.nDels) return { sets: 0, dels: 0 };
+      if (!d.nSets && !d.nDels) { limparPend(); return { sets: 0, dels: 0 }; }
+      if (offline) { guardarPend(d); return { sets: d.nSets, dels: d.nDels, offline: true }; }
       var ultimo;
       for (var t = 1; t <= 3; t++) {
         try {
           if (d.nDels) await enviar(d.dels);   // primeiro apaga, depois grava (evita caminhos sobrepostos)
           if (d.nSets) await enviar(d.sets);
           baseFlat = novo;
+          limparPend();
           if (o.onSalvo) { try { o.onSalvo(d); } catch (e) {} }
           return { sets: d.nSets, dels: d.nDels };
         } catch (e) { ultimo = e; if (t < 3) await sleep(800); }
       }
+      guardarPend(d); // a conexão caiu: guarda aqui para não perder, mesmo se a página for fechada
       throw ultimo;
     }
     function salvar(dados) {
@@ -404,7 +471,9 @@ window.V2_CONFIG = {
     }
 
     return {
-      iniciar: iniciar, carregar: carregar, salvar: salvar,
+      iniciar: iniciar, carregar: carregar, salvar: salvar, sincronizar: sincronizar,
+      get offline() { return offline; },
+      get temPendencia() { return !!lerPend(); },
       fechar: function () { fechado = true; try { if (es) es.close(); } catch (e) {} },
       get bloqueado() { return bloqueado; },
       _debug: { get cache() { return cache; }, get base() { return baseFlat; } }
@@ -643,7 +712,43 @@ window.V2_CONFIG = {
       } catch (e) {}
     }
   }
-  function limparCacheLocal() { try { Object.keys(localStorage).filter(function (k) { return k.indexOf('v2cache_') === 0; }).forEach(function (k) { localStorage.removeItem(k); }); } catch (e) {} }
+  function temPendenciaLocal() { try { return Object.keys(localStorage).some(function (k) { return k.indexOf('v2pend_') === 0; }); } catch (e) { return false; } }
+  function limparCacheLocal() { try { Object.keys(localStorage).filter(function (k) { return k.indexOf('v2cache_') === 0 || k.indexOf('v2pend_') === 0; }).forEach(function (k) { localStorage.removeItem(k); }); } catch (e) {} }
+
+  /* ---------- relatório de progressão (abre uma página pronta para imprimir / salvar como PDF) ---------- */
+  function escHtml(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  // r = { tropa, nome, info:[[rotulo,valor]], resumo:{n,total,etapa}, eixos:[{nome,cor,feitos,total,blocos:[{nome,ok,detalhe}]}], presenca:{presentes,ausentes,total}|null }
+  // Chame direto do clique (antes de qualquer espera) para o navegador não bloquear a janela.
+  function abrirRelatorio(r) {
+    var w = window.open('', '_blank');
+    if (!w) { alert('O navegador bloqueou a janela do relatório. Permita pop-ups para este site e tente de novo.'); return; }
+    var pct = r.resumo.total ? Math.round(r.resumo.n / r.resumo.total * 100) : 0;
+    var hoje = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+    var h = '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Relatório — ' + escHtml(r.nome) + '</title><style>' +
+      '*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#222;margin:0;padding:24px;max-width:820px;margin:auto;font-size:13px;line-height:1.4}' +
+      'header{border-bottom:3px solid #6D1026;padding-bottom:10px;margin-bottom:14px}h1{margin:0;font-size:22px;color:#6D1026}.sub{color:#666;font-size:12px;margin-top:2px}' +
+      '.info{display:grid;grid-template-columns:1fr 1fr;gap:4px 18px;margin:12px 0}.info div span{color:#777}' +
+      '.resumo{background:#F6EFEA;border-radius:8px;padding:12px 14px;margin:12px 0}.resumo b{font-size:16px}.barra{height:10px;background:#E4D9D0;border-radius:6px;margin-top:8px;overflow:hidden}.barra i{display:block;height:100%;background:#6D1026}' +
+      '.eixo{margin-top:14px;break-inside:avoid}.eixo h2{font-size:14px;margin:0 0 6px;padding:6px 10px;border-radius:6px;color:#fff;display:flex;justify-content:space-between}' +
+      'table{width:100%;border-collapse:collapse}td{padding:5px 8px;border-bottom:1px solid #EEE;vertical-align:top}td.s{width:26px;text-align:center;font-weight:bold}.ok{color:#1E8449}.pend{color:#B0A89F}td.d{color:#666;text-align:right;white-space:nowrap}' +
+      'footer{margin-top:22px;border-top:1px solid #DDD;padding-top:8px;color:#888;font-size:11px}.btn{position:fixed;right:14px;top:14px;background:#6D1026;color:#fff;border:0;border-radius:20px;padding:10px 16px;font-size:13px;cursor:pointer}' +
+      '@media print{.btn{display:none}body{padding:0}}@page{margin:14mm}</style></head><body>' +
+      '<button class="btn" onclick="window.print()">🖨 Imprimir / Salvar como PDF</button>' +
+      '<header><h1>' + escHtml(r.nome) + '</h1><div class="sub">' + escHtml(r.tropa) + ' · GE Joaninha · Relatório de progressão · ' + escHtml(hoje) + '</div></header>';
+    if (r.info && r.info.length) h += '<div class="info">' + r.info.filter(function (i) { return i[1]; }).map(function (i) { return '<div><span>' + escHtml(i[0]) + ':</span> ' + escHtml(i[1]) + '</div>'; }).join('') + '</div>';
+    h += '<div class="resumo"><b>' + r.resumo.n + ' de ' + r.resumo.total + ' blocos concluídos</b> (' + pct + '%)' + (r.resumo.etapa ? ' — etapa: <b>' + escHtml(r.resumo.etapa) + '</b>' : '') + '<div class="barra"><i style="width:' + pct + '%"></i></div></div>';
+    if (r.presenca && r.presenca.total) {
+      var pp = Math.round(r.presenca.presentes / r.presenca.total * 100);
+      h += '<div class="resumo"><b>Presença:</b> ' + r.presenca.presentes + ' presença(s) em ' + r.presenca.total + ' atividade(s) com chamada (' + pp + '%)' + (r.presenca.ausentes ? ' · ' + r.presenca.ausentes + ' falta(s)' : '') + '</div>';
+    }
+    (r.eixos || []).forEach(function (e) {
+      h += '<div class="eixo"><h2 style="background:' + escHtml(e.cor) + '"><span>' + escHtml(e.nome) + '</span><span>' + e.feitos + '/' + e.total + '</span></h2><table>' +
+        e.blocos.map(function (b) { return '<tr><td class="s ' + (b.ok ? 'ok' : 'pend') + '">' + (b.ok ? '✓' : '○') + '</td><td>' + escHtml(b.nome) + '</td><td class="d">' + escHtml(b.detalhe) + '</td></tr>'; }).join('') + '</table></div>';
+    });
+    h += '<footer>Relatório gerado pelo sistema de progressão do GE Joaninha. Os dados refletem o que estava registrado no momento da emissão.</footer></body></html>';
+    w.document.open(); w.document.write(h); w.document.close();
+    setTimeout(function () { try { w.focus(); w.print(); } catch (e) {} }, 500);
+  }
 
   /* ---------- lembrete mensal de backup (admins) ---------- */
   // Janela: últimos 5 dias do mês até o dia 5 do mês seguinte. Devolve "AAAA-MM" do mês a fechar, ou null fora da janela.
@@ -703,8 +808,9 @@ window.V2_CONFIG = {
   }
 
   root.V2 = {
+    abrirRelatorio: abrirRelatorio,
     snapshot: snapshot, listarSnapshots: listarSnapshots, lerSnapshot: lerSnapshot, protegerAntes: protegerAntes,
-    resumirDiff: resumirDiff, registrarHistorico: registrarHistorico, lerHistorico: lerHistorico, podarHistorico: podarHistorico, limparCacheLocal: limparCacheLocal,
+    resumirDiff: resumirDiff, registrarHistorico: registrarHistorico, lerHistorico: lerHistorico, podarHistorico: podarHistorico, limparCacheLocal: limparCacheLocal, temPendenciaLocal: temPendenciaLocal,
     hashSenha: hashSenha, conferirSenha: conferirSenha, senhaComHash: senhaComHash,
     cicloBackup: cicloBackup, lembreteBackup: lembreteBackup, registrarBackup: registrarBackup,
     CFG: CFG, escKey: escKey, unescKey: unescKey, enc: enc, dec: dec, encDados: encDados, decDados: decDados, decCampo: decCampo,
@@ -805,11 +911,12 @@ function urlComAuthFirebase(url) {
   return url + (url.indexOf('?') !== -1 ? '&' : '?') + 'auth=' + firebaseAuthToken;
 }
 async function renovarTokenSessao(refreshToken) {
-  const resp = await fetch('https://securetoken.googleapis.com/v1/token?key=' + window.V2_CONFIG.API_KEY, {
+  let resp;
+  try { resp = await fetch('https://securetoken.googleapis.com/v1/token?key=' + window.V2_CONFIG.API_KEY, {
     method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(refreshToken)
-  });
-  const data = await resp.json();
+  }); } catch (e) { return null; } // sem internet: devolve null em vez de dar erro
+  const data = await resp.json().catch(() => null);
   if (data && data.id_token) return { idToken: data.id_token, refreshToken: data.refresh_token };
   return null;
 }
