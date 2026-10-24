@@ -753,7 +753,6 @@ REGISTRO ESCOTEIRO
 <div class="conta-barra">
 <span class="conta-barra-registro">👤 <strong id="contaRegistroTxt"></strong></span>
 <button class="conta-barra-btn" id="btnGerenciarChefes" style="display:none;" onclick="abrirGerenciarChefes()">⚙️ Gerenciar Chefes</button>
-<button class="conta-barra-btn" id="btnRelatorioTropa" onclick="relatorioDaTropaAtual()">📄 Relatório da tropa</button>
 <button class="conta-barra-btn somente-admin" id="btnHistorico" onclick="abrirHistorico()">📜 Histórico</button>
 <button class="conta-barra-btn" onclick="if(confirm('Sair da sua conta neste navegador?'))fazerLogout()">🚪 Sair</button>
 </div>
@@ -788,6 +787,8 @@ Toque num jovem para abrir a ficha dele. Dentro de cada bloco, marque as ações
 e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco fecha ✓ sozinho quando as duas metas forem batidas.
 </div>
 
+<button type="button" class="btn-secundario" id="btnRelatorioTropa" style="width:100%;margin:0 0 10px;padding:12px;font-weight:700;" onclick="relatorioTropa()">📄 Relatório da tropa</button>
+
 <div class="roster-section" style="padding:0;overflow:hidden;">
 <div class="bloco-head aberto cabecalho-secao" id="cabecalhoPatrulhas" style="padding:14px;" onclick="togglePatrulhasSecao()">
 <span class="bloco-name" style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">🏕️ Patrulhas</span>
@@ -807,7 +808,6 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 <div id="roster"></div>
 <div class="add-jovem-wrap" id="addJovemWrap">
 <button class="btn-add-jovem" id="btnAbrirAddJovem" onclick="toggleAddJovemForm()">+ Adicionar jovem</button>
-<button type="button" class="btn-secundario" style="width:100%;margin-top:8px;" onclick="relatorioTropa()">📄 Relatório da tropa em PDF</button>
 <div class="add-jovem-row" id="addJovemForm" style="display:none;">
 <div>
 <label class="campo-label">Nome</label>
@@ -2555,13 +2555,6 @@ function toggleFixa(j, b, i) { S[j][b].fixas[i] = S[j][b].fixas[i] ? 0 : 1; temA
 function toggleVar(j, b, i) { S[j][b].variaveis[i] = S[j][b].variaveis[i] ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); preservarScrollFicha(() => { renderRoster(); renderDetail(j); }); }
 function toggleEsp(j, b) { S[j][b].especialidade = S[j][b].especialidade ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); preservarScrollFicha(() => { renderRoster(); renderDetail(j); }); }
 
-function relatorioDaTropaAtual() {
-  const sr = document.getElementById('pagina-senior');
-  const noSenior = sr && sr.style.display !== 'none';
-  if (!noSenior) { relatorioTropa(); return; }
-  const f = document.getElementById('iframeSenior');
-  try { f.contentWindow.relatorioTropaSr(); } catch (e) { alert('Abra a aba da Tropa Sênior e espere carregar antes de gerar o relatório.'); }
-}
 function relatorioTropa() {
   const hoje = new Date().toISOString().slice(0, 10);
   const chamadas = EVENTOS.filter(e => e.data && e.data <= hoje && (e.presentes || []).length > 0);
