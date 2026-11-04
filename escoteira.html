@@ -1115,6 +1115,36 @@ function iniciarSync() {
   });
 }
 
+// ===== Importação do Paxtu (acionada pela tela principal, só para administradores) =====
+function paxtuPronto() { return !carregando && !!__store; }
+function paxtuEstado() {
+  const ids = [...JOVENS, ...JOVENS_ARQUIVADOS.filter(id => !JOVENS.includes(id))];
+  return {
+    jovens: ids.map(id => ({ id, nome: JNOMES[id] || id, nasc: DATAS_NASC[id] || '', patrulhaId: PATRULHA_DE[id] || null, arquivado: JOVENS_ARQUIVADOS.includes(id) })),
+    patrulhas: PATRULHAS.map(p => ({ id: p.id, nome: p.nome }))
+  };
+}
+async function paxtuAplicar(lista) {
+  if (!souAdmin) throw new Error('Esta ação é só para administradores.');
+  if (!(await V2.protegerAntes('escoteira', montarDadosEscoteira(), 'Antes de importar do Paxtu', registroLogado))) throw new Error('Importação cancelada.');
+  const ids = lista.map(item => {
+    let id = item.id;
+    if (!id) {
+      id = slugify(item.nome);
+      JOVENS.push(id); JNOMES[id] = item.nome; JCOR[id] = corPara(JOVENS.length - 1); S[id] = blocosEmBranco();
+    }
+    if (item.nasc) DATAS_NASC[id] = item.nasc;
+    if (item.patrulhaId) PATRULHA_DE[id] = item.patrulhaId;
+    return id;
+  });
+  temAlteracaoLocalPendente = true;
+  await saveState();
+  if (temAlteracaoLocalPendente) throw new Error('Não foi possível salvar. Confira a conexão.');
+  renderRoster();
+  return ids;
+}
+function paxtuAtualizar() { V2.paxtuLimpar(); renderRoster(); if (ativo) renderDetail(ativo); }
+
 async function saveState() {
   temAlteracaoLocalPendente = false; // o que foi clicado até agora entra neste salvamento
   mostrarStatusSalvando('Salvando…');
@@ -2132,6 +2162,7 @@ let html = `
 <span class="detail-etapa" style="background:${et.bg || et.c+'22'};color:${et.c}">${n}/18 blocos &mdash; ${et.l}</span>
 <div class="detail-track"><div class="detail-bar" style="width:${Math.round(n/18*100)}%"></div></div>
 <button type="button" class="btn-secundario" style="margin:6px 0 2px;font-size:11px;padding:5px 10px;" onclick="relatorioJovem('${j}')">📄 Relatório em PDF</button>
+<div data-paxtu="${j}"></div>
 <div class="detail-hint">Pistas: 0-3 &nbsp;|&nbsp; Trilha: 4 &nbsp;|&nbsp; Rumo: 8 &nbsp;|&nbsp; Travessia: 13 &nbsp;|&nbsp; 🏅 Lis de Ouro: 18</div>
 <div class="eixo-grid">`;
 EIXOS.forEach(eixo => {
@@ -2151,6 +2182,7 @@ const eixoSel = EIXOS.find(e => e.id === window.__eixoAtivo);
 if (!eixoSel) {
 html += `<div class="eixo-blocos-hint">Toque num eixo acima para ver os blocos.</div>`;
 el.innerHTML = html;
+V2.paxtuPreencher('escoteira', el);
 return;
 }
 

@@ -54,7 +54,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-11-03c"
+  VERSAO: "2026-11-04a"
 };
 
 /* ============================================================
@@ -660,6 +660,44 @@ window.V2_CONFIG = {
     }
   }
 
+  /* ---------- dados importados do Paxtu (área privada: /v2/paxtu/<ramo>/<id do jovem>) ---------- */
+  var paxtuCache = {};
+  async function paxtuLer(ramo, forcar) {
+    var c = paxtuCache[ramo];
+    if (!forcar && c && Date.now() - c.em < 60000) return c.dados;
+    var r = await fetch(urlV2('paxtu/' + ramo));
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    var d = (await r.json()) || {};
+    delete d._atualizadoEm;
+    paxtuCache[ramo] = { em: Date.now(), dados: d };
+    return d;
+  }
+  async function paxtuTestar(ramo) {
+    var r = await fetch(urlV2('paxtu/' + ramo), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ _atualizadoEm: new Date().toISOString() }) });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+  }
+  async function paxtuGravar(ramo, mapa) {
+    var r = await fetch(urlV2('paxtu/' + ramo), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(mapa) });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    delete paxtuCache[ramo];
+  }
+  function paxtuData(iso) { var m = /^(\d{4})-(\d\d)-(\d\d)/.exec(iso || ''); return m ? m[3] + '/' + m[2] + '/' + m[1] : 'sem data'; }
+  function paxtuHtml(d) {
+    var esp = d.especialidades || [], prog = (d.progressao || []).slice().sort(function (a, b) { return String(a.data).localeCompare(String(b.data)); }), conq = d.conquistas || [];
+    var lista = function (l, nivel) { return l.map(function (e) { return '<li>' + escHtml(e.nome) + (nivel && e.nivel ? ' · nível ' + escHtml(e.nivel) : '') + ' <span style="color:#777">(' + paxtuData(e.data) + ')</span></li>'; }).join(''); };
+    var bloco = function (t, l, nivel) { return l.length ? '<div style="font-weight:800;margin:8px 0 3px;">' + t + ' (' + l.length + ')</div><ul style="margin:0;padding-left:17px;line-height:1.45;">' + lista(l, nivel) + '</ul>' : ''; };
+    return '<details style="margin-top:9px;background:#fff;border:1px solid #E0D8D0;border-radius:8px;padding:8px 10px;font-size:11px;color:#1A1A1A;text-align:left;"><summary style="cursor:pointer;font-weight:800;">📋 Dados do Paxtu · ' + esp.length + ' especialidades</summary><div style="margin-top:6px;">Registro ' + escHtml(d.registro || '—') + (d.importadoEm ? ' · importado em ' + paxtuData(String(d.importadoEm).slice(0, 10)) : '') + '</div>' + bloco('Progressão', prog) + bloco('Especialidades', esp, true) + bloco('Conquistas', conq) + '</details>';
+  }
+  async function paxtuPreencher(ramo, raiz) {
+    if (!auth.getToken()) return;
+    var alvos = (raiz || document).querySelectorAll('[data-paxtu]');
+    if (!alvos.length) return;
+    try {
+      var d = await paxtuLer(ramo);
+      alvos.forEach(function (el) { var x = d[el.getAttribute('data-paxtu')]; el.innerHTML = x ? paxtuHtml(x) : ''; });
+    } catch (e) {}
+  }
+
   /* ---------- histórico de alterações ---------- */
   var ROTULOS = {
     S: 'Progressão', PRESENCA: 'Presença', eventos: 'Calendário', ciclo: 'Ciclo de programa', cicloInfo: 'Ciclo de programa',
@@ -1081,7 +1119,7 @@ window.V2_CONFIG = {
     configurarAuth: configurarAuth, criarStore: criarStore,
     subirAnexo: subirAnexo, garantirAnexos: garantirAnexos, removerAnexo: removerAnexo, baixarAnexo: baixarAnexo,
     ehAnexoInline: ehAnexoInline, gravarAnexo: gravarAnexo, urlAnexoDb: urlAnexoDb, nomeSeguro: nomeSeguro,
-    comEspera: comEspera, pagina: pagina, sleep: sleep, fetchTimeout: fetchTimeout
+    paxtuLer: paxtuLer, paxtuLimpar: function () { paxtuCache = {}; }, paxtuTestar: paxtuTestar, paxtuGravar: paxtuGravar, paxtuPreencher: paxtuPreencher, comEspera: comEspera, pagina: pagina, sleep: sleep, fetchTimeout: fetchTimeout
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.V2;
 })(typeof window !== 'undefined' ? window : globalThis);

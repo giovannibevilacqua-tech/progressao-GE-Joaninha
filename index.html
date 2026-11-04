@@ -146,6 +146,37 @@ border: none; background: var(--card); color: var(--text); cursor: pointer;
 .obs-modal-titulo { font-size: 15px; font-weight: 800; color: var(--vinho); margin-bottom: 10px; }
 .obs-modal-texto { font-size: 13px; color: var(--text); line-height: 1.6; white-space: pre-line; }
 
+.paxtu-txt { font-size: 12px; color: var(--muted); line-height: 1.5; margin: 0 0 13px; }
+.paxtu-txt strong { color: var(--text); }
+.paxtu-ramos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; margin-bottom: 15px; }
+.paxtu-ramo { min-height: 54px; padding: 7px 5px; border: 1.5px solid var(--border); border-radius: var(--r); background: var(--card); color: var(--text); font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+.paxtu-ramo.sel { border-color: var(--vinho); background: var(--done-bg); color: var(--vinho); box-shadow: inset 0 0 0 1px var(--vinho); }
+.paxtu-ramo:disabled { background: #F4F1EC; color: #8A837B; cursor: not-allowed; }
+.paxtu-ramo small { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .4px; }
+.paxtu-envio { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 17px 12px; border: 2px dashed var(--border); border-radius: var(--r); background: var(--card); cursor: pointer; font-size: 13px; text-align: center; }
+.paxtu-envio:hover, .paxtu-envio:focus-within { border-color: var(--vinho); }
+.paxtu-envio input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.paxtu-envio span { font-size: 11px; color: var(--muted); }
+.paxtu-arqs { margin: 9px 0 0; padding-left: 17px; font-size: 11px; color: var(--muted); overflow-wrap: anywhere; }
+.paxtu-acao { width: 100%; margin-top: 14px; }
+.paxtu-acao:disabled, #paxtuGravar:disabled { opacity: .5; cursor: not-allowed; }
+.paxtu-msg { margin-top: 11px; padding: 9px 11px; border-radius: 8px; background: #EAF2FB; color: var(--azul); font-size: 11px; font-weight: 600; line-height: 1.4; }
+.paxtu-msg.erro { background: #FDECEA; color: #C0392B; }
+.paxtu-lista { display: flex; flex-direction: column; gap: 9px; }
+.paxtu-item { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 11px; }
+.paxtu-item.off { opacity: .62; }
+.paxtu-nome { display: flex; gap: 9px; align-items: flex-start; font-size: 13px; cursor: pointer; margin-bottom: 9px; }
+.paxtu-nome input { width: 17px; height: 17px; margin: 1px 0 0; flex-shrink: 0; }
+.paxtu-nome span { min-width: 0; overflow-wrap: anywhere; }
+.paxtu-nome small { display: block; font-size: 10px; color: var(--muted); margin-top: 2px; }
+.paxtu-sel { width: 100%; font-size: 12px; }
+.paxtu-mud { margin: 8px 0 0; padding-left: 16px; font-size: 11px; color: var(--muted); line-height: 1.45; }
+.paxtu-aviso { margin-top: 8px; padding: 7px 9px; border-radius: 7px; background: var(--focus-y); color: #7A5200; font-size: 11px; line-height: 1.4; }
+.paxtu-botoes { display: flex; gap: 8px; margin-top: 13px; position: sticky; bottom: 0; background: var(--bg); padding: 8px 0 2px; }
+.paxtu-botoes button { flex: 1; margin-top: 0; }
+.paxtu-ok { text-align: center; padding: 16px 8px; font-size: 13px; }
+.paxtu-ok > div { width: 46px; height: 46px; line-height: 46px; margin: 0 auto 10px; border-radius: 50%; background: var(--done); color: #fff; font-size: 23px; font-weight: 900; }
+.paxtu-ok p { font-size: 12px; color: var(--muted); margin: 6px 0 14px; }
 .lis-modal-ov { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1000; align-items: flex-end; justify-content: center; padding: 0 10px; box-sizing: border-box; }
 .lis-modal-ov.open { display: flex; }
 .lis-modal-box { background: var(--bg); border-radius: 16px 16px 0 0; padding: 0; width: 100%; max-width: 560px; max-height: 92vh; max-height: 92dvh; overflow-y: auto; overflow-x: hidden; box-sizing: border-box; }
@@ -666,6 +697,7 @@ mark.hl-esc{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 
 </style>
 <script src="v2.js"></script>
+<script src="importar-paxtu.js"></script>
 </head>
 <body>
 <div id="lembreteBackupSlot"></div>
@@ -694,6 +726,7 @@ REGISTRO ESCOTEIRO
 <span class="conta-barra-registro">👤 <strong id="contaRegistroTxt"></strong></span>
 <button class="conta-barra-btn" id="btnGerenciarChefes" style="display:none;" onclick="abrirGerenciarChefes()">⚙️ Gerenciar Chefes</button>
 <button class="conta-barra-btn somente-admin" id="btnHistorico" onclick="abrirHistorico()">📜 Histórico</button>
+<button class="conta-barra-btn somente-admin" id="btnImportarPaxtu" onclick="ImportarPaxtu.abrir()">📥 Importar PAXTU</button>
 <button class="conta-barra-btn" onclick="if(confirm('Sair da sua conta neste navegador?'))fazerLogout()">🚪 Sair</button>
 </div>
 
@@ -721,6 +754,16 @@ REGISTRO ESCOTEIRO
 
 <div id="pagina-escoteira" style="display:none;">
 <iframe id="iframeEscoteira" style="width:100%;border:none;display:block;transition:height .25s ease;" title="Tropa Escoteira"></iframe>
+</div>
+
+<div class="lis-modal-ov" id="paxtuModalOv" onclick="if(event.target===this)ImportarPaxtu.fechar()">
+<div class="lis-modal-box">
+<div class="lis-modal-header">
+<span class="lis-modal-titulo">📥 Importar PAXTU</span>
+<button class="lis-modal-fechar" aria-label="Fechar" onclick="ImportarPaxtu.fechar()">✕</button>
+</div>
+<div class="lis-modal-body" id="paxtuModalBody"></div>
+</div>
 </div>
 
 <div class="lis-modal-ov" id="chefesModalOv" onclick="if(event.target===this)fecharGerenciarChefes()">
