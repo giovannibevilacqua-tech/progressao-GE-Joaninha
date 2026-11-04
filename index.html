@@ -388,7 +388,7 @@ border: 2px solid var(--text); background: #F5F3EF; color: var(--text); cursor: 
 .actions-label-pb { font-size: clamp(9px,2.2vw,11px); font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
 .fixed-label-pb { color: #C0392B; }
 .var-label-pb { color: var(--azul); }
-.actions-table-wrap-pb { overflow-x: auto; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); max-height: 60vh; overflow-y: auto; }
+.actions-table-wrap-pb { overflow-x: auto; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
 .actions-table-pb { width: 100%; border-collapse: collapse; background: var(--card); table-layout: fixed; }
 .actions-table-pb th { background: var(--azul); color: #fff; padding: clamp(5px,1.5vw,7px) 4px; font-size: clamp(8px,2vw,10px); font-weight: 700; text-align: center; white-space: nowrap; position: sticky; top: 0; z-index: 2; width: clamp(38px,9vw,52px); overflow: hidden; text-overflow: ellipsis; }
 .actions-table-pb th.act-col-pb { text-align: left; padding-left: clamp(6px,2vw,10px); min-width: clamp(120px,32vw,190px); width: clamp(120px,32vw,190px); position: sticky; left: 0; z-index: 3; }
@@ -2921,6 +2921,14 @@ if (lista && input && !lista.contains(ev.target) && ev.target !== input) { lista
 });
 
 function renderPaginaTabela() {
+// guarda a posição da página e a rolagem horizontal das tabelas, e devolve depois de redesenhar
+const y = window.scrollY;
+const xs = Array.from(document.querySelectorAll('.actions-table-wrap-pb')).map(w => w.scrollLeft);
+_renderPaginaTabelaBase();
+document.querySelectorAll('.actions-table-wrap-pb').forEach((w, i) => { if (xs[i]) w.scrollLeft = xs[i]; });
+if (window.scrollY !== y) window.scrollTo(0, y);
+}
+function _renderPaginaTabelaBase() {
 document.getElementById('resumoContainer').innerHTML = construirResumoBlocos();
 const el = document.getElementById('blocosPorEixoContainer');
 el.innerHTML = EIXOS.map(eixo => {
