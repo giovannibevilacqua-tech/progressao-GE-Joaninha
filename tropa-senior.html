@@ -666,7 +666,7 @@ async function autenticarComSessaoCompartilhada() {
   souAdminSr = salva.admin === true;
   document.body.classList.toggle('eh-admin', souAdminSr);
   const tropa = salva.tropa;
-  if (!isAdmin && tropa === 'escoteira') {
+  if (!isAdmin && tropa && tropa !== 'senior') {
     // Usuário da Tropa Escoteira tentando acessar Tropa Sênior → redireciona
     try { window.top.location.href = V2.pagina('index'); } catch(e) { window.location.href = V2.pagina('index'); }
     return false;

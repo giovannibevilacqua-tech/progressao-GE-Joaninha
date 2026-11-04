@@ -4,7 +4,7 @@ if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScop
   // Guarda uma cópia dos arquivos do app para abrir mesmo sem internet.
   // Sempre tenta a internet primeiro (assim as atualizações chegam); só usa a cópia se estiver offline.
   const CACHE = 'joaninha-app-v1';
-  const BASE = ['./', 'index.html', 'escoteira.html', 'tropa-senior.html', 'visualizacao.html', 'v2.js', 'manifest.webmanifest'];
+  const BASE = ['./', 'index.html', 'escoteira.html', 'tropa-senior.html', 'alcateia.html', 'cla-pioneiro.html', 'diretoria.html', 'secao.css', 'visualizacao.html', 'v2.js', 'manifest.webmanifest'];
 
   self.addEventListener('install', (e) => {
     e.waitUntil(caches.open(CACHE).then((c) => Promise.all(BASE.map((u) => c.add(u).catch(() => {})))).then(() => self.skipWaiting()));
@@ -54,7 +54,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-11-03b"
+  VERSAO: "2026-11-03c"
 };
 
 /* ============================================================
@@ -1348,10 +1348,13 @@ window.V2_ALMOX = (function () {
   };
   var EMOJIS_SUG = ['⛺','🎯','📎','🏅','🔦','🧭','🪢','🔪','🍳','🎒','📚','🎵','🩹','🧰','🎨','🔥','🪵','⚽','🧵','💧','🚩','🎪'];
 
+  var NOMES = { escoteira: 'Escoteira', senior: 'Sênior', alcateia: 'Alcateia', cla: 'Clã Pioneiro', diretoria: 'Diretoria' };
   var cfg = null, itens = {}, TIPOS = JSON.parse(JSON.stringify(PADRAO)), chipAtivo = '', modo = 'estoque', emojiFoco = null;
 
   function esc(x) { return String(x == null ? '' : x).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
   function $(id) { return document.getElementById(id); }
+  function rotuloComp() { return cfg.rotuloComp ? esc(cfg.rotuloComp) : 'Compartilhado com ' + esc(cfg.outraTropa); }
+  function subComp() { return cfg.subComp ? esc(cfg.subComp) : 'Aparece nos dois painéis'; }
   function soLeitura() { return !!(cfg && cfg.somenteLeitura && cfg.somenteLeitura()); }
   function chaveForm() { return 'almoFormAberto' + (cfg.secao === 'escoteira' ? 'Esc' : cfg.secao === 'senior' ? 'Sr' : cfg.secao); }
   function url(sub) { return urlComAuthFirebase(BASE + (sub || '') + '.json'); }
@@ -1443,7 +1446,7 @@ window.V2_ALMOX = (function () {
     }).join('');
     return '' +
       '<div class="almo-section"><div class="almo-titulo">📦 Almoxarifado</div>' +
-      '<div class="almo-sub">Materiais da Tropa ' + esc(cfg.nomeTropa) + '. Itens compartilhados aparecem também no painel ' + esc(cfg.outraTropa) + '.</div></div>' +
+      '<div class="almo-sub">' + (cfg.subTitulo ? esc(cfg.subTitulo) : 'Materiais da Tropa ' + esc(cfg.nomeTropa) + '. Itens compartilhados aparecem também no painel ' + esc(cfg.outraTropa) + '.') + '</div></div>' +
       '<div class="almo-chips-wrap" id="almoModo">' +
         '<button class="almo-chip ativo" onclick="V2_ALMOX.h.trocarModo(\'estoque\',this)">📦 Estoque</button>' +
         '<button class="almo-chip" onclick="V2_ALMOX.h.trocarModo(\'desejos\',this)">🛒 Lista de desejos<span id="almoDesejosCnt"></span></button>' +
@@ -1462,7 +1465,7 @@ window.V2_ALMOX = (function () {
             '<label class="almo-campo-label" id="almoQtdLbl">Qtd.</label>' +
             '<input type="number" id="almoQtd" class="almo-input" value="1" min="0" style="text-align:center;">' +
           '</div></div>' +
-          '<div class="almo-toggle-row" id="almoToggleRow"><div class="almo-toggle-lbl-wrap"><span class="almo-toggle-lbl">Compartilhado com ' + esc(cfg.outraTropa) + '</span><span class="almo-toggle-sub">Aparece nos dois painéis</span></div>' +
+          '<div class="almo-toggle-row" id="almoToggleRow"><div class="almo-toggle-lbl-wrap"><span class="almo-toggle-lbl">' + rotuloComp() + '</span><span class="almo-toggle-sub">' + subComp() + '</span></div>' +
           '<label class="almo-toggle"><input type="checkbox" id="almoComp"><span class="almo-toggle-slider"></span></label></div>' +
           '<button class="almo-btn-add" id="almoBtnAdd" onclick="V2_ALMOX.h.adicionar()">+ Adicionar item</button>' +
         '</div>' +
@@ -1478,7 +1481,7 @@ window.V2_ALMOX = (function () {
   function visiveis(desejo) {
     return Object.keys(itens).filter(function (k) {
       var v = itens[k];
-      return v && (v.compartilhado === true || v.tropa === cfg.secao) && (v.desejo === true) === !!desejo;
+      return v && (cfg.verTudo || v.compartilhado === true || v.tropa === cfg.secao) && (v.desejo === true) === !!desejo;
     }).sort(function (a, b) { return (itens[a].nome || '').localeCompare(itens[b].nome || '', 'pt'); }).map(function (k) { return [k, itens[k]]; });
   }
 
@@ -1535,7 +1538,7 @@ window.V2_ALMOX = (function () {
     el.innerHTML = lista.map(function (p) {
       var id = p[0], v = p[1];
       var t = TIPOS[v.tipo] || { label: 'Sem categoria', emoji: '📦', color: '#888888' };
-      var comp = v.compartilhado ? '<span class="almo-badge almo-badge-comp">🔗 Compartilhado</span>' : '<span class="almo-badge almo-badge-ind">🔒 Só ' + esc(cfg.nomeTropa) + '</span>';
+      var comp = v.compartilhado ? '<span class="almo-badge almo-badge-comp">🔗 Compartilhado</span>' : '<span class="almo-badge almo-badge-ind">🔒 Só ' + esc(cfg.verTudo ? (NOMES[v.tropa] || v.tropa || '—') : cfg.nomeTropa) + '</span>';
       var qtd = ro ? '<div class="almo-qtd-val" style="margin:0 8px">' + (v.quantidade || 0) + '</div>'
         : '<div class="almo-qtd-row"><button class="almo-qtd-btn" onclick="V2_ALMOX.h.atualizarQtd(\'' + esc(id) + '\',-1)">−</button><div class="almo-qtd-val">' + (v.quantidade || 0) + '</div><button class="almo-qtd-btn" onclick="V2_ALMOX.h.atualizarQtd(\'' + esc(id) + '\',1)">+</button></div>';
       var btns = ro ? '' : (des ? '<button class="almo-del-btn" style="opacity:1" onclick="V2_ALMOX.h.marcarComprado(\'' + esc(id) + '\')" title="Marcar como comprado (vai para o estoque)">✅</button>' : '') +
@@ -1678,7 +1681,7 @@ window.V2_ALMOX = (function () {
         '<div class="almo-opt-grupo" id="almoEditTipo">' + Object.keys(TIPOS).map(function (k) { return '<button type="button" class="almo-opt ' + (k === tipoAtual ? 'ativo' : '') + '" data-valor="' + k + '">' + esc(TIPOS[k].emoji) + ' ' + esc(TIPOS[k].label) + '</button>'; }).join('') + '</div>' +
         '<label class="almo-campo-label" style="margin-top:10px;">' + (des ? 'Qtd. desejada' : 'Qtd.') + '</label>' +
         '<input type="number" class="almo-input" id="almoEditQtd" min="0" value="' + (Number(it.quantidade) || 0) + '" style="max-width:110px;text-align:center;">' +
-        '<div class="almo-toggle-row"><div class="almo-toggle-lbl-wrap"><span class="almo-toggle-lbl">Compartilhado com ' + esc(cfg.outraTropa) + '</span><span class="almo-toggle-sub">Aparece nos dois painéis</span></div>' +
+        '<div class="almo-toggle-row"><div class="almo-toggle-lbl-wrap"><span class="almo-toggle-lbl">' + rotuloComp() + '</span><span class="almo-toggle-sub">' + subComp() + '</span></div>' +
         '<label class="almo-toggle"><input type="checkbox" id="almoEditComp" ' + (it.compartilhado === true ? 'checked' : '') + '><span class="almo-toggle-slider"></span></label></div>' +
         '<div class="almo-cat-acoes"><button type="button" id="almoEditCancelar">Cancelar</button><button type="button" class="principal" id="almoEditSalvar">Salvar</button></div></div>';
       document.body.appendChild(ov);
@@ -1710,7 +1713,7 @@ window.V2_ALMOX = (function () {
       var ov = document.createElement('div');
       ov.className = 'almo-cat-ov'; ov.id = 'almoCatOv';
       ov.innerHTML = '<div class="almo-cat-box"><div class="almo-form-titulo">⚙ Categorias do almoxarifado</div>' +
-        '<div class="almo-sub" style="margin-bottom:6px;">Valem para as duas tropas. Toque no emoji e escolha abaixo, ou digite o seu.</div>' +
+        '<div class="almo-sub" style="margin-bottom:6px;">Valem para todas as seções. Toque no emoji e escolha abaixo, ou digite o seu.</div>' +
         '<div id="almoCatLinhas"></div><button type="button" class="almo-chip" id="almoCatNova">+ Nova categoria</button>' +
         '<div class="almo-cat-sug" id="almoCatSug"></div>' +
         '<div class="almo-cat-acoes"><button type="button" id="almoCatCancelar">Cancelar</button><button type="button" class="principal" id="almoCatSalvar">Salvar</button></div></div>';
