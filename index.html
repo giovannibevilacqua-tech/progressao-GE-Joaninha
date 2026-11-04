@@ -805,6 +805,7 @@ let tropaDoChefeLogado = null; // seção do chefe: 'alcateia' | 'escoteira' | '
 function emailDoRegistro(registro) { return registro + DOMINIO_LOGIN; }
 
 let firebaseUid = null;
+V2.configurarAuth({ getToken: () => firebaseAuthToken }); // leituras e gravações da tela principal usam o login atual
 
 function salvarSessao() {
 try {
