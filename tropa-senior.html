@@ -3298,8 +3298,7 @@ async function adicionarAlmoItemSr() {
   if (!nome) { document.getElementById('almoNomeSr').focus(); return; }
   let item;
   if (almoModoSr === 'desejos') {
-    const para = (document.getElementById('almoParaSelSr')||{}).value || 'propria';
-    item = { nome, quantidade:qtd, tipo, desejo:true, compartilhado:(para==='ambas'), tropa:(para==='outra' ? 'escoteira' : ALMO_TROPA_SR), criadoEm:new Date().toISOString() };
+    item = { nome, quantidade:qtd, tipo, desejo:true, compartilhado:comp, tropa:ALMO_TROPA_SR, criadoEm:new Date().toISOString() };
   } else {
     item = { nome, quantidade:qtd, tipo, compartilhado:comp, tropa:ALMO_TROPA_SR, criadoEm:new Date().toISOString() };
   }
@@ -3313,7 +3312,6 @@ async function adicionarAlmoItemSr() {
       return;
     }
     almoItensSr[res.name] = item;
-    if (item.desejo && item.tropa !== ALMO_TROPA_SR) alert('Adicionado à lista de desejos da Tropa Escoteira.');
     document.getElementById('almoNomeSr').value = '';
     document.getElementById('almoQtdSr').value = '1';
     document.getElementById('almoCompSr').checked = false;
@@ -3449,6 +3447,59 @@ function abrirCategoriasAlmoSr() {
   };
 }
 
+function editarItemAlmoSr(id) {
+  if (MODO_VISUALIZACAO_SR) return;
+  const it = almoItensSr[id];
+  if (!it || document.getElementById('almoEditOvSr')) return;
+  const des = it.desejo === true;
+  const ov = document.createElement('div');
+  ov.className = 'almo-cat-ov'; ov.id = 'almoEditOvSr';
+  const tipos = Object.entries(ALMO_TIPOS_SR);
+  const tipoAtual = ALMO_TIPOS_SR[it.tipo] ? it.tipo : '';
+  ov.innerHTML = `<div class="almo-cat-box">
+    <div class="almo-form-titulo">✏️ Editar ${des ? 'item da lista de desejos' : 'item do almoxarifado'}</div>
+    <label class="almo-campo-label">Nome do item</label>
+    <input type="text" class="almo-input" id="almoEditNomeSr" maxlength="80" value="${almoEscSr(it.nome || '')}">
+    <label class="almo-campo-label" style="margin-top:10px;">Tipo</label>
+    <div class="almo-opt-grupo" id="almoEditTipoSr">${tipos.map(([k,t]) => `<button type="button" class="almo-opt ${k===tipoAtual ? 'ativo' : ''}" data-valor="${k}">${almoEscSr(t.emoji)} ${almoEscSr(t.label)}</button>`).join('')}</div>
+    <label class="almo-campo-label" style="margin-top:10px;">${des ? 'Qtd. desejada' : 'Qtd.'}</label>
+    <input type="number" class="almo-input" id="almoEditQtdSr" min="0" value="${Number(it.quantidade) || 0}" style="max-width:110px;text-align:center;">
+    <div class="almo-toggle-row">
+      <div class="almo-toggle-lbl-wrap"><span class="almo-toggle-lbl">Compartilhado com Escoteira</span><span class="almo-toggle-sub">Aparece nos dois painéis</span></div>
+      <label class="almo-toggle"><input type="checkbox" id="almoEditCompSr" ${it.compartilhado === true ? 'checked' : ''}><span class="almo-toggle-slider"></span></label>
+    </div>
+    <div class="almo-cat-acoes"><button type="button" id="almoEditCancelarSr">Cancelar</button><button type="button" class="principal" id="almoEditSalvarSr">Salvar</button></div>
+  </div>`;
+  document.body.appendChild(ov);
+  const grupo = ov.querySelector('#almoEditTipoSr');
+  grupo.querySelectorAll('.almo-opt').forEach(b => b.onclick = () => { grupo.querySelectorAll('.almo-opt').forEach(x => x.classList.toggle('ativo', x === b)); });
+  const fechar = () => ov.remove();
+  ov.querySelector('#almoEditCancelarSr').onclick = fechar;
+  ov.addEventListener('click', e => { if (e.target === ov) fechar(); });
+  ov.querySelector('#almoEditSalvarSr').onclick = async () => {
+    const nome = ov.querySelector('#almoEditNomeSr').value.trim();
+    if (!nome) { ov.querySelector('#almoEditNomeSr').focus(); return; }
+    const ativo = grupo.querySelector('.almo-opt.ativo');
+    const tipo = ativo ? ativo.dataset.valor : (it.tipo || Object.keys(ALMO_TIPOS_SR)[0]);
+    const quantidade = Math.max(0, parseInt(ov.querySelector('#almoEditQtdSr').value) || 0);
+    const compartilhado = ov.querySelector('#almoEditCompSr').checked;
+    const antes = { nome: it.nome, tipo: it.tipo, quantidade: it.quantidade, compartilhado: it.compartilhado };
+    Object.assign(it, { nome, tipo, quantidade, compartilhado });
+    renderAlmoSr();
+    fechar();
+    try {
+      const r = await fetch(urlComAuthFirebase(ALMO_BASE_URL_SR + '/' + id + '.json'), {
+        method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ nome, tipo, quantidade, compartilhado })
+      });
+      const res = await r.json();
+      if (!r.ok || (res && res.error)) throw new Error('falhou');
+    } catch(e) {
+      Object.assign(it, antes); renderAlmoSr();
+      alert('Não consegui salvar a edição. Verifique a conexão e tente de novo.');
+    }
+  };
+}
+
 function selecionarChipAlmoSr(btn, tipo) {
   almoChipAtivoSr = tipo;
   document.querySelectorAll('#almoChipsSr .almo-chip').forEach(c=>c.classList.remove('ativo'));
@@ -3513,7 +3564,7 @@ function renderListaAlmoSr() {
           <div class="almo-qtd-val">${v.quantidade||0}</div>
           <button class="almo-qtd-btn" onclick="atualizarQtdAlmoSr('${_e(id)}',1)">+</button>
         </div>`;
-    const btnDel = soLeitura ? '' : (modoDes ? `<button class="almo-del-btn" style="opacity:1" onclick="marcarCompradoAlmoSr('${_e(id)}')" title="Marcar como comprado (vai para o estoque)">✅</button>` : '') + `<button class="almo-del-btn" onclick="deletarAlmoItemSr('${_e(id)}')" title="Remover">🗑</button>`;
+    const btnDel = soLeitura ? '' : (modoDes ? `<button class="almo-del-btn" style="opacity:1" onclick="marcarCompradoAlmoSr('${_e(id)}')" title="Marcar como comprado (vai para o estoque)">✅</button>` : '') + `<button class="almo-del-btn" style="opacity:1" onclick="editarItemAlmoSr('${_e(id)}')" title="Editar">✏️</button><button class="almo-del-btn" onclick="deletarAlmoItemSr('${_e(id)}')" title="Remover">🗑</button>`;
     return `<div class="almo-item">
       <div class="almo-item-dot" style="background:${t.color}"></div>
       <div class="almo-item-body">
@@ -3577,8 +3628,6 @@ function renderAlmoSr() {
   const des = almoModoSr === 'desejos';
   const $ = id => document.getElementById(id);
   if ($('almoChartCardSr')) $('almoChartCardSr').style.display = des ? 'none' : '';
-  if ($('almoToggleRowSr')) $('almoToggleRowSr').style.display = des ? 'none' : '';
-  if ($('almoParaRowSr')) $('almoParaRowSr').style.display = des ? '' : 'none';
   if ($('almoFormTituloSr')) $('almoFormTituloSr').textContent = des ? '🛒 Adicionar à lista de desejos' : '➕ Adicionar item';
   if ($('almoQtdLblSr')) $('almoQtdLblSr').textContent = des ? 'Qtd. desejada' : 'Qtd.';
   if ($('almoBtnAddSr')) $('almoBtnAddSr').textContent = des ? '+ Adicionar à lista' : '+ Adicionar item';
@@ -3684,19 +3733,6 @@ async function abrirAlmoSr() {
           <input type="checkbox" id="almoCompSr">
           <span class="almo-toggle-slider"></span>
         </label>
-      </div>
-      <div id="almoParaRowSr" style="display:none;margin:10px 0;">
-        <label class="almo-campo-label">Para quem</label>
-        <select id="almoParaSelSr" class="almo-select" style="display:none;">
-          <option value="propria">🔒 Só Sênior</option>
-          <option value="outra">🔒 Só Escoteira</option>
-          <option value="ambas">🔗 Ambas as seções</option>
-        </select>
-        <div class="almo-opt-grupo">
-          <button type="button" class="almo-opt ativo" data-valor="propria" onclick="escolherOpcaoAlmo(this,'almoParaSelSr')">🔒 Só Sênior</button>
-          <button type="button" class="almo-opt" data-valor="outra" onclick="escolherOpcaoAlmo(this,'almoParaSelSr')">🔒 Só Escoteira</button>
-          <button type="button" class="almo-opt" data-valor="ambas" onclick="escolherOpcaoAlmo(this,'almoParaSelSr')">🔗 Ambas as seções</button>
-        </div>
       </div>
       <button class="almo-btn-add" id="almoBtnAddSr" onclick="adicionarAlmoItemSr()">+ Adicionar item</button>
       </div>
