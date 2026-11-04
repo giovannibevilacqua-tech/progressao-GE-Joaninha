@@ -645,7 +645,7 @@ cursor: pointer; color: #fff;
 
 /* ─── Busca de Ações ─────────────────────────────── */
 .busca-wrap-esc{margin:12px 14px 0;position:relative;}
-.busca-input-esc{width:100%;box-sizing:border-box;padding:10px 38px 10px 38px;border:1.5px solid var(--border);border-radius:22px;font-size:13px;background:var(--card);color:var(--texto);outline:none;transition:border .2s;-webkit-appearance:none;appearance:none;}
+.busca-input-esc{width:100%;box-sizing:border-box;padding:10px 38px 10px 38px;border:1.5px solid var(--border);border-radius:22px;font-size:13px;background:var(--card);color:var(--text);outline:none;transition:border .2s;-webkit-appearance:none;appearance:none;}
 .busca-input-esc:focus{border-color:var(--vinho);}
 .busca-icon-esc{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none;line-height:1;}
 .busca-clear-esc{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:15px;color:var(--muted);cursor:pointer;background:none;border:none;padding:3px 6px;display:none;line-height:1;}
@@ -656,7 +656,7 @@ cursor: pointer; color: #fff;
 .busca-dot-esc{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px;}
 .busca-body-esc{flex:1;min-width:0;}
 .busca-bloco-esc{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:3px;}
-.busca-acao-esc{font-size:12px;color:var(--texto);line-height:1.4;}
+.busca-acao-esc{font-size:12px;color:var(--text);line-height:1.4;}
 .busca-tipo-esc{font-size:9px;font-weight:800;padding:2px 6px;border-radius:8px;flex-shrink:0;align-self:flex-start;white-space:nowrap;}
 .busca-tipo-esc.fxe{background:#E8F5E9;color:#27AE60;}
 .busca-tipo-esc.vxe{background:#E3F2FD;color:#1565C0;}
@@ -668,16 +668,18 @@ mark.hl-esc{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 .almo-titulo{font-size:16px;font-weight:800;color:var(--vinho);margin-bottom:2px;}
 .almo-sub{font-size:11px;color:var(--muted);margin-bottom:0;}
 .almo-form-card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:14px;}
-.almo-form-titulo{font-size:12px;font-weight:800;color:var(--texto);margin-bottom:10px;}
+.almo-form-titulo{font-size:12px;font-weight:800;color:var(--text);margin-bottom:10px;}
 .almo-campo-label{font-size:10px;font-weight:700;color:var(--muted);margin-bottom:3px;display:block;}
-.almo-input{width:100%;box-sizing:border-box;padding:9px 10px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;background:var(--card);color:var(--texto);outline:none;transition:border .2s;}
+.almo-input{width:100%;box-sizing:border-box;padding:9px 10px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;background:var(--card);color:var(--text);outline:none;transition:border .2s;}
 .almo-input:focus{border-color:var(--vinho);}
 .almo-form-grid{display:grid;grid-template-columns:1fr 90px;gap:8px;margin:8px 0;}
-.almo-select{width:100%;box-sizing:border-box;padding:9px 8px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;background:var(--card);color:var(--texto);outline:none;-webkit-appearance:none;appearance:none;cursor:pointer;}
+.almo-select{width:100%;box-sizing:border-box;padding:9px 8px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;background:var(--card);color:var(--text);outline:none;-webkit-appearance:none;appearance:none;cursor:pointer;}
 .almo-select:focus{border-color:var(--vinho);}
+.almo-select{color-scheme:light;}
+.almo-select option{background:#fff !important;color:#222 !important;}
 .almo-toggle-row{display:flex;align-items:center;gap:10px;margin:10px 0;}
 .almo-toggle-lbl-wrap{flex:1;}
-.almo-toggle-lbl{font-size:12px;font-weight:600;color:var(--texto);display:block;}
+.almo-toggle-lbl{font-size:12px;font-weight:600;color:var(--text);display:block;}
 .almo-toggle-sub{font-size:10px;color:var(--muted);}
 .almo-toggle{position:relative;width:40px;height:22px;flex-shrink:0;}
 .almo-toggle input{opacity:0;width:0;height:0;position:absolute;}
@@ -691,14 +693,14 @@ mark.hl-esc{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 .almo-chip{padding:6px 13px;border-radius:22px;border:1.5px solid var(--border);font-size:11px;font-weight:700;background:var(--card);color:var(--muted);cursor:pointer;white-space:nowrap;outline:none;flex-shrink:0;}
 .almo-chip.ativo{border-color:var(--vinho);color:var(--vinho);}
 .almo-busca-wrap-a{position:relative;margin:6px 14px 6px;}
-.almo-busca-input-a{width:100%;box-sizing:border-box;padding:9px 36px 9px 38px;border:1.5px solid var(--border);border-radius:22px;font-size:13px;background:var(--card);color:var(--texto);outline:none;-webkit-appearance:none;appearance:none;transition:border .2s;}
+.almo-busca-input-a{width:100%;box-sizing:border-box;padding:9px 36px 9px 38px;border:1.5px solid var(--border);border-radius:22px;font-size:13px;background:var(--card);color:var(--text);outline:none;-webkit-appearance:none;appearance:none;transition:border .2s;}
 .almo-busca-input-a:focus{border-color:var(--vinho);}
 .almo-busca-icon-a{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:13px;pointer-events:none;}
 .almo-busca-clear-a{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:15px;cursor:pointer;color:var(--muted);padding:3px;display:none;}
 .almo-chart-card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:14px;margin:10px 14px 0;}
 .almo-chart-titulo{font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
 .almo-chart-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
-.almo-chart-label{font-size:11px;color:var(--texto);width:88px;flex-shrink:0;white-space:nowrap;}
+.almo-chart-label{font-size:11px;color:var(--text);width:88px;flex-shrink:0;white-space:nowrap;}
 .almo-chart-track{flex:1;height:16px;background:var(--border);border-radius:8px;overflow:hidden;}
 .almo-chart-bar{height:100%;border-radius:8px;transition:width .5s ease;min-width:4px;}
 .almo-chart-val{font-size:11px;font-weight:800;color:var(--muted);width:24px;text-align:right;flex-shrink:0;}
@@ -707,7 +709,7 @@ mark.hl-esc{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 .almo-item{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:9px;}
 .almo-item-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
 .almo-item-body{flex:1;min-width:0;}
-.almo-item-nome{font-size:13px;font-weight:700;color:var(--texto);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.almo-item-nome{font-size:13px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .almo-item-badges{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px;}
 .almo-badge{font-size:9px;font-weight:800;padding:2px 7px;border-radius:9px;white-space:nowrap;}
 .almo-badge-camping{background:#E3F2FD;color:#1565C0;}
@@ -717,8 +719,8 @@ mark.hl-esc{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 .almo-badge-comp{background:#E8F5E9;color:#2E7D32;}
 .almo-badge-ind{background:#FFF8E1;color:#F57F17;}
 .almo-qtd-row{display:flex;align-items:center;gap:4px;flex-shrink:0;}
-.almo-qtd-btn{width:26px;height:26px;border:1.5px solid var(--border);border-radius:50%;background:var(--card);color:var(--texto);font-size:17px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;}
-.almo-qtd-val{font-size:14px;font-weight:800;color:var(--texto);min-width:26px;text-align:center;}
+.almo-qtd-btn{width:26px;height:26px;border:1.5px solid var(--border);border-radius:50%;background:var(--card);color:var(--text);font-size:17px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;}
+.almo-qtd-val{font-size:14px;font-weight:800;color:var(--text);min-width:26px;text-align:center;}
 .almo-del-btn{background:none;border:none;font-size:15px;cursor:pointer;color:var(--muted);padding:4px;flex-shrink:0;opacity:.7;}
 .almo-del-btn:active{opacity:1;}
 .almo-vazio{text-align:center;padding:32px 14px;color:var(--muted);font-size:12px;}
