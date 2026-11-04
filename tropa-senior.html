@@ -735,6 +735,7 @@ async function loadState(){
     }
   });
   await new Promise(res => { __resolverPrimeira = res; __store.iniciar(); });
+  paxtuCarregado = true;
 }
 let __resolverPrimeira = null;
 function aplicarDadosSr(dados, primeira){
@@ -764,6 +765,36 @@ function aplicarDadosSr(dados, primeira){
     S = deepCopy(INICIAL);
   }
 }
+// ===== Importação do Paxtu (acionada pela tela principal, só para administradores) =====
+let paxtuCarregado = false;
+function paxtuPronto() { return paxtuCarregado; }
+function paxtuEstado() {
+  return {
+    jovens: YOUTH_DATA.map(y => ({ id: y.id, nome: y.name, nasc: y.born || '', patrulhaId: PATRULHA_DE_SR[y.id] || null, arquivado: !!y.archived })),
+    patrulhas: PATRULHAS_SR.map(p => ({ id: p.id, nome: p.nome }))
+  };
+}
+async function paxtuAplicar(lista) {
+  if (!souAdminSr || MODO_VISUALIZACAO_SR) throw new Error('Esta ação é só para administradores.');
+  if (!(await V2.protegerAntes('senior', montarDadosSr(), 'Antes de importar do Paxtu', registroLogado))) throw new Error('Importação cancelada.');
+  const ids = lista.map((item, i) => {
+    let y = item.id ? YOUTH_DATA.find(v => v.id === item.id) : null;
+    if (!y) {
+      y = { id: 'y_' + Date.now() + '_' + i, name: item.nome, born: item.nasc, role: '', observacoes: '', archived: false, color: COLOR_PALETTE[(JOVENS.length + i) % COLOR_PALETTE.length] };
+      YOUTH_DATA.push(y);
+    }
+    if (item.nasc) y.born = item.nasc;
+    if (item.patrulhaId) PATRULHA_DE_SR[y.id] = item.patrulhaId;
+    return y.id;
+  });
+  syncJovens();
+  await __store.salvar(montarDadosSr());
+  onDataSaved();
+  renderAllTabs();
+  return ids;
+}
+function paxtuAtualizar() { V2.paxtuLimpar(); renderAllTabs(); }
+
 async function saveState(){
   const el = document.getElementById('save-status');
   if (el) el.textContent = '● Salvando…';
@@ -2934,6 +2965,7 @@ function renderJovens(){
   const container=document.getElementById('jovens-cards');
   container.innerHTML='';
   sorted.forEach(e=>container.appendChild(makeYouthCard(e,today,maxDays)));
+  V2.paxtuPreencher('senior',container);
   // Botão adicionar
   const addBtn=document.createElement('button');
   addBtn.style.cssText='width:100%;margin-top:4px;padding:14px;background:var(--card);border:2px dashed var(--border);border-radius:var(--r);font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;';
@@ -3009,6 +3041,7 @@ function makeYouthCard(e,today,maxDays){
     </div>
     ${!passed?`<div style="background:rgba(255,255,255,.5);border-radius:20px;height:7px;overflow:hidden;"><div style="width:${pct}%;height:100%;border-radius:20px;background:${c.fg};"></div></div>
     <div style="display:flex;justify-content:space-between;margin-top:3px;"><span style="font-size:9px;color:#999;">Hoje</span><span style="font-size:9px;color:#999;">${fmtDate(t18)}</span></div>`:''}
+    <div data-paxtu="${e.id}"></div>
   `;
   return card;
 }
