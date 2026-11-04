@@ -3254,6 +3254,7 @@ const ALMO_TIPOS_SR = {
 var almoItensSr = {};
 var almoChipAtivoSr = '';
 var almoCarregadoSr = false;
+var almoModoSr = 'estoque';   // 'estoque' | 'desejos'
 
 async function carregarAlmoSr() {
   try {
@@ -3263,9 +3264,9 @@ async function carregarAlmoSr() {
   } catch(e) { almoItensSr = {}; }
 }
 
-function almoItensVisivelSr() {
+function almoItensVisivelSr(desejo) {
   return Object.entries(almoItensSr)
-    .filter(([,v]) => v && (v.compartilhado === true || v.tropa === ALMO_TROPA_SR))
+    .filter(([,v]) => v && (v.compartilhado === true || v.tropa === ALMO_TROPA_SR) && (v.desejo === true) === !!desejo)
     .sort((a,b) => (a[1].nome||'').localeCompare(b[1].nome||'', 'pt'));
 }
 
@@ -3276,7 +3277,13 @@ async function adicionarAlmoItemSr() {
   const qtd  = Math.max(0, parseInt(document.getElementById('almoQtdSr').value)||0);
   const comp = document.getElementById('almoCompSr').checked;
   if (!nome) { document.getElementById('almoNomeSr').focus(); return; }
-  const item = { nome, quantidade:qtd, tipo, compartilhado:comp, tropa:ALMO_TROPA_SR, criadoEm:new Date().toISOString() };
+  let item;
+  if (almoModoSr === 'desejos') {
+    const para = (document.getElementById('almoParaSelSr')||{}).value || 'propria';
+    item = { nome, quantidade:qtd, tipo, desejo:true, compartilhado:(para==='ambas'), tropa:(para==='outra' ? 'escoteira' : ALMO_TROPA_SR), criadoEm:new Date().toISOString() };
+  } else {
+    item = { nome, quantidade:qtd, tipo, compartilhado:comp, tropa:ALMO_TROPA_SR, criadoEm:new Date().toISOString() };
+  }
   try {
     const r = await fetch(urlComAuthFirebase(ALMO_ALL_URL_SR), {
       method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(item)
@@ -3287,6 +3294,7 @@ async function adicionarAlmoItemSr() {
       return;
     }
     almoItensSr[res.name] = item;
+    if (item.desejo && item.tropa !== ALMO_TROPA_SR) alert('Adicionado à lista de desejos da Tropa Escoteira.');
     document.getElementById('almoNomeSr').value = '';
     document.getElementById('almoQtdSr').value = '1';
     document.getElementById('almoCompSr').checked = false;
@@ -3309,7 +3317,7 @@ async function atualizarQtdAlmoSr(id, delta) {
 
 async function deletarAlmoItemSr(id) {
   if (MODO_VISUALIZACAO_SR) return;
-  if (!confirm('Remover este item do almoxarifado?')) return;
+  if (!confirm(almoItensSr[id] && almoItensSr[id].desejo ? 'Remover este item da lista de desejos?' : 'Remover este item do almoxarifado?')) return;
   delete almoItensSr[id];
   renderAlmoSr();
   try { await fetch(urlComAuthFirebase(ALMO_BASE_URL_SR+'/'+id+'.json'), { method:'DELETE' }); } catch(e) {}
@@ -3356,14 +3364,15 @@ function renderListaAlmoSr() {
   const cnt = document.getElementById('almoCountSr');
   if (!el) return;
   const q = ((document.getElementById('almoBuscaSr')||{}).value||'').trim().toLowerCase();
-  let itens = almoItensVisivelSr();
+  const modoDes = almoModoSr === 'desejos';
+  let itens = almoItensVisivelSr(modoDes);
   if (almoChipAtivoSr) itens = itens.filter(([,v])=>v.tipo===almoChipAtivoSr);
   if (q) itens = itens.filter(([,v])=>{
     const t = ALMO_TIPOS_SR[v.tipo];
     return (v.nome||'').toLowerCase().includes(q)||(t&&t.label.toLowerCase().includes(q));
   });
   if (cnt) cnt.textContent = itens.length+' '+(itens.length===1?'item':'itens');
-  if (!itens.length) { el.innerHTML='<div class="almo-vazio">Nenhum item encontrado.</div>'; return; }
+  if (!itens.length) { el.innerHTML='<div class="almo-vazio">'+(modoDes ? 'A lista de desejos está vazia.' : 'Nenhum item encontrado.')+'</div>'; return; }
   const _e=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const soLeitura = MODO_VISUALIZACAO_SR;
   el.innerHTML = itens.map(([id,v])=>{
@@ -3378,7 +3387,7 @@ function renderListaAlmoSr() {
           <div class="almo-qtd-val">${v.quantidade||0}</div>
           <button class="almo-qtd-btn" onclick="atualizarQtdAlmoSr('${_e(id)}',1)">+</button>
         </div>`;
-    const btnDel = soLeitura ? '' : `<button class="almo-del-btn" onclick="deletarAlmoItemSr('${_e(id)}')" title="Remover">🗑</button>`;
+    const btnDel = soLeitura ? '' : (modoDes ? `<button class="almo-del-btn" style="opacity:1" onclick="marcarCompradoAlmoSr('${_e(id)}')" title="Marcar como comprado (vai para o estoque)">✅</button>` : '') + `<button class="almo-del-btn" onclick="deletarAlmoItemSr('${_e(id)}')" title="Remover">🗑</button>`;
     return `<div class="almo-item">
       <div class="almo-item-dot" style="background:${t.color}"></div>
       <div class="almo-item-body">
@@ -3393,7 +3402,56 @@ function renderListaAlmoSr() {
   }).join('');
 }
 
+function aplicarEstadoFormAlmoSr() {
+  let aberto = false;
+  try { aberto = localStorage.getItem('almoFormAbertoSr') === '1'; } catch(e) {}
+  const corpo = document.getElementById('almoFormCorpoSr'), chev = document.getElementById('almoFormChevSr'), head = document.getElementById('almoFormHeadSr');
+  if (corpo) corpo.style.display = aberto ? '' : 'none';
+  if (chev) chev.textContent = aberto ? '▾' : '▸';
+  if (head) head.style.marginBottom = aberto ? '' : '0';
+}
+
+function toggleAlmoFormSr() {
+  let aberto = false;
+  try { aberto = localStorage.getItem('almoFormAbertoSr') === '1'; } catch(e) {}
+  try { localStorage.setItem('almoFormAbertoSr', aberto ? '0' : '1'); } catch(e) {}
+  aplicarEstadoFormAlmoSr();
+  if (!aberto) { const i = document.getElementById('almoNomeSr'); if (i) i.focus(); }
+}
+
+function trocarModoAlmoSr(modo, btn) {
+  almoModoSr = modo;
+  document.querySelectorAll('#almoModoSr .almo-chip').forEach(c=>c.classList.remove('ativo'));
+  if (btn) btn.classList.add('ativo');
+  renderAlmoSr();
+}
+
+async function marcarCompradoAlmoSr(id) {
+  if (MODO_VISUALIZACAO_SR) return;
+  if (!almoItensSr[id]) return;
+  const quando = new Date().toISOString();
+  almoItensSr[id].desejo = false;
+  almoItensSr[id].compradoEm = quando;
+  renderAlmoSr();
+  try {
+    await fetch(urlComAuthFirebase(ALMO_BASE_URL_SR+'/'+id+'.json'), {
+      method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({desejo:false, compradoEm:quando})
+    });
+  } catch(e) {}
+}
+
 function renderAlmoSr() {
+  aplicarEstadoFormAlmoSr();
+  const des = almoModoSr === 'desejos';
+  const $ = id => document.getElementById(id);
+  if ($('almoChartCardSr')) $('almoChartCardSr').style.display = des ? 'none' : '';
+  if ($('almoToggleRowSr')) $('almoToggleRowSr').style.display = des ? 'none' : '';
+  if ($('almoParaRowSr')) $('almoParaRowSr').style.display = des ? '' : 'none';
+  if ($('almoFormTituloSr')) $('almoFormTituloSr').textContent = des ? '🛒 Adicionar à lista de desejos' : '➕ Adicionar item';
+  if ($('almoQtdLblSr')) $('almoQtdLblSr').textContent = des ? 'Qtd. desejada' : 'Qtd.';
+  if ($('almoBtnAddSr')) $('almoBtnAddSr').textContent = des ? '+ Adicionar à lista' : '+ Adicionar item';
+  const n = almoItensVisivelSr(true).length;
+  if ($('almoDesejosCntSr')) $('almoDesejosCntSr').textContent = n ? ' (' + n + ')' : '';
   renderChartAlmoSr();
   renderListaAlmoSr();
 }
@@ -3453,9 +3511,14 @@ async function abrirAlmoSr() {
     <div class="almo-titulo">📦 Almoxarifado</div>
     <div class="almo-sub">Materiais da Tropa Sênior. Itens compartilhados aparecem também no painel Escoteira.</div>
   </div>
+  <div class="almo-chips-wrap" id="almoModoSr">
+    <button class="almo-chip ativo" onclick="trocarModoAlmoSr('estoque',this)">📦 Estoque</button>
+    <button class="almo-chip" onclick="trocarModoAlmoSr('desejos',this)">🛒 Lista de desejos<span id="almoDesejosCntSr"></span></button>
+  </div>
   <div class="almo-section" id="almoFormWrapSr">
     <div class="almo-form-card">
-      <div class="almo-form-titulo">➕ Adicionar item</div>
+      <div class="almo-form-titulo" id="almoFormHeadSr" onclick="toggleAlmoFormSr()" style="cursor:pointer;display:flex;align-items:center;gap:6px;user-select:none;"><span id="almoFormTituloSr">➕ Adicionar item</span><span id="almoFormChevSr" style="margin-left:auto;color:var(--muted);">▾</span></div>
+      <div id="almoFormCorpoSr">
       <label class="almo-campo-label">Nome do item</label>
       <input type="text" id="almoNomeSr" class="almo-input" placeholder="Ex: Barraca Alpine, Jogo da memória…" autocomplete="off">
       <div class="almo-form-grid">
@@ -3469,11 +3532,11 @@ async function abrirAlmoSr() {
           </select>
         </div>
         <div>
-          <label class="almo-campo-label">Qtd.</label>
+          <label class="almo-campo-label" id="almoQtdLblSr">Qtd.</label>
           <input type="number" id="almoQtdSr" class="almo-input" value="1" min="0" style="text-align:center;">
         </div>
       </div>
-      <div class="almo-toggle-row">
+      <div class="almo-toggle-row" id="almoToggleRowSr">
         <div class="almo-toggle-lbl-wrap">
           <span class="almo-toggle-lbl">Compartilhado com Escoteira</span>
           <span class="almo-toggle-sub">Aparece nos dois painéis</span>
@@ -3483,7 +3546,16 @@ async function abrirAlmoSr() {
           <span class="almo-toggle-slider"></span>
         </label>
       </div>
-      <button class="almo-btn-add" onclick="adicionarAlmoItemSr()">+ Adicionar item</button>
+      <div id="almoParaRowSr" style="display:none;margin:10px 0;">
+        <label class="almo-campo-label">Para quem</label>
+        <select id="almoParaSelSr" class="almo-select">
+          <option value="propria">🔒 Só Sênior</option>
+          <option value="outra">🔒 Só Escoteira</option>
+          <option value="ambas">🔗 Ambas as seções</option>
+        </select>
+      </div>
+      <button class="almo-btn-add" id="almoBtnAddSr" onclick="adicionarAlmoItemSr()">+ Adicionar item</button>
+      </div>
     </div>
   </div>
   <div class="almo-busca-wrap-a">
@@ -3502,7 +3574,7 @@ async function abrirAlmoSr() {
     <button class="almo-chip" onclick="selecionarChipAlmoSr(this,'escritorio')">📎 Escritório</button>
     <button class="almo-chip" onclick="selecionarChipAlmoSr(this,'distintivos')">🏅 Distintivos</button>
   </div>
-  <div class="almo-chart-card">
+  <div class="almo-chart-card" id="almoChartCardSr">
     <div class="almo-chart-titulo">Quantidade por tipo</div>
     <div id="almoChartSr"></div>
   </div>

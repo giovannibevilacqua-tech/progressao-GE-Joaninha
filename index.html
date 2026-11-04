@@ -944,9 +944,14 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
     <div class="almo-titulo">📦 Almoxarifado</div>
     <div class="almo-sub">Materiais da Tropa Escoteira. Itens compartilhados aparecem também no painel Sênior.</div>
   </div>
+  <div class="almo-chips-wrap" id="almoModoEsc">
+    <button class="almo-chip ativo" onclick="trocarModoAlmoEsc('estoque',this)">📦 Estoque</button>
+    <button class="almo-chip" onclick="trocarModoAlmoEsc('desejos',this)">🛒 Lista de desejos<span id="almoDesejosCntEsc"></span></button>
+  </div>
   <div class="almo-section">
     <div class="almo-form-card" id="almoFormCardEsc">
-      <div class="almo-form-titulo">➕ Adicionar item</div>
+      <div class="almo-form-titulo" id="almoFormHeadEsc" onclick="toggleAlmoFormEsc()" style="cursor:pointer;display:flex;align-items:center;gap:6px;user-select:none;"><span id="almoFormTituloEsc">➕ Adicionar item</span><span id="almoFormChevEsc" style="margin-left:auto;color:var(--muted);">▾</span></div>
+      <div id="almoFormCorpoEsc">
       <label class="almo-campo-label">Nome do item</label>
       <input type="text" id="almoNomeEsc" class="almo-input" placeholder="Ex: Barraca Alpine, Jogo da memória…" autocomplete="off">
       <div class="almo-form-grid">
@@ -960,11 +965,11 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
           </select>
         </div>
         <div>
-          <label class="almo-campo-label">Qtd.</label>
+          <label class="almo-campo-label" id="almoQtdLblEsc">Qtd.</label>
           <input type="number" id="almoQtdEsc" class="almo-input" value="1" min="0" style="text-align:center;">
         </div>
       </div>
-      <div class="almo-toggle-row">
+      <div class="almo-toggle-row" id="almoToggleRowEsc">
         <div class="almo-toggle-lbl-wrap">
           <span class="almo-toggle-lbl">Compartilhado com Sênior</span>
           <span class="almo-toggle-sub">Aparece nos dois painéis</span>
@@ -974,7 +979,16 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
           <span class="almo-toggle-slider"></span>
         </label>
       </div>
-      <button class="almo-btn-add" onclick="adicionarAlmoItemEsc()">+ Adicionar item</button>
+      <div id="almoParaRowEsc" style="display:none;margin:10px 0;">
+        <label class="almo-campo-label">Para quem</label>
+        <select id="almoParaSelEsc" class="almo-select">
+          <option value="propria">🔒 Só Escoteira</option>
+          <option value="outra">🔒 Só Sênior</option>
+          <option value="ambas">🔗 Ambas as seções</option>
+        </select>
+      </div>
+      <button class="almo-btn-add" id="almoBtnAddEsc" onclick="adicionarAlmoItemEsc()">+ Adicionar item</button>
+      </div>
     </div>
   </div>
   <div class="almo-busca-wrap-a">
@@ -993,7 +1007,7 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
     <button class="almo-chip" onclick="selecionarChipAlmoEsc(this,'escritorio')">📎 Escritório</button>
     <button class="almo-chip" onclick="selecionarChipAlmoEsc(this,'distintivos')">🏅 Distintivos</button>
   </div>
-  <div class="almo-chart-card">
+  <div class="almo-chart-card" id="almoChartCardEsc">
     <div class="almo-chart-titulo">Quantidade por tipo</div>
     <div id="almoChartEsc"></div>
   </div>
@@ -4286,6 +4300,7 @@ const ALMO_TIPOS_ESC = {
 let almoItensEsc = {};       // cache local: { firebaseId: {nome,quantidade,tipo,compartilhado,tropa} }
 let almoChipAtivoEsc = '';   // filtro por tipo
 let almoCarregadoEsc = false;
+let almoModoEsc = 'estoque';   // 'estoque' | 'desejos'
 
 async function carregarAlmoEsc() {
   try {
@@ -4295,9 +4310,9 @@ async function carregarAlmoEsc() {
   } catch(e) { almoItensEsc = {}; }
 }
 
-function almoItensVisiveisEsc() {
+function almoItensVisiveisEsc(desejo) {
   return Object.entries(almoItensEsc)
-    .filter(([,v]) => v && (v.compartilhado === true || v.tropa === ALMO_TROPA_ESC))
+    .filter(([,v]) => v && (v.compartilhado === true || v.tropa === ALMO_TROPA_ESC) && (v.desejo === true) === !!desejo)
     .sort((a,b) => (a[1].nome||'').localeCompare(b[1].nome||'', 'pt'));
 }
 
@@ -4307,7 +4322,13 @@ async function adicionarAlmoItemEsc() {
   const qtd  = Math.max(0, parseInt(document.getElementById('almoQtdEsc').value)||0);
   const comp = document.getElementById('almoCompEsc').checked;
   if (!nome) { document.getElementById('almoNomeEsc').focus(); return; }
-  const item = { nome, quantidade:qtd, tipo, compartilhado:comp, tropa:ALMO_TROPA_ESC, criadoEm:new Date().toISOString() };
+  let item;
+  if (almoModoEsc === 'desejos') {
+    const para = (document.getElementById('almoParaSelEsc')||{}).value || 'propria';
+    item = { nome, quantidade:qtd, tipo, desejo:true, compartilhado:(para==='ambas'), tropa:(para==='outra' ? 'senior' : ALMO_TROPA_ESC), criadoEm:new Date().toISOString() };
+  } else {
+    item = { nome, quantidade:qtd, tipo, compartilhado:comp, tropa:ALMO_TROPA_ESC, criadoEm:new Date().toISOString() };
+  }
   try {
     const r = await fetch(urlComAuthFirebase(ALMO_ALL_URL), {
       method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(item)
@@ -4318,6 +4339,7 @@ async function adicionarAlmoItemEsc() {
       return;
     }
     almoItensEsc[res.name] = item;
+    if (item.desejo && item.tropa !== ALMO_TROPA_ESC) alert('Adicionado à lista de desejos da Tropa Sênior.');
     document.getElementById('almoNomeEsc').value = '';
     document.getElementById('almoQtdEsc').value = '1';
     document.getElementById('almoCompEsc').checked = false;
@@ -4338,7 +4360,7 @@ async function atualizarQtdAlmoEsc(id, delta) {
 }
 
 async function deletarAlmoItemEsc(id) {
-  if (!confirm('Remover este item do almoxarifado?')) return;
+  if (!confirm(almoItensEsc[id] && almoItensEsc[id].desejo ? 'Remover este item da lista de desejos?' : 'Remover este item do almoxarifado?')) return;
   delete almoItensEsc[id];
   renderAlmoEsc();
   try { await fetch(urlComAuthFirebase(ALMO_BASE_URL+'/'+id+'.json'), { method:'DELETE' }); } catch(e) {}
@@ -4385,14 +4407,15 @@ function renderListaAlmoEsc() {
   const cnt = document.getElementById('almoCountEsc');
   if (!el) return;
   const q = ((document.getElementById('almoBuscaEsc')||{}).value||'').trim().toLowerCase();
-  let itens = almoItensVisiveisEsc();
+  const modoDes = almoModoEsc === 'desejos';
+  let itens = almoItensVisiveisEsc(modoDes);
   if (almoChipAtivoEsc) itens = itens.filter(([,v])=>v.tipo===almoChipAtivoEsc);
   if (q) itens = itens.filter(([,v])=>{
     const t = ALMO_TIPOS_ESC[v.tipo];
     return (v.nome||'').toLowerCase().includes(q)||(t&&t.label.toLowerCase().includes(q));
   });
   if (cnt) cnt.textContent = itens.length+' '+(itens.length===1?'item':'itens');
-  if (!itens.length) { el.innerHTML='<div class="almo-vazio">Nenhum item encontrado.</div>'; return; }
+  if (!itens.length) { el.innerHTML='<div class="almo-vazio">'+(modoDes ? 'A lista de desejos está vazia.' : 'Nenhum item encontrado.')+'</div>'; return; }
   const _e=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   el.innerHTML = itens.map(([id,v])=>{
     const t = ALMO_TIPOS_ESC[v.tipo]||{label:v.tipo,emoji:'📦',color:'#888',badgeCls:''};
@@ -4413,12 +4436,60 @@ function renderListaAlmoEsc() {
         <div class="almo-qtd-val">${v.quantidade||0}</div>
         <button class="almo-qtd-btn" onclick="atualizarQtdAlmoEsc('${_e(id)}',1)">+</button>
       </div>
-      <button class="almo-del-btn" onclick="deletarAlmoItemEsc('${_e(id)}')" title="Remover">🗑</button>
+      ${modoDes ? `<button class="almo-del-btn" style="opacity:1" onclick="marcarCompradoAlmoEsc('${_e(id)}')" title="Marcar como comprado (vai para o estoque)">✅</button>` : ''}<button class="almo-del-btn" onclick="deletarAlmoItemEsc('${_e(id)}')" title="Remover">🗑</button>
     </div>`;
   }).join('');
 }
 
+function aplicarEstadoFormAlmoEsc() {
+  let aberto = false;
+  try { aberto = localStorage.getItem('almoFormAbertoEsc') === '1'; } catch(e) {}
+  const corpo = document.getElementById('almoFormCorpoEsc'), chev = document.getElementById('almoFormChevEsc'), head = document.getElementById('almoFormHeadEsc');
+  if (corpo) corpo.style.display = aberto ? '' : 'none';
+  if (chev) chev.textContent = aberto ? '▾' : '▸';
+  if (head) head.style.marginBottom = aberto ? '' : '0';
+}
+
+function toggleAlmoFormEsc() {
+  let aberto = false;
+  try { aberto = localStorage.getItem('almoFormAbertoEsc') === '1'; } catch(e) {}
+  try { localStorage.setItem('almoFormAbertoEsc', aberto ? '0' : '1'); } catch(e) {}
+  aplicarEstadoFormAlmoEsc();
+  if (!aberto) { const i = document.getElementById('almoNomeEsc'); if (i) i.focus(); }
+}
+
+function trocarModoAlmoEsc(modo, btn) {
+  almoModoEsc = modo;
+  document.querySelectorAll('#almoModoEsc .almo-chip').forEach(c=>c.classList.remove('ativo'));
+  if (btn) btn.classList.add('ativo');
+  renderAlmoEsc();
+}
+
+async function marcarCompradoAlmoEsc(id) {
+  if (!almoItensEsc[id]) return;
+  const quando = new Date().toISOString();
+  almoItensEsc[id].desejo = false;
+  almoItensEsc[id].compradoEm = quando;
+  renderAlmoEsc();
+  try {
+    await fetch(urlComAuthFirebase(ALMO_BASE_URL+'/'+id+'.json'), {
+      method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({desejo:false, compradoEm:quando})
+    });
+  } catch(e) {}
+}
+
 function renderAlmoEsc() {
+  aplicarEstadoFormAlmoEsc();
+  const des = almoModoEsc === 'desejos';
+  const $ = id => document.getElementById(id);
+  if ($('almoChartCardEsc')) $('almoChartCardEsc').style.display = des ? 'none' : '';
+  if ($('almoToggleRowEsc')) $('almoToggleRowEsc').style.display = des ? 'none' : '';
+  if ($('almoParaRowEsc')) $('almoParaRowEsc').style.display = des ? '' : 'none';
+  if ($('almoFormTituloEsc')) $('almoFormTituloEsc').textContent = des ? '🛒 Adicionar à lista de desejos' : '➕ Adicionar item';
+  if ($('almoQtdLblEsc')) $('almoQtdLblEsc').textContent = des ? 'Qtd. desejada' : 'Qtd.';
+  if ($('almoBtnAddEsc')) $('almoBtnAddEsc').textContent = des ? '+ Adicionar à lista' : '+ Adicionar item';
+  const n = almoItensVisiveisEsc(true).length;
+  if ($('almoDesejosCntEsc')) $('almoDesejosCntEsc').textContent = n ? ' (' + n + ')' : '';
   renderChartAlmoEsc();
   renderListaAlmoEsc();
 }
