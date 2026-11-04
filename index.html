@@ -328,7 +328,8 @@ padding: 8px; background: var(--focus-y); border-radius: 8px;
 }
 .especialidade-row label { font-size: 11px; color: #7A4A00; cursor: pointer; }
 .meta-note { font-size: 10px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
-.ramo-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 14px 0; }
+.ramo-switch { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 14px 0; }
+.ramo-switch .ramo-btn { flex: 1 1 110px; padding: 12px 8px; }
 .conta-barra { display: flex; align-items: center; gap: 8px; margin: 10px 14px; flex-wrap: wrap; }
 .conta-barra-registro { font-size: 11px; font-weight: 600; color: var(--muted); flex: 1; min-width: 0; }
 .conta-barra-btn { border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 11px; font-weight: 700; padding: 6px 10px; border-radius: 8px; cursor: pointer; white-space: nowrap; }
@@ -705,10 +706,17 @@ REGISTRO ESCOTEIRO
 </header>
 
 <div class="ramo-switch" id="ramoSwitch">
-<button class="ramo-btn active" id="ramoBtnEscoteira" onclick="mudarRamo('escoteira')">🏕️ Tropa Escoteira</button>
-<button class="ramo-btn" id="ramoBtnSenior" onclick="mudarRamo('senior')">🎓 Tropa Sênior</button>
+<button class="ramo-btn" id="ramoBtnAlcateia" onclick="mudarRamo('alcateia')">🐺 Alcateia</button>
+<button class="ramo-btn active" id="ramoBtnEscoteira" onclick="mudarRamo('escoteira')">🏕️ Escoteira</button>
+<button class="ramo-btn" id="ramoBtnSenior" onclick="mudarRamo('senior')">🎓 Sênior</button>
+<button class="ramo-btn" id="ramoBtnCla" onclick="mudarRamo('cla')">🔥 Clã Pioneiro</button>
+<button class="ramo-btn" id="ramoBtnDiretoria" onclick="mudarRamo('diretoria')" style="display:none;">🏛️ Diretoria</button>
 </div>
 
+</div>
+
+<div id="pagina-alcateia" style="display:none;">
+<iframe id="iframeAlcateia" style="width:100%;border:none;display:block;transition:height .25s ease;" title="Alcateia"></iframe>
 </div>
 
 <div id="pagina-escoteira" style="display:none;">
@@ -729,6 +737,15 @@ REGISTRO ESCOTEIRO
 <iframe id="iframeSenior" style="width:100%;border:none;display:block;transition:height .25s ease;" title="Tropa Sênior"></iframe>
 </div>
 
+<div id="pagina-cla" style="display:none;">
+<iframe id="iframeCla" style="width:100%;border:none;display:block;transition:height .25s ease;" title="Clã Pioneiro"></iframe>
+</div>
+
+<div id="pagina-diretoria" style="display:none;">
+<iframe id="iframeDiretoria" style="width:100%;border:none;display:block;transition:height .25s ease;" title="Diretoria"></iframe>
+</div>
+
+
 <script>
 // ── Autenticação por Registro Escoteiro (login real — resolve o aviso de segurança do Firebase) ──
 const FIREBASE_WEB_API_KEY = "AIzaSyB50r7SU6qU_dwq03v_oQksLi1bAxbU614";
@@ -740,7 +757,7 @@ let firebaseAuthToken = null;
 let firebaseRefreshToken = null;
 let registroLogado = null;
 let souAdmin = false;
-let tropaDoChefeLogado = null; // 'escoteira' | 'senior' | null (admin não tem tropa)
+let tropaDoChefeLogado = null; // seção do chefe: 'alcateia' | 'escoteira' | 'senior' | 'cla' | 'diretoria' | null (admin não tem seção)
 
 function emailDoRegistro(registro) { return registro + DOMINIO_LOGIN; }
 
@@ -983,7 +1000,7 @@ async function abrirHistorico() {
   corpo.innerHTML = lista.map(e => {
     const quando = new Date(e.em).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
     return '<div style="padding:8px 4px;border-bottom:1px solid var(--border);font-size:12px;line-height:1.4;">' +
-      '<div style="color:var(--muted);font-size:10px;">' + esc(quando) + ' · ' + (e.tropa === 'senior' ? 'Tropa Sênior' : 'Tropa Escoteira') + ' · ' + esc(e.nome || ('Registro ' + e.por)) + '</div>' +
+      '<div style="color:var(--muted);font-size:10px;">' + esc(quando) + ' · ' + ({ senior: 'Tropa Sênior', alcateia: 'Alcateia', cla: 'Clã Pioneiro', diretoria: 'Diretoria' }[e.tropa] || 'Tropa Escoteira') + ' · ' + esc(e.nome || ('Registro ' + e.por)) + '</div>' +
       '<div>' + esc(e.resumo) + '</div></div>';
   }).join('') + '<div style="padding:10px;font-size:10px;color:var(--muted);text-align:center;">Mostrando as 60 mais recentes. O sistema guarda até 300 por tropa.</div>';
   V2.podarHistorico(300);
@@ -1005,8 +1022,11 @@ let html = `
 <input type="text" class="campo-input" id="novoChefeNomeInput" autocomplete="off" placeholder="Nome (opcional)" style="flex:1;min-width:120px;">
 <input type="text" class="campo-input" id="novoChefeRegistroInput" inputmode="numeric" autocomplete="off" placeholder="Registro" style="flex:1;min-width:100px;" onkeydown="if(event.key==='Enter')criarNovoChefeUI()">
 <select class="campo-input" id="novoChefeRoleSelect" style="flex:1;min-width:130px;">
+<option value="alcateia">🐺 Alcateia</option>
 <option value="escoteira">🏕️ Tropa Escoteira</option>
 <option value="senior">🎓 Tropa Sênior</option>
+<option value="cla">🔥 Clã Pioneiro</option>
+<option value="diretoria">🏛️ Diretoria</option>
 <option value="admin">⭐ Administrador</option>
 </select>
 <button class="chefe-add-btn" onclick="criarNovoChefeUI()">+ Criar</button>
@@ -1019,12 +1039,15 @@ html += '<div style="padding:14px;text-align:center;color:var(--muted);font-size
 html += uids.map(uid => {
 const c = chefes[uid];
 const papelAtual = c.admin ? 'admin' : (c.tropa || 'escoteira');
-const papelLabel = c.admin ? '⭐ Admin' : (c.tropa === 'senior' ? '🎓 Sênior' : '🏕️ Escoteira');
+const papelLabel = c.admin ? '⭐ Admin' : ({ senior: '🎓 Sênior', alcateia: '🐺 Alcateia', cla: '🔥 Clã Pioneiro', diretoria: '🏛️ Diretoria' }[c.tropa] || '🏕️ Escoteira');
 return `<div class="chefe-row" style="flex-wrap:wrap;gap:5px;">
 <span class="chefe-row-registro" style="flex:1;min-width:120px;">${c.nome ? c.nome : c.registro || uid}${c.nome ? `<br><span style="font-size:10px;font-weight:500;color:var(--muted);">Registro ${c.registro || uid}</span>` : ''}</span>
 <select class="campo-input" style="font-size:11px;padding:4px 6px;flex:0 0 auto;" onchange="alterarRoleChefeUI('${uid}', this.value)" title="Alterar acesso">
+<option value="alcateia" ${papelAtual==='alcateia'?'selected':''}>🐺 Alcateia</option>
 <option value="escoteira" ${papelAtual==='escoteira'?'selected':''}>🏕️ Escoteira</option>
 <option value="senior" ${papelAtual==='senior'?'selected':''}>🎓 Sênior</option>
+<option value="cla" ${papelAtual==='cla'?'selected':''}>🔥 Clã Pioneiro</option>
+<option value="diretoria" ${papelAtual==='diretoria'?'selected':''}>🏛️ Diretoria</option>
 <option value="admin" ${papelAtual==='admin'?'selected':''}>⭐ Admin</option>
 </select>
 <button class="chefe-row-btn" onclick="editarNomeChefeUI('${uid}')" title="Editar nome">✏️</button>
@@ -1054,7 +1077,7 @@ inputRegistro.value = '';
 await renderChefesModalBody();
 }
 async function alterarRoleChefeUI(uid, novoPapel) {
-const label = novoPapel === 'admin' ? 'Administrador' : novoPapel === 'senior' ? 'Tropa Sênior' : 'Tropa Escoteira';
+const label = novoPapel === 'admin' ? 'Administrador' : ({ senior: 'Tropa Sênior', alcateia: 'Alcateia', cla: 'Clã Pioneiro', diretoria: 'Diretoria' }[novoPapel] || 'Tropa Escoteira');
 const aviso = uid === firebaseUid ? `\n\n⚠️ Você está alterando seu PRÓPRIO acesso! Se remover o Admin, perderá acesso a esta tela.` : '';
 if (!confirm(`Alterar acesso para "${label}"?${aviso}`)) {
 await renderChefesModalBody(); // reverte select visual
@@ -1105,8 +1128,13 @@ window.location.reload();
 <script>
 
 // ===== CASCA: navegação entre as seções (cada uma é uma página própria dentro de um iframe) =====
-const SECOES = { escoteira: { pagina: 'escoteira', frame: 'iframeEscoteira', box: 'pagina-escoteira', btn: 'ramoBtnEscoteira' },
-                 senior:    { pagina: 'tropa-senior', frame: 'iframeSenior', box: 'pagina-senior', btn: 'ramoBtnSenior' } };
+const SECOES = { alcateia:   { pagina: 'alcateia', frame: 'iframeAlcateia', box: 'pagina-alcateia', btn: 'ramoBtnAlcateia' },
+                 escoteira:  { pagina: 'escoteira', frame: 'iframeEscoteira', box: 'pagina-escoteira', btn: 'ramoBtnEscoteira' },
+                 senior:     { pagina: 'tropa-senior', frame: 'iframeSenior', box: 'pagina-senior', btn: 'ramoBtnSenior' },
+                 cla:        { pagina: 'cla-pioneiro', frame: 'iframeCla', box: 'pagina-cla', btn: 'ramoBtnCla' },
+                 diretoria:  { pagina: 'diretoria', frame: 'iframeDiretoria', box: 'pagina-diretoria', btn: 'ramoBtnDiretoria' } };
+// quem pode abrir cada seção: admin vê tudo; chefe de uma seção vê só a dela; sem seção definida (contas antigas) vê tudo menos a Diretoria
+function ramoPermitido(r) { return !!souAdmin || tropaDoChefeLogado === r || (!tropaDoChefeLogado && r !== 'diretoria'); }
 let ramoAtual = null;
 const compactoPorRamo = {};
 
@@ -1121,7 +1149,7 @@ function ajustarAlturaIframes() {
 window.addEventListener('resize', ajustarAlturaIframes);
 
 function mudarRamo(r) {
-  if (!SECOES[r]) r = 'escoteira';
+  if (!SECOES[r] || !ramoPermitido(r)) r = Object.keys(SECOES).find(ramoPermitido) || 'escoteira';
   ramoAtual = r;
   try { localStorage.setItem('escoteira_ramoAtivo', r); } catch (e) {}
   Object.keys(SECOES).forEach(k => {
@@ -1145,8 +1173,8 @@ window.addEventListener('message', function (ev) {
   const msg = ev.data;
   if (!msg || typeof msg !== 'object') return;
   if (msg.tipo === 'headerCompactoSr' || msg.tipo === 'headerCompacto') {
-    const fEsc = document.getElementById('iframeEscoteira');
-    const r = (fEsc && ev.source === fEsc.contentWindow) ? 'escoteira' : 'senior';
+    const r = Object.keys(SECOES).find(k => { const f = document.getElementById(SECOES[k].frame); return f && ev.source === f.contentWindow; });
+    if (!r) return;
     compactoPorRamo[r] = !!msg.compacto;
     if (r !== ramoAtual) return;
     const header = document.querySelector('.header');
@@ -1188,23 +1216,13 @@ document.body.classList.toggle('eh-admin', !!souAdmin);
 if (souAdmin) { migrarSenhasParaHash(); atualizarLembreteBackup(); }
 else { const lb = document.getElementById('lembreteBackup'); if (lb) lb.remove(); }
 
-// Restrição de acesso por tropa
+// Restrição de acesso por seção
 const ramoSwitch = document.getElementById('ramoSwitch');
-if (souAdmin || !tropaDoChefeLogado) {
-// Admin ou sem tropa definida: acesso total, mantém preferência salva
-if (ramoSwitch) ramoSwitch.style.display = '';
+const vePrimeiraSecao = !!souAdmin || !tropaDoChefeLogado;
+const btnDir = document.getElementById('ramoBtnDiretoria'); if (btnDir) btnDir.style.display = souAdmin ? '' : 'none';
+if (ramoSwitch) ramoSwitch.style.display = vePrimeiraSecao ? '' : 'none';
 const ramoPref = (function(){ try { return localStorage.getItem('escoteira_ramoAtivo') || 'escoteira'; } catch(e){ return 'escoteira'; } })();
-mudarRamo(ramoPref);
-} else if (tropaDoChefeLogado === 'senior') {
-// Apenas Tropa Sênior: oculta seletor, força seção senior
-if (ramoSwitch) ramoSwitch.style.display = 'none';
-mudarRamo('senior');
-} else {
-// Apenas Tropa Escoteira (ou valor desconhecido): oculta seletor, força escoteira
-if (ramoSwitch) ramoSwitch.style.display = 'none';
-mudarRamo('escoteira');
-}
-
+mudarRamo(vePrimeiraSecao ? ramoPref : tropaDoChefeLogado);
 }
 
 async function tentarLoginTela() {

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diretoria — GE Joaninha</title>
+<link rel="stylesheet" href="secao.css">
+<script src="v2.js"></script>
+</head>
+<body>
+<div class="cabecalho-fixo"><nav class="tabs-linha"><button class="tab-btn-linha" data-aba="almox" onclick="mostrarAba('almox',this)">📦 Almoxarifado geral</button><button class="tab-btn-linha" data-aba="chefes" onclick="mostrarAba('chefes',this)">👥 Chefes e assistentes</button><button class="tab-btn-linha" data-aba="docs" onclick="mostrarAba('docs',this)">📄 Documentação</button></nav></div>
+<div class="pagina" id="pg-almox"><div id="almox-box"></div></div>
+<div class="pagina" id="pg-chefes"><div class="pagina-ttl">Chefes e assistentes</div><div class="pagina-sub">Quem tem acesso a cada seção do sistema.</div><div id="chefes-lista"><div class="vazio">Carregando…</div></div>
+<div class="card" style="margin-top:12px;"><div class="card-ttl">Assistentes <span class="em-breve">em construção</span></div><div class="card-txt">O cadastro de assistentes por seção ainda não existe. Por enquanto, a lista acima mostra os chefes com acesso ao sistema.</div></div></div>
+<div class="pagina" id="pg-docs"><div class="pagina-ttl">Documentação</div><div class="pagina-sub">Documentos de gestão do Grupo Escoteiro.</div>
+<div class="card"><div class="card-ttl">📝 Atas de reunião <span class="em-breve">em construção</span></div><div class="card-txt">Registro das reuniões da diretoria e dos chefes.</div></div>
+<div class="card"><div class="card-ttl">📁 Documentos do grupo <span class="em-breve">em construção</span></div><div class="card-txt">Estatuto, registros, certificados e arquivos de consulta.</div></div>
+<div class="card"><div class="card-ttl">✅ Pendências da gestão <span class="em-breve">em construção</span></div><div class="card-txt">Renovações, prazos e tarefas do grupo.</div></div></div>
+<script>
+const DB_URL = "https://joaninha-progressao-default-rtdb.firebaseio.com";
+const SECAO = "diretoria";
+let firebaseAuthToken = null, firebaseRefreshToken = null, firebaseUid = null, registroLogado = null;
+let souAdmin = false, nomeLogado = '', tropaDoChefeLogado = null;
+function lerSessaoSalva() { try { const v = localStorage.getItem('chefeSessao'); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
+function salvarSessao() {
+  try {
+    const atual = lerSessaoSalva() || {};
+    localStorage.setItem('chefeSessao', JSON.stringify(Object.assign({}, atual, { registro: registroLogado, uid: firebaseUid, idToken: firebaseAuthToken, refreshToken: firebaseRefreshToken, expiraEm: Date.now() + 55 * 60 * 1000 })));
+  } catch (e) {}
+}
+async function renovarAgendado() {
+  if (!firebaseRefreshToken) return;
+  const r = await renovarTokenSessao(firebaseRefreshToken);
+  if (r) { firebaseAuthToken = r.idToken; firebaseRefreshToken = r.refreshToken; salvarSessao(); setTimeout(renovarAgendado, 50 * 60 * 1000); }
+  else setTimeout(renovarAgendado, 2 * 60 * 1000);
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible' || !firebaseRefreshToken) return;
+  const s = lerSessaoSalva(); if (s && Date.now() >= s.expiraEm) renovarAgendado();
+});
+async function autenticarComSessaoCompartilhada() {
+  const salva = lerSessaoSalva();
+  if (!salva) return false;
+  if (Date.now() < salva.expiraEm && salva.idToken) {
+    firebaseAuthToken = salva.idToken; firebaseRefreshToken = salva.refreshToken;
+  } else {
+    let r = await renovarTokenSessao(salva.refreshToken);
+    if (!r) { await new Promise(x => setTimeout(x, 1500)); r = await renovarTokenSessao(salva.refreshToken); }
+    if (!r && navigator.onLine === false) { firebaseAuthToken = salva.idToken; firebaseRefreshToken = salva.refreshToken; }
+    else if (!r) return false;
+    else { firebaseAuthToken = r.idToken; firebaseRefreshToken = r.refreshToken; }
+  }
+  registroLogado = salva.registro; firebaseUid = salva.uid;
+  souAdmin = salva.admin === true; nomeLogado = salva.nome || ''; tropaDoChefeLogado = salva.tropa || null;
+  document.body.classList.toggle('eh-admin', souAdmin);
+  salvarSessao();
+  const permitido = souAdmin || tropaDoChefeLogado === SECAO || (!tropaDoChefeLogado && SECAO !== 'diretoria');
+  if (!permitido) return false;
+  setTimeout(renovarAgendado, 50 * 60 * 1000);
+  return true;
+}
+function mostrarAba(id, btn) {
+  document.querySelectorAll('.pagina').forEach(p => p.classList.toggle('ativa', p.id === 'pg-' + id));
+  document.querySelectorAll('.tab-btn-linha').forEach(b => b.classList.toggle('active', b === btn));
+  try { localStorage.setItem('aba_' + SECAO, id); } catch (e) {}
+  if (id === 'almox') V2_ALMOX.abrir();
+  if (typeof aoAbrirAba === 'function') aoAbrirAba(id);
+}
+function iniciarObservadorHeaderCompacto() {
+  const FECHA_APOS = 200, ABRE_ATE = 60; let agendado = false, compacto = false;
+  function avaliar() {
+    agendado = false; const y = window.scrollY; let novo = compacto;
+    if (!compacto && y > FECHA_APOS) novo = true; else if (compacto && y < ABRE_ATE) novo = false;
+    if (novo !== compacto) { compacto = novo; try { window.parent.postMessage({ tipo: 'headerCompacto', compacto }, '*'); } catch (e) {} }
+  }
+  window.addEventListener('scroll', () => { if (!agendado) { agendado = true; requestAnimationFrame(avaliar); } }, { passive: true });
+}
+iniciarObservadorHeaderCompacto();
+async function iniciarSecao() {
+  const ok = await autenticarComSessaoCompartilhada();
+  if (!ok) {
+    document.body.innerHTML = '<div style="padding:40px 20px;text-align:center;font-family:sans-serif;color:#666;"><div style="font-size:34px;margin-bottom:10px;">⚜</div><div style="font-weight:700;margin-bottom:6px;">Sem acesso a esta seção</div><div style="font-size:13px;">Entre pela página inicial do sistema com uma conta que tenha acesso.</div></div>';
+    return;
+  }
+  let aba = null; try { aba = localStorage.getItem('aba_' + SECAO); } catch (e) {}
+  const btn = document.querySelector('.tab-btn-linha[data-aba="' + aba + '"]') || document.querySelector('.tab-btn-linha');
+  mostrarAba(btn.dataset.aba, btn);
+}
+</script>
+<script>
+V2_ALMOX.montar({ secao:'diretoria', nomeTropa:'Diretoria', outraTropa:'', verTudo:true, somenteLeitura:function(){ return true; }, subTitulo:'Visão geral do material de todas as seções (somente leitura). Para editar, abra o almoxarifado da seção.', container:'almox-box', padX:14 });
+const ROTULOS = { admin:'⭐ Administrador', escoteira:'🏕️ Tropa Escoteira', senior:'🎓 Tropa Sênior', alcateia:'🐺 Alcateia', cla:'🔥 Clã Pioneiro', diretoria:'🏛️ Diretoria' };
+function escH(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+async function aoAbrirAba(id) {
+  if (id !== 'chefes') return;
+  const box = document.getElementById('chefes-lista');
+  try {
+    const r = await fetch(urlComAuthFirebase(DB_URL + '/usuarios.json'));
+    const d = await r.json();
+    if (!d || d.error) { box.innerHTML = '<div class="vazio">Não foi possível carregar a lista de chefes.</div>'; return; }
+    const grupos = {};
+    Object.keys(d).forEach(uid => { const u = d[uid]; if (!u) return; const k = u.admin ? 'admin' : (u.tropa || 'escoteira'); (grupos[k] = grupos[k] || []).push(u); });
+    const ordem = ['diretoria','admin','alcateia','escoteira','senior','cla'];
+    box.innerHTML = ordem.filter(k => grupos[k]).map(k => '<div class="grupo-ttl">' + ROTULOS[k] + ' (' + grupos[k].length + ')</div><div class="card">' +
+      grupos[k].sort((a, b) => (a.nome || a.registro || '').localeCompare(b.nome || b.registro || '', 'pt')).map(u => '<div class="pessoa"><b>' + escH(u.nome || ('Registro ' + u.registro)) + '</b>' + (u.nome ? '<small>Registro ' + escH(u.registro) + '</small>' : '') + '</div>').join('') + '</div>').join('') || '<div class="vazio">Nenhum chefe cadastrado.</div>';
+  } catch (e) { box.innerHTML = '<div class="vazio">Sem conexão para carregar a lista.</div>'; }
+}
+iniciarSecao();
+</script>
+</body>
+</html>
