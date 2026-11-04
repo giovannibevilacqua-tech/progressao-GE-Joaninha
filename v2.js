@@ -54,7 +54,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-11-04b"
+  VERSAO: "2026-11-04c"
 };
 
 /* ============================================================
@@ -660,6 +660,18 @@ window.V2_CONFIG = {
     }
   }
 
+  /* ---------- leitura pública: busca só os campos liberados, sem login ---------- */
+  async function lerCamposPublicos(node, campos) {
+    var ids = (CFG.ID_ARRAYS || {})[node] || [], dados = {};
+    await Promise.all(campos.map(async function (c) {
+      var r = await fetchTimeout(CFG.DB_URL + '/' + CFG.RAIZ + '/' + node + '/' + c + '.json', {}, 15000);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      var v = await r.json();
+      if (v !== null) dados[c] = decCampo(c, v, ids);
+    }));
+    return dados;
+  }
+
   /* ---------- dados importados do Paxtu (área privada: /v2/paxtu/<ramo>/<id do jovem>) ---------- */
   var paxtuCache = {};
   async function paxtuLer(ramo, forcar) {
@@ -1119,7 +1131,7 @@ window.V2_CONFIG = {
     configurarAuth: configurarAuth, criarStore: criarStore,
     subirAnexo: subirAnexo, garantirAnexos: garantirAnexos, removerAnexo: removerAnexo, baixarAnexo: baixarAnexo,
     ehAnexoInline: ehAnexoInline, gravarAnexo: gravarAnexo, urlAnexoDb: urlAnexoDb, nomeSeguro: nomeSeguro,
-    paxtuLer: paxtuLer, paxtuLimpar: function () { paxtuCache = {}; }, paxtuTestar: paxtuTestar, paxtuGravar: paxtuGravar, paxtuPreencher: paxtuPreencher, comEspera: comEspera, pagina: pagina, sleep: sleep, fetchTimeout: fetchTimeout
+    lerCamposPublicos: lerCamposPublicos, paxtuLer: paxtuLer, paxtuLimpar: function () { paxtuCache = {}; }, paxtuTestar: paxtuTestar, paxtuGravar: paxtuGravar, paxtuPreencher: paxtuPreencher, comEspera: comEspera, pagina: pagina, sleep: sleep, fetchTimeout: fetchTimeout
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.V2;
 })(typeof window !== 'undefined' ? window : globalThis);

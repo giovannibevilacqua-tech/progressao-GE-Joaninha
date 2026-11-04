@@ -701,6 +701,16 @@ async function renovarSessaoV2() {
 function montarDadosSr() {
   return { S, JOVENS, JNOMES, JCORES, PRESENCA, YOUTH_DATA, EP_DATA, CAL_EXTRAS, CAL_2S26, CAL_1S27, JUSTIFICATIVAS_SR, METAS_SR, CICLO_BLOCOS_SR, PATRULHAS_SR, PATRULHA_DE_SR, SEMESTRES_SR, semAbertoSr };
 }
+// A visualização pública lê só o calendário e os semestres; dados de jovens exigem login.
+const CAMPOS_PUBLICOS_SR = ['CAL_EXTRAS', 'CAL_2S26', 'CAL_1S27', 'CICLO_BLOCOS_SR', 'SEMESTRES_SR', 'semAbertoSr'];
+async function carregarVisualizacaoSr() {
+  JOVENS.length = 0; JNOMES.length = 0; JCORES.length = 0; YOUTH_DATA = [];
+  let dados = null;
+  try { dados = await V2.lerCamposPublicos(V2_NODE_SR, CAMPOS_PUBLICOS_SR); }
+  catch (e) { console.error('Tropa Sênior: falha ao carregar a visualização:', e); }
+  aplicarDadosSr(dados, true);
+  __store = { salvar: () => Promise.reject(new Error('Visualização somente leitura.')), offline: false };
+}
 async function loadState(){
   if (!MODO_VISUALIZACAO_SR) {
     const logado = await autenticarComSessaoCompartilhada();
@@ -709,6 +719,7 @@ async function loadState(){
       throw new Error('Sem sessão de login — Tropa Sênior precisa ser aberta a partir da tela principal.');
     }
   }
+  if (MODO_VISUALIZACAO_SR) { await carregarVisualizacaoSr(); return; }
   V2.configurarAuth({ getToken: () => MODO_VISUALIZACAO_SR ? null : firebaseAuthToken, renovar: renovarSessaoV2 });
   __store = V2.criarStore({
     node: V2_NODE_SR, stream: !MODO_VISUALIZACAO_SR,
@@ -3085,6 +3096,7 @@ async function iniciarApp(){
 
 function aplicarModoVisualizacaoSr() {
 document.querySelectorAll('.tab-btn[data-tab="prog"], .tab-btn[data-tab="jovens"], .tab-btn[data-tab="ep"], .tab-btn[data-tab="alm"]').forEach(el => el.style.display = 'none');
+const resumoPresenca = document.getElementById('presenca-summary'); if (resumoPresenca) { resumoPresenca.parentElement.style.display = 'none'; }
 document.querySelectorAll('#cabecalhoAddEventoSr').forEach(el => { el.style.display = 'none'; const body = el.nextElementSibling; if (body) body.style.display = 'none'; });
 const saveBar = document.getElementById('saveBarSr');
 if (saveBar) saveBar.style.display = 'none';
