@@ -675,6 +675,20 @@ mark.hl-esc{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 .almo-form-grid{display:grid;grid-template-columns:1fr 90px;gap:8px;margin:8px 0;}
 .almo-select{width:100%;box-sizing:border-box;padding:9px 8px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;background:var(--card);color:var(--text);outline:none;-webkit-appearance:none;appearance:none;cursor:pointer;}
 .almo-select:focus{border-color:var(--vinho);}
+.almo-opt-grupo{display:flex;flex-wrap:wrap;gap:6px;}
+.almo-opt{padding:8px 12px;border:1.5px solid var(--border);border-radius:20px;background:var(--card);color:var(--text);font-size:12px;font-weight:700;cursor:pointer;}
+.almo-opt.ativo{border-color:var(--vinho);color:var(--vinho);box-shadow:inset 0 0 0 1px var(--vinho);}
+.almo-cat-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:14px;}
+.almo-cat-box{background:var(--card);color:var(--text);border-radius:14px;padding:16px;width:100%;max-width:560px;max-height:88vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,.4);}
+.almo-cat-linha{display:flex;align-items:center;gap:6px;margin:8px 0;}
+.almo-cat-linha .almo-cat-emoji{width:54px;flex:none;text-align:center;font-size:18px;padding:7px 4px;}
+.almo-cat-linha .almo-cat-nome{flex:1;min-width:0;}
+.almo-cat-linha input[type=color]{width:42px;height:38px;padding:2px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);cursor:pointer;flex:none;}
+.almo-cat-sug{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0 2px;}
+.almo-cat-sug button{border:1.5px solid var(--border);background:var(--card);border-radius:8px;font-size:18px;padding:3px 6px;cursor:pointer;}
+.almo-cat-acoes{display:flex;gap:8px;margin-top:14px;}
+.almo-cat-acoes button{flex:1;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);background:var(--card);color:var(--text);}
+.almo-cat-acoes button.principal{background:var(--vinho);color:#fff;border-color:var(--vinho);}
 .almo-select{color-scheme:light;}
 .almo-select option{background:#fff !important;color:#222 !important;}
 .almo-toggle-row{display:flex;align-items:center;gap:10px;margin:10px 0;}
@@ -949,6 +963,7 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
   <div class="almo-chips-wrap" id="almoModoEsc">
     <button class="almo-chip ativo" onclick="trocarModoAlmoEsc('estoque',this)">📦 Estoque</button>
     <button class="almo-chip" onclick="trocarModoAlmoEsc('desejos',this)">🛒 Lista de desejos<span id="almoDesejosCntEsc"></span></button>
+    <button class="almo-chip" id="almoBtnCatsEsc" style="margin-left:auto;" onclick="abrirCategoriasAlmoEsc()">⚙ Categorias</button>
   </div>
   <div class="almo-section">
     <div class="almo-form-card" id="almoFormCardEsc">
@@ -959,12 +974,18 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
       <div class="almo-form-grid">
         <div>
           <label class="almo-campo-label">Tipo</label>
-          <select id="almoTipoEsc" class="almo-select">
+          <select id="almoTipoEsc" class="almo-select" style="display:none;">
             <option value="camping">⛺ Camping</option>
             <option value="jogos">🎯 Jogos</option>
             <option value="escritorio">📎 Escritório</option>
             <option value="distintivos">🏅 Distintivos</option>
           </select>
+          <div class="almo-opt-grupo" id="almoTipoOptsEsc">
+            <button type="button" class="almo-opt ativo" data-valor="camping" onclick="escolherOpcaoAlmo(this,'almoTipoEsc')">⛺ Camping</button>
+            <button type="button" class="almo-opt" data-valor="jogos" onclick="escolherOpcaoAlmo(this,'almoTipoEsc')">🎯 Jogos</button>
+            <button type="button" class="almo-opt" data-valor="escritorio" onclick="escolherOpcaoAlmo(this,'almoTipoEsc')">📎 Escritório</button>
+            <button type="button" class="almo-opt" data-valor="distintivos" onclick="escolherOpcaoAlmo(this,'almoTipoEsc')">🏅 Distintivos</button>
+          </div>
         </div>
         <div>
           <label class="almo-campo-label" id="almoQtdLblEsc">Qtd.</label>
@@ -983,11 +1004,16 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
       </div>
       <div id="almoParaRowEsc" style="display:none;margin:10px 0;">
         <label class="almo-campo-label">Para quem</label>
-        <select id="almoParaSelEsc" class="almo-select">
+        <select id="almoParaSelEsc" class="almo-select" style="display:none;">
           <option value="propria">🔒 Só Escoteira</option>
           <option value="outra">🔒 Só Sênior</option>
           <option value="ambas">🔗 Ambas as seções</option>
         </select>
+        <div class="almo-opt-grupo">
+          <button type="button" class="almo-opt ativo" data-valor="propria" onclick="escolherOpcaoAlmo(this,'almoParaSelEsc')">🔒 Só Escoteira</button>
+          <button type="button" class="almo-opt" data-valor="outra" onclick="escolherOpcaoAlmo(this,'almoParaSelEsc')">🔒 Só Sênior</button>
+          <button type="button" class="almo-opt" data-valor="ambas" onclick="escolherOpcaoAlmo(this,'almoParaSelEsc')">🔗 Ambas as seções</button>
+        </div>
       </div>
       <button class="almo-btn-add" id="almoBtnAddEsc" onclick="adicionarAlmoItemEsc()">+ Adicionar item</button>
       </div>
@@ -4300,12 +4326,13 @@ const ALMO_BASE_URL = DB_URL + '/almoxarifado';
 const ALMO_ALL_URL  = ALMO_BASE_URL + '.json';
 const ALMO_TROPA_ESC = 'escoteira';
 
-const ALMO_TIPOS_ESC = {
+let ALMO_TIPOS_ESC = {
   camping:    { label:'Camping',     emoji:'⛺', color:'#2196F3', badgeCls:'almo-badge-camping' },
   jogos:      { label:'Jogos',       emoji:'🎯', color:'#FF9800', badgeCls:'almo-badge-jogos' },
   escritorio: { label:'Escritório',  emoji:'📎', color:'#9C27B0', badgeCls:'almo-badge-escritorio' },
   distintivos:{ label:'Distintivos', emoji:'🏅', color:'#4CAF50', badgeCls:'almo-badge-distintivos' }
 };
+const ALMO_TIPOS_PADRAO_ESC = JSON.parse(JSON.stringify(ALMO_TIPOS_ESC));
 
 let almoItensEsc = {};       // cache local: { firebaseId: {nome,quantidade,tipo,compartilhado,tropa} }
 let almoChipAtivoEsc = '';   // filtro por tipo
@@ -4317,6 +4344,8 @@ async function carregarAlmoEsc() {
     const r = await fetch(urlComAuthFirebase(ALMO_ALL_URL));
     const d = await r.json();
     almoItensEsc = (d && typeof d === 'object' && !Array.isArray(d)) ? d : {};
+    const cfgAlmo = almoItensEsc._config; delete almoItensEsc._config;
+    aplicarCategoriasAlmoEsc(cfgAlmo && cfgAlmo.categorias);
   } catch(e) { almoItensEsc = {}; }
 }
 
@@ -4376,6 +4405,113 @@ async function deletarAlmoItemEsc(id) {
   try { await fetch(urlComAuthFirebase(ALMO_BASE_URL+'/'+id+'.json'), { method:'DELETE' }); } catch(e) {}
 }
 
+function almoEscEsc(x) { return String(x == null ? '' : x).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// converte as categorias do banco ({id:{nome,emoji,cor,ordem}}) para o formato interno e refaz chips, botões e select
+function aplicarCategoriasAlmoEsc(cats) {
+  if (cats && typeof cats === 'object' && !Array.isArray(cats) && Object.keys(cats).length) {
+    const lista = Object.entries(cats).filter(([,c]) => c && c.nome).sort((a,b) => (a[1].ordem||0) - (b[1].ordem||0));
+    if (lista.length) {
+      ALMO_TIPOS_ESC = {};
+      lista.forEach(([id,c]) => { ALMO_TIPOS_ESC[id] = { label:String(c.nome), emoji:String(c.emoji||'📦'), color:/^#[0-9a-fA-F]{6}$/.test(c.cor||'') ? c.cor : '#888888' }; });
+    }
+  } else {
+    ALMO_TIPOS_ESC = JSON.parse(JSON.stringify(ALMO_TIPOS_PADRAO_ESC));
+  }
+  if (almoChipAtivoEsc && !ALMO_TIPOS_ESC[almoChipAtivoEsc]) almoChipAtivoEsc = '';
+  // chips do filtro
+  const chips = document.getElementById('almoChipsEsc');
+  if (chips) {
+    chips.innerHTML = `<button class="almo-chip ${almoChipAtivoEsc ? '' : 'ativo'}" onclick="selecionarChipAlmoEsc(this,'')">Todos</button>` +
+      Object.entries(ALMO_TIPOS_ESC).map(([id,t]) => `<button class="almo-chip ${almoChipAtivoEsc===id ? 'ativo' : ''}" onclick="selecionarChipAlmoEsc(this,'${id}')">${almoEscEsc(t.emoji)} ${almoEscEsc(t.label)}</button>`).join('');
+  }
+  // select escondido + botões do formulário
+  const sel = document.getElementById('almoTipoEsc'), grupo = document.getElementById('almoTipoOptsEsc');
+  if (sel && grupo) {
+    const atual = Object.keys(ALMO_TIPOS_ESC).includes(sel.value) ? sel.value : Object.keys(ALMO_TIPOS_ESC)[0];
+    sel.innerHTML = Object.entries(ALMO_TIPOS_ESC).map(([id,t]) => `<option value="${id}">${almoEscEsc(t.emoji)} ${almoEscEsc(t.label)}</option>`).join('');
+    sel.value = atual;
+    grupo.innerHTML = Object.entries(ALMO_TIPOS_ESC).map(([id,t]) => `<button type="button" class="almo-opt ${id===atual ? 'ativo' : ''}" data-valor="${id}" onclick="escolherOpcaoAlmo(this,'almoTipoEsc')">${almoEscEsc(t.emoji)} ${almoEscEsc(t.label)}</button>`).join('');
+  }
+  const g = document.getElementById('almoBtnCatsEsc');
+  if (g) g.style.display = false ? 'none' : '';
+}
+
+let almoCatEmojiFocoEsc = null;
+const ALMO_EMOJIS_SUG = ['⛺','🎯','📎','🏅','🔦','🧭','🪢','🔪','🍳','🎒','📚','🎵','🩹','🧰','🎨','🔥','🪵','⚽','🧵','💧','🚩','🎪'];
+
+function linhaCatAlmoEsc(id, t) {
+  const d = document.createElement('div');
+  d.className = 'almo-cat-linha';
+  d.dataset.id = id || '';
+  d.innerHTML = `<input class="almo-input almo-cat-emoji" maxlength="8" value="${almoEscEsc(t.emoji)}" title="Emoji" onfocus="almoCatEmojiFocoEsc=this">
+    <input class="almo-input almo-cat-nome" maxlength="30" value="${almoEscEsc(t.label)}" placeholder="Nome da categoria">
+    <input type="color" class="almo-cat-cor" value="${almoEscEsc(t.color)}" title="Cor">
+    <button class="almo-del-btn" type="button" title="Excluir categoria">🗑</button>`;
+  d.querySelector('.almo-del-btn').onclick = () => {
+    const usados = id ? Object.values(almoItensEsc).filter(v => v && v.tipo === id).length : 0;
+    const msg = usados ? `${usados} item(ns) usam esta categoria e ficarão como "Sem categoria". Excluir mesmo assim?` : 'Excluir esta categoria?';
+    if (confirm(msg)) d.remove();
+  };
+  return d;
+}
+
+function abrirCategoriasAlmoEsc() {
+  if (false) return;
+  if (document.getElementById('almoCatOvEsc')) return;
+  const ov = document.createElement('div');
+  ov.className = 'almo-cat-ov'; ov.id = 'almoCatOvEsc';
+  ov.innerHTML = `<div class="almo-cat-box">
+    <div class="almo-form-titulo">⚙ Categorias do almoxarifado</div>
+    <div class="almo-sub" style="margin-bottom:6px;">Valem para as duas tropas. Toque no emoji e escolha abaixo, ou digite o seu.</div>
+    <div id="almoCatLinhasEsc"></div>
+    <button type="button" class="almo-chip" id="almoCatNovaEsc">+ Nova categoria</button>
+    <div class="almo-cat-sug" id="almoCatSugEsc"></div>
+    <div class="almo-cat-acoes"><button type="button" id="almoCatCancelarEsc">Cancelar</button><button type="button" class="principal" id="almoCatSalvarEsc">Salvar</button></div>
+  </div>`;
+  document.body.appendChild(ov);
+  const box = ov.querySelector('#almoCatLinhasEsc');
+  Object.entries(ALMO_TIPOS_ESC).forEach(([id,t]) => box.appendChild(linhaCatAlmoEsc(id, t)));
+  ov.querySelector('#almoCatSugEsc').innerHTML = ALMO_EMOJIS_SUG.map(e => `<button type="button">${e}</button>`).join('');
+  ov.querySelectorAll('#almoCatSugEsc button').forEach(b => b.onclick = () => {
+    const alvo = almoCatEmojiFocoEsc && ov.contains(almoCatEmojiFocoEsc) ? almoCatEmojiFocoEsc : box.querySelector('.almo-cat-emoji');
+    if (alvo) alvo.value = b.textContent;
+  });
+  ov.querySelector('#almoCatNovaEsc').onclick = () => {
+    const l = linhaCatAlmoEsc('', {emoji:'📦', label:'', color:'#607D8B'});
+    box.appendChild(l); l.querySelector('.almo-cat-nome').focus(); almoCatEmojiFocoEsc = l.querySelector('.almo-cat-emoji');
+  };
+  const fechar = () => { ov.remove(); almoCatEmojiFocoEsc = null; };
+  ov.querySelector('#almoCatCancelarEsc').onclick = fechar;
+  ov.addEventListener('click', e => { if (e.target === ov) fechar(); });
+  ov.querySelector('#almoCatSalvarEsc').onclick = async () => {
+    const linhas = Array.from(box.querySelectorAll('.almo-cat-linha'));
+    if (!linhas.length) { alert('Mantenha pelo menos uma categoria.'); return; }
+    const novas = {}; const usados = new Set();
+    for (let i = 0; i < linhas.length; i++) {
+      const l = linhas[i];
+      const nome = l.querySelector('.almo-cat-nome').value.trim();
+      if (!nome) { alert('Toda categoria precisa de um nome.'); l.querySelector('.almo-cat-nome').focus(); return; }
+      let id = l.dataset.id;
+      if (!id) {
+        const base = nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'') || 'cat';
+        id = base; let n = 2;
+        while (usados.has(id) || ALMO_TIPOS_ESC[id] || Object.values(almoItensEsc).some(v => v && v.tipo === id)) id = base + '_' + (n++);
+      }
+      usados.add(id);
+      novas[id] = { nome, emoji: l.querySelector('.almo-cat-emoji').value.trim() || '📦', cor: l.querySelector('.almo-cat-cor').value, ordem: i + 1 };
+    }
+    try {
+      const r = await fetch(urlComAuthFirebase(ALMO_BASE_URL + '/_config/categorias.json'), { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(novas) });
+      const res = await r.json();
+      if (!r.ok || (res && res.error)) { alert('Erro ao salvar as categorias: ' + ((res && res.error) || r.status)); return; }
+    } catch(e) { alert('Erro ao salvar. Verifique a conexão.'); return; }
+    aplicarCategoriasAlmoEsc(novas);
+    fechar();
+    renderAlmoEsc();
+  };
+}
+
 function selecionarChipAlmoEsc(btn, tipo) {
   almoChipAtivoEsc = tipo;
   document.querySelectorAll('#almoChipsEsc .almo-chip').forEach(c=>c.classList.remove('ativo'));
@@ -4399,13 +4535,13 @@ function limparBuscaAlmoEsc() {
 function renderChartAlmoEsc() {
   const el = document.getElementById('almoChartEsc');
   if (!el) return;
-  const tots = { camping:0, jogos:0, escritorio:0, distintivos:0 };
+  const tots = {}; Object.keys(ALMO_TIPOS_ESC).forEach(k => tots[k] = 0);
   almoItensVisiveisEsc().forEach(([,v])=>{ if(tots[v.tipo]!==undefined) tots[v.tipo]+=(v.quantidade||0); });
   const max = Math.max(...Object.values(tots), 1);
   el.innerHTML = Object.entries(ALMO_TIPOS_ESC).map(([k,t])=>{
     const val=tots[k], pct=Math.round(val/max*100);
     return `<div class="almo-chart-row">
-      <div class="almo-chart-label">${t.emoji} ${t.label}</div>
+      <div class="almo-chart-label">${almoEscEsc(t.emoji)} ${almoEscEsc(t.label)}</div>
       <div class="almo-chart-track"><div class="almo-chart-bar" style="width:${pct}%;background:${t.color}"></div></div>
       <div class="almo-chart-val">${val}</div>
     </div>`;
@@ -4428,7 +4564,7 @@ function renderListaAlmoEsc() {
   if (!itens.length) { el.innerHTML='<div class="almo-vazio">'+(modoDes ? 'A lista de desejos está vazia.' : 'Nenhum item encontrado.')+'</div>'; return; }
   const _e=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   el.innerHTML = itens.map(([id,v])=>{
-    const t = ALMO_TIPOS_ESC[v.tipo]||{label:v.tipo,emoji:'📦',color:'#888',badgeCls:''};
+    const t = ALMO_TIPOS_ESC[v.tipo]||{label:'Sem categoria',emoji:'📦',color:'#888888'};
     const compBadge = v.compartilhado
       ? '<span class="almo-badge almo-badge-comp">🔗 Compartilhado</span>'
       : '<span class="almo-badge almo-badge-ind">🔒 Só Escoteira</span>';
@@ -4437,7 +4573,7 @@ function renderListaAlmoEsc() {
       <div class="almo-item-body">
         <div class="almo-item-nome">${_e(v.nome||'')}</div>
         <div class="almo-item-badges">
-          <span class="almo-badge ${t.badgeCls}">${t.emoji} ${t.label}</span>
+          <span class="almo-badge" style="background:${almoEscEsc(t.color)}22;color:${almoEscEsc(t.color)};">${almoEscEsc(t.emoji)} ${almoEscEsc(t.label)}</span>
           ${compBadge}
         </div>
       </div>
@@ -4449,6 +4585,12 @@ function renderListaAlmoEsc() {
       ${modoDes ? `<button class="almo-del-btn" style="opacity:1" onclick="marcarCompradoAlmoEsc('${_e(id)}')" title="Marcar como comprado (vai para o estoque)">✅</button>` : ''}<button class="almo-del-btn" onclick="deletarAlmoItemEsc('${_e(id)}')" title="Remover">🗑</button>
     </div>`;
   }).join('');
+}
+
+function escolherOpcaoAlmo(btn, selId) {
+  const sel = document.getElementById(selId);
+  if (sel) sel.value = btn.dataset.valor;
+  btn.parentNode.querySelectorAll('.almo-opt').forEach(b => b.classList.toggle('ativo', b === btn));
 }
 
 function aplicarEstadoFormAlmoEsc() {
