@@ -54,7 +54,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-10-23l"
+  VERSAO: "2026-11-03a"
 };
 
 /* ============================================================
@@ -1330,4 +1330,447 @@ var METAS_SR = {
   ]
 };
   return { BLOCKS: BLOCKS, EIXOS: EIXOS, CAL_2S26: CAL_2S26, CAL_1S27: CAL_1S27, DEFAULT_YOUTH: DEFAULT_YOUTH, SEMESTRES_SR: SEMESTRES_SR, METAS_SR: METAS_SR };
+})();
+
+/* ============================================================
+   Almoxarifado — módulo único para todas as seções (Escoteira, Sênior e as próximas).
+   Uso: V2_ALMOX.montar({ secao:'escoteira', nomeTropa:'Escoteira', outraTropa:'Sênior', container:'pagina-almoxarifado' })
+        V2_ALMOX.abrir()   // recarrega do banco e desenha
+   Os itens ficam em /almoxarifado (compartilhados entre seções); as categorias em /almoxarifado/_config/categorias.
+   ============================================================ */
+window.V2_ALMOX = (function () {
+  var BASE = (window.V2_CONFIG || {}).DB_URL + '/almoxarifado';
+  var PADRAO = {
+    camping:     { label: 'Camping',     emoji: '⛺', color: '#2196F3' },
+    jogos:       { label: 'Jogos',       emoji: '🎯', color: '#FF9800' },
+    escritorio:  { label: 'Escritório',  emoji: '📎', color: '#9C27B0' },
+    distintivos: { label: 'Distintivos', emoji: '🏅', color: '#4CAF50' }
+  };
+  var EMOJIS_SUG = ['⛺','🎯','📎','🏅','🔦','🧭','🪢','🔪','🍳','🎒','📚','🎵','🩹','🧰','🎨','🔥','🪵','⚽','🧵','💧','🚩','🎪'];
+
+  var cfg = null, itens = {}, TIPOS = JSON.parse(JSON.stringify(PADRAO)), chipAtivo = '', modo = 'estoque', emojiFoco = null;
+
+  function esc(x) { return String(x == null ? '' : x).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
+  function $(id) { return document.getElementById(id); }
+  function soLeitura() { return !!(cfg && cfg.somenteLeitura && cfg.somenteLeitura()); }
+  function chaveForm() { return 'almoFormAberto' + (cfg.secao === 'escoteira' ? 'Esc' : cfg.secao === 'senior' ? 'Sr' : cfg.secao); }
+  function url(sub) { return urlComAuthFirebase(BASE + (sub || '') + '.json'); }
+
+  function injetarCss() {
+    if ($('v2AlmoxCss')) return;
+    var p = cfg.padX || 14;
+    var st = document.createElement('style');
+    st.id = 'v2AlmoxCss';
+    st.textContent = [
+      '.almo-section{padding:12px ' + p + 'px 0;}',
+      '.almo-titulo{font-size:16px;font-weight:800;color:var(--vinho);margin-bottom:2px;}',
+      '.almo-sub{font-size:11px;color:var(--muted);margin-bottom:0;}',
+      '.almo-form-card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:14px;}',
+      '.almo-form-titulo{font-size:12px;font-weight:800;color:var(--text);margin-bottom:10px;}',
+      '.almo-campo-label{font-size:10px;font-weight:700;color:var(--muted);margin-bottom:3px;display:block;}',
+      '.almo-input{width:100%;box-sizing:border-box;padding:9px 10px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;background:var(--card);color:var(--text);outline:none;}',
+      '.almo-input:focus{border-color:var(--vinho);}',
+      '.almo-form-grid{display:grid;grid-template-columns:1fr 90px;gap:8px;margin:8px 0;}',
+      '.almo-select{width:100%;box-sizing:border-box;padding:9px 8px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;background:var(--card);color:var(--text);outline:none;-webkit-appearance:none;appearance:none;cursor:pointer;}',
+      '.almo-select:focus{border-color:var(--vinho);}',
+      '.almo-opt-grupo{display:flex;flex-wrap:wrap;gap:6px;}',
+      '.almo-opt{padding:8px 12px;border:1.5px solid var(--border);border-radius:20px;background:var(--card);color:var(--text);font-size:12px;font-weight:700;cursor:pointer;}',
+      '.almo-opt.ativo{border-color:var(--vinho);color:var(--vinho);box-shadow:inset 0 0 0 1px var(--vinho);}',
+      '.almo-cat-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:14px;}',
+      '.almo-cat-box{background:var(--card);color:var(--text);border-radius:14px;padding:16px;width:100%;max-width:560px;max-height:88vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,.4);}',
+      '.almo-cat-linha{display:flex;align-items:center;gap:6px;margin:8px 0;}',
+      '.almo-cat-linha .almo-cat-emoji{width:54px;flex:none;text-align:center;font-size:18px;padding:7px 4px;}',
+      '.almo-cat-linha .almo-cat-nome{flex:1;min-width:0;}',
+      '.almo-cat-linha input[type=color]{width:42px;height:38px;padding:2px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);cursor:pointer;flex:none;}',
+      '.almo-cat-sug{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0 2px;}',
+      '.almo-cat-sug button{border:1.5px solid var(--border);background:var(--card);border-radius:8px;font-size:18px;padding:3px 6px;cursor:pointer;}',
+      '.almo-cat-acoes{display:flex;gap:8px;margin-top:14px;}',
+      '.almo-cat-acoes button{flex:1;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);background:var(--card);color:var(--text);}',
+      '.almo-cat-acoes button.principal{background:var(--vinho);color:#fff;border-color:var(--vinho);}',
+      '.almo-select{color-scheme:light;}',
+      '.almo-select option{background:#fff !important;color:#222 !important;}',
+      '.almo-toggle-row{display:flex;align-items:center;gap:10px;margin:10px 0;}',
+      '.almo-toggle-lbl-wrap{flex:1;}',
+      '.almo-toggle-lbl{font-size:12px;font-weight:600;color:var(--text);display:block;}',
+      '.almo-toggle-sub{font-size:10px;color:var(--muted);}',
+      '.almo-toggle{position:relative;width:40px;height:22px;flex-shrink:0;}',
+      '.almo-toggle input{opacity:0;width:0;height:0;position:absolute;}',
+      '.almo-toggle-slider{position:absolute;inset:0;background:#ccc;border-radius:22px;transition:.3s;cursor:pointer;}',
+      '.almo-toggle input:checked+.almo-toggle-slider{background:var(--vinho);}',
+      '.almo-toggle-slider:before{content:\'\';position:absolute;width:16px;height:16px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.3s;}',
+      '.almo-toggle input:checked+.almo-toggle-slider:before{transform:translateX(18px);}',
+      '.almo-btn-add{width:100%;padding:11px;border:none;border-radius:10px;background:var(--vinho);color:#fff;font-size:13px;font-weight:700;cursor:pointer;margin-top:4px;}',
+      '.almo-chips-wrap{display:flex;gap:6px;overflow-x:auto;padding:8px ' + p + 'px 2px;scrollbar-width:none;}',
+      '.almo-chips-wrap::-webkit-scrollbar{display:none;}',
+      '.almo-chip{padding:6px 13px;border-radius:22px;border:1.5px solid var(--border);font-size:11px;font-weight:700;background:var(--card);color:var(--muted);cursor:pointer;white-space:nowrap;flex-shrink:0;}',
+      '.almo-chip.ativo{border-color:var(--vinho);color:var(--vinho);}',
+      '.almo-busca-wrap-a{position:relative;margin:6px ' + p + 'px 6px;}',
+      '.almo-busca-input-a{width:100%;box-sizing:border-box;padding:9px 36px 9px 38px;border:1.5px solid var(--border);border-radius:22px;font-size:13px;background:var(--card);color:var(--text);outline:none;}',
+      '.almo-busca-input-a:focus{border-color:var(--vinho);}',
+      '.almo-busca-icon-a{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:13px;pointer-events:none;}',
+      '.almo-busca-clear-a{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:15px;cursor:pointer;color:var(--muted);padding:2px;display:none;}',
+      '.almo-chart-card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:14px;margin:10px ' + p + 'px 0;}',
+      '.almo-chart-titulo{font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}',
+      '.almo-chart-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}',
+      '.almo-chart-label{font-size:11px;color:var(--text);width:88px;flex-shrink:0;white-space:nowrap;}',
+      '.almo-chart-track{flex:1;height:16px;background:var(--border);border-radius:8px;overflow:hidden;}',
+      '.almo-chart-bar{height:100%;border-radius:8px;transition:width .5s ease;min-width:4px;}',
+      '.almo-chart-val{font-size:11px;font-weight:800;color:var(--muted);width:24px;text-align:right;flex-shrink:0;}',
+      '.almo-lista-wrap{padding:10px ' + p + 'px 0;}',
+      '.almo-lista-count{font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:7px;}',
+      '.almo-item{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:9px;}',
+      '.almo-item-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}',
+      '.almo-item-body{flex:1;min-width:0;}',
+      '.almo-item-nome{font-size:13px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}',
+      '.almo-item-badges{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px;}',
+      '.almo-badge{font-size:9px;font-weight:800;padding:2px 7px;border-radius:9px;white-space:nowrap;}',
+      '.almo-badge-comp{background:#E8F5E9;color:#2E7D32;}',
+      '.almo-badge-ind{background:#FFF8E1;color:#F57F17;}',
+      '.almo-qtd-row{display:flex;align-items:center;gap:4px;flex-shrink:0;}',
+      '.almo-qtd-btn{width:26px;height:26px;border:1.5px solid var(--border);border-radius:50%;background:var(--card);color:var(--text);font-size:17px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;}',
+      '.almo-qtd-val{font-size:14px;font-weight:800;color:var(--text);min-width:26px;text-align:center;}',
+      '.almo-del-btn{background:none;border:none;font-size:15px;cursor:pointer;color:var(--muted);padding:4px;flex-shrink:0;opacity:.7;}',
+      '.almo-del-btn:active{opacity:1;}',
+      '.almo-vazio{text-align:center;padding:32px ' + p + 'px;color:var(--muted);font-size:12px;}'
+    ].join('\n');
+    document.head.appendChild(st);
+  }
+
+  function html() {
+    var opts = Object.keys(PADRAO).map(function (id, i) {
+      var t = PADRAO[id];
+      return '<button type="button" class="almo-opt' + (i === 0 ? ' ativo' : '') + '" data-valor="' + id + '" onclick="V2_ALMOX.h.escolherOpcao(this,\'almoTipo\')">' + t.emoji + ' ' + t.label + '</button>';
+    }).join('');
+    return '' +
+      '<div class="almo-section"><div class="almo-titulo">📦 Almoxarifado</div>' +
+      '<div class="almo-sub">Materiais da Tropa ' + esc(cfg.nomeTropa) + '. Itens compartilhados aparecem também no painel ' + esc(cfg.outraTropa) + '.</div></div>' +
+      '<div class="almo-chips-wrap" id="almoModo">' +
+        '<button class="almo-chip ativo" onclick="V2_ALMOX.h.trocarModo(\'estoque\',this)">📦 Estoque</button>' +
+        '<button class="almo-chip" onclick="V2_ALMOX.h.trocarModo(\'desejos\',this)">🛒 Lista de desejos<span id="almoDesejosCnt"></span></button>' +
+        '<button class="almo-chip" id="almoBtnCats" style="margin-left:auto;" onclick="V2_ALMOX.h.abrirCategorias()">⚙ Categorias</button>' +
+      '</div>' +
+      '<div class="almo-section" id="almoFormWrap"><div class="almo-form-card" id="almoFormCard">' +
+        '<div class="almo-form-titulo" id="almoFormHead" onclick="V2_ALMOX.h.toggleForm()" style="cursor:pointer;display:flex;align-items:center;gap:6px;user-select:none;"><span id="almoFormTitulo">➕ Adicionar item</span><span id="almoFormChev" style="margin-left:auto;color:var(--muted);">▾</span></div>' +
+        '<div id="almoFormCorpo">' +
+          '<label class="almo-campo-label">Nome do item</label>' +
+          '<input type="text" id="almoNome" class="almo-input" placeholder="Ex: Barraca Alpine, Jogo da memória…" autocomplete="off">' +
+          '<div class="almo-form-grid"><div>' +
+            '<label class="almo-campo-label">Tipo</label>' +
+            '<select id="almoTipo" class="almo-select" style="display:none;"></select>' +
+            '<div class="almo-opt-grupo" id="almoTipoOpts">' + opts + '</div>' +
+          '</div><div>' +
+            '<label class="almo-campo-label" id="almoQtdLbl">Qtd.</label>' +
+            '<input type="number" id="almoQtd" class="almo-input" value="1" min="0" style="text-align:center;">' +
+          '</div></div>' +
+          '<div class="almo-toggle-row" id="almoToggleRow"><div class="almo-toggle-lbl-wrap"><span class="almo-toggle-lbl">Compartilhado com ' + esc(cfg.outraTropa) + '</span><span class="almo-toggle-sub">Aparece nos dois painéis</span></div>' +
+          '<label class="almo-toggle"><input type="checkbox" id="almoComp"><span class="almo-toggle-slider"></span></label></div>' +
+          '<button class="almo-btn-add" id="almoBtnAdd" onclick="V2_ALMOX.h.adicionar()">+ Adicionar item</button>' +
+        '</div>' +
+      '</div></div>' +
+      '<div class="almo-busca-wrap-a"><span class="almo-busca-icon-a">🔍</span>' +
+        '<input type="search" id="almoBusca" class="almo-busca-input-a" placeholder="Buscar por nome ou tipo…" autocomplete="off" oninput="V2_ALMOX.h.filtrar()" onsearch="V2_ALMOX.h.filtrar()">' +
+        '<button class="almo-busca-clear-a" id="almoBuscaClear" onclick="V2_ALMOX.h.limparBusca()">✕</button></div>' +
+      '<div class="almo-chips-wrap" id="almoChips"></div>' +
+      '<div class="almo-chart-card" id="almoChartCard"><div class="almo-chart-titulo">Quantidade por tipo</div><div id="almoChart"></div></div>' +
+      '<div class="almo-lista-wrap"><div class="almo-lista-count" id="almoCount"></div><div id="almoLista"></div></div>';
+  }
+
+  function visiveis(desejo) {
+    return Object.keys(itens).filter(function (k) {
+      var v = itens[k];
+      return v && (v.compartilhado === true || v.tropa === cfg.secao) && (v.desejo === true) === !!desejo;
+    }).sort(function (a, b) { return (itens[a].nome || '').localeCompare(itens[b].nome || '', 'pt'); }).map(function (k) { return [k, itens[k]]; });
+  }
+
+  function aplicarCategorias(cats) {
+    if (cats && typeof cats === 'object' && !Array.isArray(cats) && Object.keys(cats).length) {
+      var lista = Object.keys(cats).filter(function (id) { return cats[id] && cats[id].nome; })
+        .sort(function (a, b) { return (cats[a].ordem || 0) - (cats[b].ordem || 0); });
+      if (lista.length) {
+        TIPOS = {};
+        lista.forEach(function (id) { var c = cats[id]; TIPOS[id] = { label: String(c.nome), emoji: String(c.emoji || '📦'), color: /^#[0-9a-fA-F]{6}$/.test(c.cor || '') ? c.cor : '#888888' }; });
+      }
+    } else {
+      TIPOS = JSON.parse(JSON.stringify(PADRAO));
+    }
+    if (chipAtivo && !TIPOS[chipAtivo]) chipAtivo = '';
+    var chips = $('almoChips');
+    if (chips) {
+      chips.innerHTML = '<button class="almo-chip ' + (chipAtivo ? '' : 'ativo') + '" onclick="V2_ALMOX.h.selecionarChip(this,\'\')">Todos</button>' +
+        Object.keys(TIPOS).map(function (id) { var t = TIPOS[id]; return '<button class="almo-chip ' + (chipAtivo === id ? 'ativo' : '') + '" onclick="V2_ALMOX.h.selecionarChip(this,\'' + id + '\')">' + esc(t.emoji) + ' ' + esc(t.label) + '</button>'; }).join('');
+    }
+    var sel = $('almoTipo'), grupo = $('almoTipoOpts');
+    if (sel && grupo) {
+      var ids = Object.keys(TIPOS);
+      var atual = ids.indexOf(sel.value) >= 0 ? sel.value : ids[0];
+      sel.innerHTML = ids.map(function (id) { return '<option value="' + id + '">' + esc(TIPOS[id].emoji) + ' ' + esc(TIPOS[id].label) + '</option>'; }).join('');
+      sel.value = atual;
+      grupo.innerHTML = ids.map(function (id) { return '<button type="button" class="almo-opt ' + (id === atual ? 'ativo' : '') + '" data-valor="' + id + '" onclick="V2_ALMOX.h.escolherOpcao(this,\'almoTipo\')">' + esc(TIPOS[id].emoji) + ' ' + esc(TIPOS[id].label) + '</button>'; }).join('');
+    }
+    var g = $('almoBtnCats'); if (g) g.style.display = soLeitura() ? 'none' : '';
+  }
+
+  function renderChart() {
+    var el = $('almoChart'); if (!el) return;
+    var tots = {}; Object.keys(TIPOS).forEach(function (k) { tots[k] = 0; });
+    visiveis(false).forEach(function (p) { var v = p[1]; if (tots[v.tipo] !== undefined) tots[v.tipo] += (v.quantidade || 0); });
+    var max = Math.max.apply(null, Object.keys(tots).map(function (k) { return tots[k]; }).concat([1]));
+    el.innerHTML = Object.keys(TIPOS).map(function (k) {
+      var t = TIPOS[k], val = tots[k], pct = Math.round(val / max * 100);
+      return '<div class="almo-chart-row"><div class="almo-chart-label">' + esc(t.emoji) + ' ' + esc(t.label) + '</div>' +
+        '<div class="almo-chart-track"><div class="almo-chart-bar" style="width:' + pct + '%;background:' + esc(t.color) + '"></div></div>' +
+        '<div class="almo-chart-val">' + val + '</div></div>';
+    }).join('');
+  }
+
+  function renderLista() {
+    var el = $('almoLista'), cnt = $('almoCount'); if (!el) return;
+    var q = (($('almoBusca') || {}).value || '').trim().toLowerCase();
+    var des = modo === 'desejos', ro = soLeitura();
+    var lista = visiveis(des);
+    if (chipAtivo) lista = lista.filter(function (p) { return p[1].tipo === chipAtivo; });
+    if (q) lista = lista.filter(function (p) { var v = p[1], t = TIPOS[v.tipo]; return (v.nome || '').toLowerCase().indexOf(q) >= 0 || (t && t.label.toLowerCase().indexOf(q) >= 0); });
+    if (cnt) cnt.textContent = lista.length + ' ' + (lista.length === 1 ? 'item' : 'itens');
+    if (!lista.length) { el.innerHTML = '<div class="almo-vazio">' + (des ? 'A lista de desejos está vazia.' : 'Nenhum item encontrado.') + '</div>'; return; }
+    el.innerHTML = lista.map(function (p) {
+      var id = p[0], v = p[1];
+      var t = TIPOS[v.tipo] || { label: 'Sem categoria', emoji: '📦', color: '#888888' };
+      var comp = v.compartilhado ? '<span class="almo-badge almo-badge-comp">🔗 Compartilhado</span>' : '<span class="almo-badge almo-badge-ind">🔒 Só ' + esc(cfg.nomeTropa) + '</span>';
+      var qtd = ro ? '<div class="almo-qtd-val" style="margin:0 8px">' + (v.quantidade || 0) + '</div>'
+        : '<div class="almo-qtd-row"><button class="almo-qtd-btn" onclick="V2_ALMOX.h.atualizarQtd(\'' + esc(id) + '\',-1)">−</button><div class="almo-qtd-val">' + (v.quantidade || 0) + '</div><button class="almo-qtd-btn" onclick="V2_ALMOX.h.atualizarQtd(\'' + esc(id) + '\',1)">+</button></div>';
+      var btns = ro ? '' : (des ? '<button class="almo-del-btn" style="opacity:1" onclick="V2_ALMOX.h.marcarComprado(\'' + esc(id) + '\')" title="Marcar como comprado (vai para o estoque)">✅</button>' : '') +
+        '<button class="almo-del-btn" style="opacity:1" onclick="V2_ALMOX.h.editar(\'' + esc(id) + '\')" title="Editar">✏️</button>' +
+        '<button class="almo-del-btn" onclick="V2_ALMOX.h.deletar(\'' + esc(id) + '\')" title="Remover">🗑</button>';
+      return '<div class="almo-item"><div class="almo-item-dot" style="background:' + esc(t.color) + '"></div><div class="almo-item-body">' +
+        '<div class="almo-item-nome">' + esc(v.nome || '') + '</div><div class="almo-item-badges">' +
+        '<span class="almo-badge" style="background:' + esc(t.color) + '22;color:' + esc(t.color) + ';">' + esc(t.emoji) + ' ' + esc(t.label) + '</span>' + comp + '</div></div>' + qtd + btns + '</div>';
+    }).join('');
+  }
+
+  function aplicarEstadoForm() {
+    var aberto = false; try { aberto = localStorage.getItem(chaveForm()) === '1'; } catch (e) {}
+    var corpo = $('almoFormCorpo'), chev = $('almoFormChev'), head = $('almoFormHead');
+    if (corpo) corpo.style.display = aberto ? '' : 'none';
+    if (chev) chev.textContent = aberto ? '▾' : '▸';
+    if (head) head.style.marginBottom = aberto ? '' : '0';
+  }
+
+  function render() {
+    aplicarEstadoForm();
+    var des = modo === 'desejos';
+    var w = $('almoFormWrap'); if (w) w.style.display = soLeitura() ? 'none' : '';
+    if ($('almoChartCard')) $('almoChartCard').style.display = des ? 'none' : '';
+    if ($('almoFormTitulo')) $('almoFormTitulo').textContent = des ? '🛒 Adicionar à lista de desejos' : '➕ Adicionar item';
+    if ($('almoQtdLbl')) $('almoQtdLbl').textContent = des ? 'Qtd. desejada' : 'Qtd.';
+    if ($('almoBtnAdd')) $('almoBtnAdd').textContent = des ? '+ Adicionar à lista' : '+ Adicionar item';
+    var n = visiveis(true).length;
+    if ($('almoDesejosCnt')) $('almoDesejosCnt').textContent = n ? ' (' + n + ')' : '';
+    renderChart(); renderLista();
+  }
+
+  async function carregar() {
+    try {
+      var r = await fetch(url());
+      var d = await r.json();
+      itens = (d && typeof d === 'object' && !Array.isArray(d)) ? d : {};
+      var c = itens._config; delete itens._config;
+      aplicarCategorias(c && c.categorias);
+    } catch (e) { itens = {}; }
+  }
+
+  async function abrir() {
+    if (!cfg) return;
+    if (Object.keys(itens).length === 0) { var el = $('almoLista'); if (el) el.innerHTML = '<div class="almo-vazio">Carregando…</div>'; }
+    await carregar();
+    render();
+  }
+
+  function montar(opts) {
+    cfg = opts;
+    var c = typeof opts.container === 'string' ? $(opts.container) : opts.container;
+    injetarCss();
+    c.innerHTML = html();
+    aplicarCategorias(null);
+    render();
+  }
+
+  /* ---------- ações (chamadas pelos botões) ---------- */
+  var h = {
+    escolherOpcao: function (btn, selId) {
+      var sel = $(selId); if (sel) sel.value = btn.dataset.valor;
+      btn.parentNode.querySelectorAll('.almo-opt').forEach(function (b) { b.classList.toggle('ativo', b === btn); });
+    },
+    trocarModo: function (m, btn) {
+      modo = m;
+      document.querySelectorAll('#almoModo .almo-chip').forEach(function (c) { c.classList.remove('ativo'); });
+      if (btn) btn.classList.add('ativo');
+      render();
+    },
+    toggleForm: function () {
+      var aberto = false; try { aberto = localStorage.getItem(chaveForm()) === '1'; } catch (e) {}
+      try { localStorage.setItem(chaveForm(), aberto ? '0' : '1'); } catch (e) {}
+      aplicarEstadoForm();
+      if (!aberto) { var i = $('almoNome'); if (i) i.focus(); }
+    },
+    selecionarChip: function (btn, tipo) {
+      chipAtivo = tipo;
+      document.querySelectorAll('#almoChips .almo-chip').forEach(function (c) { c.classList.remove('ativo'); });
+      btn.classList.add('ativo');
+      renderLista();
+    },
+    filtrar: function () {
+      var q = ($('almoBusca').value || '').trim(), clr = $('almoBuscaClear');
+      if (clr) clr.style.display = q ? '' : 'none';
+      renderLista();
+    },
+    limparBusca: function () { var i = $('almoBusca'); if (i) { i.value = ''; i.focus(); } h.filtrar(); },
+
+    adicionar: async function () {
+      if (soLeitura()) return;
+      var nome = ($('almoNome').value || '').trim();
+      var tipo = $('almoTipo').value;
+      var qtd = Math.max(0, parseInt($('almoQtd').value) || 0);
+      var comp = $('almoComp').checked;
+      if (!nome) { $('almoNome').focus(); return; }
+      var item = { nome: nome, quantidade: qtd, tipo: tipo, compartilhado: comp, tropa: cfg.secao, criadoEm: new Date().toISOString() };
+      if (modo === 'desejos') item.desejo = true;
+      try {
+        var r = await fetch(url(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item) });
+        var res = await r.json();
+        if (!res || !res.name) { alert('Erro ao salvar no Firebase: ' + (res && res.error ? res.error : 'permissão negada. Verifique as regras do banco de dados.')); return; }
+        itens[res.name] = item;
+        $('almoNome').value = ''; $('almoQtd').value = '1'; $('almoComp').checked = false;
+        render();
+      } catch (e) { alert('Erro ao salvar. Verifique a conexão.'); }
+    },
+    atualizarQtd: async function (id, delta) {
+      if (soLeitura() || !itens[id]) return;
+      var nova = Math.max(0, (itens[id].quantidade || 0) + delta);
+      itens[id].quantidade = nova; render();
+      try { await fetch(url('/' + id), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quantidade: nova }) }); } catch (e) {}
+    },
+    deletar: async function (id) {
+      if (soLeitura()) return;
+      if (!confirm(itens[id] && itens[id].desejo ? 'Remover este item da lista de desejos?' : 'Remover este item do almoxarifado?')) return;
+      delete itens[id]; render();
+      try { await fetch(url('/' + id), { method: 'DELETE' }); } catch (e) {}
+    },
+    marcarComprado: async function (id) {
+      if (soLeitura() || !itens[id]) return;
+      var quando = new Date().toISOString();
+      itens[id].desejo = false; itens[id].compradoEm = quando; render();
+      try { await fetch(url('/' + id), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ desejo: false, compradoEm: quando }) }); } catch (e) {}
+    },
+
+    editar: function (id) {
+      if (soLeitura()) return;
+      var it = itens[id];
+      if (!it || $('almoEditOv')) return;
+      var des = it.desejo === true;
+      var ov = document.createElement('div');
+      ov.className = 'almo-cat-ov'; ov.id = 'almoEditOv';
+      var tipoAtual = TIPOS[it.tipo] ? it.tipo : '';
+      ov.innerHTML = '<div class="almo-cat-box">' +
+        '<div class="almo-form-titulo">✏️ Editar ' + (des ? 'item da lista de desejos' : 'item do almoxarifado') + '</div>' +
+        '<label class="almo-campo-label">Nome do item</label>' +
+        '<input type="text" class="almo-input" id="almoEditNome" maxlength="80" value="' + esc(it.nome || '') + '">' +
+        '<label class="almo-campo-label" style="margin-top:10px;">Tipo</label>' +
+        '<div class="almo-opt-grupo" id="almoEditTipo">' + Object.keys(TIPOS).map(function (k) { return '<button type="button" class="almo-opt ' + (k === tipoAtual ? 'ativo' : '') + '" data-valor="' + k + '">' + esc(TIPOS[k].emoji) + ' ' + esc(TIPOS[k].label) + '</button>'; }).join('') + '</div>' +
+        '<label class="almo-campo-label" style="margin-top:10px;">' + (des ? 'Qtd. desejada' : 'Qtd.') + '</label>' +
+        '<input type="number" class="almo-input" id="almoEditQtd" min="0" value="' + (Number(it.quantidade) || 0) + '" style="max-width:110px;text-align:center;">' +
+        '<div class="almo-toggle-row"><div class="almo-toggle-lbl-wrap"><span class="almo-toggle-lbl">Compartilhado com ' + esc(cfg.outraTropa) + '</span><span class="almo-toggle-sub">Aparece nos dois painéis</span></div>' +
+        '<label class="almo-toggle"><input type="checkbox" id="almoEditComp" ' + (it.compartilhado === true ? 'checked' : '') + '><span class="almo-toggle-slider"></span></label></div>' +
+        '<div class="almo-cat-acoes"><button type="button" id="almoEditCancelar">Cancelar</button><button type="button" class="principal" id="almoEditSalvar">Salvar</button></div></div>';
+      document.body.appendChild(ov);
+      var grupo = ov.querySelector('#almoEditTipo');
+      grupo.querySelectorAll('.almo-opt').forEach(function (b) { b.onclick = function () { grupo.querySelectorAll('.almo-opt').forEach(function (x) { x.classList.toggle('ativo', x === b); }); }; });
+      var fechar = function () { ov.remove(); };
+      ov.querySelector('#almoEditCancelar').onclick = fechar;
+      ov.addEventListener('click', function (e) { if (e.target === ov) fechar(); });
+      ov.querySelector('#almoEditSalvar').onclick = async function () {
+        var nome = ov.querySelector('#almoEditNome').value.trim();
+        if (!nome) { ov.querySelector('#almoEditNome').focus(); return; }
+        var ativo = grupo.querySelector('.almo-opt.ativo');
+        var tipo = ativo ? ativo.dataset.valor : (it.tipo || Object.keys(TIPOS)[0]);
+        var quantidade = Math.max(0, parseInt(ov.querySelector('#almoEditQtd').value) || 0);
+        var compartilhado = ov.querySelector('#almoEditComp').checked;
+        var antes = { nome: it.nome, tipo: it.tipo, quantidade: it.quantidade, compartilhado: it.compartilhado };
+        Object.assign(it, { nome: nome, tipo: tipo, quantidade: quantidade, compartilhado: compartilhado });
+        render(); fechar();
+        try {
+          var r = await fetch(url('/' + id), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nome: nome, tipo: tipo, quantidade: quantidade, compartilhado: compartilhado }) });
+          var res = await r.json();
+          if (!r.ok || (res && res.error)) throw new Error('falhou');
+        } catch (e) { Object.assign(it, antes); render(); alert('Não consegui salvar a edição. Verifique a conexão e tente de novo.'); }
+      };
+    },
+
+    abrirCategorias: function () {
+      if (soLeitura() || $('almoCatOv')) return;
+      var ov = document.createElement('div');
+      ov.className = 'almo-cat-ov'; ov.id = 'almoCatOv';
+      ov.innerHTML = '<div class="almo-cat-box"><div class="almo-form-titulo">⚙ Categorias do almoxarifado</div>' +
+        '<div class="almo-sub" style="margin-bottom:6px;">Valem para as duas tropas. Toque no emoji e escolha abaixo, ou digite o seu.</div>' +
+        '<div id="almoCatLinhas"></div><button type="button" class="almo-chip" id="almoCatNova">+ Nova categoria</button>' +
+        '<div class="almo-cat-sug" id="almoCatSug"></div>' +
+        '<div class="almo-cat-acoes"><button type="button" id="almoCatCancelar">Cancelar</button><button type="button" class="principal" id="almoCatSalvar">Salvar</button></div></div>';
+      document.body.appendChild(ov);
+      var box = ov.querySelector('#almoCatLinhas');
+      var linha = function (id, t) {
+        var d = document.createElement('div');
+        d.className = 'almo-cat-linha'; d.dataset.id = id || '';
+        d.innerHTML = '<input class="almo-input almo-cat-emoji" maxlength="8" value="' + esc(t.emoji) + '" title="Emoji">' +
+          '<input class="almo-input almo-cat-nome" maxlength="30" value="' + esc(t.label) + '" placeholder="Nome da categoria">' +
+          '<input type="color" class="almo-cat-cor" value="' + esc(t.color) + '" title="Cor">' +
+          '<button class="almo-del-btn" type="button" title="Excluir categoria">🗑</button>';
+        d.querySelector('.almo-cat-emoji').onfocus = function () { emojiFoco = this; };
+        d.querySelector('.almo-del-btn').onclick = function () {
+          var usados = id ? Object.keys(itens).filter(function (k) { return itens[k] && itens[k].tipo === id; }).length : 0;
+          var msg = usados ? usados + ' item(ns) usam esta categoria e ficarão como "Sem categoria". Excluir mesmo assim?' : 'Excluir esta categoria?';
+          if (confirm(msg)) d.remove();
+        };
+        return d;
+      };
+      Object.keys(TIPOS).forEach(function (id) { box.appendChild(linha(id, TIPOS[id])); });
+      ov.querySelector('#almoCatSug').innerHTML = EMOJIS_SUG.map(function (e) { return '<button type="button">' + e + '</button>'; }).join('');
+      ov.querySelectorAll('#almoCatSug button').forEach(function (b) {
+        b.onclick = function () {
+          var alvo = emojiFoco && ov.contains(emojiFoco) ? emojiFoco : box.querySelector('.almo-cat-emoji');
+          if (alvo) alvo.value = b.textContent;
+        };
+      });
+      ov.querySelector('#almoCatNova').onclick = function () {
+        var l = linha('', { emoji: '📦', label: '', color: '#607D8B' });
+        box.appendChild(l); l.querySelector('.almo-cat-nome').focus(); emojiFoco = l.querySelector('.almo-cat-emoji');
+      };
+      var fechar = function () { ov.remove(); emojiFoco = null; };
+      ov.querySelector('#almoCatCancelar').onclick = fechar;
+      ov.addEventListener('click', function (e) { if (e.target === ov) fechar(); });
+      ov.querySelector('#almoCatSalvar').onclick = async function () {
+        var linhas = Array.prototype.slice.call(box.querySelectorAll('.almo-cat-linha'));
+        if (!linhas.length) { alert('Mantenha pelo menos uma categoria.'); return; }
+        var novas = {}, usados = {};
+        for (var i = 0; i < linhas.length; i++) {
+          var l = linhas[i], nome = l.querySelector('.almo-cat-nome').value.trim();
+          if (!nome) { alert('Toda categoria precisa de um nome.'); l.querySelector('.almo-cat-nome').focus(); return; }
+          var id = l.dataset.id;
+          if (!id) {
+            var base = nome.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || 'cat';
+            id = base; var n = 2;
+            while (usados[id] || TIPOS[id] || Object.keys(itens).some(function (k) { return itens[k] && itens[k].tipo === id; })) id = base + '_' + (n++);
+          }
+          usados[id] = true;
+          novas[id] = { nome: nome, emoji: l.querySelector('.almo-cat-emoji').value.trim() || '📦', cor: l.querySelector('.almo-cat-cor').value, ordem: i + 1 };
+        }
+        try {
+          var r = await fetch(url('/_config/categorias'), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(novas) });
+          var res = await r.json();
+          if (!r.ok || (res && res.error)) { alert('Erro ao salvar as categorias: ' + ((res && res.error) || r.status)); return; }
+        } catch (e) { alert('Erro ao salvar. Verifique a conexão.'); return; }
+        aplicarCategorias(novas); fechar(); render();
+      };
+    }
+  };
+
+  return { montar: montar, abrir: abrir, h: h };
 })();
