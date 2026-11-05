@@ -108,13 +108,15 @@ async function abrirFormacao() {
     box.innerHTML = '<div class="card">' + uids.map(uid => {
       const p = eq[uid], d = fichas[uid] || {}, pf = d.perfil || {}, cn = F.contar(d.done);
       const r = F.RK.indexOf(pf.ramo) >= 0 ? pf.ramo : null;
-      const n = r ? cn[r][0] + cn[r][1] + cn[r][2] : 0;
-      const outros = F.RK.filter(k => k !== r).map(k => [k, cn[k][0] + cn[k][1] + cn[k][2]]).filter(x => x[1]);
+      const r2 = F.RK.indexOf(pf.ramo2) >= 0 ? pf.ramo2 : null;
+      const lin = [[r, pf.nivel], [r2, pf.nivel2]].filter(l => l[0]);
+      const resumo = l => '<b>' + (l[1] != null ? cn[l[0]][l[1]] + '/' + F.TOT[l[0]][l[1]] : cn[l[0]][0] + cn[l[0]][1] + cn[l[0]][2] + '/' + F.totR(l[0])) + '</b> ' + escH(F.CAT[l[0]].n) + (l[1] != null ? ' · ' + F.NV[l[1]] : '');
+      const outros = F.RK.filter(k => k !== r && k !== r2).map(k => [k, cn[k][0] + cn[k][1] + cn[k][2]]).filter(x => x[1]);
       const ext = pf.apfExterno;
       const apf = pf.apfUid ? nomeDe(pf.apfUid) : (ext && ext.nome ? ext.nome + ' (fora do grupo)' : 'sem APF');
       return '<div class="pessoa" style="flex-wrap:wrap;gap:6px 10px;"><div style="flex:1;min-width:160px;"><b>' + escH(nomeDe(uid)) + '</b><small style="display:block">' + escH(rotSecao[p.tropa] || 'Sem seção') + ' · Registro ' + escH(p.registro) + '</small></div>' +
-        '<div style="flex:1;min-width:150px;font-size:11px;">APF: <b>' + escH(apf) + '</b><br><span style="color:var(--muted)">' + (r ? escH(F.CAT[r].n) + (pf.nivel != null ? ' · ' + F.NV[pf.nivel] : '') : 'ramo de formação não informado') + '</span></div>' +
-        '<div style="min-width:110px;font-size:11px;">' + (r ? '<b>' + n + '/' + F.totR(r) + '</b> atividades' : '<span style="color:var(--muted)">—</span>') + (outros.length ? '<br><span style="color:var(--muted)">+ ' + outros.map(x => escH(F.CAT[x[0]].n) + ' ' + x[1]).join(', ') + '</span>' : '') + '</div>' +
+        '<div style="flex:1;min-width:150px;font-size:11px;">APF: <b>' + escH(apf) + '</b><br><span style="color:var(--muted)">' + (lin.length ? lin.map(l => escH(F.CAT[l[0]].n) + (l[1] != null ? ' · ' + F.NV[l[1]] : '')).join(' + ') : 'ramo de formação não informado') + '</span></div>' +
+        '<div style="min-width:110px;font-size:11px;">' + (lin.length ? lin.map(resumo).join('<br>') + '<br><span style="color:var(--muted)">atividades marcadas</span>' : '<span style="color:var(--muted)">—</span>') + (outros.length ? '<br><span style="color:var(--muted)">+ ' + outros.map(x => escH(F.CAT[x[0]].n) + ' ' + x[1]).join(', ') + '</span>' : '') + '</div>' +
         '<a href="formacao.html#c-' + encodeURIComponent(uid) + '" target="_top" class="btn-ic" style="text-decoration:none;font-size:11px;border:1px solid var(--border);border-radius:7px;padding:4px 8px;color:var(--vinho);font-weight:700;">Abrir ficha</a></div>';
     }).join('') + '</div>';
   } catch (e) { box.innerHTML = '<div class="vazio">Não foi possível carregar a formação dos chefes.</div>'; }

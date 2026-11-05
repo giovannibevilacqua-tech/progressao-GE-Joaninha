@@ -178,6 +178,8 @@ function htmlPerfil() {
   return `<div class="panel"><h3>Perfil de formação</h3><div class="perfil">
 <div class="f-field"><label for="pf-ramo">Ramo de formação</label><select id="pf-ramo" ${ed ? '' : 'disabled'}><option value="">Não informado</option>${RK.map(r => `<option value="${r}" ${p.ramo === r ? 'selected' : ''}>${esc(CAT[r].n)}</option>`).join('')}</select></div>
 <div class="f-field"><label for="pf-nivel">Nível</label><select id="pf-nivel" ${ed ? '' : 'disabled'}><option value="">Não informado</option>${NV.map((n, i) => `<option value="${i}" ${p.nivel === i ? 'selected' : ''}>${n}</option>`).join('')}</select></div>
+<div class="f-field"><label for="pf-ramo2">2ª linha: ramo (opcional)</label><select id="pf-ramo2" ${ed ? '' : 'disabled'}><option value="">Nenhuma</option>${RK.map(r => `<option value="${r}" ${p.ramo2 === r ? 'selected' : ''}>${esc(CAT[r].n)}</option>`).join('')}</select></div>
+<div class="f-field"><label for="pf-nivel2">2ª linha: nível</label><select id="pf-nivel2" ${ed ? '' : 'disabled'}><option value="">Não informado</option>${NV.map((n, i) => `<option value="${i}" ${p.nivel2 === i ? 'selected' : ''}>${n}</option>`).join('')}</select></div>
 <div class="f-field"><label for="pf-apf">APF (Assessor Pessoal de Formação)</label><select id="pf-apf" ${ed ? '' : 'disabled'} onchange="trocaApf()"><option value="">Sem APF</option>${cands.map(u => `<option value="${esc(u)}" ${modo === u ? 'selected' : ''}>${esc(nomeDe(u))} · ${esc((E.equipe[u] || {}).registro || '')}</option>`).join('')}<option value="_ext" ${modo === '_ext' ? 'selected' : ''}>Outro (fora do grupo)</option></select></div>
 <div class="f-field" id="pf-ext1" style="display:${modo === '_ext' ? '' : 'none'}"><label for="pf-extnome">Nome do APF</label><input id="pf-extnome" type="text" maxlength="120" value="${esc(ext.nome || '')}" ${ed ? '' : 'disabled'}></div>
 <div class="f-field" id="pf-ext2" style="display:${modo === '_ext' ? '' : 'none'}"><label for="pf-extreg">Registro do APF</label><input id="pf-extreg" type="text" maxlength="40" value="${esc(ext.registro || '')}" ${ed ? '' : 'disabled'}></div>
@@ -189,7 +191,9 @@ async function salvarPerfil() {
   const msg = $('#pf-msg'); msg.className = 'msg'; msg.textContent = '';
   const ramo = $('#pf-ramo').value, nv = $('#pf-nivel').value, apf = $('#pf-apf').value;
   const antigo = (E.perfil && E.perfil.apfUid) || null;
-  const novo = { ramo: ramo || null, nivel: nv === '' ? null : +nv, apfUid: null, apfExterno: null };
+  const ramo2 = $('#pf-ramo2').value, nv2 = $('#pf-nivel2').value;
+  const novo = { ramo: ramo || null, nivel: nv === '' ? null : +nv, ramo2: ramo2 || null, nivel2: ramo2 && nv2 !== '' ? +nv2 : null, apfUid: null, apfExterno: null };
+  if (ramo2 && ramo2 === ramo && nv2 === nv) { msg.className = 'msg erro'; msg.textContent = 'A 2ª linha precisa ter ramo ou nível diferente da 1ª.'; return; }
   if (apf === '_ext') {
     const nome = $('#pf-extnome').value.trim(), reg = $('#pf-extreg').value.trim();
     if (!nome) { msg.className = 'msg erro'; msg.textContent = 'Informe o nome do APF.'; return; }
@@ -211,7 +215,11 @@ function htmlFicha() {
   const rk = E.ramo, ni = E.nivel;
   const tiles = RK.map(r => `<button type="button" class="tile t-${r}" data-ramo="${r}" aria-pressed="false"><span class="lbl">${esc(CAT[r].n)}</span><div class="big"><span class="sum">0</span> <small>de ${totR(r)}</small></div><div class="bar"><i></i></div></button>`).join('');
   const lvs = NV.map((n, i) => `<button type="button" data-nivel="${i}" aria-pressed="false">${n}<small></small></button>`).join('');
-  let h = `<div class="tiles">${tiles}</div><div class="t-${rk}"><div class="lv">${lvs}</div><div class="foldbar"><button data-foldall="close">Recolher tudo</button><button data-foldall="open">Expandir tudo</button></div>`;
+  const p = E.perfil || {}, linhas = [];
+  if (RK.indexOf(p.ramo) >= 0 && p.nivel != null) linhas.push([p.ramo, p.nivel, '1ª linha']);
+  if (RK.indexOf(p.ramo2) >= 0 && p.nivel2 != null) linhas.push([p.ramo2, p.nivel2, '2ª linha']);
+  const atalhos = linhas.length > 1 ? `<div class="lv lv-lin" style="margin-top:12px">${linhas.map(l => `<button type="button" class="t-${l[0]}" data-linha="${l[0]}:${l[1]}" aria-pressed="${l[0] === rk && l[1] === ni}">${l[2]}: ${esc(CAT[l[0]].n)} · ${NV[l[1]]}</button>`).join('')}</div>` : '';
+  let h = `${atalhos}<div class="tiles">${tiles}</div><div class="t-${rk}"><div class="lv">${lvs}</div><div class="foldbar"><button data-foldall="close">Recolher tudo</button><button data-foldall="open">Expandir tudo</button></div>`;
   CAT[rk].g.forEach(g => {
     h += `<div class="grupo"><h3>${esc(g.t)}</h3><div class="grid">`;
     g.c.forEach(c => {
@@ -245,7 +253,8 @@ function atualizar() {
     const r = t.getAttribute('data-ramo'), n = cn[r][0] + cn[r][1] + cn[r][2], tt = totR(r);
     t.setAttribute('aria-pressed', r === E.ramo ? 'true' : 'false'); t.querySelector('.sum').textContent = n; t.querySelector('.bar i').style.width = (tt ? 100 * n / tt : 0) + '%';
   });
-  document.querySelectorAll('#ficha .lv button').forEach(b => { const i = +b.getAttribute('data-nivel'); b.setAttribute('aria-pressed', i === E.nivel ? 'true' : 'false'); b.querySelector('small').textContent = cn[E.ramo][i] + '/' + TOT[E.ramo][i]; });
+  document.querySelectorAll('#ficha .lv-lin button').forEach(b => { const q = b.getAttribute('data-linha').split(':'); b.setAttribute('aria-pressed', q[0] === E.ramo && +q[1] === E.nivel ? 'true' : 'false'); });
+  document.querySelectorAll('#ficha button[data-nivel]').forEach(b => { const i = +b.getAttribute('data-nivel'); b.setAttribute('aria-pressed', i === E.nivel ? 'true' : 'false'); b.querySelector('small').textContent = cn[E.ramo][i] + '/' + TOT[E.ramo][i]; });
 }
 
 /* ---------- telas ---------- */
@@ -279,8 +288,9 @@ async function telaAssessorados() {
   fichas.sort((a, b) => nomeDe(a[0]).localeCompare(nomeDe(b[0]), 'pt-BR'));
   $('#corpo').innerHTML = '<div class="quem"><h2>Meus assessorados</h2><div class="sub">Abra a ficha para marcar as atividades que o chefe já cumpriu.</div></div>' + fichas.map(([u, d]) => {
     const p = d.perfil || {}, cn = F.contar(d.done), r = RK.indexOf(p.ramo) >= 0 ? p.ramo : null;
-    const n = r ? cn[r][0] + cn[r][1] + cn[r][2] : 0;
-    return `<div class="panel ass-card"><div class="nm">${esc(nomeDe(u))}<small>Registro ${esc((E.equipe[u] || {}).registro || '')} · ${r ? esc(CAT[r].n) : 'ramo não informado'}${p.nivel != null ? ' · ' + NV[p.nivel] : ''}</small></div>${r ? `<span class="chip t-${r}">${n}/${totR(r)} atividades</span>` : ''}<a class="btn-v" style="text-decoration:none" href="#c-${esc(u)}">Abrir ficha</a></div>`;
+    const lin = [[r, p.nivel], [RK.indexOf(p.ramo2) >= 0 ? p.ramo2 : null, p.nivel2]].filter(l => l[0]);
+    const chips = lin.map(l => `<span class="chip t-${l[0]}">${esc(CAT[l[0]].n)}${l[1] != null ? ' · ' + NV[l[1]] + ' ' + cn[l[0]][l[1]] + '/' + TOT[l[0]][l[1]] : ' ' + (cn[l[0]][0] + cn[l[0]][1] + cn[l[0]][2]) + '/' + totR(l[0])}</span>`).join(' ');
+    return `<div class="panel ass-card"><div class="nm">${esc(nomeDe(u))}<small>Registro ${esc((E.equipe[u] || {}).registro || '')}${lin.length ? '' : ' · ramo não informado'}</small></div>${chips}<a class="btn-v" style="text-decoration:none" href="#c-${esc(u)}">Abrir ficha</a></div>`;
   }).join('');
 }
 let temAss = false;
@@ -300,6 +310,8 @@ document.addEventListener('click', e => {
   if (fo) { const k = fo.getAttribute('data-fold'), cl = fo.parentNode.classList.toggle('fechado'); E.fechados[k] = cl; return; }
   const fa = e.target.closest('[data-foldall]');
   if (fa) { const ab = fa.getAttribute('data-foldall') === 'open'; document.querySelectorAll('#ficha .cp').forEach(cp => { cp.classList.toggle('fechado', !ab); E.fechados[cp.getAttribute('data-cp')] = !ab; }); return; }
+  const ln = e.target.closest('[data-linha]');
+  if (ln) { const q = ln.getAttribute('data-linha').split(':'); E.ramo = q[0]; E.nivel = +q[1]; $('#ficha').innerHTML = htmlFicha(); atualizar(); return; }
   const t = e.target.closest('[data-ramo],[data-nivel]');
   if (!t) return;
   if (t.hasAttribute('data-ramo')) E.ramo = t.getAttribute('data-ramo'); else E.nivel = +t.getAttribute('data-nivel');

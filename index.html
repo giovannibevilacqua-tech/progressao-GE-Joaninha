@@ -1142,7 +1142,10 @@ return `<div style="flex-basis:100%;display:flex;gap:6px;align-items:center;flex
 <select class="campo-input" style="font-size:11px;padding:4px 6px;flex:0 0 auto;max-width:170px;" onchange="alterarFormacaoUI('${uid}','apf',this.value)" title="APF">
 <option value="">Sem APF</option>${outros.map(u => `<option value="${u}" ${modo===u?'selected':''}>APF: ${chefes[u].nome || chefes[u].registro || u}</option>`).join('')}<option value="_ext" ${modo==='_ext'?'selected':''}>APF de fora${modo==='_ext' && ext.nome ? ': ' + ext.nome : ''}…</option></select>
 <select class="campo-input" style="font-size:11px;padding:4px 6px;flex:0 0 auto;" onchange="alterarFormacaoUI('${uid}','ramo',this.value)" title="Ramo de formação"><option value="">Ramo —</option>${Object.keys(RAMOS_FORM).map(r => `<option value="${r}" ${pf.ramo===r?'selected':''}>${RAMOS_FORM[r]}</option>`).join('')}</select>
-<select class="campo-input" style="font-size:11px;padding:4px 6px;flex:0 0 auto;" onchange="alterarFormacaoUI('${uid}','nivel',this.value)" title="Nível"><option value="">Nível —</option>${['Preliminar','Intermediário','Avançado'].map((n, i) => `<option value="${i}" ${pf.nivel===i?'selected':''}>${n}</option>`).join('')}</select></div>`; })()}
+<select class="campo-input" style="font-size:11px;padding:4px 6px;flex:0 0 auto;" onchange="alterarFormacaoUI('${uid}','nivel',this.value)" title="Nível"><option value="">Nível —</option>${['Preliminar','Intermediário','Avançado'].map((n, i) => `<option value="${i}" ${pf.nivel===i?'selected':''}>${n}</option>`).join('')}</select></div>
+<div style="flex-basis:100%;display:flex;gap:6px;align-items:center;flex-wrap:wrap;"><span style="font-size:10px;font-weight:700;color:var(--muted);">🎓 2ª linha:</span>
+<select class="campo-input" style="font-size:11px;padding:4px 6px;flex:0 0 auto;" onchange="alterarFormacaoUI('${uid}','ramo2',this.value)" title="Ramo da 2ª linha"><option value="">Nenhuma</option>${Object.keys(RAMOS_FORM).map(r => `<option value="${r}" ${pf.ramo2===r?'selected':''}>${RAMOS_FORM[r]}</option>`).join('')}</select>
+${pf.ramo2 ? `<select class="campo-input" style="font-size:11px;padding:4px 6px;flex:0 0 auto;" onchange="alterarFormacaoUI('${uid}','nivel2',this.value)" title="Nível da 2ª linha"><option value="">Nível —</option>${['Preliminar','Intermediário','Avançado'].map((n, i) => `<option value="${i}" ${pf.nivel2===i?'selected':''}>${n}</option>`).join('')}</select>` : ''}</div>`; })()}
 <label class="sw-lbl" title="Administrador"><span class="sw"><input type="checkbox" ${c.admin?'checked':''} onchange="alternarAdminUI('${uid}', this.checked, this)"><i></i></span> ⭐ Admin</label>
 <button class="chefe-row-btn" onclick="editarNomeChefeUI('${uid}')" title="Editar nome">✏️</button>
 <button class="chefe-row-btn" onclick="redefinirSenhaAdmin('${uid}','${c.registro || uid}')" title="Redefinir senha">🔑</button>
@@ -1185,9 +1188,11 @@ await renderChefesModalBody();
 }
 async function alterarFormacaoUI(uid, campo, valor) {
 const antigo = ((formacaoCache[uid] && formacaoCache[uid].perfil) || {});
-const novo = { ramo: antigo.ramo || null, nivel: antigo.nivel == null ? null : antigo.nivel, apfUid: antigo.apfUid || null, apfExterno: antigo.apfExterno || null };
+const novo = { ramo: antigo.ramo || null, nivel: antigo.nivel == null ? null : antigo.nivel, ramo2: antigo.ramo2 || null, nivel2: antigo.nivel2 == null ? null : antigo.nivel2, apfUid: antigo.apfUid || null, apfExterno: antigo.apfExterno || null };
 if (campo === 'ramo') novo.ramo = valor || null;
 else if (campo === 'nivel') novo.nivel = valor === '' ? null : +valor;
+else if (campo === 'ramo2') { novo.ramo2 = valor || null; if (!valor) novo.nivel2 = null; }
+else if (campo === 'nivel2') novo.nivel2 = valor === '' ? null : +valor;
 else if (campo === 'apf') {
 if (valor === '_ext') {
 const nome = prompt('Nome do APF (fora do grupo):', (antigo.apfExterno && antigo.apfExterno.nome) || '');
