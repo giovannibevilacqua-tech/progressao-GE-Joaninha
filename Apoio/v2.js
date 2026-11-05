@@ -4,7 +4,7 @@ if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScop
   // Guarda uma cópia dos arquivos do app para abrir mesmo sem internet.
   // Sempre tenta a internet primeiro (assim as atualizações chegam); só usa a cópia se estiver offline.
   const CACHE = 'joaninha-app-v1';
-  const BASE = ['./', 'index.html', 'escoteira.html', 'tropa-senior.html', 'alcateia.html', 'cla-pioneiro.html', 'diretoria.html', 'secao.css', 'visualizacao.html', 'formacao.html', 'competencias.js', 'v2.js', 'manifest.webmanifest'];
+  const BASE = ['./', 'index.html', 'escoteira.html', 'tropa-senior.html', 'alcateia.html', 'cla-pioneiro.html', 'diretoria.html', 'Apoio/secao.css', 'visualizacao.html', 'formacao.html', 'Apoio/competencias.js', 'sw.js', 'Apoio/v2.js', 'Apoio/manifest.webmanifest'];
 
   self.addEventListener('install', (e) => {
     e.waitUntil(caches.open(CACHE).then((c) => Promise.all(BASE.map((u) => c.add(u).catch(() => {})))).then(() => self.skipWaiting()));
@@ -54,7 +54,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-11-05z"
+  VERSAO: "2026-11-06a"
 };
 
 /* ============================================================
@@ -2019,8 +2019,8 @@ window.V2_ALMOX = (function () {
   function carregarPdf() {
     if (!pdfPronto) pdfPronto = new Promise(function (ok, falha) {
       var s = document.createElement('script');
-      s.src = 'vendor/pdfjs/pdf.min.js';
-      s.onload = function () { root.pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdfjs/pdf.worker.min.js'; ok(root.pdfjsLib); };
+      s.src = 'Apoio/vendor/pdfjs/pdf.min.js';
+      s.onload = function () { root.pdfjsLib.GlobalWorkerOptions.workerSrc = 'Apoio/vendor/pdfjs/pdf.worker.min.js'; ok(root.pdfjsLib); };
       s.onerror = function () { pdfPronto = null; falha(new Error('Não consegui carregar o leitor de PDF.')); };
       document.head.appendChild(s);
     });

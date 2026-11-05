@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Diretoria — GE Joaninha</title>
-<link rel="stylesheet" href="secao.css">
-<script src="v2.js"></script>
+<link rel="stylesheet" href="Apoio/secao.css">
+<script src="Apoio/v2.js"></script>
 </head>
 <body>
 <div class="cabecalho-fixo"><nav class="tabs-linha"><button class="tab-btn-linha" data-aba="almox" onclick="mostrarAba('almox',this)">📦 Almoxarifado geral</button><button class="tab-btn-linha" data-aba="chefes" onclick="mostrarAba('chefes',this)">👥 Chefes e assistentes</button><button class="tab-btn-linha" data-aba="forms" onclick="mostrarAba('forms',this)">🎓 Formação dos chefes</button><button class="tab-btn-linha" data-aba="docs" onclick="mostrarAba('docs',this)">📄 Documentação</button></nav></div>
@@ -96,7 +96,7 @@ function carregarScript(src) { return new Promise((ok, falha) => { if (window.FO
 async function abrirFormacao() {
   const box = document.getElementById('forms-lista');
   try {
-    await carregarScript('competencias.js');
+    await carregarScript('Apoio/competencias.js');
     const F = window.FORMACAO;
     const [eq, fm] = await Promise.all([fetch(urlComAuthFirebase(DB_URL + '/equipe.json')).then(r => r.json()), fetch(urlComAuthFirebase(DB_URL + '/formacao.json')).then(r => { if (!r.ok) throw new Error('permissao'); return r.json(); })]);
     if (!eq) { box.innerHTML = '<div class="vazio">A lista aparece depois que um administrador abrir o sistema.</div>'; return; }
