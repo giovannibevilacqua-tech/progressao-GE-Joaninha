@@ -6,6 +6,11 @@
 <title>Diretoria — GE Joaninha</title>
 <link rel="stylesheet" href="Apoio/secao.css">
 <script src="Apoio/v2.js"></script>
+<style>.sec-grid{display:grid;grid-template-columns:minmax(230px,1fr) minmax(0,2fr);gap:18px;margin-top:14px;align-items:start}@media(max-width:720px){.sec-grid{grid-template-columns:1fr}}
+.sec-box{background:rgba(127,127,127,.07);border-radius:10px;padding:10px 12px;min-width:0}.sec-box h4{margin:0 0 8px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+.tb-sec{width:100%;border-collapse:collapse;font-size:12px}.tb-sec th{text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);padding:4px 8px;border-bottom:1px solid var(--border)}.tb-sec td{padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:middle}.tb-sec tr:last-child td{border-bottom:0}.tb-sec td.n{white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}
+.tb-sec .mini{display:block;height:5px;border-radius:3px;background:rgba(127,127,127,.25);margin-top:3px;min-width:60px;overflow:hidden}.tb-sec .mini i{display:block;height:100%;background:var(--vinho,#9b2c43)}
+.sec-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}</style>
 </head>
 <body>
 <div class="cabecalho-fixo"><nav class="tabs-linha"><button class="tab-btn-linha" data-aba="almox" onclick="mostrarAba('almox',this)">📦 Almoxarifado geral</button><button class="tab-btn-linha" data-aba="secoes" onclick="mostrarAba('secoes',this)">🗂️ Seções</button><button class="tab-btn-linha" data-aba="forms" onclick="mostrarAba('forms',this)">🎓 Formação dos chefes</button><button class="tab-btn-linha" data-aba="docs" onclick="mostrarAba('docs',this)">📄 Documentação</button></nav></div>
@@ -153,8 +158,8 @@ function agruparEquipe(d) {
 }
 const tagFuncao = u => '<span class="tag-fn ' + (u.funcao === 'assistente' ? 'ass' : 'chefe') + '">' + (u.funcao === 'assistente' ? 'Assistente' : 'Chefe de seção') + '</span>' + (u._seg ? ' <span class="tag-fn" style="background:#8882">2ª função</span>' : '');
 function listaChefes(gente) {
-  if (!gente || !gente.length) return '<div class="card-txt" style="margin-top:8px">Nenhum chefe ou assistente cadastrado.</div>';
-  return '<div style="margin-top:8px">' + gente.map(u => '<div class="pessoa"><b>' + escH(u.nome || ('Registro ' + u.registro)) + '</b> ' + tagFuncao(u) + (u.nome ? '<small>Registro ' + escH(u.registro) + '</small>' : '') + '</div>').join('') + '</div>';
+  if (!gente || !gente.length) return '<div class="card-txt">Nenhum chefe ou assistente cadastrado.</div>';
+  return '<table class="tb-sec"><thead><tr><th>Nome</th><th>Função</th><th>Registro</th></tr></thead><tbody>' + gente.map(u => '<tr><td><b>' + escH(u.nome || ('Registro ' + u.registro)) + '</b></td><td>' + tagFuncao(u) + '</td><td>' + escH(u.registro || '') + '</td></tr>').join('') + '</tbody></table>';
 }
 function secoesQuadro() {
   const grupos = EQUIPE ? agruparEquipe(EQUIPE) : {};
@@ -163,16 +168,16 @@ function secoesQuadro() {
   document.getElementById('secoes-lista').innerHTML = ordem.map(id => {
     const g = grupos[id] || [], nChefes = EQUIPE ? g.length + (g.length === 1 ? ' pessoa' : ' pessoas') : '';
     if (id === 'diretoria' || id === 'sem') {
-      return '<details class="card sec-det"><summary style="cursor:pointer;list-style:none"><b>' + ROTULOS[id] + '</b><br><span class="card-txt">' + nChefes + '</span></summary>' + listaChefes(g) + '</details>';
+      return '<details class="card sec-det"><summary style="cursor:pointer;list-style:none"><b>' + ROTULOS[id] + '</b><br><span class="card-txt">' + nChefes + '</span></summary><div class="sec-box" style="margin-top:12px"><h4>Chefia</h4>' + listaChefes(g) + '</div></details>';
     }
     const r = SEC_DADOS[id];
     if (!r) return '<div class="card"><div class="card-ttl">' + ico[id] + ' ' + escH(ROTULOS[id].replace(/^\S+\s/, '')) + '</div><div class="card-txt">Carregando…</div></div>';
-    const linhas = (r.linhas || []).map(l => '<tr><td>' + escH(l.nome) + '</td><td style="text-align:right;white-space:nowrap">' + l.n + '/' + l.total + '</td><td>' + escH(l.etapa) + '</td></tr>').join('');
+    const linhas = (r.linhas || []).map(l => '<tr><td><b>' + escH(l.nome) + '</b></td><td style="min-width:110px">' + l.n + '/' + l.total + '<span class="mini"><i style="width:' + (l.total ? Math.round(l.n / l.total * 100) : 0) + '%"></i></span></td><td>' + escH(l.etapa) + '</td></tr>').join('');
     return '<details class="card sec-det"><summary style="cursor:pointer;list-style:none;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="flex:1;min-width:150px"><b>' + ico[id] + ' ' + escH(r.tropa) + '</b><br><span class="card-txt">' + r.resumo.jovens + ' jovens · média de ' + escH(r.resumo.media) + ' blocos (de ' + r.resumo.total + ')' + (nChefes ? ' · ' + nChefes : '') + '</span></span>' +
       '<button type="button" class="btn-ic" style="font-size:12px;padding:6px 10px" onclick="event.preventDefault();event.stopPropagation();relatorioSecaoDir(\'' + id + '\')">📄 Relatório</button></summary>' +
-      '<div class="grupo-ttl" style="margin-top:12px">Chefes e assistentes</div>' + listaChefes(g) +
-      '<div class="grupo-ttl" style="margin-top:12px">Jovens</div><div style="display:flex;gap:6px;flex-wrap:wrap">' + (r.etapas || []).map(e => '<span class="tag-fn chefe">' + escH(e[0]) + ': ' + e[1] + '</span>').join('') + '</div>' +
-      '<div style="overflow-x:auto;margin-top:8px"><table style="width:100%;border-collapse:collapse;font-size:12px"><tbody>' + (linhas || '<tr><td class="card-txt">Nenhum jovem cadastrado.</td></tr>') + '</tbody></table></div></details>';
+      '<div class="sec-grid"><div class="sec-box"><h4>Chefia (' + g.length + ')</h4>' + listaChefes(g) + '</div>' +
+      '<div class="sec-box"><h4>Jovens (' + r.resumo.jovens + ')</h4><div class="sec-chips">' + (r.etapas || []).map(e => '<span class="tag-fn chefe">' + escH(e[0]) + ': ' + e[1] + '</span>').join('') + '</div>' +
+      (linhas ? '<table class="tb-sec"><thead><tr><th>Nome</th><th>Blocos</th><th>Etapa</th></tr></thead><tbody>' + linhas + '</tbody></table>' : '<div class="card-txt">Nenhum jovem cadastrado.</div>') + '</div></div></details>';
   }).join('');
   document.getElementById('btnRelGrupo').disabled = !SECOES_DIR.every(s => SEC_DADOS[s.id]);
 }
