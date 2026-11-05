@@ -811,6 +811,7 @@ let firebaseAuthToken = null;
 let firebaseRefreshToken = null;
 let registroLogado = null;
 let souAdmin = false;
+let tropa2DoChefeLogado = null;
 let tropaDoChefeLogado = null; // seção do chefe: 'alcateia' | 'escoteira' | 'senior' | 'cla' | 'diretoria' | null (admin não tem seção)
 
 function emailDoRegistro(registro) { return registro + DOMINIO_LOGIN; }
@@ -827,7 +828,8 @@ idToken: firebaseAuthToken,
 refreshToken: firebaseRefreshToken,
 expiraEm: Date.now() + 55 * 60 * 1000,
 admin: souAdmin,
-tropa: tropaDoChefeLogado
+tropa: tropaDoChefeLogado,
+tropa2: tropa2DoChefeLogado
 }));
 } catch (e) {}
 }
@@ -861,7 +863,7 @@ renovado = await renovarTokenSessao(salva.refreshToken);
 if (!renovado && navigator.onLine === false && salva.uid) {
 // sem internet: entra só para leitura (os dados vêm da cópia guardada neste aparelho)
 firebaseAuthToken = salva.idToken; firebaseRefreshToken = salva.refreshToken; registroLogado = salva.registro; firebaseUid = salva.uid;
-souAdmin = salva.admin === true; tropaDoChefeLogado = salva.tropa || null; nomeLogado = salva.nome || '';
+souAdmin = salva.admin === true; tropaDoChefeLogado = salva.tropa || null; tropa2DoChefeLogado = salva.tropa2 || null; nomeLogado = salva.nome || '';
 return true;
 }
 if (!renovado) { limparSessao(); return false; }
@@ -969,6 +971,7 @@ const v = await r.json();
 souAdmin = !!(v && v.admin === true);
 nomeLogado = (v && v.nome) || '';
 tropaDoChefeLogado = (v && v.tropa) || null;
+tropa2DoChefeLogado = (v && v.tropa2) || null;
 salvarSessao(); // persiste tropa e admin na sessão para tropa-senior.html poder ler
 return v;
 } catch (e) { souAdmin = false; nomeLogado = ''; tropaDoChefeLogado = null; return null; }
@@ -1102,7 +1105,7 @@ const ehAss = c.funcao === 'assistente';
 const rotSecao = { senior: '🎓 Sênior', alcateia: '🐺 Alcateia', cla: '🔥 Clã Pioneiro', diretoria: '🏛️ Diretoria', escoteira: '🏕️ Escoteira' };
 return `<div class="chefe-row" style="flex-wrap:wrap;gap:6px;">
 <span class="chefe-row-registro" style="flex:1;min-width:120px;">${c.nome ? c.nome : c.registro || uid}${c.nome ? `<br><span style="font-size:10px;font-weight:500;color:var(--muted);">Registro ${c.registro || uid}</span>` : ''}
-<br><span class="chefe-tag ${ehAss ? 'ass' : 'chefe'}">${ehAss ? 'Assistente' : 'Chefe de seção'}</span>${c.admin ? ' <span class="chefe-tag adm">⭐ Admin</span>' : ''}</span>
+<br><span class="chefe-tag ${ehAss ? 'ass' : 'chefe'}">${ehAss ? 'Assistente' : 'Chefe de seção'}</span>${c.tropa2 ? ` <span class="chefe-tag ${c.funcao2 === 'assistente' ? 'ass' : 'chefe'}">${c.funcao2 === 'assistente' ? 'Assistente' : 'Chefe'} · ${(rotSecao[c.tropa2] || c.tropa2).replace(/^\S+\s/, '')}</span>` : ''}${c.admin ? ' <span class="chefe-tag adm">⭐ Admin</span>' : ''}</span>
 <select class="campo-input" style="font-size:11px;padding:4px 6px;flex:0 0 auto;" onchange="alterarRoleChefeUI('${uid}', this.value)" title="Seção">
 ${c.admin ? `<option value="" ${secao===''?'selected':''}>Sem seção (vê tudo)</option>` : ''}
 ${Object.keys(rotSecao).map(k => `<option value="${k}" ${(secao||(c.admin?'':'escoteira'))===k?'selected':''}>${rotSecao[k]}</option>`).join('')}
@@ -1111,6 +1114,15 @@ ${Object.keys(rotSecao).map(k => `<option value="${k}" ${(secao||(c.admin?'':'es
 <option value="chefe" ${ehAss?'':'selected'}>Chefe de seção</option>
 <option value="assistente" ${ehAss?'selected':''}>Assistente</option>
 </select>
+<div style="flex-basis:100%;display:flex;gap:6px;align-items:center;flex-wrap:wrap;"><span style="font-size:10px;font-weight:700;color:var(--muted);">2ª função:</span>
+<select class="campo-input" style="font-size:11px;padding:4px 6px;flex:0 0 auto;" onchange="alterarVinculo2UI('${uid}','tropa',this.value)" title="Segunda seção">
+<option value="">Nenhuma</option>
+${Object.keys(rotSecao).filter(k => k !== (secao || (c.admin ? '' : 'escoteira'))).map(k => `<option value="${k}" ${c.tropa2===k?'selected':''}>${rotSecao[k]}</option>`).join('')}
+</select>
+${c.tropa2 ? `<select class="campo-input" style="font-size:11px;padding:4px 6px;flex:0 0 auto;" onchange="alterarVinculo2UI('${uid}','funcao',this.value)" title="Função na segunda seção">
+<option value="chefe" ${c.funcao2==='assistente'?'':'selected'}>Chefe de seção</option>
+<option value="assistente" ${c.funcao2==='assistente'?'selected':''}>Assistente</option>
+</select>` : ''}</div>
 <label class="sw-lbl" title="Administrador"><span class="sw"><input type="checkbox" ${c.admin?'checked':''} onchange="alternarAdminUI('${uid}', this.checked, this)"><i></i></span> ⭐ Admin</label>
 <button class="chefe-row-btn" onclick="editarNomeChefeUI('${uid}')" title="Editar nome">✏️</button>
 <button class="chefe-row-btn" onclick="redefinirSenhaAdmin('${uid}','${c.registro || uid}')" title="Redefinir senha">🔑</button>
@@ -1143,6 +1155,12 @@ const label = ({ senior: 'Tropa Sênior', alcateia: 'Alcateia', cla: 'Clã Pione
 if (!confirm(`Alterar a seção para "${label}"?`)) { await renderChefesModalBody(); return; }
 await alterarRoleChefe(uid, novaSecao);
 if (uid === firebaseUid) { await checarSeSouAdmin(); fecharGerenciarChefes(); aplicarEstadoContaLogada(); return; }
+await renderChefesModalBody();
+}
+async function alterarVinculo2UI(uid, campo, valor) {
+const corpo = campo === 'tropa' ? (valor ? { tropa2: valor, funcao2: (chefesCache[uid] && chefesCache[uid].funcao2) || 'chefe' } : { tropa2: null, funcao2: null }) : { funcao2: valor === 'assistente' ? 'assistente' : 'chefe' };
+await fetch(urlComAuthFirebase(DB_URL + '/usuarios/' + uid + '.json'), { method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(corpo) });
+if (uid === firebaseUid) { await checarSeSouAdmin(); aplicarEstadoContaLogada(); }
 await renderChefesModalBody();
 }
 async function alterarFuncaoChefeUI(uid, funcao) {
@@ -1197,7 +1215,7 @@ const SECOES = { alcateia:   { pagina: 'alcateia', frame: 'iframeAlcateia', box:
                  cla:        { pagina: 'cla-pioneiro', frame: 'iframeCla', box: 'pagina-cla', btn: 'ramoBtnCla' },
                  diretoria:  { pagina: 'diretoria', frame: 'iframeDiretoria', box: 'pagina-diretoria', btn: 'ramoBtnDiretoria' } };
 // quem pode abrir cada seção: admin vê tudo; chefe de uma seção vê só a dela; sem seção definida (contas antigas) vê tudo menos a Diretoria
-function ramoPermitido(r) { return !!souAdmin || tropaDoChefeLogado === r || (!tropaDoChefeLogado && r !== 'diretoria'); }
+function ramoPermitido(r) { return !!souAdmin || tropaDoChefeLogado === r || tropa2DoChefeLogado === r || (!tropaDoChefeLogado && r !== 'diretoria'); }
 let ramoAtual = null;
 const compactoPorRamo = {};
 
@@ -1282,10 +1300,12 @@ else { const lb = document.getElementById('lembreteBackup'); if (lb) lb.remove()
 // Restrição de acesso por seção
 const ramoSwitch = document.getElementById('ramoSwitch');
 const vePrimeiraSecao = !!souAdmin || !tropaDoChefeLogado;
-const btnDir = document.getElementById('ramoBtnDiretoria'); if (btnDir) btnDir.style.display = souAdmin ? '' : 'none';
-if (ramoSwitch) ramoSwitch.style.display = vePrimeiraSecao ? '' : 'none';
+const temDuas = !souAdmin && !!tropaDoChefeLogado && !!tropa2DoChefeLogado && tropa2DoChefeLogado !== tropaDoChefeLogado;
+if (temDuas) Object.keys(SECOES).forEach(k => { const b = document.getElementById(SECOES[k].btn); if (b) b.style.display = ramoPermitido(k) ? '' : 'none'; });
+const btnDir = document.getElementById('ramoBtnDiretoria'); if (btnDir) btnDir.style.display = (souAdmin || tropaDoChefeLogado === 'diretoria' || tropa2DoChefeLogado === 'diretoria') ? '' : 'none';
+if (ramoSwitch) ramoSwitch.style.display = (vePrimeiraSecao || temDuas) ? '' : 'none';
 const ramoPref = (function(){ try { return localStorage.getItem('escoteira_ramoAtivo') || 'escoteira'; } catch(e){ return 'escoteira'; } })();
-mudarRamo(vePrimeiraSecao ? ramoPref : tropaDoChefeLogado);
+mudarRamo(vePrimeiraSecao || temDuas ? ramoPref : tropaDoChefeLogado);
 }
 
 async function tentarLoginTela() {

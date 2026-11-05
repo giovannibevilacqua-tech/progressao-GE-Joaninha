@@ -993,8 +993,9 @@ async function autenticarComSessaoCompartilhada() {
   souAdmin = salva.admin === true;
   nomeLogado = salva.nome || '';
   tropaDoChefeLogado = salva.tropa || null;
+  const _t2 = salva.tropa2 || null;
   document.body.classList.toggle('eh-admin', souAdmin);
-  if (!souAdmin && tropaDoChefeLogado && tropaDoChefeLogado !== 'escoteira') return false; // chefe só da Sênior não entra aqui (a página principal já esconde esta seção)
+  if (!souAdmin && tropaDoChefeLogado && tropaDoChefeLogado !== 'escoteira' && _t2 !== 'escoteira') return false; // chefe só da Sênior não entra aqui (a página principal já esconde esta seção)
   agendarRenovacaoToken();
   return true;
 }
