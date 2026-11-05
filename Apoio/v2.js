@@ -27,7 +27,18 @@ if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScop
 
 }
 // Seção aberta escondida dentro da Diretoria (só para ler os números do relatório): nada de pop-ups.
-try { if (typeof document !== 'undefined' && window.parent !== window && /[?&]resumo=1/.test(location.search)) window.alert = function () {}; } catch (e) {}
+try {
+  if (typeof document !== 'undefined' && window.parent !== window && /[?&]resumo=1/.test(location.search)) {
+    window.alert = function () {};
+    // modo só leitura: esta cópia da seção (escondida na Diretoria) NUNCA grava nada no banco
+    var _fetchOrig = window.fetch.bind(window);
+    window.fetch = function (u, o) {
+      var m = ((o && o.method) || (u && u.method) || 'GET').toUpperCase();
+      if (m !== 'GET' && /firebaseio\.com/.test(String((u && u.url) || u))) return Promise.resolve(new Response('null', { status: 200, headers: { 'Content-Type': 'application/json' } }));
+      return _fetchOrig(u, o);
+    };
+  }
+} catch (e) {}
 
 /* ============================================================
    v2-config.js — configuração única da migração (Firebase v2)
@@ -56,7 +67,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-11-06h"
+  VERSAO: "2026-11-06i"
 };
 
 /* ============================================================

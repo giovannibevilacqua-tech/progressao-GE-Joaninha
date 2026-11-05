@@ -181,7 +181,7 @@ function secoesQuadro() {
   }).join('');
   document.getElementById('btnRelGrupo').disabled = !SECOES_DIR.every(s => SEC_DADOS[s.id]);
 }
-function lerSecao(s, fr) {
+function lerSecao(s, fr, fim) {
   // espera a seção terminar de carregar os dados do banco (senão o relatório sai com os valores iniciais) e os números se estabilizarem
   const t0 = Date.now(); let ultimo = null, estavel = 0;
   (function tentar() {
@@ -194,8 +194,8 @@ function lerSecao(s, fr) {
     const assin = r ? JSON.stringify(r) : null;
     estavel = assin && assin === ultimo ? estavel + 1 : 0; ultimo = assin;
     const idade = Date.now() - t0;
-    if (r && ((carregado && estavel >= 2) || idade > 20000)) { SEC_DADOS[s.id] = r; secoesQuadro(); return; }
-    if (idade > 30000) { SEC_DADOS[s.id] = r || { tropa: s.id, resumo: { jovens: 0, media: '0', total: 0 }, etapas: [], colunas: [], linhas: [] }; secoesQuadro(); return; }
+    if (r && ((carregado && estavel >= 2) || idade > 20000)) { SEC_DADOS[s.id] = r; secoesQuadro(); if (fim) fim(); return; }
+    if (idade > 30000) { SEC_DADOS[s.id] = r || { tropa: s.id, resumo: { jovens: 0, media: '0', total: 0 }, etapas: [], colunas: [], linhas: [] }; secoesQuadro(); if (fim) fim(); return; }
     setTimeout(tentar, 500);
   })();
 }
@@ -206,11 +206,16 @@ function carregarSecoes(forcar) {
   secoesQuadro();
   fetch(urlComAuthFirebase(DB_URL + '/equipe.json')).then(r => r.json()).then(d => { EQUIPE = d && !d.error ? d : null; secoesQuadro(); }).catch(() => {});
   const box = document.getElementById('secoes-frames'); box.innerHTML = '';
-  SECOES_DIR.forEach(s => {
-    const fr = document.createElement('iframe'); fr.src = s.pagina + '?resumo=1'; fr.setAttribute('aria-hidden', 'true'); fr.tabIndex = -1;
-    fr.style.cssText = 'width:900px;height:600px;border:0'; box.appendChild(fr);
-    fr.addEventListener('load', () => lerSecao(s, fr));
-  });
+  // uma seção por vez, e a cópia escondida é descartada assim que os números são lidos (evita travar o app)
+  (async function fila() {
+    for (const s of SECOES_DIR) {
+      await new Promise(ok => {
+        const fr = document.createElement('iframe'); fr.src = s.pagina + '?resumo=1'; fr.setAttribute('aria-hidden', 'true'); fr.tabIndex = -1;
+        fr.style.cssText = 'width:900px;height:600px;border:0'; box.appendChild(fr);
+        fr.addEventListener('load', () => lerSecao(s, fr, () => { try { fr.contentWindow.eval('try{__store.fechar()}catch(e){}'); } catch (e) {} fr.remove(); ok(); }));
+      });
+    }
+  })();
 }
 function relatorioSecaoDir(id) { if (SEC_DADOS[id]) V2.abrirRelatorioTropa(SEC_DADOS[id]); }
 function relatorioGrupo() { if (SECOES_DIR.every(s => SEC_DADOS[s.id])) V2.abrirRelatorioGrupo(SECOES_DIR.map(s => SEC_DADOS[s.id])); }
