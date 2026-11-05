@@ -745,6 +745,7 @@ REGISTRO ESCOTEIRO
 <span class="conta-barra-registro">👤 <strong id="contaRegistroTxt"></strong></span>
 <button class="conta-barra-btn" id="btnMinhaFormacao" onclick="location.href=V2.pagina('formacao')">🎓 Minha formação</button>
 <button class="conta-barra-btn" id="btnGerenciarChefes" style="display:none;" onclick="abrirGerenciarChefes()">⚙️ Gerenciar Chefes</button>
+<button class="conta-barra-btn somente-admin" id="btnVisaoPropria" style="display:none;" onclick="alternarVisaoPropria()">👁 Ver só minhas seções</button>
 <button class="conta-barra-btn somente-admin" id="btnHistorico" onclick="abrirHistorico()">📜 Histórico</button>
 <button class="conta-barra-btn somente-admin" id="btnImportarPaxtu" onclick="ImportarPaxtu.abrir()">📥 Importar PAXTU</button>
 <button class="conta-barra-btn" onclick="if(confirm('Sair da sua conta neste navegador?'))fazerLogout()">🚪 Sair</button>
@@ -1306,7 +1307,15 @@ const SECOES = { alcateia:   { pagina: 'alcateia', frame: 'iframeAlcateia', box:
                  cla:        { pagina: 'cla-pioneiro', frame: 'iframeCla', box: 'pagina-cla', btn: 'ramoBtnCla' },
                  diretoria:  { pagina: 'diretoria', frame: 'iframeDiretoria', box: 'pagina-diretoria', btn: 'ramoBtnDiretoria' } };
 // quem pode abrir cada seção: admin vê tudo; chefe de uma seção vê só a dela; sem seção definida (contas antigas) vê tudo menos a Diretoria
-function ramoPermitido(r) { return !!souAdmin || tropaDoChefeLogado === r || tropa2DoChefeLogado === r; }
+// Admin pode alternar entre ver todas as seções e ver só as próprias (a que ele tem como chefe/assistente)
+let visaoPropria = (function () { try { return localStorage.getItem('visaoPropriaAdmin') === '1'; } catch (e) { return false; } })();
+function verTudo() { return !!souAdmin && !(visaoPropria && (tropaDoChefeLogado || tropa2DoChefeLogado)); }
+function alternarVisaoPropria() {
+  visaoPropria = !visaoPropria;
+  try { localStorage.setItem('visaoPropriaAdmin', visaoPropria ? '1' : '0'); } catch (e) {}
+  aplicarVisibilidadeSecoes();
+}
+function ramoPermitido(r) { return verTudo() || tropaDoChefeLogado === r || tropa2DoChefeLogado === r; }
 let ramoAtual = null;
 const compactoPorRamo = {};
 
@@ -1388,20 +1397,29 @@ document.body.classList.toggle('eh-admin', !!souAdmin);
 if (souAdmin) { migrarSenhasParaHash(); atualizarLembreteBackup(); carregarListaChefes(); }
 else { const lb = document.getElementById('lembreteBackup'); if (lb) lb.remove(); }
 
+aplicarVisibilidadeSecoes();
+}
+function aplicarVisibilidadeSecoes() {
+const btnVis = document.getElementById('btnVisaoPropria');
+if (btnVis) {
+  const temPropria = !!souAdmin && !!(tropaDoChefeLogado || tropa2DoChefeLogado);
+  btnVis.style.display = temPropria ? '' : 'none';
+  btnVis.textContent = verTudo() ? '👁 Ver só minhas seções' : '👁 Ver todas as seções';
+}
 // Restrição de acesso por seção
 const ramoSwitch = document.getElementById('ramoSwitch');
-const vePrimeiraSecao = !!souAdmin;
+const vePrimeiraSecao = verTudo();
 const semAcessoSecao = !souAdmin && !tropaDoChefeLogado && !tropa2DoChefeLogado;
 let msgSem = document.getElementById('semSecaoMsg');
 if (!msgSem) { msgSem = document.createElement('div'); msgSem.id = 'semSecaoMsg'; msgSem.style.cssText = 'display:none;margin:40px 18px;padding:22px;text-align:center;background:var(--card);border-radius:14px;box-shadow:var(--shadow);font-size:14px;line-height:1.6;'; msgSem.innerHTML = '<div style="font-size:32px;margin-bottom:6px;">🔒</div><b>Você ainda não tem uma seção definida.</b><br>Peça a um administrador para liberar o seu acesso.'; const sw = document.getElementById('ramoSwitch'); sw.parentNode.insertBefore(msgSem, sw.nextSibling); }
 msgSem.style.display = semAcessoSecao ? '' : 'none';
 if (semAcessoSecao) { Object.keys(SECOES).forEach(k => { const bx = document.getElementById(SECOES[k].box); if (bx) bx.style.display = 'none'; }); if (ramoSwitch) ramoSwitch.style.display = 'none'; return; }
-const temDuas = !souAdmin && !!tropaDoChefeLogado && !!tropa2DoChefeLogado && tropa2DoChefeLogado !== tropaDoChefeLogado;
-if (temDuas) Object.keys(SECOES).forEach(k => { const b = document.getElementById(SECOES[k].btn); if (b) b.style.display = ramoPermitido(k) ? '' : 'none'; });
-const btnDir = document.getElementById('ramoBtnDiretoria'); if (btnDir) btnDir.style.display = (souAdmin || tropaDoChefeLogado === 'diretoria' || tropa2DoChefeLogado === 'diretoria') ? '' : 'none';
+const temDuas = !verTudo() && !!tropaDoChefeLogado && !!tropa2DoChefeLogado && tropa2DoChefeLogado !== tropaDoChefeLogado;
+Object.keys(SECOES).forEach(k => { const b = document.getElementById(SECOES[k].btn); if (b) b.style.display = ramoPermitido(k) ? '' : 'none'; });
+const btnDir = document.getElementById('ramoBtnDiretoria'); if (btnDir) btnDir.style.display = (verTudo() || tropaDoChefeLogado === 'diretoria' || tropa2DoChefeLogado === 'diretoria') ? '' : 'none';
 if (ramoSwitch) ramoSwitch.style.display = (vePrimeiraSecao || temDuas) ? '' : 'none';
 const ramoPref = (function(){ try { return localStorage.getItem('escoteira_ramoAtivo') || 'escoteira'; } catch(e){ return 'escoteira'; } })();
-mudarRamo(vePrimeiraSecao || temDuas ? ramoPref : tropaDoChefeLogado);
+mudarRamo(vePrimeiraSecao || temDuas ? ramoPref : (tropaDoChefeLogado || tropa2DoChefeLogado));
 }
 
 async function tentarLoginTela() {
