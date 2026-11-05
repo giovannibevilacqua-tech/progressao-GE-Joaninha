@@ -744,6 +744,7 @@ REGISTRO ESCOTEIRO
 <div class="conta-barra">
 <span class="conta-barra-registro">👤 <strong id="contaRegistroTxt"></strong></span>
 <button class="conta-barra-btn" id="btnMinhaFormacao" onclick="location.href=V2.pagina('formacao')">🎓 Minha formação</button>
+<button class="conta-barra-btn" id="btnVisaoPropriaTopo" style="display:none;" onclick="alternarVisaoPropria()">👁 Só minhas seções</button>
 <button class="conta-barra-btn" id="btnAdminVolta" style="display:none;" onclick="pedirSenhaModoAdmin()">🔑 Admin</button>
 <button class="conta-barra-btn somente-admin" id="btnHistorico" onclick="abrirHistorico()">📜 Histórico</button>
 <button class="conta-barra-btn somente-admin" id="btnImportarPaxtu" onclick="ImportarPaxtu.abrir()">📥 Importar PAXTU</button>
@@ -1310,6 +1311,7 @@ const SECOES = { alcateia:   { pagina: 'alcateia', frame: 'iframeAlcateia', box:
 let visaoPropria = (function () { try { return localStorage.getItem('visaoPropriaAdmin') === '1'; } catch (e) { return false; } })();
 function verTudo() { return !!souAdmin && !(visaoPropria && (tropaDoChefeLogado || tropa2DoChefeLogado)); }
 function alternarVisaoPropria() {
+  if (!visaoPropria && !(tropaDoChefeLogado || tropa2DoChefeLogado)) { alert('Você ainda não tem uma seção própria definida. Em Gerenciar Chefes, defina a sua seção para usar essa visão.'); return; }
   visaoPropria = !visaoPropria;
   try { localStorage.setItem('visaoPropriaAdmin', visaoPropria ? '1' : '0'); } catch (e) {}
   aplicarVisibilidadeSecoes();
@@ -1445,6 +1447,7 @@ aplicarVisibilidadeSecoes();
 function aplicarVisibilidadeSecoes() {
 const btnVolta = document.getElementById('btnAdminVolta');
 if (btnVolta) btnVolta.style.display = (souAdmin && !verTudo()) ? '' : 'none';
+const btnVP = document.getElementById('btnVisaoPropriaTopo'); if (btnVP) btnVP.style.display = (souAdmin && verTudo()) ? '' : 'none';
 document.body.classList.toggle('eh-admin', verTudo());
 aplicarBarraBackup();
 // Restrição de acesso por seção

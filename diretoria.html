@@ -90,7 +90,7 @@ async function iniciarSecao() {
     document.body.innerHTML = '<div style="padding:40px 20px;text-align:center;font-family:sans-serif;color:#666;"><div style="font-size:34px;margin-bottom:10px;">⚜</div><div style="font-weight:700;margin-bottom:6px;">Sem acesso a esta seção</div><div style="font-size:13px;">Entre pela página inicial do sistema com uma conta que tenha acesso.</div></div>';
     return;
   }
-  try { const P = window.parent; if (P !== window) { const e = P.estadoAdminParaSecoes(); if (e.admin) { document.getElementById('btnGerChefes').style.display = ''; if (e.propria) document.getElementById('btnVisaoPropria').style.display = ''; } } } catch (e) {}
+  try { const P = window.parent; if (P !== window) { const e = P.estadoAdminParaSecoes(); if (e.admin) { document.getElementById('btnGerChefes').style.display = ''; document.getElementById('btnVisaoPropria').style.display = ''; } } } catch (e) {}
   let aba = null; try { aba = localStorage.getItem('aba_' + SECAO); } catch (e) {}
   const btn = document.querySelector('.tab-btn-linha[data-aba="' + aba + '"]') || document.querySelector('.tab-btn-linha');
   mostrarAba(btn.dataset.aba, btn);
