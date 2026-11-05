@@ -388,9 +388,6 @@ mark.hl{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
   <div class="alert">
     Toque em ▶ para abrir um bloco. Marque cada ação feita por lobinho; o bloco se conclui sozinho quando todas as fixas estão feitas e o número de ações variáveis pedido no bloco foi cumprido (ou há uma especialidade/insígnia do bloco). A etapa vem do total de blocos concluídos: <strong>4</strong> = Saltador · <strong>8</strong> = Rastreador · <strong>13</strong> = Caçador · <strong>18</strong> = Cruzeiro do Sul. Os blocos podem ser feitos em qualquer ordem. Salvo automaticamente.
   </div>
-  <div class="modal-row"><label for="selModalidade">Modalidade do grupo</label>
-    <select id="selModalidade" class="f-input" onchange="setModalidade(this.value)"><option value="basica">Básica (sem Ar/Mar)</option><option value="ar">Do Ar ✈️</option><option value="mar">Do Mar ⛵</option></select>
-    <small>As ações marcadas com ✈️ (Ar) ou ⛵ (Mar) só são obrigatórias na modalidade correspondente.</small></div>
 
   <div class="busca-wrap">
     <span class="busca-icon">🔍</span>
@@ -1985,14 +1982,10 @@ function marcarConcluido(bid, yid){
   if (novo === atual) return;
   garantirBloco(bid, 'concluded').concluded[yid] = novo ? 1 : 0;
 }
-function modalidade(){ return CFG.modalidade || 'basica'; }
+function modalidade(){ return 'basica'; } // sem seletor: ações exclusivas de Ar/Mar não entram
 function fixasDe(bl){
   const m = modalidade();
   return bl.fixed.filter(a => !a.modal || a.modal === m).map(a => a.modal ? Object.assign({}, a, {name:(a.modal === 'ar' ? '✈️ ' : '⛵ ') + a.name}) : a);
-}
-function setModalidade(v){
-  CFG.modalidade = v;
-  preservarScroll(renderAll); saveState();
 }
 function variaveisDe(bl){
   const cust = S[bl.id]?.custom || {};

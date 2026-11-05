@@ -88,7 +88,7 @@ async function iniciarSecao() {
 }
 </script>
 <script>
-V2_ALMOX.montar({ secao:'diretoria', nomeTropa:'Diretoria', outraTropa:'', verTudo:true, somenteLeitura:function(){ return true; }, subTitulo:'Visão geral do material de todas as seções (somente leitura). Para editar, abra o almoxarifado da seção.', container:'almox-box', padX:14 });
+V2_ALMOX.montar({ secao:'diretoria', nomeTropa:'Diretoria', outraTropa:'', verTudo:true, subTitulo:'Visão geral do material de todas as seções. A Diretoria pode editar qualquer item; cada seção edita só os seus.', container:'almox-box', padX:14 });
 const ROTULOS = { admin:'⭐ Administrador', escoteira:'🏕️ Tropa Escoteira', senior:'🎓 Tropa Sênior', alcateia:'🐺 Alcateia', cla:'🔥 Clã Pioneiro', diretoria:'🏛️ Diretoria' };
 function escH(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 async function aoAbrirAba(id) {

@@ -54,7 +54,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-11-05c"
+  VERSAO: "2026-11-05d"
 };
 
 /* ============================================================
@@ -1412,12 +1412,15 @@ window.V2_ALMOX = (function () {
     return it.compartilhado === true ? SEC_ALMOX.map(function (s) { return s[0]; }).filter(function (s) { return s !== dono; }) : [];
   }
   function chipsCompartilhar(dono, marcadas, idGrupo) {
-    return '<div class="almo-opt-grupo" id="' + idGrupo + '">' + SEC_ALMOX.filter(function (s) { return s[0] !== dono; }).map(function (s) {
+    return '<div class="almo-opt-grupo" id="' + idGrupo + '">' + SEC_ALMOX.map(function (s) {
+      if (s[0] === dono) return '<button type="button" class="almo-opt ativo" disabled style="opacity:.65;cursor:default;" title="Seção dona do item">' + s[1] + ' ' + s[2] + ' · dona</button>';
       return '<button type="button" class="almo-opt' + (marcadas.indexOf(s[0]) >= 0 ? ' ativo' : '') + '" data-sec="' + s[0] + '" onclick="this.classList.toggle(\'ativo\')">' + s[1] + ' ' + s[2] + '</button>';
     }).join('') + '</div>';
   }
+  // só a seção dona do item e a Diretoria editam; as demais apenas veem
+  function podeEditar(it) { return !soLeitura() && (cfg.secao === 'diretoria' || donoDe(it) === cfg.secao); }
   function lerChips(idGrupo) {
-    return Array.prototype.map.call(document.querySelectorAll('#' + idGrupo + ' .almo-opt.ativo'), function (b) { return b.dataset.sec; });
+    return Array.prototype.map.call(document.querySelectorAll('#' + idGrupo + ' .almo-opt.ativo:not([disabled])'), function (b) { return b.dataset.sec; });
   }
   function rotuloComp() { return cfg.rotuloComp ? esc(cfg.rotuloComp) : 'Compartilhado com ' + esc(cfg.outraTropa); }
   function subComp() { return cfg.subComp ? esc(cfg.subComp) : 'Aparece nos dois painéis'; }
@@ -1610,9 +1613,10 @@ window.V2_ALMOX = (function () {
       if (cfg.verTudo || dono !== cfg.secao) comp += '<span class="almo-badge almo-badge-ind">📍 ' + esc(nomeDe(dono)) + '</span>';
       if (cm.length && (cfg.verTudo || dono === cfg.secao)) comp += '<span class="almo-badge almo-badge-comp">🔗 ' + (todas ? 'Todas as seções' : esc(cm.map(nomeDe).join(', '))) + '</span>';
       else if (!cm.length) comp += '<span class="almo-badge almo-badge-ind">🔒 Só ' + esc(nomeDe(dono)) + '</span>';
-      var qtd = ro ? '<div class="almo-qtd-val" style="margin:0 8px">' + (v.quantidade || 0) + '</div>'
+      var roi = !podeEditar(v);
+      var qtd = roi ? '<div class="almo-qtd-val" style="margin:0 8px">' + (v.quantidade || 0) + '</div>'
         : '<div class="almo-qtd-row"><button class="almo-qtd-btn" onclick="V2_ALMOX.h.atualizarQtd(\'' + esc(id) + '\',-1)">−</button><div class="almo-qtd-val">' + (v.quantidade || 0) + '</div><button class="almo-qtd-btn" onclick="V2_ALMOX.h.atualizarQtd(\'' + esc(id) + '\',1)">+</button></div>';
-      var btns = ro ? '' : (des ? '<button class="almo-del-btn" style="opacity:1" onclick="V2_ALMOX.h.marcarComprado(\'' + esc(id) + '\')" title="Marcar como comprado (vai para o estoque)">✅</button>' : '') +
+      var btns = roi ? '' : (des ? '<button class="almo-del-btn" style="opacity:1" onclick="V2_ALMOX.h.marcarComprado(\'' + esc(id) + '\')" title="Marcar como comprado (vai para o estoque)">✅</button>' : '') +
         '<button class="almo-del-btn" style="opacity:1" onclick="V2_ALMOX.h.editar(\'' + esc(id) + '\')" title="Editar">✏️</button>' +
         '<button class="almo-del-btn" onclick="V2_ALMOX.h.deletar(\'' + esc(id) + '\')" title="Remover">🗑</button>';
       return '<div class="almo-item"><div class="almo-item-dot" style="background:' + esc(t.color) + '"></div><div class="almo-item-body">' +
@@ -1718,28 +1722,27 @@ window.V2_ALMOX = (function () {
       } catch (e) { alert('Erro ao salvar. Verifique a conexão.'); }
     },
     atualizarQtd: async function (id, delta) {
-      if (soLeitura() || !itens[id]) return;
+      if (!itens[id] || !podeEditar(itens[id])) return;
       var nova = Math.max(0, (itens[id].quantidade || 0) + delta);
       itens[id].quantidade = nova; render();
       try { await fetch(url('/' + id), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quantidade: nova }) }); } catch (e) {}
     },
     deletar: async function (id) {
-      if (soLeitura()) return;
+      if (!itens[id] || !podeEditar(itens[id])) return;
       if (!confirm(itens[id] && itens[id].desejo ? 'Remover este item da lista de desejos?' : 'Remover este item do almoxarifado?')) return;
       delete itens[id]; render();
       try { await fetch(url('/' + id), { method: 'DELETE' }); } catch (e) {}
     },
     marcarComprado: async function (id) {
-      if (soLeitura() || !itens[id]) return;
+      if (!itens[id] || !podeEditar(itens[id])) return;
       var quando = new Date().toISOString();
       itens[id].desejo = false; itens[id].compradoEm = quando; render();
       try { await fetch(url('/' + id), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ desejo: false, compradoEm: quando }) }); } catch (e) {}
     },
 
     editar: function (id) {
-      if (soLeitura()) return;
       var it = itens[id];
-      if (!it || $('almoEditOv')) return;
+      if (!it || !podeEditar(it) || $('almoEditOv')) return;
       var des = it.desejo === true;
       var ov = document.createElement('div');
       ov.className = 'almo-cat-ov'; ov.id = 'almoEditOv';
