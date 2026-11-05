@@ -10,10 +10,10 @@
 
   var RAMOS = [
     { id: 'filhotes', nome: 'Filhotes', icone: '🐣' },
-    { id: 'lobinho', nome: 'Lobinho', icone: '🐺' },
+    { id: 'lobinho', nome: 'Lobinho', icone: '🐺', ativo: true, ficha: 'lobinho', frame: 'iframeAlcateia', secao: 'alcateia' },
     { id: 'escoteira', nome: 'Escoteiro', icone: '🏕️', ativo: true, ficha: 'escoteiro', frame: 'iframeEscoteira', secao: 'escoteira' },
     { id: 'senior', nome: 'Sênior', icone: '🎓', ativo: true, ficha: 'senior', frame: 'iframeSenior', secao: 'senior' },
-    { id: 'pioneiro', nome: 'Pioneiro', icone: '🔥' },
+    { id: 'pioneiro', nome: 'Pioneiro', icone: '🔥', ativo: true, ficha: 'pioneiro', frame: 'iframeCla', secao: 'cla' },
     { id: 'dirigente', nome: 'Dirigente', icone: '🏛️' }
   ];
   var BLOCOS = ['Conquistas', 'Especialidades', 'Progressão', 'Condecorações', 'Cursos de formação', 'Atividades', 'Sanções'];
@@ -183,7 +183,7 @@
   }
   async function estadoDaSecao(ramo) {
     var f = $(ramo.frame);
-    if (!f.getAttribute('src')) f.src = root.V2.pagina(ramo.secao === 'senior' ? 'tropa-senior' : 'escoteira');
+    if (!f.getAttribute('src')) f.src = root.V2.pagina({ senior: 'tropa-senior', alcateia: 'alcateia', cla: 'cla-pioneiro' }[ramo.secao] || 'escoteira');
     for (var i = 0; i < 80; i++) {
       var w = f.contentWindow;
       try { if (w && w.paxtuPronto && w.paxtuPronto()) return w; } catch (e) {}
