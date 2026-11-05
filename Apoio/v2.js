@@ -56,7 +56,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-11-06e"
+  VERSAO: "2026-11-06f"
 };
 
 /* ============================================================
@@ -485,6 +485,7 @@ window.V2_CONFIG = {
       get temPendencia() { return !!lerPend(); },
       fechar: function () { fechado = true; try { if (es) es.close(); } catch (e) {} },
       get bloqueado() { return bloqueado; },
+      get carregado() { return carregou; },
       _debug: { get cache() { return cache; }, get base() { return baseFlat; } }
     };
   }

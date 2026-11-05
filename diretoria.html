@@ -182,13 +182,20 @@ function secoesQuadro() {
   document.getElementById('btnRelGrupo').disabled = !SECOES_DIR.every(s => SEC_DADOS[s.id]);
 }
 function lerSecao(s, fr) {
-  const t0 = Date.now();
+  // espera a seção terminar de carregar os dados do banco (senão o relatório sai com os valores iniciais) e os números se estabilizarem
+  const t0 = Date.now(); let ultimo = null, estavel = 0;
   (function tentar() {
-    let r = null;
-    try { if (fr.contentWindow && typeof fr.contentWindow.dadosRelatorioTropa === 'function') r = fr.contentWindow.dadosRelatorioTropa(); } catch (e) { r = null; }
-    const pronto = r && ((r.linhas && r.linhas.length) || Date.now() - t0 > 12000);
-    if (pronto) { SEC_DADOS[s.id] = r; secoesQuadro(); return; }
-    if (Date.now() - t0 > 30000) { SEC_DADOS[s.id] = r || { tropa: s.id, resumo: { jovens: 0, media: '0', total: 0 }, etapas: [], colunas: [], linhas: [] }; secoesQuadro(); return; }
+    let r = null, carregado = false;
+    try {
+      const w = fr.contentWindow;
+      carregado = !!w.eval('typeof __store !== "undefined" && !!__store && __store.carregado === true');
+      if (typeof w.dadosRelatorioTropa === 'function') r = w.dadosRelatorioTropa();
+    } catch (e) { r = null; }
+    const assin = r ? JSON.stringify(r) : null;
+    estavel = assin && assin === ultimo ? estavel + 1 : 0; ultimo = assin;
+    const idade = Date.now() - t0;
+    if (r && ((carregado && estavel >= 2) || idade > 20000)) { SEC_DADOS[s.id] = r; secoesQuadro(); return; }
+    if (idade > 30000) { SEC_DADOS[s.id] = r || { tropa: s.id, resumo: { jovens: 0, media: '0', total: 0 }, etapas: [], colunas: [], linhas: [] }; secoesQuadro(); return; }
     setTimeout(tentar, 500);
   })();
 }
