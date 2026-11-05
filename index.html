@@ -220,6 +220,12 @@ scrollbar-width: thin; scrollbar-color: rgba(0,0,0,.25) transparent;
 .chefe-tag.chefe { background: #1565C033; color: #5C9BE6; }
 .chefe-tag.ass { background: #E67E2233; color: #E69A4D; }
 .chefe-tag.adm { background: #D4A01733; color: #D4A017; }
+.chefe-tag.r-alcateia { background: #F2C300; color: #3a2e00; }
+.chefe-tag.r-escoteira { background: #2E8B57; color: #fff; }
+.chefe-tag.r-senior { background: #7B1E3A; color: #fff; }
+.chefe-tag.r-cla { background: #D32F2F; color: #fff; }
+.chefe-tag.r-diretoria { background: #1F5FBF; color: #fff; }
+.chefe-tag.r-sem { background: #8884; color: var(--muted); }
 .chefe-row-btn.remover { color: #E74C3C; border-color: #F5C6C0; }
 .chefe-row-btn[title="Editar nome"] { padding: 5px 7px; font-size: 12px; }
 .lis-modal-header { position: sticky; top: 0; z-index: 5; background: var(--card); padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
@@ -1124,7 +1130,7 @@ const ehAss = c.funcao === 'assistente';
 const rotSecao = { senior: '🎓 Sênior', alcateia: '🐺 Alcateia', cla: '🔥 Clã Pioneiro', diretoria: '🏛️ Diretoria', escoteira: '🏕️ Escoteira' };
 return `<div class="chefe-row" style="flex-wrap:wrap;gap:6px;">
 <span class="chefe-row-registro" style="flex:1;min-width:120px;">${c.nome ? c.nome : c.registro || uid}${c.nome ? `<br><span style="font-size:10px;font-weight:500;color:var(--muted);">Registro ${c.registro || uid}</span>` : ''}
-<br><span class="chefe-tag ${ehAss ? 'ass' : 'chefe'}">${ehAss ? 'Assistente' : 'Chefe'} · ${secao ? (rotSecao[secao] || secao).replace(/^\S+\s/, '') : 'Sem seção'}</span>${c.tropa2 ? ` <span class="chefe-tag ${c.funcao2 === 'assistente' ? 'ass' : 'chefe'}">${c.funcao2 === 'assistente' ? 'Assistente' : 'Chefe'} · ${(rotSecao[c.tropa2] || c.tropa2).replace(/^\S+\s/, '')}</span>` : ''}${c.admin ? ' <span class="chefe-tag adm">⭐ Admin</span>' : ''}</span>
+<br><span class="chefe-tag r-${secao || 'sem'}">${ehAss ? 'Assistente' : 'Chefe'} · ${secao ? (rotSecao[secao] || secao).replace(/^\S+\s/, '') : 'Sem seção'}</span>${c.tropa2 ? ` <span class="chefe-tag r-${c.tropa2}">${c.funcao2 === 'assistente' ? 'Assistente' : 'Chefe'} · ${(rotSecao[c.tropa2] || c.tropa2).replace(/^\S+\s/, '')}</span>` : ''}${c.admin ? ' <span class="chefe-tag adm">⭐ Admin</span>' : ''}</span>
 <details class="chefe-det" data-k="${uid}:f" ${chefeAbertos.has(uid+":f")?"open":""} ontoggle="chefeToggle(this)"><summary>Seção e função</summary><div class="chefe-det-corpo">
 <div class="func-lista" data-uid="${uid}">
 <div class="func-row" data-i="0"><span class="func-h" title="Arraste para trocar a ordem das funções">⠿</span><span class="func-n">1ª função</span>
