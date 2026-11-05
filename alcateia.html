@@ -390,7 +390,10 @@ mark.hl{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 .roster-row-sr{display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer;border-bottom:1px solid #F0EDE8;}
 .roster-row-sr:last-child{border-bottom:none;}
 .prog-grupo{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;padding:6px 10px;border-left:4px solid;margin:12px 0 4px;border-radius:0 6px 6px 0;background:rgba(127,127,127,.08);}
-select option,select optgroup{background:#fff;color:#222;}
+body.modo-view .tab-btn:not([data-tab=cal]):not([data-tab=ciclo]){display:none;}
+body.modo-view .save-bar{display:none !important;}
+body.modo-view #cal > div > *:not(#cal-lista){display:none !important;}
+body.modo-view{padding-bottom:12px;}
 </style>
 <script src="Apoio/v2.js"></script>
 </head>
@@ -1870,6 +1873,7 @@ function renderAllTabs(){ renderAll(); renderCal(); renderCiclo(); renderJovens(
 // ╚═══════════════════════════════════════════════════╝
 const DB_URL = "https://joaninha-progressao-default-rtdb.firebaseio.com";
 const SECAO = "alcateia";
+const MODO_VIEW = new URLSearchParams(location.search).get('view') === '1';
 const V2_NODE = "alcateia"; // dados ficam em /v2/alcateia
 let firebaseAuthToken = null, firebaseRefreshToken = null, firebaseUid = null, registroLogado = null;
 let souAdmin = false, nomeLogado = '', tropaDoChefeLogado = null;
@@ -2279,6 +2283,7 @@ function cicloAtualResumo() {
   return { titulo: s.titulo, periodo: fmtPeriodoCiclo(s), blocos: s.blocos.filter(Boolean).map(id => { const b = BLOCKS.find(x => x.id === id); return b ? { nome: b.name, cor: (EIXOS[b.eixo] || {}).cor || '#666', feitos: JOVENS.filter(y => isConcluido(id, y)).length, total: JOVENS.length } : null; }).filter(Boolean) };
 }
 function cicloCard(s) {
+  if (MODO_VIEW) return cicloCardView(s);
   const aberto = !!cicloAbertos[s.key], ed = cicloEditando === s.key;
   const grad = 'background:linear-gradient(135deg,' + s.cor1 + ',' + s.cor2 + ');';
   let h = '<div class="sem-section" style="margin-top:14px;">';
@@ -2315,9 +2320,58 @@ function cicloCard(s) {
 }
 function renderCiclo() {
   const c = document.getElementById('ciclo-content'); if (!c) return;
-  c.innerHTML = CICLO_SEM.map(cicloCard).join('') + '<button class="btn-sec" style="display:block;width:calc(100% - 24px);margin:16px 12px 24px;padding:12px;font-size:13px;font-weight:700;text-align:center;" onclick="cicloNovo()">+ Adicionar novo semestre</button>';
+  c.innerHTML = CICLO_SEM.map(cicloCard).join('') + (MODO_VIEW ? '' : '<button class="btn-sec" style="display:block;width:calc(100% - 24px);margin:16px 12px 24px;padding:12px;font-size:13px;font-weight:700;text-align:center;" onclick="cicloNovo()">+ Adicionar novo semestre</button>');
 }
 
+/* ---------- Modo visualização (?view=1): só calendário e ciclo, sem login e sem dados de jovens ---------- */
+const CAMPOS_PUBLICOS_VIEW = ['eventos', 'CAL_EXTRAS', 'CICLO_SEM', 'cicloAbertos'];
+async function iniciarVisualizacao() {
+  document.body.classList.add('modo-view');
+  let dados = null, falhou = false;
+  try { dados = await V2.lerCamposPublicos(V2_NODE, CAMPOS_PUBLICOS_VIEW); } catch (e) { console.error('Visualização: falha ao carregar:', e); falhou = true; }
+  YOUTH_DATA = []; syncJovens();
+  aplicarDados(dados || {});
+  __store = { salvar: () => Promise.reject(new Error('Visualização somente leitura.')), offline: false };
+  renderCalView(); renderCiclo();
+  if (falhou) { const l = $('cal-lista'); if (l) l.innerHTML = '<div class="cla-vazio">Não foi possível carregar os dados agora. Tente atualizar a página em instantes.</div>'; }
+  const btn = document.querySelector('.tab-btn[data-tab="cal"]'); showTab('cal', btn);
+}
+function renderCalView() {
+  const list = $('cal-lista'); if (!list) return; list.innerHTML = '';
+  const evs = eventosOrdenados();
+  if (!evs.length) { list.innerHTML = '<div class="cla-vazio"><span class="ico">📅</span>Nenhuma atividade cadastrada ainda.</div>'; return; }
+  let mesAtual = '';
+  evs.forEach(ev => {
+    const d = new Date((ev.dataISO || '') + 'T12:00:00'), valida = !isNaN(d), mes = valida ? ev.dataISO.slice(0, 7) : 'sem-data';
+    if (mes !== mesAtual) { mesAtual = mes; const h = document.createElement('div'); h.className = 'cal-section-hdr'; h.style.marginTop = list.children.length ? '20px' : ''; h.textContent = '📅 ' + (valida ? d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }) : 'Sem data'); list.appendChild(h); }
+    const fmt = ev.fmt || 'C', itens = Array.isArray(ev.itens) ? ev.itens : Object.values(ev.itens || {});
+    const tags = itens.map(b => getBlock(b)).filter(Boolean).map(b => '<span class="bloco-tag">📌 ' + esc(b.name) + '</span>').join('');
+    const ex = (CAL_EXTRAS && CAL_EXTRAS[ev.id]) || {}, lk = linkSeguro(ex.link);
+    const card = document.createElement('div'); card.className = 'cal-card'; card.style.cssText = 'flex-direction:column;margin:0 12px 8px';
+    card.innerHTML = '<div style="display:flex;"><div class="cal-strip strip-normal"><div class="strip-day" style="font-size:18px">' + (valida ? String(d.getDate()).padStart(2, '0') : '--') + '</div><div class="strip-mon">' + (valida ? d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '').toUpperCase() : '') + '</div></div>' +
+      '<div class="cal-body" style="flex:1;"><div style="font-size:12px;font-weight:800;color:var(--vinho);margin-bottom:3px;">' + (ev.externa ? '<span class="externa-badge-sr">🌍 Externa</span>' : '') + esc(ev.nome) + '</div>' +
+      (ev.local ? '<div style="font-size:10px;color:var(--muted);margin-bottom:2px;">📍 ' + esc(ev.local) + '</div>' : '') +
+      (ev.responsavel ? '<div style="font-size:10px;color:var(--muted);margin-bottom:4px;">👤 ' + esc(ev.responsavel) + '</div>' : '') +
+      '<div class="cal-meta"><span class="fmt-badge fmt-' + (FMT_CLASSE[fmt] || 'T') + '" title="' + esc(FMT_NOME[fmt] || '') + '">' + esc(fmt) + '</span>' + tags + '</div>' +
+      (ev.txt ? '<div class="cal-text">' + esc(ev.txt) + '</div>' : '') +
+      (lk ? '<a class="evento-link-sr" href="' + esc(lk) + '" target="_blank" rel="noopener" style="display:inline-block;margin-top:6px;">🔗 Abrir link</a>' : '') +
+      (ex.resposta ? '<div class="cal-text" style="margin-top:6px;border-left:3px solid var(--vinho);padding-left:8px;">💬 ' + esc(ex.resposta) + '</div>' : '') + '</div></div>';
+    list.appendChild(card);
+  });
+}
+function cicloCardView(s) {
+  const aberto = !!cicloAbertos[s.key];
+  let h = '<div class="sem-section" style="margin-top:14px;"><div class="sem-header" style="background:linear-gradient(135deg,' + s.cor1 + ',' + s.cor2 + ');border-radius:' + (aberto ? 'var(--r) var(--r) 0 0' : 'var(--r)') + ';cursor:pointer;position:relative;" onclick="cicloToggle(\'' + s.key + '\')"><h3 style="padding-right:30px;">📅 ' + esc(s.titulo) + '</h3><div class="period">' + fmtPeriodoCiclo(s) + '</div><span style="position:absolute;top:11px;right:12px;color:#fff;font-size:13px;transform:rotate(' + (aberto ? 180 : 0) + 'deg);">▾</span></div>';
+  if (aberto) {
+    const ext = eventosOrdenados().filter(e => e.externa && (!s.ini || e.dataISO >= s.ini) && (!s.fim || e.dataISO <= s.fim));
+    h += '<div class="sem-body"><div class="section-label" style="margin-bottom:7px;">Blocos-foco do semestre</div><div class="sem-blocks">' +
+      (s.blocos.filter(Boolean).map(id => { const b = BLOCKS.find(x => x.id === id); if (!b) return ''; const cor = (EIXOS[b.eixo] || {}).cor || '#666'; return '<div class="sem-block-row" style="background:' + cor + '16;border-left:4px solid ' + cor + ';"><span class="sem-block-name">' + esc(b.name) + '</span></div>'; }).join('') || '<div style="font-size:11px;color:var(--muted);">Nenhum bloco definido ainda.</div>') + '</div>' +
+      '<div class="sem-special"><div class="section-label" style="margin-bottom:7px;">📍 Atividades externas</div>' +
+      (ext.length ? ext.map(e => '<div class="sem-special-item"><span class="sem-special-icon">📍</span><div><strong>' + new Date(e.dataISO + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) + ':</strong> ' + esc(e.nome) + '</div></div>').join('') : '<div style="font-size:11px;color:var(--muted);">Nenhuma atividade externa marcada neste período.</div>') + '</div>' +
+      (s.metas.length ? '<div class="milestone-box"><div class="section-label" style="margin-bottom:7px;">Metas</div>' + s.metas.map(m => '<div class="milestone-item"><span class="milestone-star">' + esc(m.icone) + '</span><div style="flex:1;">' + esc(m.texto) + '</div></div>').join('') + '</div>' : '') + '</div>';
+  }
+  return h + '</div>';
+}
 function getExtra(eid){ if (!CAL_EXTRAS[eid]) CAL_EXTRAS[eid] = {link:'', resposta:''}; return CAL_EXTRAS[eid]; }
 function salvarLinkEvento(eid, v){ getExtra(eid).link = v; saveState(); }
 function salvarRespostaEvento(eid, v){ getExtra(eid).resposta = v; saveState(); }
@@ -2918,6 +2972,7 @@ function restaurarUltimaAba(){
   if (btn.dataset.tab === 'alm') V2_ALMOX.abrir();
 }
 async function iniciarApp(){
+  if (MODO_VIEW) return iniciarVisualizacao();
   await loadState();
   syncJovens();
   V2_ALMOX.montar({ secao:'alcateia', nomeTropa:'Alcateia', outraTropa:'as outras seções', rotuloComp:'Compartilhado com as outras seções', subComp:'Aparece no almoxarifado de todas as seções', subTitulo:'Materiais do Alcateia. Itens compartilhados aparecem também nas outras seções.', container:'alm', padX:12 });

@@ -64,6 +64,14 @@ try {
   };
   window.icoTxt = { alcateia: '🐺', escoteira: '⚜️', senior: '🧭', cla: '🦉', diretoria: '\uD83E\uDEA2' };
   window.icoCor = COR;
+  // Listas de seleção legíveis mesmo com extensões de modo escuro (o texto das opções ficava claro sobre fundo claro ou fora da caixa)
+  if (typeof document !== 'undefined') {
+    (function () {
+      var st = document.createElement('style');
+      st.textContent = 'select{color-scheme:light;} select option,select optgroup{background:#fff !important;color:#222 !important;}';
+      (document.head || document.documentElement).appendChild(st);
+    })();
+  }
   if (typeof document !== 'undefined') {
     var preencher = function () { Array.prototype.forEach.call(document.querySelectorAll('[data-ico]'), function (e) { if (!e.firstChild) e.innerHTML = window.icoRamo(e.getAttribute('data-ico')); }); };
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', preencher); else preencher();
@@ -97,7 +105,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-11-06t"
+  VERSAO: "2026-11-06v"
 };
 
 /* ============================================================

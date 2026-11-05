@@ -131,6 +131,23 @@ background: #FAFAF8; cursor: pointer; font-size: 12px; font-weight: 800; color: 
 .secao-label-view { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); margin-bottom: 7px; }
 .meta-item-view { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 12px; border-bottom: 1px solid #F5F2EE; }
 .meta-item-view:last-child { border-bottom: none; }
+
+.modal-secao-view { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 16px; }
+.modal-secao-view.aberto { display: flex; }
+.modal-secao-box { background: var(--card); color: var(--text); border-radius: 16px; padding: 22px 18px; width: 100%; max-width: 420px; max-height: 92vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,.35); }
+.modal-secao-box h2 { font-size: 18px; font-weight: 800; text-align: center; }
+.modal-secao-sub { font-size: 12px; color: var(--muted); text-align: center; margin: 6px 0 16px; line-height: 1.5; }
+.modal-secao-lista { display: flex; flex-direction: column; gap: 10px; }
+.sec-opcao { display: flex; align-items: center; gap: 10px; padding: 15px 14px; border-radius: 12px; border: 2px solid var(--text); background: #F5F3EF; color: #1A1A1A; font-size: 14px; font-weight: 800; cursor: pointer; text-align: left; width: 100%; }
+.sec-opcao .sec-marca { margin-left: auto; font-size: 16px; opacity: 0; }
+.sec-opcao.sel { background: var(--vinho); color: #fff; border-color: var(--vinho); }
+.sec-opcao.sel .sec-marca { opacity: 1; }
+.modal-secao-multi { display: flex; align-items: center; gap: 8px; margin-top: 16px; font-size: 12px; font-weight: 700; cursor: pointer; }
+.modal-secao-aviso { margin-top: 10px; background: #FFF9E6; border-left: 4px solid #F0B429; border-radius: 0 10px 10px 0; padding: 10px 12px; font-size: 11px; color: #7A5A00; line-height: 1.5; }
+.btn-ver-secoes { margin-top: 14px; width: 100%; padding: 13px; border: none; border-radius: 12px; background: var(--vinho); color: #fff; font-size: 14px; font-weight: 800; cursor: pointer; }
+.btn-ver-secoes:disabled { opacity: .45; cursor: not-allowed; }
+.ramo-switch { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
+.ramo-btn.trocar { background: transparent; border-style: dashed; font-size: 12px; }
 </style>
 <script src="Apoio/v2.js"></script>
 <script>const { EIXOS, BLOCOS, BLOCO_IDS } = window.V2_BLOCOS;</script>
@@ -143,16 +160,13 @@ background: #FAFAF8; cursor: pointer; font-size: 12px; font-weight: 800; color: 
 <header class="header">
 <div class="header-flor">⚜</div>
 <h1>PROGRESSÃO JOVENS<br>GE JOANINHA</h1>
-<div class="sub">Tropa Escoteira e Tropa Sênior — Visualização</div>
+<div class="sub">Calendário e ciclo de programa — Visualização</div>
 <div class="badge-view">🔒 Modo somente leitura</div>
 </header>
 
-<div class="ramo-switch">
-<button class="ramo-btn active" id="ramoBtnEscoteiraView" onclick="mudarRamoView('escoteira')"><span data-ico="escoteira"></span> Tropa Escoteira</button>
-<button class="ramo-btn" id="ramoBtnSeniorView" onclick="mudarRamoView('senior')"><span data-ico="senior"></span> Tropa Sênior</button>
-</div>
+<div class="ramo-switch" id="ramoSwitchView"></div>
 
-<nav class="tabs-linha" id="tabsLinhaView">
+<nav class="tabs-linha" id="tabsLinhaView" style="display:none;">
 <button class="tab-btn-linha active" id="tabCalView" onclick="mudarPaginaView('calendario')">📅 Calendário</button>
 <button class="tab-btn-linha" id="tabCicloView" onclick="mudarPaginaView('ciclo')">🔄 Ciclo de Programa</button>
 </nav>
@@ -168,9 +182,21 @@ background: #FAFAF8; cursor: pointer; font-size: 12px; font-weight: 800; color: 
 <div id="listaCicloView"></div>
 </div>
 
-<div id="pagina-senior-view" style="display:none;">
-<iframe id="iframeSeniorView" style="width:100%;border:none;display:block;" title="Tropa Sênior — Visualização"></iframe>
+<div id="pagina-secao-view" style="display:none;">
+<iframe id="iframeSecaoView" style="width:100%;border:none;display:block;" title="Seção — Visualização"></iframe>
 </div>
+
+<div class="modal-secao-view" id="modalSecaoView">
+<div class="modal-secao-box">
+<h2>Qual a seção do seu filho?</h2>
+<p class="modal-secao-sub" id="modalSecaoSub">Toque na seção para ver o calendário e o ciclo de programa.</p>
+<div class="modal-secao-lista" id="modalSecaoLista"></div>
+<label class="modal-secao-multi"><input type="checkbox" id="chkMultiSecao" onchange="alternarMultiSecao()"> Tenho filhos em mais de uma seção</label>
+<div class="modal-secao-aviso" id="avisoMultiSecao" style="display:none;">⚠️ Marque somente as seções em que você realmente tem filho(a), para ver só as informações que interessam a você.</div>
+<button class="btn-ver-secoes" id="btnVerSecoes" style="display:none;" onclick="confirmarSecoes()" disabled>Ver seções escolhidas</button>
+</div>
+</div>
+
 
 <script>
 // ── Dados base ───────────────────────────────────────────
@@ -210,15 +236,6 @@ return;
 }
 renderCalendarioVisualizacao();
 renderCicloVisualizacao();
-let ramoSalvoView = null;
-try { ramoSalvoView = localStorage.getItem('visualizacao_ramoAtivo'); } catch (e) {}
-mudarRamoView(ramoSalvoView === 'senior' ? 'senior' : 'escoteira');
-if (ramoSalvoView !== 'senior') {
-let paginaSalvaView = null;
-try { paginaSalvaView = localStorage.getItem('visualizacao_paginaAtiva'); } catch (e) {}
-if (paginaSalvaView && paginaSalvaView !== 'calendario') mudarPaginaView(paginaSalvaView);
-}
-restaurarScrollSalvoView('visualizacao_scrollY');
 }
 
 let scrollSaveTimerView = null;
@@ -239,7 +256,7 @@ if (isNaN(y)) return;
 }
 
 function ajustarAlturaIframeSeniorView() {
-const iframe = document.getElementById('iframeSeniorView');
+const iframe = document.getElementById('iframeSecaoView');
 if (!iframe || iframe.offsetParent === null) return;
 const topo = iframe.getBoundingClientRect().top;
 const altura = window.innerHeight - topo;
@@ -247,24 +264,75 @@ iframe.style.height = Math.max(altura, 320) + 'px';
 }
 window.addEventListener('resize', ajustarAlturaIframeSeniorView);
 
+// ── Escolha da(s) seção(ões) do filho ──
+const SECOES_VIEW = [
+{ id: 'alcateia', nome: 'Alcateia', pagina: 'alcateia' },
+{ id: 'escoteira', nome: 'Tropa Escoteira', pagina: null },
+{ id: 'senior', nome: 'Tropa Sênior', pagina: 'tropa-senior' },
+{ id: 'cla', nome: 'Clã Pioneiro', pagina: 'cla-pioneiro' }
+];
+let secoesEscolhidasView = [];
+let multiSecaoView = false;
+let secaoAtivaView = null;
+function abrirEscolhaSecao() {
+multiSecaoView = false; secoesEscolhidasView = [];
+document.getElementById('chkMultiSecao').checked = false;
+atualizarModalSecao();
+document.getElementById('modalSecaoView').classList.add('aberto');
+}
+function alternarMultiSecao() {
+multiSecaoView = document.getElementById('chkMultiSecao').checked;
+secoesEscolhidasView = [];
+atualizarModalSecao();
+}
+function atualizarModalSecao() {
+document.getElementById('modalSecaoLista').innerHTML = SECOES_VIEW.map(s => `<button type="button" class="sec-opcao${secoesEscolhidasView.includes(s.id) ? ' sel' : ''}" onclick="clicarSecaoView('${s.id}')"><span>${window.icoRamo(s.id)}</span><span>${s.nome}</span><span class="sec-marca">✓</span></button>`).join('');
+document.getElementById('avisoMultiSecao').style.display = multiSecaoView ? '' : 'none';
+const btn = document.getElementById('btnVerSecoes');
+btn.style.display = multiSecaoView ? '' : 'none';
+btn.disabled = !secoesEscolhidasView.length;
+document.getElementById('modalSecaoSub').textContent = multiSecaoView ? 'Marque as seções e toque em "Ver seções escolhidas".' : 'Toque na seção para ver o calendário e o ciclo de programa.';
+}
+function clicarSecaoView(id) {
+if (!multiSecaoView) { secoesEscolhidasView = [id]; confirmarSecoes(); return; }
+secoesEscolhidasView = secoesEscolhidasView.includes(id) ? secoesEscolhidasView.filter(x => x !== id) : secoesEscolhidasView.concat(id);
+atualizarModalSecao();
+}
+function confirmarSecoes() {
+if (!secoesEscolhidasView.length) return;
+document.getElementById('modalSecaoView').classList.remove('aberto');
+const ordem = SECOES_VIEW.map(s => s.id).filter(id => secoesEscolhidasView.includes(id));
+secoesEscolhidasView = ordem;
+renderSwitchSecoesView();
+mudarRamoView(ordem[0]);
+}
+function renderSwitchSecoesView() {
+const sw = document.getElementById('ramoSwitchView');
+const botoes = secoesEscolhidasView.map(id => { const s = SECOES_VIEW.find(x => x.id === id); return `<button class="ramo-btn${id === secaoAtivaView ? ' active' : ''}" onclick="mudarRamoView('${id}')"><span>${window.icoRamo(id)}</span> ${s.nome}</button>`; });
+botoes.push('<button class="ramo-btn trocar" onclick="abrirEscolhaSecao()">↩ Trocar seção</button>');
+sw.innerHTML = botoes.join('');
+}
+
 function mudarRamoView(r) {
-document.getElementById('ramoBtnEscoteiraView').classList.toggle('active', r === 'escoteira');
-document.getElementById('ramoBtnSeniorView').classList.toggle('active', r === 'senior');
-document.getElementById('tabsLinhaView').style.display = r === 'escoteira' ? '' : 'none';
-document.getElementById('pagina-calendario-view').style.display = r === 'escoteira' ? '' : 'none';
-document.getElementById('pagina-ciclo-view').style.display = r === 'escoteira' ? '' : 'none';
-document.getElementById('pagina-senior-view').style.display = r === 'senior' ? '' : 'none';
-document.documentElement.style.overflow = r === 'senior' ? 'hidden' : '';
-document.body.style.overflow = r === 'senior' ? 'hidden' : '';
-try { localStorage.setItem('visualizacao_ramoAtivo', r); } catch (e) {}
+secaoAtivaView = r;
+const nativa = r === 'escoteira';
+renderSwitchSecoesView();
+document.getElementById('tabsLinhaView').style.display = nativa ? '' : 'none';
+document.getElementById('pagina-calendario-view').style.display = nativa ? '' : 'none';
+document.getElementById('pagina-ciclo-view').style.display = nativa ? '' : 'none';
+document.getElementById('pagina-secao-view').style.display = nativa ? 'none' : '';
+document.documentElement.style.overflow = nativa ? '' : 'hidden';
+document.body.style.overflow = nativa ? '' : 'hidden';
 window.scrollTo(0, 0);
-if (r === 'senior') {
-const iframe = document.getElementById('iframeSeniorView');
-if (!iframe.src) iframe.src = V2.pagina('tropa-senior', 'view=1');
+if (nativa) {
+mudarPaginaView('calendario');
+} else {
+const sec = SECOES_VIEW.find(x => x.id === r);
+const iframe = document.getElementById('iframeSecaoView');
+const alvo = V2.pagina(sec.pagina, 'view=1');
+if (iframe.getAttribute('data-sec') !== r) { iframe.setAttribute('data-sec', r); iframe.src = alvo; }
 requestAnimationFrame(ajustarAlturaIframeSeniorView);
 setTimeout(ajustarAlturaIframeSeniorView, 50);
-} else if (r === 'escoteira') {
-mudarPaginaView('calendario');
 }
 }
 
@@ -463,6 +531,7 @@ observer.observe(sentinela);
 iniciarObservadorHeaderCompactoView();
 
 carregarDadosView();
+abrirEscolhaSecao();
 </script>
 
 </body>
