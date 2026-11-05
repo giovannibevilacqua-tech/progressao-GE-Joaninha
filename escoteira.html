@@ -445,6 +445,24 @@ body:not(.eh-admin) .somente-admin { display: none !important; }
 .sbar-btn.prim { background: rgba(255,255,255,.92); color: var(--azul); }
 .sbar-btn.prim:hover { background: #fff; }
 .tabs-linha.compacto .tab-btn-linha { padding: 9px 6px; }
+.progress-section { margin: 12px 14px 0; background: var(--card); border-radius: var(--r); padding: 13px 13px 9px; box-shadow: var(--shadow); }
+.section-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 11px; }
+.prog-row { margin-bottom: 9px; cursor: pointer; }
+.prog-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; gap: 8px; }
+.prog-name { font-size: 12px; font-weight: 700; }
+.prog-etapa { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; white-space: nowrap; }
+.prog-track { background: #EEEBE7; border-radius: 20px; height: 9px; overflow: hidden; }
+.prog-bar { height: 100%; border-radius: 20px; transition: width .5s ease; }
+.prog-hint { font-size: 10px; color: var(--muted); margin-top: 7px; line-height: 1.5; border-top: 1px solid var(--border); padding-top: 7px; }
+.etapa-seg { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
+.etapa-pill { font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 20px; border: 1px solid; white-space: nowrap; }
+.lis-card { background: var(--card); border-radius: var(--r); box-shadow: var(--shadow); padding: 12px 13px; margin: 0 14px 10px; border-left: 5px solid var(--border); }
+.lis-card-topo { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.lis-card-nome { font-size: 13px; font-weight: 800; }
+.lis-pills { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.lis-pill { font-size: 9px; font-weight: 800; padding: 3px 9px; border-radius: 20px; }
+.lis-pill.ok { background: #27AE6022; color: #1E8449; }
+.lis-pill.pend { background: #95A5A622; color: #7F8C8D; }
 
 .campo-label { font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; display: block; margin-bottom: 4px; }
 .campo-input {
@@ -671,7 +689,9 @@ mark.hl-esc{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 <nav class="tabs-linha" id="tabsLinha">
 <button class="tab-btn-linha active" id="tabTabela" onclick="mudarPagina('tabela')">⚡ Progressão</button>
 <button class="tab-btn-linha" id="tabCalendario" onclick="mudarPagina('calendario')">📅 Calendário</button>
+<button class="tab-btn-linha" id="tabJovens" onclick="mudarPagina('jovens')">🏕️ Jovens</button>
 <button class="tab-btn-linha" id="tabCiclo" onclick="mudarPagina('ciclo')">🔄 Ciclo</button>
+<button class="tab-btn-linha" id="tabLis" onclick="mudarPagina('lis')">🏅 Lis de Ouro</button>
 <button class="tab-btn-linha" id="tabAlmoxarifado" onclick="mudarPagina('almoxarifado')">📦 Almoxarifado</button>
 </nav>
 </div>
@@ -681,8 +701,7 @@ mark.hl-esc{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 <div id="pagina-tabela" style="display:none;">
 
 <div class="alert">
-Toque num jovem para abrir a ficha dele. Dentro de cada bloco, marque as ações fixas (todas são obrigatórias, quando houver)
-e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco fecha ✓ sozinho quando as duas metas forem batidas.
+Toque em ▶ para abrir um bloco. Marque cada ação feita por jovem; o bloco se conclui sozinho quando todas as fixas estão feitas e o mínimo de variáveis do bloco foi cumprido (ou há uma especialidade). A etapa vem do total de blocos concluídos: <strong>4</strong> = Trilha · <strong>8</strong> = Rumo · <strong>13</strong> = Travessia · <strong>18</strong> = Lis de Ouro. Salvo automaticamente.
 </div>
 
 <div class="busca-wrap-esc">
@@ -696,7 +715,30 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 </div>
 <div class="busca-results-esc" id="buscaResultsEsc"></div>
 <div id="topoTabela">
+<div class="progress-section">
+<div class="section-label">Progresso por jovem</div>
+<div id="pbars"></div>
+<div class="prog-hint">Pistas: 0–3 blocos &nbsp;|&nbsp; Trilha: 4–7 &nbsp;|&nbsp; Rumo: 8–12 &nbsp;|&nbsp; Travessia: 13–17 &nbsp;|&nbsp; 18 blocos concluídos = Lis de Ouro. Toque em um jovem para abrir a ficha.</div>
+</div>
 <button type="button" class="btn-secundario" id="btnRelatorioTropa" style="width:calc(100% - 28px);margin:10px 14px;padding:12px;font-weight:700;" onclick="relatorioTropa()">📄 Relatório da tropa</button>
+
+<div id="resumoContainer"></div>
+<div style="margin:14px 14px 0;position:relative;">
+<label class="campo-label">🔎 Destacar jovens na tabela</label>
+<input type="text" class="campo-input" id="filtroJovemPBInput" placeholder="Digite um nome..." autocomplete="off" oninput="autocompleteJovemPB(this.value)" onfocus="autocompleteJovemPB(this.value)" onkeydown="if(event.key==='Enter')adicionarPrimeiraSugestaoPB()">
+<div id="autocompleteJovemPBList" class="autocomplete-lista-pb" style="display:none;"></div>
+<div id="chipsJovemPB" class="chips-jovem-pb"></div>
+<div id="indicadorDestaquePB" class="indicador-destaque-pb" style="display:none;"></div>
+</div>
+</div>
+<div id="blocosPorEixoContainer"></div>
+</div>
+
+<div id="pagina-jovens" style="display:none;">
+
+<div class="alert">
+Toque num jovem para abrir a ficha dele. A barra de cor mostra o tempo até a transferência para a Tropa Sênior (aos 14 anos e 6 meses); no fim dela o jovem faz o Caminho. Arraste um jovem para outra patrulha para mudá-lo de lugar.
+</div>
 
 <div class="roster-section" style="padding:0;overflow:hidden;">
 <div class="bloco-head aberto cabecalho-secao" id="cabecalhoPatrulhas" style="padding:14px;" onclick="togglePatrulhasSecao()">
@@ -739,16 +781,14 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 </div>
 </div>
 
-<div id="resumoContainer"></div>
-<div style="margin:14px 14px 0;position:relative;">
-<label class="campo-label">🔎 Destacar jovens na tabela</label>
-<input type="text" class="campo-input" id="filtroJovemPBInput" placeholder="Digite um nome..." autocomplete="off" oninput="autocompleteJovemPB(this.value)" onfocus="autocompleteJovemPB(this.value)" onkeydown="if(event.key==='Enter')adicionarPrimeiraSugestaoPB()">
-<div id="autocompleteJovemPBList" class="autocomplete-lista-pb" style="display:none;"></div>
-<div id="chipsJovemPB" class="chips-jovem-pb"></div>
-<div id="indicadorDestaquePB" class="indicador-destaque-pb" style="display:none;"></div>
 </div>
+
+<div id="pagina-lis" style="display:none;">
+
+<div class="alert">
+🏅 <strong>Reconhecimento Lis de Ouro</strong> — requer os 18 blocos concluídos, o Desafio Pessoal, a autoavaliação e a avaliação dos pares. Toque em um jovem para registrar cada parte.
 </div>
-<div id="blocosPorEixoContainer"></div>
+<div id="listaLis" style="margin-top:12px;"></div>
 </div>
 
 <div id="pagina-calendario" style="display:none;">
@@ -1073,6 +1113,7 @@ function aplicarDadosEscoteira(dados, primeira) {
       if (paginaAtiva === 'tabela') atualizarTabelaBloco();
       if (paginaAtiva === 'calendario') renderPaginaCalendario();
       if (paginaAtiva === 'ciclo') renderPaginaCiclo();
+      if (paginaAtiva === 'lis') renderPaginaLis();
     });
   }
 }
@@ -2234,21 +2275,21 @@ if (card) card.classList.toggle('open');
 // ===== PÁGINA 2: TABELA POR BLOCO =====
 let paginaAtiva = 'tabela';
 
+const PAGINAS_ESC = { tabela: ['pagina-tabela', 'tabTabela'], calendario: ['pagina-calendario', 'tabCalendario'], jovens: ['pagina-jovens', 'tabJovens'], ciclo: ['pagina-ciclo', 'tabCiclo'], lis: ['pagina-lis', 'tabLis'], almoxarifado: ['pagina-almoxarifado', 'tabAlmoxarifado'] };
 function mudarPagina(p) {
+if (!PAGINAS_ESC[p]) p = 'tabela';
 paginaAtiva = p;
 try { localStorage.setItem('escoteira_paginaAtiva', p); } catch (e) {}
-document.getElementById('pagina-tabela').style.display = p === 'tabela' ? '' : 'none';
-document.getElementById('pagina-calendario').style.display = p === 'calendario' ? '' : 'none';
-document.getElementById('pagina-ciclo').style.display = p === 'ciclo' ? '' : 'none';
-document.getElementById('pagina-almoxarifado').style.display = p === 'almoxarifado' ? '' : 'none';
-document.getElementById('tabTabela').classList.toggle('active', p === 'tabela');
-document.getElementById('tabCalendario').classList.toggle('active', p === 'calendario');
-document.getElementById('tabCiclo').classList.toggle('active', p === 'ciclo');
-document.getElementById('tabAlmoxarifado').classList.toggle('active', p === 'almoxarifado');
+Object.keys(PAGINAS_ESC).forEach(k => {
+document.getElementById(PAGINAS_ESC[k][0]).style.display = k === p ? '' : 'none';
+document.getElementById(PAGINAS_ESC[k][1]).classList.toggle('active', k === p);
+});
 document.getElementById('btnLimparMarcacoes').style.display = p === 'tabela' ? '' : 'none';
 if (p === 'tabela') renderPaginaTabela();
 if (p === 'calendario') renderPaginaCalendario();
+if (p === 'jovens') renderRoster();
 if (p === 'ciclo') renderPaginaCiclo();
+if (p === 'lis') renderPaginaLis();
 if (p === 'almoxarifado') V2_ALMOX.abrir();
 }
 
@@ -2423,7 +2464,39 @@ _renderPaginaTabelaBase();
 document.querySelectorAll('.actions-table-wrap-pb').forEach((w, i) => { if (xs[i]) w.scrollLeft = xs[i]; });
 if (window.scrollY !== y) window.scrollTo(0, y);
 }
+function renderProgressoJovens() {
+const c = document.getElementById('pbars'); if (!c) return;
+if (!JOVENS.length) { c.innerHTML = '<div style="text-align:center;padding:18px 8px;color:var(--muted);font-size:12px;">Nenhum jovem cadastrado ainda.<br>Cadastre na aba <strong>🏕️ Jovens</strong>.</div>'; return; }
+const lim = [['Pistas', 0, 4, '#27AE60'], ['Trilha', 4, 4, '#D4A017'], ['Rumo', 8, 5, '#1565C0'], ['Travessia', 13, 5, '#E74C3C']];
+c.innerHTML = JOVENS.map(j => {
+const n = countConcluidos(j), et = etapa(n), pct = Math.round(n / 18 * 100);
+const pills = lim.map(([nome, ini, tam, cor]) => `<span class="etapa-pill" style="color:${cor};border-color:${cor};background:${cor}12">${nome} ${Math.max(0, Math.min(tam, n - ini))}/${tam}</span>`).join('');
+return `<div class="prog-row" onclick="selecionarJovem('${j}')"><div class="prog-meta"><span class="prog-name">${JNOMES[j]}</span><span class="prog-etapa" style="background:${et.bg || et.c + '22'};color:${et.bg ? '#fff' : et.c}">${n}/18 — ${et.l}</span></div>
+<div class="prog-track"><div class="prog-bar" style="width:${pct}%;background:${JCOR[j]};"></div></div>
+<div class="etapa-seg">${pills}</div></div>`;
+}).join('');
+}
+function renderPaginaLis() {
+const el = document.getElementById('listaLis'); if (!el) return;
+if (!JOVENS.length) { el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--muted);font-size:12px;">Nenhum jovem cadastrado ainda.</div>'; return; }
+const pill = (ok, txt) => `<span class="lis-pill ${ok ? 'ok' : 'pend'}">${ok ? '✓' : '○'} ${txt}</span>`;
+el.innerHTML = JOVENS.slice().sort((a, b) => countConcluidos(b) - countConcluidos(a)).map(j => {
+const n = countConcluidos(j);
+const d = LIS_OURO_DATA[j] || {};
+const des = d.desafio && d.desafio.status === 'concluido';
+const aut = d.autoval && d.autoval.status === 'concluido';
+const par = d.pareval && d.pareval.status === 'concluido';
+const pronto = n >= 18 && des && aut && par;
+const prazo = calcularPrazoLisOuro(DATAS_NASC[j]);
+return `<div class="lis-card" style="border-left-color:${JCOR[j]};cursor:pointer;" onclick="abrirLisOuro('${j}')">
+<div class="lis-card-topo"><span class="lis-card-nome">${JNOMES[j]}</span><span class="prog-etapa" style="background:${pronto ? '#14532D' : '#E67E2222'};color:${pronto ? '#fff' : '#E67E22'};">${pronto ? '🏅 Pronto' : '⏳ Em progresso'}</span></div>
+<div class="lis-pills">${pill(n >= 18, 'Blocos ' + n + '/18')}${pill(des, 'Desafio pessoal')}${pill(aut, 'Autoavaliação')}${pill(par, 'Avaliação dos pares')}</div>
+${prazo ? `<div style="font-size:10px;color:var(--muted);margin-top:7px;">Transferência para a Sênior: <strong>${fmtDataBR(prazo)}</strong></div>` : ''}
+</div>`;
+}).join('');
+}
 function _renderPaginaTabelaBase() {
+renderProgressoJovens();
 document.getElementById('resumoContainer').innerHTML = construirResumoBlocos();
 const el = document.getElementById('blocosPorEixoContainer');
 el.innerHTML = EIXOS.map(eixo => {
