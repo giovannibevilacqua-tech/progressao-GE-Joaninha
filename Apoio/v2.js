@@ -97,7 +97,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-11-06q"
+  VERSAO: "2026-11-06r"
 };
 
 /* ============================================================
@@ -762,7 +762,7 @@ window.V2_CONFIG = {
     extraJovens: 'Jovens', excluidos: 'Jovens', arquivados: 'Jovens', JOVENS: 'Jovens', JNOMES: 'Jovens', JCORES: 'Jovens', YOUTH_DATA: 'Jovens',
     lisOuroDe: 'Lis de Ouro', conversarCom: 'Conversar com', EP_DATA: 'Especialidades', CAL_EXTRAS: 'Calendário', CAL_2S26: 'Calendário',
     CAL_1S27: 'Calendário', METAS_SR: 'Metas', CICLO_BLOCOS_SR: 'Ciclo de programa', PATRULHAS_SR: 'Patrulhas', PATRULHA_DE_SR: 'Patrulhas',
-    SEMESTRES_SR: 'Semestres', semAbertoSr: 'Semestres'
+    SEMESTRES_SR: 'Semestres', semAbertoSr: 'Semestres', CICLO_SEM: 'Ciclo', cicloAbertos: 'Ciclo'
   };
   // nomeDe(segmento) devolve o nome do jovem se o segmento for o ID de um jovem
   function resumirDiff(d, nomeDe) {

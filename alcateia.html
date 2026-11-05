@@ -390,6 +390,7 @@ mark.hl{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 .roster-row-sr{display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer;border-bottom:1px solid #F0EDE8;}
 .roster-row-sr:last-child{border-bottom:none;}
 .prog-grupo{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;padding:6px 10px;border-left:4px solid;margin:12px 0 4px;border-radius:0 6px 6px 0;background:rgba(127,127,127,.08);}
+select option,select optgroup{background:#fff;color:#222;}
 </style>
 <script src="Apoio/v2.js"></script>
 </head>
@@ -400,6 +401,7 @@ mark.hl{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 <nav class="tabs" id="tabsCla">
   <button class="tab-btn active" data-tab="prog" onclick="showTab('prog',this)">⚡ Progressão</button>
   <button class="tab-btn" data-tab="cal" onclick="showTab('cal',this)">📅 Calendário</button>
+  <button class="tab-btn" data-tab="ciclo" onclick="showTab('ciclo',this)">🔄 Ciclo</button>
   <button class="tab-btn" data-tab="jovens" onclick="showTab('jovens',this)">👥 Lobinhos</button>
   <button class="tab-btn" data-tab="bp" onclick="showTab('bp',this)">🌟 Cruzeiro do Sul</button>
   <button class="tab-btn" data-tab="alm" onclick="showTab('alm',this);V2_ALMOX.abrir();">📦 Almoxarifado</button>
@@ -518,6 +520,10 @@ mark.hl{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 </div>
 
 <!-- ═══ TAB: PIONEIROS ═══════════════════════════════ -->
+<div id="ciclo" class="tab-content">
+  <div id="ciclo-content" style="padding-bottom:8px;"></div>
+</div>
+
 <div id="jovens" class="tab-content">
   <div class="alert" style="margin-top:12px;">
     A Alcateia acompanha o lobinho até a <strong>passagem para o Ramo Escoteiro</strong> (considerada aos 11 anos). A cor vai do <strong style="color:#27AE60">verde</strong> (mais tempo até a passagem) ao <strong style="color:#E74C3C">vermelho</strong> (passagem próxima). Nos últimos 4 meses o lobinho faz o <strong>Caminho</strong> para a Tropa.
@@ -1857,7 +1863,7 @@ function syncJovens(){
   JCORES = ativos.map(y => y.color);
 }
 function actJ(){ return JOVENS.map((yid,i) => ({yid:yid,i:i})); }
-function renderAllTabs(){ renderAll(); renderCal(); renderJovens(); renderBP(); }
+function renderAllTabs(){ renderAll(); renderCal(); renderCiclo(); renderJovens(); renderBP(); }
 
 // ╔═══════════════════════════════════════════════════╗
 // ║              LOGIN E ARMAZENAMENTO               ║
@@ -1928,7 +1934,7 @@ function sincronizadoOffline(res, recarregar) {
   if (recarregar) location.reload();
 }
 function montarDados() {
-  return { S, YOUTH_DATA, PRESENCA, eventos, CAL_EXTRAS, JUSTIFICATIVAS_SR, INSIGNIA_BP, CFG, MATILHAS, MATILHA_DE };
+  return { S, YOUTH_DATA, PRESENCA, eventos, CAL_EXTRAS, JUSTIFICATIVAS_SR, INSIGNIA_BP, CFG, MATILHAS, MATILHA_DE, CICLO_SEM, cicloAbertos };
 }
 function aplicarDados(dados) {
   if (!dados) return;
@@ -1937,6 +1943,7 @@ function aplicarDados(dados) {
   PRESENCA = dados.PRESENCA || {};
   eventos = dados.eventos || {};
   CAL_EXTRAS = dados.CAL_EXTRAS || {};
+  CICLO_SEM = normalizarCiclo(dados.CICLO_SEM); cicloAbertos = dados.cicloAbertos || cicloAbertos;
   JUSTIFICATIVAS_SR = dados.JUSTIFICATIVAS_SR || {};
   INSIGNIA_BP = dados.INSIGNIA_BP || {};
   CFG = dados.CFG || {};
@@ -2208,6 +2215,97 @@ function irParaBloco(bid){
 let eventoEditandoId = null, eventoMenuAbertoId = null, itensSelecionados = [];
 const MESES = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
 function eventosOrdenados(){ return Object.values(eventos).filter(Boolean).sort((a,b) => String(a.dataISO).localeCompare(String(b.dataISO)) || String(a.nome).localeCompare(String(b.nome))); }
+/* ---------- Ciclo de programa (semestres com blocos-foco, metas e previsão) ---------- */
+function cicloPadrao() {
+  return [
+    { key: '2s26', titulo: '2º Semestre 2026', ini: '2026-08-01', fim: '2026-11-28', cor1: '#6D1026', cor2: '#9C1B3A', origem: true, blocos: [], metas: [] },
+    { key: '1s27', titulo: '1º Semestre 2027', ini: '2027-02-01', fim: '2027-06-30', cor1: '#1B3B6F', cor2: '#2A5298', origem: true, blocos: [], metas: [] }
+  ];
+}
+let CICLO_SEM = cicloPadrao();
+let cicloAbertos = { '2s26': true, '1s27': true };
+let cicloEditando = null;
+function normalizarCiclo(v) {
+  const lista = Array.isArray(v) ? v : Object.values(v || {});
+  if (!lista.length) return cicloPadrao();
+  return lista.filter(Boolean).map(s => Object.assign({}, s, { blocos: Object.values(s.blocos || {}), metas: Object.values(s.metas || {}).filter(Boolean) }));
+}
+const fmtPeriodoCiclo = s => (s.ini ? new Date(s.ini + 'T12:00:00').toLocaleDateString('pt-BR') : '?') + ' → ' + (s.fim ? new Date(s.fim + 'T12:00:00').toLocaleDateString('pt-BR') : '?');
+function cicloSem(key) { return CICLO_SEM.find(s => s.key === key); }
+function cicloSelectBloco(sem, j) {
+  const atual = sem.blocos[j] || '';
+  const ops = Object.keys(EIXOS).map(k => '<optgroup label="' + esc(EIXOS[k].label) + '">' + BLOCKS.filter(b => b.eixo === k).map(b => '<option value="' + b.id + '"' + (b.id === atual ? ' selected' : '') + '>' + esc(b.name) + '</option>').join('') + '</optgroup>').join('');
+  const cor = atual ? (EIXOS[(BLOCKS.find(b => b.id === atual) || {}).eixo] || {}).cor : '';
+  return '<div style="display:flex;gap:6px;margin-bottom:6px;align-items:center;"><select class="f-input" style="flex:1;' + (cor ? 'border-left:5px solid ' + cor + ';' : '') + '" onchange="cicloTrocarBloco(\'' + sem.key + '\',' + j + ',this.value)"><option value="">Selecionar bloco…</option>' + ops + '</select><button class="btn-ic" style="color:#E74C3C;" onclick="cicloRemoverBloco(\'' + sem.key + '\',' + j + ')" title="Remover">✕</button></div>';
+}
+function cicloTrocarBloco(k, j, v) { cicloSem(k).blocos[j] = v; saveState(); renderCiclo(); }
+function cicloAddBloco(k) { cicloSem(k).blocos.push(''); saveState(); renderCiclo(); }
+function cicloRemoverBloco(k, j) { cicloSem(k).blocos.splice(j, 1); saveState(); renderCiclo(); }
+function cicloAddMeta(k) {
+  const t = document.getElementById('cicloMetaTxt_' + k), ic = document.getElementById('cicloMetaIc_' + k);
+  if (!t || !t.value.trim()) return;
+  cicloSem(k).metas.push({ icone: ic.value, texto: t.value.trim() }); saveState(); renderCiclo();
+}
+function cicloRemoverMeta(k, i) { cicloSem(k).metas.splice(i, 1); saveState(); renderCiclo(); }
+function cicloToggle(k) { cicloAbertos[k] = !cicloAbertos[k]; renderCiclo(); }
+function cicloEditar(k) { cicloEditando = k; cicloAbertos[k] = true; renderCiclo(); }
+function cicloCancelar() { cicloEditando = null; renderCiclo(); }
+function cicloSalvar(k) {
+  const s = cicloSem(k), t = document.getElementById('cicloTit_' + k).value.trim();
+  if (!t) { alert('Dê um título ao semestre.'); return; }
+  s.titulo = t; s.ini = document.getElementById('cicloIni_' + k).value; s.fim = document.getElementById('cicloFim_' + k).value;
+  s.cor1 = document.getElementById('cicloC1_' + k).value; s.cor2 = document.getElementById('cicloC2_' + k).value;
+  cicloEditando = null; saveState(); renderCiclo();
+}
+function cicloNovo() {
+  const key = 'sem' + Date.now();
+  CICLO_SEM.push({ key, titulo: 'Novo semestre', ini: '', fim: '', cor1: '#1B3B6F', cor2: '#2A5298', origem: false, blocos: [], metas: [] });
+  cicloAbertos[key] = true; cicloEditando = key; saveState(); renderCiclo();
+}
+function cicloRemover(k) {
+  if (!confirm('Remover este semestre? Os blocos-foco e metas dele também serão apagados.')) return;
+  CICLO_SEM = CICLO_SEM.filter(s => s.key !== k); delete cicloAbertos[k]; saveState(); renderCiclo();
+}
+function cicloCard(s) {
+  const aberto = !!cicloAbertos[s.key], ed = cicloEditando === s.key;
+  const grad = 'background:linear-gradient(135deg,' + s.cor1 + ',' + s.cor2 + ');';
+  let h = '<div class="sem-section" style="margin-top:14px;">';
+  if (ed) {
+    h += '<div class="sem-header" style="' + grad + 'border-radius:var(--r);"><div style="display:flex;flex-direction:column;gap:8px;">' +
+      '<input type="text" class="f-input" id="cicloTit_' + s.key + '" value="' + esc(s.titulo) + '" placeholder="Título do semestre">' +
+      '<div style="display:flex;gap:8px;"><input type="date" class="f-input" id="cicloIni_' + s.key + '" value="' + esc(s.ini || '') + '"><input type="date" class="f-input" id="cicloFim_' + s.key + '" value="' + esc(s.fim || '') + '"></div>' +
+      '<div style="display:flex;gap:10px;align-items:center;"><label style="font-size:11px;color:#fff;font-weight:700;">Cores do cabeçalho</label><input type="color" id="cicloC1_' + s.key + '" value="' + s.cor1 + '"><input type="color" id="cicloC2_' + s.key + '" value="' + s.cor2 + '"></div>' +
+      '<div style="display:flex;gap:8px;"><button class="btn-prim" style="flex:1;padding:8px;font-size:12px;" onclick="cicloSalvar(\'' + s.key + '\')">💾 Salvar</button><button class="btn-sec" style="flex:1;padding:8px;font-size:12px;" onclick="cicloCancelar()">Cancelar</button></div></div></div>';
+  } else {
+    h += '<div class="sem-header" style="' + grad + 'border-radius:' + (aberto ? 'var(--r) var(--r) 0 0' : 'var(--r)') + ';cursor:pointer;position:relative;" onclick="cicloToggle(\'' + s.key + '\')"><h3 style="padding-right:90px;">📅 ' + esc(s.titulo) + '</h3><div class="period">' + fmtPeriodoCiclo(s) + '</div>' +
+      '<button class="btn-ic" style="position:absolute;top:10px;right:' + (s.origem ? '38px' : '66px') + ';background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.35);color:#fff;padding:3px 7px;" onclick="event.stopPropagation();cicloEditar(\'' + s.key + '\')">✏️</button>' +
+      (s.origem ? '' : '<button class="btn-ic" style="position:absolute;top:10px;right:38px;background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.35);color:#fff;padding:3px 7px;" onclick="event.stopPropagation();cicloRemover(\'' + s.key + '\')">🗑️</button>') +
+      '<span style="position:absolute;top:11px;right:12px;color:#fff;font-size:13px;transform:rotate(' + (aberto ? 180 : 0) + 'deg);">▾</span></div>';
+  }
+  if (aberto && !ed) {
+    const ext = eventosOrdenados().filter(e => e.externa && (!s.ini || e.dataISO >= s.ini) && (!s.fim || e.dataISO <= s.fim));
+    const ids = s.blocos.filter(Boolean);
+    h += '<div class="sem-body"><div class="section-label" style="margin-bottom:7px;">Blocos-foco do semestre</div><div class="sem-blocks">' +
+      s.blocos.map((b, j) => cicloSelectBloco(s, j)).join('') + (s.blocos.length ? '' : '<div style="font-size:11px;color:var(--muted);">Nenhum bloco selecionado ainda.</div>') +
+      '<button class="btn-ic" style="width:100%;margin-top:4px;text-align:center;" onclick="cicloAddBloco(\'' + s.key + '\')">+ Adicionar bloco</button></div>' +
+      '<div class="sem-special"><div class="section-label" style="margin-bottom:7px;">📍 Atividades externas no calendário</div>' +
+      (ext.length ? ext.map(e => '<div class="sem-special-item"><span class="sem-special-icon">📍</span><div><strong>' + new Date(e.dataISO + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) + ':</strong> ' + esc(e.nome) + '</div></div>').join('') : '<div style="font-size:11px;color:var(--muted);">Nenhuma atividade externa marcada neste período.</div>') + '</div>' +
+      '<div class="milestone-box"><div class="section-label" style="margin-bottom:7px;">Metas — ' + esc(s.titulo) + '</div>' +
+      s.metas.map((m, i) => '<div class="milestone-item"><span class="milestone-star">' + esc(m.icone) + '</span><div style="flex:1;">' + esc(m.texto) + '</div><button class="btn-ic" style="color:#E74C3C;" onclick="cicloRemoverMeta(\'' + s.key + '\',' + i + ')">🗑️</button></div>').join('') +
+      '<div style="display:flex;gap:6px;margin-top:6px;"><select class="f-input" id="cicloMetaIc_' + s.key + '" style="width:64px;"><option>⭐</option><option>🏆</option><option>🎯</option><option>📌</option></select><input type="text" class="f-input" id="cicloMetaTxt_' + s.key + '" placeholder="Nova meta…" style="flex:1;"><button class="btn-prim" style="padding:8px 12px;font-size:12px;" onclick="cicloAddMeta(\'' + s.key + '\')">+</button></div></div>' +
+      '<div class="prog-overview"><div class="prog-overview-title">Previsão de blocos ao final de ' + esc(s.titulo) + '</div>' +
+      actJ().map(({ yid, i }) => {
+        const n = statsJovem(yid).n, ganho = ids.filter(b => !isConcluido(b, yid)).length, exp = Math.min(TOTAL_BLOCOS, n + ganho), et = etapaAtual(exp);
+        return '<div class="prog-mini-row"><span class="prog-mini-name">' + esc(JNOMES[i]) + '</span><div class="prog-mini-track"><div class="prog-mini-bar" style="width:' + Math.round(exp / TOTAL_BLOCOS * 100) + '%;background:' + JCORES[i] + ';"></div></div><span class="prog-mini-label" style="color:' + et.c + '">' + exp + '/' + TOTAL_BLOCOS + '</span></div>';
+      }).join('') + '</div></div>';
+  }
+  return h + '</div>';
+}
+function renderCiclo() {
+  const c = document.getElementById('ciclo-content'); if (!c) return;
+  c.innerHTML = CICLO_SEM.map(cicloCard).join('') + '<button class="btn-sec" style="display:block;width:calc(100% - 24px);margin:16px 12px 24px;padding:12px;font-size:13px;font-weight:700;text-align:center;" onclick="cicloNovo()">+ Adicionar novo semestre</button>';
+}
+
 function getExtra(eid){ if (!CAL_EXTRAS[eid]) CAL_EXTRAS[eid] = {link:'', resposta:''}; return CAL_EXTRAS[eid]; }
 function salvarLinkEvento(eid, v){ getExtra(eid).link = v; saveState(); }
 function salvarRespostaEvento(eid, v){ getExtra(eid).resposta = v; saveState(); }
