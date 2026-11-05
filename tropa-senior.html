@@ -2772,9 +2772,7 @@ function daysLeft(bornStr,today){
   return Math.ceil((t-today)/(1000*60*60*24));
 }
 
-function fmtDate(d){
-  return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});
-}
+
 
 function timeStr(days){
   if(days<=0) return 'Já passou para o Pioneiro';

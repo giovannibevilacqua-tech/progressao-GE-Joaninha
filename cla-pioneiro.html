@@ -1306,16 +1306,10 @@ let INSIGNIA_BP = {};     // marcos da Insígnia de B-P por pioneiro
 
 const $ = id => document.getElementById(id);
 function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function nomeCurto(n){ const p = String(n || '').trim().split(/\s+/); return p.slice(0,2).join(' '); }
-function syncJovens(){
-  const ativos = YOUTH_DATA.filter(y => y && !y.archived);
-  ativos.forEach((y,i) => { if (!y.color) y.color = COLOR_PALETTE[i % COLOR_PALETTE.length]; });
-  JOVENS = ativos.map(y => y.id);
-  JNOMES = ativos.map(y => nomeCurto(y.name));
-  JCORES = ativos.map(y => y.color);
-}
-function actJ(){ return JOVENS.map((yid,i) => ({yid:yid,i:i})); }
-function renderAllTabs(){ renderAll(); renderCal(); renderCiclo(); renderJovens(); renderBP(); }
+
+
+
+
 
 // ╔═══════════════════════════════════════════════════╗
 // ║              LOGIN E ARMAZENAMENTO               ║
@@ -1366,26 +1360,9 @@ async function autenticarComSessaoCompartilhada() {
   setTimeout(renovarAgendado, 50 * 60 * 1000);
   return true;
 }
-async function renovarSessaoV2() {
-  if (!firebaseRefreshToken) return;
-  const r = await renovarTokenSessao(firebaseRefreshToken);
-  if (r) { firebaseAuthToken = r.idToken; firebaseRefreshToken = r.refreshToken; salvarSessao(); }
-}
-function mostrarModoLeitura(motivo) {
-  if ($('bannerLeitura')) return;
-  const d = document.createElement('div');
-  d.id = 'bannerLeitura';
-  d.style.cssText = 'position:sticky;top:0;z-index:9999;background:#E8EEF7;border-bottom:2px solid #1B3B6F;color:#1B3B6F;padding:8px 12px;font-size:12px;text-align:center;';
-  d.textContent = '📴 Sem conexão — você pode continuar usando e marcando. As alterações ficam guardadas neste aparelho e são enviadas sozinhas quando o sinal voltar (não feche o app antes disso, nem saia da conta).';
-  document.body.insertBefore(d, document.body.firstChild);
-}
-function sincronizadoOffline(res, recarregar) {
-  if (res && res.n) {
-    V2.registrarHistorico(V2_NODE, registroLogado, '', 'Enviou ' + res.n + ' alteração(ões) feitas sem internet', res.n);
-    alert('✓ ' + res.n + ' alteração(ões) feitas sem internet foram enviadas.');
-  }
-  if (recarregar) location.reload();
-}
+
+
+
 function montarDados() {
   return { S, YOUTH_DATA, PRESENCA, eventos, CAL_EXTRAS, JUSTIFICATIVAS_SR, INSIGNIA_BP, CICLO_SEM, cicloAbertos };
 }
@@ -1440,39 +1417,24 @@ async function saveState(){
     if (el) el.innerHTML = '<span style="color:#E74C3C;cursor:pointer;" onclick="saveState()">⚠️ Não salvou — toque para tentar de novo</span>';
   }
 }
-function preservarScroll(fn){ const y = window.scrollY; fn(); window.scrollTo(0, y); }
+
 
 // ── estado de abas/blocos abertos (só neste aparelho) ──
 function persistir(chave, valor){ try { localStorage.setItem('cla_' + chave, JSON.stringify(valor)); } catch (e) {} }
 function restaurar(chave, padrao){ try { const v = localStorage.getItem('cla_' + chave); return v !== null ? JSON.parse(v) : padrao; } catch (e) { return padrao; } }
 let blocosAbertos = restaurar('blocosAbertos', {});
 let eixosAbertos = restaurar('eixosAbertos', {});
-function toggleEixo(id){ eixosAbertos[id] = !(eixosAbertos[id] ?? true); persistir('eixosAbertos', eixosAbertos); aplicarEstadoEixo(id); }
-function aplicarEstadoEixo(id){
-  const aberto = eixosAbertos[id] ?? true;
-  $('bl-' + id).style.display = aberto ? '' : 'none';
-  $('chev-' + id).style.transform = aberto ? '' : 'rotate(-90deg)';
-}
+
+
 
 // ╔═══════════════════════════════════════════════════╗
 // ║                  PROGRESSÃO                      ║
 // ╚═══════════════════════════════════════════════════╝
-function getBlock(id){ return BLOCKS.find(b => b.id === id); }
+
 // cria só as pastas pedidas (evita gravar objetos vazios no banco)
-function garantirBloco(id, ...chaves){
-  if (!S[id] || typeof S[id] !== 'object') S[id] = {};
-  chaves.forEach(k => { if (!S[id][k] || Array.isArray(S[id][k])) S[id][k] = {}; });
-  return S[id];
-}
-function marcarConcluido(bid, yid){
-  const novo = concluidoCalc(bid, yid), atual = isConcluido(bid, yid);
-  if (novo === atual) return;
-  garantirBloco(bid, 'concluded').concluded[yid] = novo ? 1 : 0;
-}
-function variaveisDe(bl){
-  const cust = S[bl.id]?.custom || {};
-  return bl.variable.concat(Object.keys(cust).map(cid => ({id:cid, name:cust[cid].name, custom:true})));
-}
+
+
+
 function feito(bid, tipo, aid, yid){ return S[bid]?.[tipo]?.[aid]?.[yid] === 1; }
 function concluidoCalc(bid, yid){
   const bl = getBlock(bid);
@@ -1481,7 +1443,7 @@ function concluidoCalc(bid, yid){
   if (bl.insignias.some(a => feito(bid,'g',a.id,yid))) return true;
   return variaveisDe(bl).filter(a => feito(bid,'v',a.id,yid)).length >= bl.minVariable;
 }
-function isConcluido(bid, yid){ return S[bid]?.concluded?.[yid] === 1; }
+
 function statsJovem(yid){
   let n = 0; const porEtapa = {1:0,2:0,3:0}, escolhidos = {1:0,2:0,3:0};
   BLOCKS.forEach(b => {
@@ -1510,21 +1472,8 @@ function ciclarEtapa(bid, yid){
   if (prox === 0) delete bl.etapa[yid]; else bl.etapa[yid] = prox;
   saveState(); preservarScroll(renderAll);
 }
-function addCustom(bid){
-  const inp = $('cust-' + bid); const nome = (inp.value || '').trim();
-  if (!nome) return;
-  const bl = garantirBloco(bid, 'custom');
-  bl.custom['c' + Date.now().toString(36)] = { name: nome };
-  inp.value = '';
-  saveState(); preservarScroll(renderAll);
-}
-function removerCustom(bid, cid){
-  if (!confirm('Remover esta ação personalizada? As marcações feitas nela também deixam de contar.')) return;
-  const bl = garantirBloco(bid, 'custom', 'v');
-  delete bl.custom[cid]; delete bl.v[cid];
-  YOUTH_DATA.forEach(y => marcarConcluido(bid, y.id));
-  saveState(); preservarScroll(renderAll);
-}
+
+
 async function confirmReset(){
   if (!souAdmin) { alert('Esta ação é só para administradores.'); return; }
   const senha = prompt('Ação sensível: isso apaga TODAS as marcações de progressão do Clã, pra todo mundo.\n\nDigite a senha para confirmar:');
@@ -1553,23 +1502,8 @@ function renderProgressBars(){
   });
 }
 
-function tabelaCabecalho(rotulo){
-  return `<thead><tr><th class="act-col">${rotulo}</th>${actJ().map(({i}) => `<th>${esc(JNOMES[i].split(' ')[0])}</th>`).join('')}</tr></thead>`;
-}
-function secaoAcoes(bid, tipo, lista, rotulo, rotuloClasse, estilo){
-  if (!lista.length) return '';
-  const rows = lista.map(a => {
-    const cells = actJ().map(({yid}) => {
-      const ok = feito(bid, tipo, a.id, yid);
-      const st = estilo ? (ok ? estilo.on : estilo.off) : '';
-      return `<td><div class="cb ${ok?'done':'pending'}" ${st?`style="${st}"`:''} onclick="toggle('${bid}','${tipo}','${a.id}','${yid}')">${ok ? (estilo ? '★' : '✓') : '·'}</div></td>`;
-    }).join('');
-    const icone = tipo === 'f' ? '📌 ' : tipo === 's' ? '🎖 ' : tipo === 'g' ? '🏅 ' : '';
-    const x = a.custom ? `<button class="custom-x" title="Remover ação personalizada" onclick="removerCustom('${bid}','${a.id}')">✕</button>` : '';
-    return `<tr class="${tipo==='f'?'fixed-row':''}"><td class="act-col">${icone}${esc(a.name)}${a.custom?' <em style="color:#999;font-size:9px;">(personalizada)</em>':''}${x}</td>${cells}</tr>`;
-  }).join('');
-  return `<div class="actions-section">${rotuloClasse}<div class="actions-table-wrap"><table class="actions-table">${tabelaCabecalho(rotulo)}<tbody>${rows}</tbody></table></div></div>`;
-}
+
+
 
 function renderEixo(eixoId){
   const eixo = EIXOS[eixoId];
@@ -1678,257 +1612,68 @@ function filtrarAcoes(q){
     : '<div class="busca-nada">Nenhuma ação encontrada.</div>';
 }
 function limparBusca(){ $('buscaAcoes').value = ''; filtrarAcoes(''); }
-function irParaBloco(bid){
-  mudarVista('eixo');
-  const b = getBlock(bid); eixosAbertos[b.eixo] = true; aplicarEstadoEixo(b.eixo);
-  const el = document.querySelector(`details[data-block-id="${bid}"]`);
-  if (el) { el.open = true; blocosAbertos[bid] = true; persistir('blocosAbertos', blocosAbertos); el.scrollIntoView({behavior:'smooth', block:'start'}); }
-}
+
 
 // ╔═══════════════════════════════════════════════════╗
 // ║                  CALENDÁRIO                      ║
 // ╚═══════════════════════════════════════════════════╝
 let eventoEditandoId = null, eventoMenuAbertoId = null, itensSelecionados = [];
 const MESES = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
-function eventosOrdenados(){ return Object.values(eventos).filter(Boolean).sort((a,b) => String(a.dataISO).localeCompare(String(b.dataISO)) || String(a.nome).localeCompare(String(b.nome))); }
+
 /* ---------- Ciclo de programa (semestres com blocos-foco, metas e previsão) ---------- */
 const CICLO_QTD = 3; // blocos sugeridos por semestre (podem ser trocados)
 const cicloSementes = k => BLOCKS.slice(k * CICLO_QTD, (k + 1) * CICLO_QTD).map(b => b.id);
-function cicloPadrao() {
-  return [
-    { key: '2s26', titulo: '2º Semestre 2026', ini: '2026-08-01', fim: '2026-11-28', cor1: '#6D1026', cor2: '#9C1B3A', origem: true, semeado: true, blocos: cicloSementes(0), metas: [] },
-    { key: '1s27', titulo: '1º Semestre 2027', ini: '2027-02-01', fim: '2027-06-30', cor1: '#1B3B6F', cor2: '#2A5298', origem: true, semeado: true, blocos: cicloSementes(1), metas: [] }
-  ];
-}
+
 let CICLO_SEM = cicloPadrao();
 let cicloAbertos = { '2s26': true, '1s27': true };
 let cicloEditando = null;
-function normalizarCiclo(v) {
-  const lista = Array.isArray(v) ? v : Object.values(v || {});
-  if (!lista.length) return cicloPadrao();
-  return lista.filter(Boolean).map(s => {
-    const o = Object.assign({}, s, { blocos: Object.values(s.blocos || {}), metas: Object.values(s.metas || {}).filter(Boolean) });
-    if (!o.semeado) { o.semeado = true; const k = ['2s26', '1s27'].indexOf(o.key); if (k >= 0 && !o.blocos.filter(Boolean).length) o.blocos = cicloSementes(k); }
-    return o;
-  });
-}
+
 const fmtPeriodoCiclo = s => (s.ini ? new Date(s.ini + 'T12:00:00').toLocaleDateString('pt-BR') : '?') + ' → ' + (s.fim ? new Date(s.fim + 'T12:00:00').toLocaleDateString('pt-BR') : '?');
-function cicloSem(key) { return CICLO_SEM.find(s => s.key === key); }
+
 let cicloPickerAberto = null;
-function cicloTogglePicker(k, j) { const key = k + '_' + j; cicloPickerAberto = cicloPickerAberto === key ? null : key; renderCiclo(); }
-function cicloSelectBloco(sem, j) {
-  const sel = sem.blocos[j] || '', def = sel ? BLOCKS.find(b => b.id === sel) : null, key = sem.key + '_' + j, aberto = cicloPickerAberto === key;
-  const cor = def ? (EIXOS[def.eixo] || {}).cor : '';
-  const estiloBtn = def ? 'background:' + cor + ';color:#fff;border-color:' + cor + ';' : '';
-  let painel = '';
-  if (aberto) {
-    painel = '<div class="itens-picker-scroll-sr" style="display:block;">' + Object.keys(EIXOS).map(k => {
-      const blocos = BLOCKS.filter(b => b.eixo === k).map(b => '<div class="picker-bloco-sr" style="' + (b.id === sel ? 'border-color:' + EIXOS[k].cor + ';' : '') + '"><div class="picker-bloco-head-sr" onclick="cicloTrocarBloco(\'' + sem.key + '\',' + j + ',\'' + b.id + '\')"><span>' + esc(b.name) + '</span>' + (b.id === sel ? '<span class="picker-bloco-count-sr">✓ selecionado</span>' : '') + '</div></div>').join('');
-      return '<div class="eixo-picker-header-sr" style="background:' + EIXOS[k].cor + '">' + esc(EIXOS[k].label) + '</div>' + blocos;
-    }).join('') + '<div class="picker-bloco-sr" style="cursor:pointer;"><div class="picker-bloco-head-sr" onclick="cicloTrocarBloco(\'' + sem.key + '\',' + j + ',\'\')"><span>— Limpar seleção</span></div></div></div>';
-  }
-  return '<div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:6px;"><div style="flex:1;min-width:0;"><button type="button" class="btn-picker-toggle-sr" style="' + estiloBtn + '" onclick="cicloTogglePicker(\'' + sem.key + '\',' + j + ')"><span>' + (def ? esc(def.name) : 'Selecionar bloco') + '</span><span class="chev" style="transform:rotate(' + (aberto ? 180 : 0) + 'deg);' + (def ? 'color:#fff;' : '') + '">▾</span></button>' + painel +
-    (def && !aberto ? '<div style="font-size:10px;color:var(--muted);margin:3px 0 0 4px;">' + JOVENS.filter(y => isConcluido(sel, y)).length + ' de ' + JOVENS.length + ' concluíram</div>' : '') + '</div>' +
-    '<button class="btn-ic" style="color:#E74C3C;flex-shrink:0;" onclick="cicloRemoverBloco(\'' + sem.key + '\',' + j + ')" title="Remover este bloco">✕</button></div>';
-}
-function cicloTrocarBloco(k, j, v) { cicloSem(k).blocos[j] = v; cicloPickerAberto = null; saveState(); renderCiclo(); }
-function cicloAddBloco(k) { cicloSem(k).blocos.push(''); saveState(); renderCiclo(); }
-function cicloRemoverBloco(k, j) { cicloPickerAberto = null; cicloSem(k).blocos.splice(j, 1); saveState(); renderCiclo(); }
-function cicloAddMeta(k) {
-  const t = document.getElementById('cicloMetaTxt_' + k), ic = document.getElementById('cicloMetaIc_' + k);
-  if (!t || !t.value.trim()) return;
-  cicloSem(k).metas.push({ icone: ic.value, texto: t.value.trim() }); saveState(); renderCiclo();
-}
-function cicloRemoverMeta(k, i) { cicloSem(k).metas.splice(i, 1); saveState(); renderCiclo(); }
-function cicloToggle(k) { cicloAbertos[k] = !cicloAbertos[k]; renderCiclo(); }
-function cicloEditar(k) { cicloEditando = k; cicloAbertos[k] = true; renderCiclo(); }
-function cicloCancelar() { cicloEditando = null; renderCiclo(); }
-function cicloSalvar(k) {
-  const s = cicloSem(k), t = document.getElementById('cicloTit_' + k).value.trim();
-  if (!t) { alert('Dê um título ao semestre.'); return; }
-  s.titulo = t; s.ini = document.getElementById('cicloIni_' + k).value; s.fim = document.getElementById('cicloFim_' + k).value;
-  s.cor1 = document.getElementById('cicloC1_' + k).value; s.cor2 = document.getElementById('cicloC2_' + k).value;
-  cicloEditando = null; saveState(); renderCiclo();
-}
-function cicloNovo() {
-  const key = 'sem' + Date.now();
-  CICLO_SEM.push({ key, titulo: 'Novo semestre', ini: '', fim: '', cor1: '#1B3B6F', cor2: '#2A5298', origem: false, blocos: [], metas: [] });
-  cicloAbertos[key] = true; cicloEditando = key; saveState(); renderCiclo();
-}
-function cicloRemover(k) {
-  if (!confirm('Remover este semestre? Os blocos-foco e metas dele também serão apagados.')) return;
-  CICLO_SEM = CICLO_SEM.filter(s => s.key !== k); delete cicloAbertos[k]; saveState(); renderCiclo();
-}
-function cicloAtualResumo() {
-  const hoje = new Date().toISOString().slice(0, 10);
-  const s = CICLO_SEM.find(x => x.ini && x.fim && hoje >= x.ini && hoje <= x.fim) || CICLO_SEM.find(x => x.blocos.filter(Boolean).length) || CICLO_SEM[0];
-  if (!s) return null;
-  return { titulo: s.titulo, periodo: fmtPeriodoCiclo(s), blocos: s.blocos.filter(Boolean).map(id => { const b = BLOCKS.find(x => x.id === id); return b ? { nome: b.name, cor: (EIXOS[b.eixo] || {}).cor || '#666', feitos: JOVENS.filter(y => isConcluido(id, y)).length, total: JOVENS.length } : null; }).filter(Boolean) };
-}
-function cicloCard(s) {
-  if (MODO_VIEW) return cicloCardView(s);
-  const aberto = !!cicloAbertos[s.key], ed = cicloEditando === s.key;
-  const grad = 'background:linear-gradient(135deg,' + s.cor1 + ',' + s.cor2 + ');';
-  let h = '<div class="sem-section" style="margin-top:14px;">';
-  if (ed) {
-    h += '<div class="sem-header" style="' + grad + 'border-radius:var(--r);"><div style="display:flex;flex-direction:column;gap:8px;">' +
-      '<input type="text" class="f-input" id="cicloTit_' + s.key + '" value="' + esc(s.titulo) + '" placeholder="Título do semestre">' +
-      '<div style="display:flex;gap:8px;"><input type="date" class="f-input" id="cicloIni_' + s.key + '" value="' + esc(s.ini || '') + '"><input type="date" class="f-input" id="cicloFim_' + s.key + '" value="' + esc(s.fim || '') + '"></div>' +
-      '<div style="display:flex;gap:10px;align-items:center;"><label style="font-size:11px;color:#fff;font-weight:700;">Cores do cabeçalho</label><input type="color" id="cicloC1_' + s.key + '" value="' + s.cor1 + '"><input type="color" id="cicloC2_' + s.key + '" value="' + s.cor2 + '"></div>' +
-      '<div style="display:flex;gap:8px;"><button class="btn-prim" style="flex:1;padding:8px;font-size:12px;" onclick="cicloSalvar(\'' + s.key + '\')">💾 Salvar</button><button class="btn-sec" style="flex:1;padding:8px;font-size:12px;" onclick="cicloCancelar()">Cancelar</button></div></div></div>';
-  } else {
-    h += '<div class="sem-header" style="' + grad + 'border-radius:' + (aberto ? 'var(--r) var(--r) 0 0' : 'var(--r)') + ';cursor:pointer;position:relative;" onclick="cicloToggle(\'' + s.key + '\')"><h3 style="padding-right:90px;">📅 ' + esc(s.titulo) + '</h3><div class="period">' + fmtPeriodoCiclo(s) + '</div>' +
-      '<button class="btn-ic" style="position:absolute;top:10px;right:' + (s.origem ? '38px' : '66px') + ';background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.35);color:#fff;padding:3px 7px;" onclick="event.stopPropagation();cicloEditar(\'' + s.key + '\')">✏️</button>' +
-      (s.origem ? '' : '<button class="btn-ic" style="position:absolute;top:10px;right:38px;background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.35);color:#fff;padding:3px 7px;" onclick="event.stopPropagation();cicloRemover(\'' + s.key + '\')">🗑️</button>') +
-      '<span style="position:absolute;top:11px;right:12px;color:#fff;font-size:13px;transform:rotate(' + (aberto ? 180 : 0) + 'deg);">▾</span></div>';
-  }
-  if (aberto && !ed) {
-    const ext = eventosOrdenados().filter(e => e.externa && (!s.ini || e.dataISO >= s.ini) && (!s.fim || e.dataISO <= s.fim));
-    const ids = s.blocos.filter(Boolean);
-    h += '<div class="sem-body"><div class="section-label" style="margin-bottom:7px;">Blocos-foco do semestre</div><div class="sem-blocks">' +
-      s.blocos.map((b, j) => cicloSelectBloco(s, j)).join('') + (s.blocos.length ? '' : '<div style="font-size:11px;color:var(--muted);">Nenhum bloco selecionado ainda.</div>') +
-      '<button class="btn-ic" style="width:100%;margin-top:4px;text-align:center;" onclick="cicloAddBloco(\'' + s.key + '\')">+ Adicionar bloco</button></div>' +
-      '<div class="sem-special"><div class="section-label" style="margin-bottom:7px;">📍 Atividades externas no calendário</div>' +
-      (ext.length ? ext.map(e => '<div class="sem-special-item"><span class="sem-special-icon">📍</span><div><strong>' + new Date(e.dataISO + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) + ':</strong> ' + esc(e.nome) + '</div></div>').join('') : '<div style="font-size:11px;color:var(--muted);">Nenhuma atividade externa marcada neste período.</div>') + '</div>' +
-      '<div class="milestone-box"><div class="section-label" style="margin-bottom:7px;">Metas — ' + esc(s.titulo) + '</div>' +
-      s.metas.map((m, i) => '<div class="milestone-item"><span class="milestone-star">' + esc(m.icone) + '</span><div style="flex:1;">' + esc(m.texto) + '</div><button class="btn-ic" style="color:#E74C3C;" onclick="cicloRemoverMeta(\'' + s.key + '\',' + i + ')">🗑️</button></div>').join('') +
-      '<div style="display:flex;gap:6px;margin-top:6px;"><select class="f-input" id="cicloMetaIc_' + s.key + '" style="width:64px;"><option>⭐</option><option>🏆</option><option>🎯</option><option>📌</option></select><input type="text" class="f-input" id="cicloMetaTxt_' + s.key + '" placeholder="Nova meta…" style="flex:1;"><button class="btn-prim" style="width:auto;flex:0 0 auto;padding:8px 14px;font-size:12px;" onclick="cicloAddMeta(\'' + s.key + '\')">+</button></div></div>' +
-      '<div class="prog-overview"><div class="prog-overview-title">Previsão de blocos ao final de ' + esc(s.titulo) + '</div>' +
-      actJ().map(({ yid, i }) => {
-        const n = statsJovem(yid).n, ganho = ids.filter(b => !isConcluido(b, yid)).length, exp = Math.min(TOTAL_BLOCOS, n + ganho), et = etapaAtual(exp);
-        return '<div class="prog-mini-row"><span class="prog-mini-name">' + esc(JNOMES[i]) + '</span><div class="prog-mini-track"><div class="prog-mini-bar" style="width:' + Math.round(exp / TOTAL_BLOCOS * 100) + '%;background:' + JCORES[i] + ';"></div></div><span class="prog-mini-label" style="color:' + et.c + '">' + exp + '/' + TOTAL_BLOCOS + '</span></div>';
-      }).join('') + '</div></div>';
-  }
-  return h + '</div>';
-}
-function renderCiclo() {
-  const c = document.getElementById('ciclo-content'); if (!c) return;
-  c.innerHTML = CICLO_SEM.map(cicloCard).join('') + (MODO_VIEW ? '' : '<button class="btn-sec" style="display:block;width:calc(100% - 24px);margin:16px 12px 24px;padding:12px;font-size:13px;font-weight:700;text-align:center;" onclick="cicloNovo()">+ Adicionar novo semestre</button>');
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* ---------- Modo visualização (?view=1): só calendário e ciclo, sem login e sem dados de jovens ---------- */
 const CAMPOS_PUBLICOS_VIEW = ['eventos', 'CAL_EXTRAS', 'CICLO_SEM', 'cicloAbertos'];
-async function iniciarVisualizacao() {
-  document.body.classList.add('modo-view');
-  let dados = null, falhou = false;
-  try { dados = await V2.lerCamposPublicos(V2_NODE, CAMPOS_PUBLICOS_VIEW); } catch (e) { console.error('Visualização: falha ao carregar:', e); falhou = true; }
-  YOUTH_DATA = []; syncJovens();
-  aplicarDados(dados || {});
-  __store = { salvar: () => Promise.reject(new Error('Visualização somente leitura.')), offline: false };
-  renderCalView(); renderCiclo();
-  if (falhou) { const l = $('cal-lista'); if (l) l.innerHTML = '<div class="cla-vazio">Não foi possível carregar os dados agora. Tente atualizar a página em instantes.</div>'; }
-  const btn = document.querySelector('.tab-btn[data-tab="cal"]'); showTab('cal', btn);
-}
-function renderCalView() {
-  const list = $('cal-lista'); if (!list) return; list.innerHTML = '';
-  const evs = eventosOrdenados();
-  if (!evs.length) { list.innerHTML = '<div class="cla-vazio"><span class="ico">📅</span>Nenhuma atividade cadastrada ainda.</div>'; return; }
-  let mesAtual = '';
-  evs.forEach(ev => {
-    const d = new Date((ev.dataISO || '') + 'T12:00:00'), valida = !isNaN(d), mes = valida ? ev.dataISO.slice(0, 7) : 'sem-data';
-    if (mes !== mesAtual) { mesAtual = mes; const h = document.createElement('div'); h.className = 'cal-section-hdr'; h.style.marginTop = list.children.length ? '20px' : ''; h.textContent = '📅 ' + (valida ? d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }) : 'Sem data'); list.appendChild(h); }
-    const fmt = ev.fmt || 'C', itens = Array.isArray(ev.itens) ? ev.itens : Object.values(ev.itens || {});
-    const tags = itens.map(b => getBlock(b)).filter(Boolean).map(b => '<span class="bloco-tag">📌 ' + esc(b.name) + '</span>').join('');
-    const ex = (CAL_EXTRAS && CAL_EXTRAS[ev.id]) || {}, lk = linkSeguro(ex.link);
-    const card = document.createElement('div'); card.className = 'cal-card'; card.style.cssText = 'flex-direction:column;margin:0 12px 8px';
-    card.innerHTML = '<div style="display:flex;"><div class="cal-strip strip-normal"><div class="strip-day" style="font-size:18px">' + (valida ? String(d.getDate()).padStart(2, '0') : '--') + '</div><div class="strip-mon">' + (valida ? d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '').toUpperCase() : '') + '</div></div>' +
-      '<div class="cal-body" style="flex:1;"><div style="font-size:12px;font-weight:800;color:var(--vinho);margin-bottom:3px;">' + (ev.externa ? '<span class="externa-badge-sr">🌍 Externa</span>' : '') + esc(ev.nome) + '</div>' +
-      (ev.local ? '<div style="font-size:10px;color:var(--muted);margin-bottom:2px;">📍 ' + esc(ev.local) + '</div>' : '') +
-      (ev.responsavel ? '<div style="font-size:10px;color:var(--muted);margin-bottom:4px;">👤 ' + esc(ev.responsavel) + '</div>' : '') +
-      '<div class="cal-meta"><span class="fmt-badge fmt-' + (FMT_CLASSE[fmt] || 'T') + '" title="' + esc(FMT_NOME[fmt] || '') + '">' + esc(fmt) + '</span>' + tags + '</div>' +
-      (ev.txt ? '<div class="cal-text">' + esc(ev.txt) + '</div>' : '') +
-      (lk ? '<a class="evento-link-sr" href="' + esc(lk) + '" target="_blank" rel="noopener" style="display:inline-block;margin-top:6px;">🔗 Abrir link</a>' : '') +
-      (ex.resposta ? '<div class="cal-text" style="margin-top:6px;border-left:3px solid var(--vinho);padding-left:8px;">💬 ' + esc(ex.resposta) + '</div>' : '') + '</div></div>';
-    list.appendChild(card);
-  });
-}
-function cicloCardView(s) {
-  const aberto = !!cicloAbertos[s.key];
-  let h = '<div class="sem-section" style="margin-top:14px;"><div class="sem-header" style="background:linear-gradient(135deg,' + s.cor1 + ',' + s.cor2 + ');border-radius:' + (aberto ? 'var(--r) var(--r) 0 0' : 'var(--r)') + ';cursor:pointer;position:relative;" onclick="cicloToggle(\'' + s.key + '\')"><h3 style="padding-right:30px;">📅 ' + esc(s.titulo) + '</h3><div class="period">' + fmtPeriodoCiclo(s) + '</div><span style="position:absolute;top:11px;right:12px;color:#fff;font-size:13px;transform:rotate(' + (aberto ? 180 : 0) + 'deg);">▾</span></div>';
-  if (aberto) {
-    const ext = eventosOrdenados().filter(e => e.externa && (!s.ini || e.dataISO >= s.ini) && (!s.fim || e.dataISO <= s.fim));
-    h += '<div class="sem-body"><div class="section-label" style="margin-bottom:7px;">Blocos-foco do semestre</div><div class="sem-blocks">' +
-      (s.blocos.filter(Boolean).map(id => { const b = BLOCKS.find(x => x.id === id); if (!b) return ''; const cor = (EIXOS[b.eixo] || {}).cor || '#666'; return '<div class="sem-block-row" style="background:' + cor + '16;border-left:4px solid ' + cor + ';"><span class="sem-block-name">' + esc(b.name) + '</span></div>'; }).join('') || '<div style="font-size:11px;color:var(--muted);">Nenhum bloco definido ainda.</div>') + '</div>' +
-      '<div class="sem-special"><div class="section-label" style="margin-bottom:7px;">📍 Atividades externas</div>' +
-      (ext.length ? ext.map(e => '<div class="sem-special-item"><span class="sem-special-icon">📍</span><div><strong>' + new Date(e.dataISO + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) + ':</strong> ' + esc(e.nome) + '</div></div>').join('') : '<div style="font-size:11px;color:var(--muted);">Nenhuma atividade externa marcada neste período.</div>') + '</div>' +
-      (s.metas.length ? '<div class="milestone-box"><div class="section-label" style="margin-bottom:7px;">Metas</div>' + s.metas.map(m => '<div class="milestone-item"><span class="milestone-star">' + esc(m.icone) + '</span><div style="flex:1;">' + esc(m.texto) + '</div></div>').join('') + '</div>' : '') + '</div>';
-  }
-  return h + '</div>';
-}
-function getExtra(eid){ if (!CAL_EXTRAS[eid]) CAL_EXTRAS[eid] = {link:'', resposta:''}; return CAL_EXTRAS[eid]; }
-function salvarLinkEvento(eid, v){ getExtra(eid).link = v; saveState(); }
-function salvarRespostaEvento(eid, v){ getExtra(eid).resposta = v; saveState(); }
+
+
+
+
+
+
 function linkSeguro(u){ return /^https?:\/\//i.test(u || '') ? u : ''; }
 
-function toggleAddEvento(forcar){
-  const body = $('addEventoBody'); const abrir = forcar === undefined ? body.style.display === 'none' : !!forcar;
-  body.style.display = abrir ? 'flex' : 'none';
-  $('chevAddEvento').style.transform = abrir ? 'rotate(180deg)' : '';
-  if (abrir) renderItensPicker();
-}
-function toggleItensPicker(){ const p = $('eventoItensPicker'); const abrir = p.style.display === 'none'; p.style.display = abrir ? 'block' : 'none'; $('chevItensPicker').style.transform = abrir ? 'rotate(180deg)' : ''; if (abrir) renderItensPicker(); }
-function atualizarResumoItens(){
-  $('resumoItensPicker').textContent = itensSelecionados.length ? itensSelecionados.length + ' bloco(s) selecionado(s)' : 'Nenhum bloco selecionado';
-}
-function renderItensPicker(){
-  const p = $('eventoItensPicker');
-  p.innerHTML = Object.keys(EIXOS).map(k => `<div class="eixo-picker-header-sr" style="background:${EIXOS[k].cor};color:#fff;">${esc(EIXOS[k].label)}</div>` +
-    EIXOS[k].blockIds.map(bid => { const sel = itensSelecionados.includes(bid); return `<div class="item-row-sr" onclick="toggleItemEvento('${bid}')"><div class="item-check-sr ${sel?'sel':''}">${sel?'✓':''}</div><div class="item-text-sr">${esc(getBlock(bid).name)}</div></div>`; }).join('')).join('');
-  atualizarResumoItens();
-}
-function toggleItemEvento(bid){ const i = itensSelecionados.indexOf(bid); if (i >= 0) itensSelecionados.splice(i,1); else itensSelecionados.push(bid); renderItensPicker(); }
-function limparFormEvento(){
-  ['eventoData','eventoNome','eventoLocal','eventoResp','eventoTxt'].forEach(id => $(id).value = '');
-  $('eventoFmt').value = 'C'; $('eventoExterna').checked = false; itensSelecionados = []; eventoEditandoId = null;
-  $('btnSalvarEvento').textContent = '+ Adicionar atividade'; $('tituloFormEvento').textContent = '+ Adicionar atividade'; $('btnCancelarEvento').style.display = 'none';
-  atualizarResumoItens();
-}
-function salvarEvento(){
-  const dataISO = $('eventoData').value, nome = $('eventoNome').value.trim();
-  if (!dataISO || !nome) { alert('Informe a data e o nome da atividade.'); return; }
-  const id = eventoEditandoId || ('ev_' + Date.now());
-  eventos[id] = { id, dataISO, nome, local: $('eventoLocal').value.trim(), fmt: $('eventoFmt').value, externa: $('eventoExterna').checked,
-    itens: itensSelecionados.slice(), responsavel: $('eventoResp').value.trim(), txt: $('eventoTxt').value.trim() };
-  limparFormEvento(); toggleAddEvento(false);
-  saveState(); renderCal();
-}
-function editarEvento(id){
-  const ev = eventos[id]; if (!ev) return;
-  eventoMenuAbertoId = null; eventoEditandoId = id;
-  $('eventoData').value = ev.dataISO || ''; $('eventoNome').value = ev.nome || ''; $('eventoLocal').value = ev.local || '';
-  $('eventoFmt').value = ev.fmt || 'C'; $('eventoExterna').checked = !!ev.externa; $('eventoResp').value = ev.responsavel || ''; $('eventoTxt').value = ev.txt || '';
-  itensSelecionados = Array.isArray(ev.itens) ? ev.itens.slice() : Object.values(ev.itens || {});
-  $('btnSalvarEvento').textContent = '💾 Salvar alterações'; $('tituloFormEvento').textContent = '✏️ Editando atividade'; $('btnCancelarEvento').style.display = 'block';
-  toggleAddEvento(true); renderCal(); $('cabecalhoAddEvento').scrollIntoView({behavior:'smooth', block:'start'});
-}
-function cancelarEdicaoEvento(){ limparFormEvento(); toggleAddEvento(false); renderCal(); }
-function removerEvento(id){
-  const ev = eventos[id]; if (!ev) return;
-  if (!confirm('Excluir a atividade "' + ev.nome + '"? A lista de presença dela também será apagada.')) return;
-  delete eventos[id]; delete PRESENCA[id]; delete CAL_EXTRAS[id]; eventoMenuAbertoId = null;
-  saveState(); renderCal();
-}
-function toggleEventoMenu(id){ eventoMenuAbertoId = eventoMenuAbertoId === id ? null : id; renderCal(); }
 
-function togglePresenca(eid, yid){
-  if (!PRESENCA[eid]) PRESENCA[eid] = {};
-  const cur = PRESENCA[eid][yid];
-  if (cur === undefined || cur === null) PRESENCA[eid][yid] = 1;
-  else if (cur === 1) PRESENCA[eid][yid] = 0;
-  else delete PRESENCA[eid][yid];
-  saveState(); fillPresencaGrid(eid); renderPresencaSummary();
-}
-function marcarTodosPresentes(eid, presente){
-  if (!PRESENCA[eid]) PRESENCA[eid] = {};
-  actJ().forEach(({yid}) => { if (presente) PRESENCA[eid][yid] = 1; else delete PRESENCA[eid][yid]; });
-  saveState(); fillPresencaGrid(eid); renderPresencaSummary();
-}
-function toggleJustificativa(eid, yid){
-  let l = JUSTIFICATIVAS_SR[yid]; if (!Array.isArray(l)) l = l ? Object.values(l) : [];
-  const i = l.indexOf(eid); if (i >= 0) l.splice(i,1); else l.push(eid);
-  JUSTIFICATIVAS_SR[yid] = l; saveState(); fillPresencaGrid(eid); renderPresencaSummary();
-}
-function justificadas(yid){ const l = JUSTIFICATIVAS_SR[yid]; return Array.isArray(l) ? l : (l ? Object.values(l) : []); }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function fillPresencaGrid(eid){
   const grid = $('pg-' + eid), badge = $('pb-' + eid); if (!grid) return;
   grid.innerHTML = '';
@@ -1954,7 +1699,7 @@ function fillPresencaGrid(eid){
   }
 }
 let resumoAberto = restaurar('resumoPresencasAberto', false);
-function toggleResumoPresencas(){ resumoAberto = !resumoAberto; persistir('resumoPresencasAberto', resumoAberto); renderPresencaSummary(); }
+
 function renderPresencaSummary(){
   const box = $('presenca-summary'); if (!box) return;
   box.style.display = resumoAberto ? 'block' : 'none';
@@ -1968,85 +1713,17 @@ function renderPresencaSummary(){
     return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #F2EFEA;font-size:12px;"><span style="flex:1;font-weight:700;">${esc(JNOMES[i])}</span><span style="color:#27AE60;font-weight:800;">${p} presença(s)</span><span style="color:${f?'#E74C3C':'#999'};font-weight:800;">${f} falta(s)</span></div>`;
   }).join('');
 }
-function renderCal(){
-  const list = $('cal-lista'); list.innerHTML = '';
-  const evs = eventosOrdenados();
-  if (!evs.length) { list.innerHTML = '<div class="cla-vazio"><span class="ico">📅</span>Nenhuma atividade cadastrada ainda.<br>Use <strong>+ Adicionar atividade</strong> acima.</div>'; renderPresencaSummary(); return; }
-  let mesAtual = '', n = 0;
-  evs.forEach(ev => {
-    n++;
-    const d = new Date((ev.dataISO || '') + 'T12:00:00'); const valida = !isNaN(d);
-    const mes = valida ? ev.dataISO.slice(0,7) : 'sem-data';
-    if (mes !== mesAtual) {
-      mesAtual = mes;
-      const h = document.createElement('div'); h.className = 'cal-section-hdr'; h.style.marginTop = list.children.length ? '20px' : '';
-      h.textContent = '📅 ' + (valida ? d.toLocaleDateString('pt-BR', {month:'long', year:'numeric'}) : 'Sem data');
-      list.appendChild(h);
-    }
-    const eid = ev.id, fmt = ev.fmt || 'C';
-    const itens = Array.isArray(ev.itens) ? ev.itens : Object.values(ev.itens || {});
-    const card = document.createElement('div'); card.className = 'cal-card'; card.style.flexDirection = 'column'; card.style.margin = '0 12px 8px';
-    const tags = itens.map(b => getBlock(b)).filter(Boolean).map(b => `<span class="bloco-tag">📌 ${esc(b.name)}</span>`).join('');
-    const menu = eventoMenuAbertoId === eid;
-    const main = document.createElement('div'); main.style.cssText = 'display:flex;';
-    main.innerHTML = `<div class="cal-strip strip-normal"><div class="strip-idx">${n}</div><div class="strip-day" style="font-size:18px">${valida ? String(d.getDate()).padStart(2,'0') : '--'}</div><div class="strip-mon">${valida ? MESES[d.getMonth()] : ''}</div></div>
-      <div class="cal-body" style="flex:1;position:relative;">
-        <button class="evento-menu-btn-sr" style="position:absolute;top:0;right:0;" onclick="event.stopPropagation();toggleEventoMenu('${eid}')">⋮</button>
-        <div style="padding-right:20px;">
-          <div style="font-size:12px;font-weight:800;color:var(--vinho);margin-bottom:3px;">${ev.externa ? '<span class="externa-badge-sr">🌍 Externa</span>' : ''}${esc(ev.nome)}</div>
-          ${ev.local ? `<div style="font-size:10px;color:var(--muted);margin-bottom:2px;">📍 ${esc(ev.local)}</div>` : ''}
-          ${ev.responsavel ? `<div style="font-size:10px;color:var(--muted);margin-bottom:4px;">👤 ${esc(ev.responsavel)}</div>` : ''}
-          <div class="cal-meta"><span class="fmt-badge fmt-${FMT_CLASSE[fmt] || 'T'}" title="${esc(FMT_NOME[fmt] || '')}">${esc(fmt)}</span>${tags}</div>
-          ${ev.txt ? `<div class="cal-text">${esc(ev.txt)}</div>` : ''}
-        </div>
-        ${menu ? `<div class="evento-dropdown-sr" onclick="event.stopPropagation()"><button onclick="editarEvento('${eid}')">✏️ Editar</button><button class="remover" onclick="removerEvento('${eid}')">🗑️ Excluir</button></div>` : ''}
-      </div>`;
-    card.appendChild(main);
-    const det = document.createElement('details'); det.style.cssText = 'border-top:1px solid #F0EDE8;';
-    det.innerHTML = `<summary style="cursor:pointer;padding:7px 11px;font-size:10px;font-weight:700;color:var(--muted);list-style:none;display:flex;align-items:center;gap:6px;user-select:none;"><span>📋 Lista de Presença</span><span id="pb-${eid}" style="margin-left:auto;"></span><span style="font-size:9px;">▼</span></summary><div style="padding:6px 11px 10px;"><div style="display:flex;flex-direction:column;gap:2px;" id="pg-${eid}"></div></div>`;
-    card.appendChild(det);
-    const ex = getExtra(eid), lk = linkSeguro(ex.link);
-    const det2 = document.createElement('details'); det2.style.cssText = 'border-top:1px solid #F0EDE8;';
-    det2.innerHTML = `<summary style="cursor:pointer;padding:7px 11px;font-size:10px;font-weight:700;color:var(--muted);list-style:none;display:flex;align-items:center;gap:6px;user-select:none;"><span>📎 Link e relato</span><span style="font-size:9px;margin-left:auto;">▼</span></summary>
-      <div style="padding:6px 11px 12px;display:flex;flex-direction:column;gap:8px;">
-        <div><div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px;">Link (Google Drive, fotos, documento etc.)</div>
-          <input type="url" class="extra-link-input" placeholder="https://drive.google.com/..." value="${esc(ex.link || '')}" onchange="salvarLinkEvento('${eid}',this.value)">
-          ${lk ? `<a class="evento-link-sr" href="${esc(lk)}" target="_blank" rel="noopener" style="display:inline-block;margin-top:4px;">🔗 Abrir link</a>` : ''}</div>
-        <div><div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px;">Como foi a atividade? Relato e observações</div>
-          <textarea class="extra-resposta-input" rows="3" placeholder="Escreva aqui..." onchange="salvarRespostaEvento('${eid}',this.value)">${esc(ex.resposta || '')}</textarea></div>
-      </div>`;
-    card.appendChild(det2);
-    list.appendChild(card);
-    fillPresencaGrid(eid);
-  });
-  renderPresencaSummary();
-}
+
 
 // ╔═══════════════════════════════════════════════════╗
 // ║                   PIONEIROS                      ║
 // ╚═══════════════════════════════════════════════════╝
-function calcAge(bornStr, today){
-  const b = new Date(bornStr + 'T12:00:00');
-  let y = today.getFullYear() - b.getFullYear(), m = today.getMonth() - b.getMonth(), d = today.getDate() - b.getDate();
-  if (d < 0) m--; if (m < 0) { y--; m += 12; }
-  return {years:y, months:m};
-}
-function dataEm(bornStr, anos){ const b = new Date(bornStr + 'T12:00:00'); return new Date(b.getFullYear() + anos, b.getMonth(), b.getDate(), 12); }
-function diasAte(d, today){ return Math.ceil((d - today) / 86400000); }
-function fmtDate(d){ return d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'}); }
-function timeStr(days){
-  if (days <= 0) return 'Prazo encerrado';
-  const tm = Math.floor(days / 30.44), y = Math.floor(tm / 12), m = tm % 12;
-  if (y > 0 && m > 0) return `${y} ano${y>1?'s':''} e ${m} mês${m!==1?'es':''}`;
-  if (y > 0) return `${y} ano${y>1?'s':''}`;
-  if (m > 0) return `${m} mês${m!==1?'es':''}`;
-  return `${days} dia${days!==1?'s':''}`;
-}
-function timeColor(days, maxDays){
-  if (days <= 0) return {fg:'#95A5A6', bg:'#F5F5F5', border:'#CCCCCC'};
-  const hue = Math.round(Math.min(1, Math.max(0, days / maxDays)) * 120);
-  return {fg:`hsl(${hue},65%,38%)`, bg:`hsl(${hue},60%,95%)`, border:`hsl(${hue},55%,60%)`};
-}
+
+
+
+
+
+
 function initials(name){ return String(name).split(' ').filter(w => w.length > 2).slice(0,2).map(w => w[0]).join('').toUpperCase() || '?'; }
 
 function showModal(yid){
@@ -2055,7 +1732,7 @@ function showModal(yid){
   $('modal-ttl').textContent = y ? 'Editar Pioneiro' : 'Adicionar Pioneiro';
   $('inp-name').value = y ? y.name : ''; $('inp-born').value = y ? y.born : ''; $('inp-role').value = y ? (y.role || '') : ''; $('inp-obs').value = y ? (y.observacoes || '') : '';
 }
-function hideModal(){ $('youth-modal').classList.remove('open'); }
+
 function saveYouth(){
   const name = $('inp-name').value.trim(), born = $('inp-born').value, role = $('inp-role').value.trim(), observacoes = $('inp-obs').value.trim();
   if (!name || !born) { alert('Nome e data de nascimento são obrigatórios.'); return; }
@@ -2064,18 +1741,10 @@ function saveYouth(){
   else YOUTH_DATA.push({id:'y_' + Date.now(), name, born, role, observacoes, archived:false, color:COLOR_PALETTE[YOUTH_DATA.length % COLOR_PALETTE.length]});
   syncJovens(); saveState(); hideModal(); renderAllTabs();
 }
-function verObservacao(yid){
-  const y = YOUTH_DATA.find(v => v.id === yid); if (!y) return;
-  $('obsModalTitulo').textContent = '📋 ' + y.name; $('obsModalTexto').textContent = y.observacoes || 'Nenhuma observação registrada.';
-  $('obsModalOv').classList.add('open');
-}
-function fecharObservacao(){ $('obsModalOv').classList.remove('open'); }
-function archiveYouth(yid){
-  const y = YOUTH_DATA.find(v => v.id === yid); if (!y) return;
-  if (!confirm('Arquivar ' + y.name + '? O histórico é mantido e dá para restaurar depois.')) return;
-  y.archived = true; syncJovens(); saveState(); renderAllTabs();
-}
-function unarchiveYouth(yid){ const y = YOUTH_DATA.find(v => v.id === yid); if (!y) return; y.archived = false; syncJovens(); saveState(); renderAllTabs(); }
+
+
+
+
 async function deleteYouth(yid){
   if (!souAdmin) { alert('Esta ação é só para administradores.'); return; }
   const y = YOUTH_DATA.find(v => v.id === yid); if (!y) return;
@@ -2191,16 +1860,9 @@ function marcoAuto(m, yid){
   if (m.auto === 4) return fixasCompletas(yid);
   return false;
 }
-function setMarcoData(yid, k, v){
-  if (!INSIGNIA_BP[yid]) INSIGNIA_BP[yid] = {};
-  if (v) INSIGNIA_BP[yid][k] = v; else delete INSIGNIA_BP[yid][k];
-  saveState(); preservarScroll(renderBP);
-}
-function toggleMarco(yid, k){
-  const atual = INSIGNIA_BP[yid]?.[k];
-  setMarcoData(yid, k, atual ? '' : new Date().toISOString().slice(0,10));
-}
-function salvarNotaExpedicao(yid, v){ if (!INSIGNIA_BP[yid]) INSIGNIA_BP[yid] = {}; INSIGNIA_BP[yid].notaExpedicao = v; saveState(); }
+
+
+
 let bpAbertos = restaurar('bpAbertos', {});
 function renderBP(){
   const c = $('bp-conteudo'); if (!c) return;
@@ -2279,7 +1941,7 @@ function dadosRelatorioTropa() {
     linhas
   });
 }
-function relatorioTropaSecao() { V2.abrirRelatorioTropa(dadosRelatorioTropa()); }
+
 function relatorioJovem(yid) {
   const y = YOUTH_DATA.find(v => v.id === yid); if (!y) return;
   const feito = (bl, id) => bl && bl.concluded && bl.concluded[id] === 1;
@@ -2309,18 +1971,8 @@ function relatorioJovem(yid) {
   });
 }
 
-function onDataSaved(){
-  clearTimeout(_savedTimer);
-  const el = $('save-status'); if (el) el.textContent = '● Salvando…';
-  _savedTimer = setTimeout(() => { const t = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit', second:'2-digit'}); if (el) el.textContent = '✓ Salvo automaticamente às ' + t; }, 350);
-}
-async function saveAll(){
-  clearTimeout(_savedTimer); await saveState();
-  const t = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
-  const el = $('save-status'); if (el) el.textContent = '✓ Dados salvos às ' + t;
-  const btn = $('save-main-btn');
-  if (btn) { const o = btn.textContent; btn.textContent = '✓ Salvo!'; btn.style.background = '#27AE60'; btn.style.color = '#fff'; setTimeout(() => { btn.textContent = o; btn.style.background = ''; btn.style.color = ''; }, 2000); }
-}
+
+
 async function exportData(){
   await saveAll();
   const data = { version:'cla-1.0', exportedAt:new Date().toISOString(), exportedBy:'GE Joaninha — Clã Pioneiro', ...montarDados() };
@@ -2366,18 +2018,8 @@ function importData(event){
 // ╔═══════════════════════════════════════════════════╗
 // ║                  INICIALIZAÇÃO                   ║
 // ╚═══════════════════════════════════════════════════╝
-function showTab(id, btn){
-  document.querySelectorAll('.tab-content').forEach(t => t.classList.toggle('active', t.id === id));
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
-  persistir('aba', id); window.scrollTo(0, 0);
-}
-function restaurarUltimaAba(){
-  const id = restaurar('aba', 'prog');
-  const btn = document.querySelector('.tab-btn[data-tab="' + id + '"]') || document.querySelector('.tab-btn');
-  showTab(btn.dataset.tab, btn);
-  if (btn.dataset.tab === 'alm') V2_ALMOX.abrir();
-  if (btn.dataset.tab === 'fin') V2_FIN.abrir();
-}
+
+
 async function iniciarApp(){
   if (MODO_VIEW) return iniciarVisualizacao();
   await loadState();
