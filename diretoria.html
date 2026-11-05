@@ -11,7 +11,7 @@
 <div class="cabecalho-fixo"><nav class="tabs-linha"><button class="tab-btn-linha" data-aba="almox" onclick="mostrarAba('almox',this)">📦 Almoxarifado geral</button><button class="tab-btn-linha" data-aba="chefes" onclick="mostrarAba('chefes',this)">👥 Chefes e assistentes</button><button class="tab-btn-linha" data-aba="docs" onclick="mostrarAba('docs',this)">📄 Documentação</button></nav></div>
 <div class="pagina" id="pg-almox"><div id="almox-box"></div></div>
 <div class="pagina" id="pg-chefes"><div class="pagina-ttl">Chefes e assistentes</div><div class="pagina-sub">Quem tem acesso a cada seção do sistema.</div><div id="chefes-lista"><div class="vazio">Carregando…</div></div>
-<div class="card" style="margin-top:12px;"><div class="card-ttl">Assistentes <span class="em-breve">em construção</span></div><div class="card-txt">O cadastro de assistentes por seção ainda não existe. Por enquanto, a lista acima mostra os chefes com acesso ao sistema.</div></div></div>
+</div>
 <div class="pagina" id="pg-docs"><div class="pagina-ttl">Documentação</div><div class="pagina-sub">Documentos de gestão do Grupo Escoteiro.</div>
 <div class="card"><div class="card-ttl">📝 Atas de reunião <span class="em-breve">em construção</span></div><div class="card-txt">Registro das reuniões da diretoria e dos chefes.</div></div>
 <div class="card"><div class="card-ttl">📁 Documentos do grupo <span class="em-breve">em construção</span></div><div class="card-txt">Estatuto, registros, certificados e arquivos de consulta.</div></div>
@@ -99,10 +99,11 @@ async function aoAbrirAba(id) {
     const d = await r.json();
     if (!d || d.error) { box.innerHTML = '<div class="vazio">Não foi possível carregar a lista de chefes.</div>'; return; }
     const grupos = {};
-    Object.keys(d).forEach(uid => { const u = d[uid]; if (!u) return; const k = u.admin ? 'admin' : (u.tropa || 'escoteira'); (grupos[k] = grupos[k] || []).push(u); });
+    Object.keys(d).forEach(uid => { const u = d[uid]; if (!u) return; const k = u.tropa || (u.admin ? 'admin' : 'escoteira'); (grupos[k] = grupos[k] || []).push(u); });
     const ordem = ['diretoria','admin','alcateia','escoteira','senior','cla'];
+    const tag = u => '<span class="tag-fn ' + (u.funcao === 'assistente' ? 'ass' : 'chefe') + '">' + (u.funcao === 'assistente' ? 'Assistente' : 'Chefe de seção') + '</span>' + (u.admin ? ' <span class="tag-fn adm">⭐ Admin</span>' : '');
     box.innerHTML = ordem.filter(k => grupos[k]).map(k => '<div class="grupo-ttl">' + ROTULOS[k] + ' (' + grupos[k].length + ')</div><div class="card">' +
-      grupos[k].sort((a, b) => (a.nome || a.registro || '').localeCompare(b.nome || b.registro || '', 'pt')).map(u => '<div class="pessoa"><b>' + escH(u.nome || ('Registro ' + u.registro)) + '</b>' + (u.nome ? '<small>Registro ' + escH(u.registro) + '</small>' : '') + '</div>').join('') + '</div>').join('') || '<div class="vazio">Nenhum chefe cadastrado.</div>';
+      grupos[k].sort((a, b) => ((a.funcao === 'assistente') - (b.funcao === 'assistente')) || (a.nome || a.registro || '').localeCompare(b.nome || b.registro || '', 'pt')).map(u => '<div class="pessoa"><b>' + escH(u.nome || ('Registro ' + u.registro)) + '</b> ' + tag(u) + (u.nome ? '<small>Registro ' + escH(u.registro) + '</small>' : '') + '</div>').join('') + '</div>').join('') || '<div class="vazio">Nenhum chefe cadastrado.</div>';
   } catch (e) { box.innerHTML = '<div class="vazio">Sem conexão para carregar a lista.</div>'; }
 }
 iniciarSecao();

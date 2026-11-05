@@ -208,6 +208,17 @@ scrollbar-width: thin; scrollbar-color: rgba(0,0,0,.25) transparent;
 .chefe-row-registro { font-size: 13px; font-weight: 700; flex: 1; }
 .chefe-badge-admin { font-size: 9px; font-weight: 800; background: #FDEBD0; color: #A85D00; padding: 2px 7px; border-radius: 10px; }
 .chefe-row-btn { border: 1px solid var(--border); background: var(--card); font-size: 10px; font-weight: 700; padding: 5px 8px; border-radius: 7px; cursor: pointer; white-space: nowrap; }
+.sw-lbl { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.sw { position: relative; display: inline-block; width: 36px; height: 20px; }
+.sw input { opacity: 0; width: 100%; height: 100%; margin: 0; position: absolute; inset: 0; cursor: pointer; z-index: 1; }
+.sw i { position: absolute; inset: 0; background: #8886; border-radius: 20px; transition: background .2s; }
+.sw i::before { content: ''; position: absolute; left: 2px; top: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .2s; }
+.sw input:checked + i { background: #27AE60; }
+.sw input:checked + i::before { transform: translateX(16px); }
+.chefe-tag { display: inline-block; font-size: 9px; font-weight: 800; padding: 2px 7px; border-radius: 20px; margin-top: 3px; }
+.chefe-tag.chefe { background: #1565C033; color: #5C9BE6; }
+.chefe-tag.ass { background: #E67E2233; color: #E69A4D; }
+.chefe-tag.adm { background: #D4A01733; color: #D4A017; }
 .chefe-row-btn.remover { color: #E74C3C; border-color: #F5C6C0; }
 .chefe-row-btn[title="Editar nome"] { padding: 5px 7px; font-size: 12px; }
 .lis-modal-header { position: sticky; top: 0; z-index: 5; background: var(--card); padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
@@ -971,8 +982,8 @@ const dados = await r.json();
 return dados || {};
 } catch (e) { return {}; }
 }
-async function criarNovoChefe(registro, papel, nome) {
-// papel: 'escoteira' | 'senior' | 'admin'
+async function criarNovoChefe(registro, papel, nome, funcao, ehAdmin) {
+// papel: seção ('alcateia'|'escoteira'|'senior'|'cla'|'diretoria'); funcao: 'chefe'|'assistente'; admin: boolean
 registro = (registro || '').trim();
 nome = (nome || '').trim();
 if (!registro) return { erro: true, mensagem: 'Digite o registro do novo chefe.' };
@@ -986,25 +997,25 @@ if (data.error) {
 if (data.error.message === 'EMAIL_EXISTS') return { erro: true, mensagem: 'Esse registro já tem acesso cadastrado.' };
 return { erro: true, mensagem: 'Não foi possível criar o acesso. Tenta de novo.' };
 }
-const admin = papel === 'admin';
-const tropa = papel !== 'admin' ? papel : null;
+const admin = !!ehAdmin;
+const tropa = papel || null;
 await fetch(urlComAuthFirebase(DB_URL + '/usuarios/' + data.localId + '.json'), {
 method: 'PUT', headers: {'Content-Type': 'application/json'},
-body: JSON.stringify({ registro, nome: nome || undefined, admin, tropa, criadoEm: new Date().toISOString() })
+body: JSON.stringify({ registro, nome: nome || undefined, admin, tropa, funcao: funcao === 'assistente' ? 'assistente' : 'chefe', criadoEm: new Date().toISOString() })
 });
 return { erro: false };
 }
 async function alterarAdminChefe(uid, novoValor) {
 await fetch(urlComAuthFirebase(DB_URL + '/usuarios/' + uid + '/admin.json'), { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(novoValor) });
 }
-async function alterarRoleChefe(uid, novoPapel) {
-// novoPapel: 'escoteira' | 'senior' | 'admin'
-const admin = novoPapel === 'admin';
-const tropa = novoPapel !== 'admin' ? novoPapel : null;
+async function alterarRoleChefe(uid, novaSecao) {
 await fetch(urlComAuthFirebase(DB_URL + '/usuarios/' + uid + '.json'), {
 method: 'PATCH', headers: {'Content-Type': 'application/json'},
-body: JSON.stringify({ admin, tropa })
+body: JSON.stringify({ tropa: novaSecao || null })
 });
+}
+async function alterarFuncaoChefe(uid, funcao) {
+await fetch(urlComAuthFirebase(DB_URL + '/usuarios/' + uid + '/funcao.json'), { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(funcao === 'assistente' ? 'assistente' : 'chefe') });
 }
 async function alterarSenhaChefe(uid, novaSenha) {
 // novaSenha: string ou null (null = usar registro como padrão)
@@ -1071,8 +1082,12 @@ let html = `
 <option value="senior">🎓 Tropa Sênior</option>
 <option value="cla">🔥 Clã Pioneiro</option>
 <option value="diretoria">🏛️ Diretoria</option>
-<option value="admin">⭐ Administrador</option>
 </select>
+<select class="campo-input" id="novoChefeFuncaoSelect" style="flex:1;min-width:130px;">
+<option value="chefe">Chefe de seção</option>
+<option value="assistente">Assistente</option>
+</select>
+<label class="sw-lbl"><span class="sw"><input type="checkbox" id="novoChefeAdminChk"><i></i></span> ⭐ Admin</label>
 <button class="chefe-add-btn" onclick="criarNovoChefeUI()">+ Criar</button>
 </div>
 <div id="novoChefeErro" class="login-erro-msg" style="display:none;margin-bottom:12px;"></div>
@@ -1082,18 +1097,21 @@ html += '<div style="padding:14px;text-align:center;color:var(--muted);font-size
 } else {
 html += uids.map(uid => {
 const c = chefes[uid];
-const papelAtual = c.admin ? 'admin' : (c.tropa || 'escoteira');
-const papelLabel = c.admin ? '⭐ Admin' : ({ senior: '🎓 Sênior', alcateia: '🐺 Alcateia', cla: '🔥 Clã Pioneiro', diretoria: '🏛️ Diretoria' }[c.tropa] || '🏕️ Escoteira');
-return `<div class="chefe-row" style="flex-wrap:wrap;gap:5px;">
-<span class="chefe-row-registro" style="flex:1;min-width:120px;">${c.nome ? c.nome : c.registro || uid}${c.nome ? `<br><span style="font-size:10px;font-weight:500;color:var(--muted);">Registro ${c.registro || uid}</span>` : ''}</span>
-<select class="campo-input" style="font-size:11px;padding:4px 6px;flex:0 0 auto;" onchange="alterarRoleChefeUI('${uid}', this.value)" title="Alterar acesso">
-<option value="alcateia" ${papelAtual==='alcateia'?'selected':''}>🐺 Alcateia</option>
-<option value="escoteira" ${papelAtual==='escoteira'?'selected':''}>🏕️ Escoteira</option>
-<option value="senior" ${papelAtual==='senior'?'selected':''}>🎓 Sênior</option>
-<option value="cla" ${papelAtual==='cla'?'selected':''}>🔥 Clã Pioneiro</option>
-<option value="diretoria" ${papelAtual==='diretoria'?'selected':''}>🏛️ Diretoria</option>
-<option value="admin" ${papelAtual==='admin'?'selected':''}>⭐ Admin</option>
+const secao = c.tropa || '';
+const ehAss = c.funcao === 'assistente';
+const rotSecao = { senior: '🎓 Sênior', alcateia: '🐺 Alcateia', cla: '🔥 Clã Pioneiro', diretoria: '🏛️ Diretoria', escoteira: '🏕️ Escoteira' };
+return `<div class="chefe-row" style="flex-wrap:wrap;gap:6px;">
+<span class="chefe-row-registro" style="flex:1;min-width:120px;">${c.nome ? c.nome : c.registro || uid}${c.nome ? `<br><span style="font-size:10px;font-weight:500;color:var(--muted);">Registro ${c.registro || uid}</span>` : ''}
+<br><span class="chefe-tag ${ehAss ? 'ass' : 'chefe'}">${ehAss ? 'Assistente' : 'Chefe de seção'}</span>${c.admin ? ' <span class="chefe-tag adm">⭐ Admin</span>' : ''}</span>
+<select class="campo-input" style="font-size:11px;padding:4px 6px;flex:0 0 auto;" onchange="alterarRoleChefeUI('${uid}', this.value)" title="Seção">
+${c.admin ? `<option value="" ${secao===''?'selected':''}>Sem seção (vê tudo)</option>` : ''}
+${Object.keys(rotSecao).map(k => `<option value="${k}" ${(secao||(c.admin?'':'escoteira'))===k?'selected':''}>${rotSecao[k]}</option>`).join('')}
 </select>
+<select class="campo-input" style="font-size:11px;padding:4px 6px;flex:0 0 auto;" onchange="alterarFuncaoChefeUI('${uid}', this.value)" title="Função">
+<option value="chefe" ${ehAss?'':'selected'}>Chefe de seção</option>
+<option value="assistente" ${ehAss?'selected':''}>Assistente</option>
+</select>
+<label class="sw-lbl" title="Administrador"><span class="sw"><input type="checkbox" ${c.admin?'checked':''} onchange="alternarAdminUI('${uid}', this.checked, this)"><i></i></span> ⭐ Admin</label>
 <button class="chefe-row-btn" onclick="editarNomeChefeUI('${uid}')" title="Editar nome">✏️</button>
 <button class="chefe-row-btn" onclick="redefinirSenhaAdmin('${uid}','${c.registro || uid}')" title="Redefinir senha">🔑</button>
 ${uid !== firebaseUid ? `<button class="chefe-row-btn remover" onclick="removerAcessoChefeUI('${uid}','${c.registro || ''}')">Remover</button>` : ''}
@@ -1110,7 +1128,7 @@ const inputRegistro = document.getElementById('novoChefeRegistroInput');
 const roleSelect = document.getElementById('novoChefeRoleSelect');
 const erroDiv = document.getElementById('novoChefeErro');
 erroDiv.style.display = 'none';
-const resultado = await criarNovoChefe(inputRegistro.value, roleSelect.value, inputNome.value);
+const resultado = await criarNovoChefe(inputRegistro.value, roleSelect.value, inputNome.value, document.getElementById('novoChefeFuncaoSelect').value, document.getElementById('novoChefeAdminChk').checked);
 if (resultado.erro) {
 erroDiv.textContent = resultado.mensagem;
 erroDiv.style.display = 'block';
@@ -1120,21 +1138,22 @@ inputNome.value = '';
 inputRegistro.value = '';
 await renderChefesModalBody();
 }
-async function alterarRoleChefeUI(uid, novoPapel) {
-const label = novoPapel === 'admin' ? 'Administrador' : ({ senior: 'Tropa Sênior', alcateia: 'Alcateia', cla: 'Clã Pioneiro', diretoria: 'Diretoria' }[novoPapel] || 'Tropa Escoteira');
-const aviso = uid === firebaseUid ? `\n\n⚠️ Você está alterando seu PRÓPRIO acesso! Se remover o Admin, perderá acesso a esta tela.` : '';
-if (!confirm(`Alterar acesso para "${label}"?${aviso}`)) {
-await renderChefesModalBody(); // reverte select visual
-return;
+async function alterarRoleChefeUI(uid, novaSecao) {
+const label = ({ senior: 'Tropa Sênior', alcateia: 'Alcateia', cla: 'Clã Pioneiro', diretoria: 'Diretoria', escoteira: 'Tropa Escoteira' }[novaSecao] || 'Sem seção');
+if (!confirm(`Alterar a seção para "${label}"?`)) { await renderChefesModalBody(); return; }
+await alterarRoleChefe(uid, novaSecao);
+if (uid === firebaseUid) { await checarSeSouAdmin(); fecharGerenciarChefes(); aplicarEstadoContaLogada(); return; }
+await renderChefesModalBody();
 }
-await alterarRoleChefe(uid, novoPapel);
-if (uid === firebaseUid) {
-// Atualiza a sessão atual imediatamente
-await checarSeSouAdmin();
-fecharGerenciarChefes();
-aplicarEstadoContaLogada();
-return;
+async function alterarFuncaoChefeUI(uid, funcao) {
+await alterarFuncaoChefe(uid, funcao);
+await renderChefesModalBody();
 }
+async function alternarAdminUI(uid, valor, el) {
+const aviso = uid === firebaseUid && !valor ? `\n\n⚠️ Você está tirando seu PRÓPRIO acesso de administrador e perderá esta tela.` : '';
+if (!confirm(`${valor ? 'Dar' : 'Tirar'} acesso de administrador?${aviso}`)) { el.checked = !valor; return; }
+await alterarAdminChefe(uid, valor);
+if (uid === firebaseUid) { await checarSeSouAdmin(); fecharGerenciarChefes(); aplicarEstadoContaLogada(); return; }
 await renderChefesModalBody();
 }
 async function redefinirSenhaAdmin(uid, registro) {

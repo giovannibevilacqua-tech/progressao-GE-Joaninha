@@ -22,3 +22,8 @@ body:not(.eh-admin) .somente-admin{display:none !important;}
 .pessoa:last-child{border-bottom:none;}
 .pessoa b{font-weight:700;}
 .pessoa small{color:var(--muted);font-size:10px;}
+
+.tag-fn{display:inline-block;font-size:9px;font-weight:800;padding:2px 7px;border-radius:20px;margin-left:4px;}
+.tag-fn.chefe{background:#1565C033;color:#5C9BE6}
+.tag-fn.ass{background:#E67E2233;color:#E69A4D}
+.tag-fn.adm{background:#D4A01733;color:#D4A017}
