@@ -2242,15 +2242,26 @@ function normalizarCiclo(v) {
 }
 const fmtPeriodoCiclo = s => (s.ini ? new Date(s.ini + 'T12:00:00').toLocaleDateString('pt-BR') : '?') + ' → ' + (s.fim ? new Date(s.fim + 'T12:00:00').toLocaleDateString('pt-BR') : '?');
 function cicloSem(key) { return CICLO_SEM.find(s => s.key === key); }
+let cicloPickerAberto = null;
+function cicloTogglePicker(k, j) { const key = k + '_' + j; cicloPickerAberto = cicloPickerAberto === key ? null : key; renderCiclo(); }
 function cicloSelectBloco(sem, j) {
-  const atual = sem.blocos[j] || '';
-  const ops = Object.keys(EIXOS).map(k => '<optgroup label="' + esc(EIXOS[k].label) + '">' + BLOCKS.filter(b => b.eixo === k).map(b => '<option value="' + b.id + '"' + (b.id === atual ? ' selected' : '') + '>' + esc(b.name) + '</option>').join('') + '</optgroup>').join('');
-  const cor = atual ? (EIXOS[(BLOCKS.find(b => b.id === atual) || {}).eixo] || {}).cor : '';
-  return '<div style="display:flex;gap:6px;margin-bottom:' + (atual ? '2' : '6') + 'px;align-items:center;"><select class="f-input" style="flex:1;' + (cor ? 'border-left:5px solid ' + cor + ';' : '') + '" onchange="cicloTrocarBloco(\'' + sem.key + '\',' + j + ',this.value)"><option value="">Selecionar bloco…</option>' + ops + '</select><button class="btn-ic" style="color:#E74C3C;" onclick="cicloRemoverBloco(\'' + sem.key + '\',' + j + ')" title="Remover">✕</button></div>' + (atual ? '<div style="font-size:10px;color:var(--muted);margin:0 0 8px 6px;">' + JOVENS.filter(y => isConcluido(atual, y)).length + ' de ' + JOVENS.length + ' concluíram</div>' : '');
+  const sel = sem.blocos[j] || '', def = sel ? BLOCKS.find(b => b.id === sel) : null, key = sem.key + '_' + j, aberto = cicloPickerAberto === key;
+  const cor = def ? (EIXOS[def.eixo] || {}).cor : '';
+  const estiloBtn = def ? 'background:' + cor + ';color:#fff;border-color:' + cor + ';' : '';
+  let painel = '';
+  if (aberto) {
+    painel = '<div class="itens-picker-scroll-sr" style="display:block;">' + Object.keys(EIXOS).map(k => {
+      const blocos = BLOCKS.filter(b => b.eixo === k).map(b => '<div class="picker-bloco-sr" style="' + (b.id === sel ? 'border-color:' + EIXOS[k].cor + ';' : '') + '"><div class="picker-bloco-head-sr" onclick="cicloTrocarBloco(\'' + sem.key + '\',' + j + ',\'' + b.id + '\')"><span>' + esc(b.name) + '</span>' + (b.id === sel ? '<span class="picker-bloco-count-sr">✓ selecionado</span>' : '') + '</div></div>').join('');
+      return '<div class="eixo-picker-header-sr" style="background:' + EIXOS[k].cor + '">' + esc(EIXOS[k].label) + '</div>' + blocos;
+    }).join('') + '<div class="picker-bloco-sr" style="cursor:pointer;"><div class="picker-bloco-head-sr" onclick="cicloTrocarBloco(\'' + sem.key + '\',' + j + ',\'\')"><span>— Limpar seleção</span></div></div></div>';
+  }
+  return '<div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:6px;"><div style="flex:1;min-width:0;"><button type="button" class="btn-picker-toggle-sr" style="' + estiloBtn + '" onclick="cicloTogglePicker(\'' + sem.key + '\',' + j + ')"><span>' + (def ? esc(def.name) : 'Selecionar bloco') + '</span><span class="chev" style="transform:rotate(' + (aberto ? 180 : 0) + 'deg);' + (def ? 'color:#fff;' : '') + '">▾</span></button>' + painel +
+    (def && !aberto ? '<div style="font-size:10px;color:var(--muted);margin:3px 0 0 4px;">' + JOVENS.filter(y => isConcluido(sel, y)).length + ' de ' + JOVENS.length + ' concluíram</div>' : '') + '</div>' +
+    '<button class="btn-ic" style="color:#E74C3C;flex-shrink:0;" onclick="cicloRemoverBloco(\'' + sem.key + '\',' + j + ')" title="Remover este bloco">✕</button></div>';
 }
-function cicloTrocarBloco(k, j, v) { cicloSem(k).blocos[j] = v; saveState(); renderCiclo(); }
+function cicloTrocarBloco(k, j, v) { cicloSem(k).blocos[j] = v; cicloPickerAberto = null; saveState(); renderCiclo(); }
 function cicloAddBloco(k) { cicloSem(k).blocos.push(''); saveState(); renderCiclo(); }
-function cicloRemoverBloco(k, j) { cicloSem(k).blocos.splice(j, 1); saveState(); renderCiclo(); }
+function cicloRemoverBloco(k, j) { cicloPickerAberto = null; cicloSem(k).blocos.splice(j, 1); saveState(); renderCiclo(); }
 function cicloAddMeta(k) {
   const t = document.getElementById('cicloMetaTxt_' + k), ic = document.getElementById('cicloMetaIc_' + k);
   if (!t || !t.value.trim()) return;

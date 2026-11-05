@@ -64,12 +64,82 @@ try {
   };
   window.icoTxt = { alcateia: '🐺', escoteira: '⚜️', senior: '🧭', cla: '🦉', diretoria: '\uD83E\uDEA2' };
   window.icoCor = COR;
-  // Listas de seleção legíveis mesmo com extensões de modo escuro (o texto das opções ficava claro sobre fundo claro ou fora da caixa)
+  // Listas de seleção: o menu nativo do navegador ficava ilegível (texto fora da caixa) com extensões de modo escuro.
+  // No computador, o clique abre um menu próprio (cores fixas, texto sempre dentro da caixa); no celular continua o seletor nativo.
   if (typeof document !== 'undefined') {
     (function () {
       var st = document.createElement('style');
-      st.textContent = 'select{color-scheme:light;} select option,select optgroup{background:#fff !important;color:#222 !important;}';
+      st.textContent = 'select{color-scheme:light;} select option,select optgroup{background:#fff !important;color:#222 !important;}' +
+        '.cs-panel{position:fixed;z-index:100000;background:#fff;color:#222;border:1px solid #bbb;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.28);overflow-y:auto;overflow-x:hidden;padding:4px;box-sizing:border-box;font-family:inherit;}' +
+        '.cs-grp{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#666;padding:8px 10px 4px;}' +
+        '.cs-opt{display:block;width:100%;text-align:left;padding:9px 10px;border:none;border-radius:7px;background:transparent;color:#222;font:inherit;font-size:13px;line-height:1.3;white-space:normal;word-break:break-word;cursor:pointer;}' +
+        '.cs-opt:hover,.cs-opt.cs-foco{background:#E6EEF9;}' +
+        '.cs-opt.cs-sel{font-weight:800;background:#F1ECE4;}' +
+        '.cs-opt.cs-sel::after{content:" ✓";}' +
+        '.cs-opt[disabled]{opacity:.45;cursor:not-allowed;}';
       (document.head || document.documentElement).appendChild(st);
+      var painel = null, alvo = null, itens = [], foco = -1;
+      function fechar() { if (painel) { painel.remove(); painel = null; } alvo = null; itens = []; foco = -1; }
+      function escolher(sel, op) {
+        if (op.disabled) return;
+        var mudou = sel.value !== op.value; sel.value = op.value; fechar();
+        if (mudou) { sel.dispatchEvent(new Event('input', { bubbles: true })); sel.dispatchEvent(new Event('change', { bubbles: true })); }
+        try { sel.focus({ preventScroll: true }); } catch (e) {}
+      }
+      function marcarFoco(i) {
+        if (!itens.length) return;
+        foco = (i + itens.length) % itens.length;
+        itens.forEach(function (b, k) { b.classList.toggle('cs-foco', k === foco); });
+        itens[foco].scrollIntoView({ block: 'nearest' });
+      }
+      function abrir(sel) {
+        fechar(); alvo = sel;
+        var cs = getComputedStyle(sel), r = sel.getBoundingClientRect();
+        painel = document.createElement('div'); painel.className = 'cs-panel'; painel.setAttribute('role', 'listbox');
+        painel.style.fontFamily = cs.fontFamily;
+        Array.prototype.forEach.call(sel.children, function (n) {
+          function add(op) {
+            var b = document.createElement('button'); b.type = 'button'; b.className = 'cs-opt' + (op.selected ? ' cs-sel' : ''); b.textContent = op.textContent || ' ';
+            if (op.disabled) b.disabled = true;
+            b.addEventListener('mousedown', function (e) { e.preventDefault(); });
+            b.addEventListener('click', function (e) { e.stopPropagation(); escolher(sel, op); });
+            painel.appendChild(b); itens.push(b);
+          }
+          if (n.tagName === 'OPTGROUP') { var g = document.createElement('div'); g.className = 'cs-grp'; g.textContent = n.label; painel.appendChild(g); Array.prototype.forEach.call(n.children, add); }
+          else if (n.tagName === 'OPTION') add(n);
+        });
+        document.body.appendChild(painel);
+        var largura = Math.max(r.width, 180), vh = window.innerHeight, abaixo = vh - r.bottom - 8, acima = r.top - 8;
+        var h = Math.min(painel.scrollHeight + 2, 340);
+        var emCima = abaixo < Math.min(h, 200) && acima > abaixo;
+        painel.style.width = Math.min(largura, window.innerWidth - 16) + 'px';
+        painel.style.left = Math.max(8, Math.min(r.left, window.innerWidth - Math.min(largura, window.innerWidth - 16) - 8)) + 'px';
+        painel.style.maxHeight = Math.max(120, Math.min(340, emCima ? acima : abaixo)) + 'px';
+        if (emCima) painel.style.bottom = (vh - r.top + 2) + 'px'; else painel.style.top = (r.bottom + 2) + 'px';
+        var i = 0; Array.prototype.forEach.call(sel.options, function (op, k) { if (op.selected) i = k; });
+        var sele = painel.querySelector('.cs-sel'); if (sele) sele.scrollIntoView({ block: 'nearest' });
+        foco = itens.indexOf(sele);
+      }
+      document.addEventListener('pointerdown', function (e) {
+        var t = e.target;
+        if (painel && painel.contains(t)) return;
+        var sel = t && t.closest ? t.closest('select') : null;
+        if (sel && e.pointerType !== 'touch' && !sel.disabled && !sel.multiple && !(sel.size > 1)) { e.preventDefault(); if (alvo === sel) fechar(); else abrir(sel); return; }
+        fechar();
+      }, true);
+      document.addEventListener('keydown', function (e) {
+        if (painel) {
+          if (e.key === 'Escape') { e.preventDefault(); fechar(); }
+          else if (e.key === 'ArrowDown') { e.preventDefault(); marcarFoco(foco + 1); }
+          else if (e.key === 'ArrowUp') { e.preventDefault(); marcarFoco(foco - 1); }
+          else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); var op = alvo && alvo.options[0] ? null : null; if (foco >= 0 && itens[foco]) itens[foco].click(); }
+          return;
+        }
+        var t = e.target;
+        if (t && t.tagName === 'SELECT' && !t.multiple && !(t.size > 1) && (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown' || e.key === 'ArrowUp') && e.altKey !== undefined) { if (e.key === 'ArrowDown' || e.key === 'ArrowUp') return; e.preventDefault(); abrir(t); }
+      }, true);
+      window.addEventListener('resize', fechar);
+      window.addEventListener('scroll', function (e) { if (painel && !(e.target && e.target.nodeType === 1 && painel.contains(e.target))) fechar(); }, true);
     })();
   }
   if (typeof document !== 'undefined') {
@@ -105,7 +175,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-11-06v"
+  VERSAO: "2026-11-06w"
 };
 
 /* ============================================================
