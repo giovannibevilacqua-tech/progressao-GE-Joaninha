@@ -1276,11 +1276,11 @@ async function atualizarLembreteBackup() {
   try { if (localStorage.getItem('lembreteBackupAte') === new Date().toISOString().slice(0, 10) + '|' + l.ciclo) return; } catch (e) {}
   const [ano, mes] = l.ciclo.split('-');
   const nomeMes = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'][+mes - 1];
-  const faltam = l.pendentes.map(t => t === 'escoteira' ? 'Tropa Escoteira' : 'Tropa Sênior').join(' e ');
+  const faltam = l.pendentes.map(t => ({ alcateia: 'Alcateia', escoteira: 'Tropa Escoteira', senior: 'Tropa Sênior', cla: 'Clã Pioneiro' }[t] || t)).join(', ');
   const div = document.createElement('div');
   div.id = 'lembreteBackup';
   div.style.cssText = 'position:sticky;top:0;z-index:9999;background:#FFF4D6;border-bottom:2px solid #E6B800;color:#5A4500;padding:8px 12px;font-size:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;';
-  div.innerHTML = '<span>💾 <b>Hora do backup de ' + nomeMes + '/' + ano + '</b> — falta: ' + faltam + '. Use 📤 Exportar backup (na barra Backup de cada tropa).</span>' +
+  div.innerHTML = '<span>💾 <b>Hora do backup de ' + nomeMes + '/' + ano + '</b> — falta: ' + faltam + '. Use 📤 Exportar backup (na barra de cada seção).</span>' +
     '<button style="border:1px solid #E6B800;background:#fff;border-radius:12px;padding:3px 10px;font-size:11px;cursor:pointer;" id="lembreteBackupOk">Lembrar amanhã</button>';
   document.body.insertBefore(div, document.body.firstChild);
   document.getElementById('lembreteBackupOk').onclick = () => {

@@ -54,7 +54,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-11-05k"
+  VERSAO: "2026-11-05l"
 };
 
 /* ============================================================
@@ -1078,7 +1078,7 @@ window.V2_CONFIG = {
     var t = auth.getToken();
     return CFG.DB_URL + '/' + CFG.RAIZ + '/meta/backups/' + ciclo + (tropa ? '/' + tropa : '') + '.json' + (t ? '?auth=' + encodeURIComponent(t) : '');
   }
-  // Devolve { ciclo, pendentes:['escoteira','senior'] } ou null se não é hora / já foi tudo feito.
+  // Devolve { ciclo, pendentes:['alcateia','escoteira','senior','cla'] } ou null se não é hora / já foi tudo feito.
   async function lembreteBackup() {
     var ciclo = cicloBackup();
     if (!ciclo) return null;
@@ -1086,7 +1086,7 @@ window.V2_CONFIG = {
       var r = await fetch(urlBackup(ciclo));
       if (!r.ok) return null;
       var feito = (await r.json()) || {};
-      var pend = ['escoteira', 'senior'].filter(function (t) { return !feito[t]; });
+      var pend = ['alcateia', 'escoteira', 'senior', 'cla'].filter(function (t) { return !feito[t]; });
       return pend.length ? { ciclo: ciclo, pendentes: pend } : null;
     } catch (e) { return null; }
   }
