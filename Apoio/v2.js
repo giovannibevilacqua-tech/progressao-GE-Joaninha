@@ -97,7 +97,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-11-06m"
+  VERSAO: "2026-11-06n"
 };
 
 /* ============================================================
@@ -976,7 +976,7 @@ window.V2_CONFIG = {
       col.pres = col.eixo0 + 4 * col.w + 2;
       function cabecalho() {
         P.rect(M, y, P.W - 2 * M, 28, VINHO);
-        [['Jovem', col.nome], ['Patrulha', col.pat], ['Cargo', col.cargo], ['Etapa', col.etapa], ['Blocos', col.bl]].forEach(function (c) { P.texto(c[1] + 4, y + 17, c[0], { t: 9, b: 1, c: '#FFFFFF' }); });
+        [['Jovem', col.nome], [r.rotuloGrupo || 'Patrulha', col.pat], r.semCargo ? ['', col.cargo] : ['Cargo', col.cargo], ['Etapa', col.etapa], ['Blocos', col.bl]].forEach(function (c) { P.texto(c[1] + 4, y + 17, c[0], { t: 9, b: 1, c: '#FFFFFF' }); });
         r.colunas.forEach(function (c, i) {
           var cx = col.eixo0 + i * col.w;
           P.rect(cx, y, col.w - 2, 28, c.cor);
@@ -991,7 +991,7 @@ window.V2_CONFIG = {
         if (k % 2) P.rect(M, y - 2, P.W - 2 * M, 22, '#FAF6F2');
         P.texto(col.nome + 4, y + 11, P.cortar(l.nome, 132, 9.5, true), { t: 9.5, b: 1 });
         P.texto(col.pat + 4, y + 11, P.cortar(l.patrulha, 74, 9), { t: 9 });
-        P.texto(col.cargo + 4, y + 11, P.cortar(l.cargo, 66, 9), { t: 9 });
+        if (!r.semCargo) P.texto(col.cargo + 4, y + 11, P.cortar(l.cargo, 66, 9), { t: 9 });
         P.texto(col.etapa + 4, y + 11, P.cortar(l.etapa, 64, 9), { t: 9 });
         var pc = l.total ? l.n / l.total : 0;
         P.texto(col.bl + 4, y + 8, l.n + '/' + l.total, { t: 9 });
@@ -1047,11 +1047,11 @@ window.V2_CONFIG = {
     var h = '<header><h1>' + escHtml(r.tropa) + '</h1><div class="sub">GE Joaninha · Relatório de progressão da tropa · ' + escHtml(dataExtenso()) + '</div></header>' +
       '<div class="cards"><div class="card"><b>' + r.resumo.jovens + '</b>jovens</div><div class="card"><b>' + r.resumo.media + '</b>média de blocos (de ' + r.resumo.total + ')</div>' +
       (r.etapas || []).map(function (e) { return '<div class="card"><b>' + e[1] + '</b>' + escHtml(e[0]) + '</div>'; }).join('') + '</div>' +
-      '<div class="tb"><table><thead><tr><th>Jovem</th><th>Patrulha</th><th>Cargo</th><th>Etapa</th><th>Blocos</th>' +
+      '<div class="tb"><table><thead><tr><th>Jovem</th><th>' + (r.rotuloGrupo || 'Patrulha') + '</th>' + (r.semCargo ? '' : '<th>Cargo</th>') + '<th>Etapa</th><th>Blocos</th>' +
       (r.colunas || []).map(function (c) { return '<th class="e" style="background:' + escHtml(c.cor) + '">' + escHtml(c.nome) + '</th>'; }).join('') + '<th class="e">Presença</th></tr></thead><tbody>' +
       r.linhas.map(function (l) {
         var pct = l.total ? Math.round(l.n / l.total * 100) : 0;
-        return '<tr><td><b>' + escHtml(l.nome) + '</b></td><td>' + escHtml(l.patrulha) + '</td><td>' + escHtml(l.cargo) + '</td><td>' + escHtml(l.etapa) + '</td>' +
+        return '<tr><td><b>' + escHtml(l.nome) + '</b></td><td>' + escHtml(l.patrulha) + '</td>' + (r.semCargo ? '' : '<td>' + escHtml(l.cargo) + '</td>') + '<td>' + escHtml(l.etapa) + '</td>' +
           '<td style="min-width:100px">' + l.n + '/' + l.total + '<div class="barra" style="height:6px;margin-top:3px"><i style="width:' + pct + '%"></i></div></td>' +
           l.porEixo.map(function (n, i) { return '<td class="c">' + n + '/' + r.colunas[i].total + '</td>'; }).join('') + '<td class="c">' + escHtml(l.presenca || '—') + '</td></tr>';
       }).join('') + '</tbody></table></div><footer>Os dados refletem o que estava registrado no momento da emissão.</footer>';

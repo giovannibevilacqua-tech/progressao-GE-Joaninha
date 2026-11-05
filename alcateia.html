@@ -368,6 +368,27 @@ mark.hl{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 .modal-row label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);}
 .modal-row select{flex:1;min-width:150px;}
 .modal-row small{flex-basis:100%;font-size:10px;color:var(--muted);line-height:1.4;}
+.matilha-form{display:flex;flex-direction:column;gap:8px;padding:10px;border:1px dashed var(--border);border-radius:10px;}
+.matilha-cores{display:flex;flex-wrap:wrap;gap:8px;}
+.matilha-cor{width:38px;height:38px;border-radius:50%;border:3px solid transparent;cursor:pointer;box-shadow:0 0 0 1px rgba(0,0,0,.25);}
+.matilha-cor.sel{border-color:var(--text);}
+.matilha-cor.uso{opacity:.25;cursor:not-allowed;}
+.matilhas-grid{display:flex;flex-direction:column;}
+.matilha-secao{margin:10px 0 0;position:relative;}
+@media(min-width:700px){.matilhas-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:0;}.matilhas-grid .matilha-secao{margin:10px 7px 0;}}
+.matilha-secao-header{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-radius:10px 10px 0 0;font-size:13px;font-weight:800;}
+.matilha-secao-header-direita{display:flex;align-items:center;gap:4px;}
+.matilha-secao-count{background:rgba(255,255,255,.28);padding:1px 9px;border-radius:20px;font-size:10px;font-weight:800;}
+.matilha-menu-btn{border:none;background:none;color:inherit;font-size:15px;font-weight:900;cursor:pointer;padding:1px 5px;border-radius:6px;}
+.matilha-dropdown{position:absolute;top:38px;right:0;background:var(--card);border:1px solid var(--border);border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.18);z-index:20;min-width:150px;overflow:hidden;}
+.matilha-dropdown button{display:block;width:100%;text-align:left;padding:10px 12px;font-size:12px;font-weight:700;border:none;background:none;cursor:pointer;color:var(--text);}
+.matilha-dropdown button.remover{color:#E74C3C;}
+.matilha-drop-zone{background:#FAFAF8;border:1px dashed var(--border);border-top:none;border-radius:0 0 10px 10px;padding:6px;min-height:44px;}
+.matilha-drop-zone.drag-over{background:#FFF8DC;border-color:#F2C300;}
+.matilha-vazia{font-size:11px;color:var(--muted);text-align:center;padding:14px;}
+.roster-row-sr{display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer;border-bottom:1px solid #F0EDE8;}
+.roster-row-sr:last-child{border-bottom:none;}
+.prog-grupo{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;padding:6px 10px;border-left:4px solid;margin:12px 0 4px;border-radius:0 6px 6px 0;background:rgba(127,127,127,.08);}
 </style>
 <script src="Apoio/v2.js"></script>
 </head>
@@ -504,6 +525,10 @@ mark.hl{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
     <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Calculado em: <span id="calc-date" style="color:var(--text);font-weight:800;">—</span></div>
     <button onclick="renderJovens()" style="background:var(--vinho);color:#fff;border:none;border-radius:20px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer;">↺ Atualizar</button>
   </div>
+  <div style="margin:12px 12px 0;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">🐺 Matilhas</div>
+  <div id="matilhasContainer" style="margin:6px 12px 0;"></div>
+  <div id="semMatilhaContainer" style="margin:0 12px 0;"></div>
+
   <div style="margin:16px 12px 0;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">👤 Todos os lobinhos</div>
   <div id="jovens-cards" style="padding:12px;display:flex;flex-direction:column;gap:10px;"></div>
 </div>
@@ -1809,6 +1834,8 @@ const FMT_NOME = {C:'Alcateia',PN:'Acampamento',Exc:'Excursão',Cer:'Cerimônia'
 const COLOR_PALETTE = ['#A31621','#1B3B6F','#2D6E3E','#6A1B9A','#CA6F1E','#1F618D','#16A085','#8E44AD','#7D3C98','#1A7434','#E67E22','#1ABC9C'];
 
 let YOUTH_DATA = [];      // lobinhos
+let MATILHAS = [];        // [{id, nome, cor, chave}] — as matilhas são cores
+let MATILHA_DE = {};      // { idDoLobinho: idDaMatilha }
 let JOVENS = [], JNOMES = [], JCORES = []; // ativos (derivados de YOUTH_DATA)
 let S = {};               // progressão: S[bloco].{concluded,etapa,f,v,s,g,custom}[...][lobinhoId]
 let PRESENCA = {};        // PRESENCA[eventoId][lobinhoId] = 1 presente | 0 ausente
@@ -1900,7 +1927,7 @@ function sincronizadoOffline(res, recarregar) {
   if (recarregar) location.reload();
 }
 function montarDados() {
-  return { S, YOUTH_DATA, PRESENCA, eventos, CAL_EXTRAS, JUSTIFICATIVAS_SR, INSIGNIA_BP, CFG };
+  return { S, YOUTH_DATA, PRESENCA, eventos, CAL_EXTRAS, JUSTIFICATIVAS_SR, INSIGNIA_BP, CFG, MATILHAS, MATILHA_DE };
 }
 function aplicarDados(dados) {
   if (!dados) return;
@@ -1912,6 +1939,8 @@ function aplicarDados(dados) {
   JUSTIFICATIVAS_SR = dados.JUSTIFICATIVAS_SR || {};
   INSIGNIA_BP = dados.INSIGNIA_BP || {};
   CFG = dados.CFG || {};
+  MATILHAS = Array.isArray(dados.MATILHAS) ? dados.MATILHAS.filter(Boolean) : Object.values(dados.MATILHAS || {});
+  MATILHA_DE = dados.MATILHA_DE || {};
 }
 async function loadState(){
   const logado = await autenticarComSessaoCompartilhada();
@@ -2050,7 +2079,14 @@ async function confirmReset(){
 function renderProgressBars(){
   const c = $('pbars'); c.innerHTML = '';
   if (!actJ().length) { c.innerHTML = '<div class="cla-vazio"><span class="ico">👥</span>Nenhum lobinho cadastrado ainda.<br>Cadastre na aba <strong>👥 Lobinhos</strong>.</div>'; return; }
-  actJ().forEach(({yid,i}) => {
+  const grupos = {};
+  actJ().forEach(it => { const mid = (matilhaDe(it.yid) || {}).id || '_sem'; (grupos[mid] = grupos[mid] || []).push(it); });
+  Object.keys(grupos).forEach(k => grupos[k].sort((x, y) => JNOMES[x.i].localeCompare(JNOMES[y.i], 'pt-BR')));
+  const ordem = MATILHAS.map(m => m.id).filter(k => grupos[k]); if (grupos._sem) ordem.push('_sem');
+  ordem.forEach(k => {
+    const m = k === '_sem' ? null : MATILHAS.find(x => x.id === k);
+    if (MATILHAS.length) { const lab = document.createElement('div'); lab.className = 'prog-grupo'; lab.style.borderColor = m ? corDaMatilha(m).hex : '#8A94A3'; lab.textContent = m ? m.nome : 'Sem matilha'; c.appendChild(lab); }
+    grupos[k].forEach(({yid,i}) => {
     const st = statsJovem(yid), et = etapaAtual(st.n), pct = Math.round(st.n / TOTAL_BLOCOS * 100);
     const pills = [1,2,3,4].map(k => `<span class="etapa-pill" style="color:${ETAPAS[k].cor};border-color:${ETAPAS[k].cor};background:${ETAPAS[k].cor}12">${ETAPAS[k].nome} ${st.porEtapa[k]}/${BLOCOS_ETAPA[k]}</span>`).join('');
     const div = document.createElement('div'); div.className = 'prog-row';
@@ -2058,6 +2094,7 @@ function renderProgressBars(){
       <div class="prog-track"><div class="prog-bar" style="width:${pct}%;background:${JCORES[i]};"></div></div>
       <div class="etapa-seg">${pills}</div>`;
     c.appendChild(div);
+    });
   });
 }
 
@@ -2368,15 +2405,16 @@ function showModal(yid){
   $('youth-modal').classList.add('open'); $('edit-id').value = yid || '';
   const y = yid ? YOUTH_DATA.find(x => x.id === yid) : null;
   $('modal-ttl').textContent = y ? 'Editar Lobinho' : 'Adicionar Lobinho';
-  $('inp-name').value = y ? y.name : ''; $('inp-born').value = y ? y.born : ''; $('inp-role').value = y ? (y.role || '') : ''; $('inp-obs').value = y ? (y.observacoes || '') : '';
+  $('inp-name').value = y ? y.name : ''; $('inp-born').value = y ? y.born : ''; preencherSelectMatilha(yid); $('inp-obs').value = y ? (y.observacoes || '') : '';
 }
 function hideModal(){ $('youth-modal').classList.remove('open'); }
 function saveYouth(){
-  const name = $('inp-name').value.trim(), born = $('inp-born').value, role = $('inp-role').value.trim(), observacoes = $('inp-obs').value.trim();
+  const name = $('inp-name').value.trim(), born = $('inp-born').value, matilhaSel = $('inp-matilha').value, observacoes = $('inp-obs').value.trim();
   if (!name || !born) { alert('Nome e data de nascimento são obrigatórios.'); return; }
   const eid = $('edit-id').value;
-  if (eid) { const y = YOUTH_DATA.find(x => x.id === eid); if (y) { y.name = name; y.born = born; y.role = role; y.observacoes = observacoes; } }
-  else YOUTH_DATA.push({id:'y_' + Date.now(), name, born, role, observacoes, archived:false, color:COLOR_PALETTE[YOUTH_DATA.length % COLOR_PALETTE.length]});
+  if (eid) { const y = YOUTH_DATA.find(x => x.id === eid); if (y) { y.name = name; y.born = born; y.observacoes = observacoes; } }
+  else { const novo = {id:'y_' + Date.now(), name, born, observacoes, archived:false, color:COLOR_PALETTE[YOUTH_DATA.length % COLOR_PALETTE.length]}; YOUTH_DATA.push(novo); if (matilhaSel) MATILHA_DE[novo.id] = matilhaSel; }
+  if (eid) { if (matilhaSel) MATILHA_DE[eid] = matilhaSel; else delete MATILHA_DE[eid]; }
   syncJovens(); saveState(); hideModal(); renderAllTabs();
 }
 function verObservacao(yid){
@@ -2404,10 +2442,94 @@ async function deleteYouth(yid){
     ['f','v','s','g'].forEach(t => { const m = bl[t] || {}; Object.keys(m).forEach(a => { if (m[a]) delete m[a][yid]; }); });
   });
   Object.keys(PRESENCA).forEach(e => { if (PRESENCA[e]) delete PRESENCA[e][yid]; });
-  delete JUSTIFICATIVAS_SR[yid]; delete INSIGNIA_BP[yid];
+  delete JUSTIFICATIVAS_SR[yid]; delete INSIGNIA_BP[yid]; delete MATILHA_DE[yid];
   syncJovens(); await saveState(); renderAllTabs();
 }
+/* ---------- Matilhas (agrupam os lobinhos; cada matilha é uma cor) ---------- */
+const CORES_MATILHA = [
+  { chave: 'amarela', nome: 'Amarela', hex: '#F2C300', fg: '#3a2e00' },
+  { chave: 'azul', nome: 'Azul', hex: '#1565C0', fg: '#fff' },
+  { chave: 'verde', nome: 'Verde', hex: '#2E8B57', fg: '#fff' },
+  { chave: 'vermelha', nome: 'Vermelha', hex: '#D32F2F', fg: '#fff' },
+  { chave: 'laranja', nome: 'Laranja', hex: '#E67E22', fg: '#fff' },
+  { chave: 'roxa', nome: 'Roxa', hex: '#7B1FA2', fg: '#fff' },
+  { chave: 'marrom', nome: 'Marrom', hex: '#6D4C41', fg: '#fff' },
+  { chave: 'cinza', nome: 'Cinza', hex: '#7F8C8D', fg: '#fff' },
+  { chave: 'preta', nome: 'Preta', hex: '#263238', fg: '#fff' },
+  { chave: 'branca', nome: 'Branca', hex: '#ECEFF1', fg: '#333' }
+];
+let matilhaEditandoId = null, matilhaMenuAbertoId = null, matilhaCorSel = null, lobinhoArrastado = null;
+const corDaMatilha = m => CORES_MATILHA.find(c => c.chave === m.chave) || { hex: m.cor || '#8A94A3', fg: '#fff' };
+function matilhaDe(yid) { const id = MATILHA_DE[yid]; return id ? MATILHAS.find(m => m.id === id) || null : null; }
+function preencherSelectMatilha(yid) {
+  const sel = $('inp-matilha'); if (!sel) return;
+  sel.innerHTML = '<option value="">Sem matilha</option>' + MATILHAS.map(m => '<option value="' + m.id + '"' + (yid && MATILHA_DE[yid] === m.id ? ' selected' : '') + '>' + esc(m.nome) + '</option>').join('');
+}
+function formMatilha(m) {
+  const usadas = MATILHAS.filter(x => !m || x.id !== m.id).map(x => x.chave);
+  if (matilhaCorSel === null) matilhaCorSel = m ? m.chave : (CORES_MATILHA.find(c => !usadas.includes(c.chave)) || CORES_MATILHA[0]).chave;
+  return '<div class="matilha-form" onclick="event.stopPropagation()"><div style="font-size:12px;font-weight:700;">Escolha a cor da matilha</div><div class="matilha-cores">' +
+    CORES_MATILHA.map(c => { const uso = usadas.includes(c.chave); return '<div class="matilha-cor' + (matilhaCorSel === c.chave ? ' sel' : '') + (uso ? ' uso' : '') + '" style="background:' + c.hex + '" title="' + c.nome + (uso ? ' (já existe)' : '') + '"' + (uso ? '' : ' onclick="escolherCorMatilha(\'' + c.chave + '\')"') + '></div>'; }).join('') + '</div>' +
+    '<div style="display:flex;gap:8px;"><button class="btn-prim" style="flex:1;padding:9px;font-size:12px;" onclick="salvarMatilha(\'' + (m ? m.id : 'nova') + '\')">💾 Salvar</button><button class="btn-sec" style="flex:1;padding:9px;font-size:12px;" onclick="cancelarEdicaoMatilha()">Cancelar</button></div></div>';
+}
+function escolherCorMatilha(chave) { matilhaCorSel = chave; renderMatilhas(); }
+function abrirNovaMatilha() { matilhaEditandoId = 'nova'; matilhaCorSel = null; renderMatilhas(); }
+function abrirEdicaoMatilha(id) { matilhaEditandoId = id; matilhaCorSel = null; matilhaMenuAbertoId = null; renderMatilhas(); }
+function cancelarEdicaoMatilha() { matilhaEditandoId = null; matilhaCorSel = null; renderMatilhas(); }
+function salvarMatilha(id) {
+  const c = CORES_MATILHA.find(x => x.chave === matilhaCorSel); if (!c) return;
+  if (id === 'nova') MATILHAS.push({ id: 'mat' + Date.now() + Math.floor(Math.random() * 1000), nome: 'Matilha ' + c.nome, cor: c.hex, chave: c.chave });
+  else { const m = MATILHAS.find(x => x.id === id); if (m) { m.nome = 'Matilha ' + c.nome; m.cor = c.hex; m.chave = c.chave; } }
+  matilhaEditandoId = null; matilhaCorSel = null;
+  saveState(); renderAllTabs();
+}
+function excluirMatilha(id) {
+  if (!confirm('Excluir essa matilha? Os lobinhos dela voltam para "Sem matilha".')) return;
+  MATILHAS = MATILHAS.filter(m => m.id !== id);
+  Object.keys(MATILHA_DE).forEach(yid => { if (MATILHA_DE[yid] === id) delete MATILHA_DE[yid]; });
+  matilhaEditandoId = null; matilhaMenuAbertoId = null;
+  saveState(); renderAllTabs();
+}
+function dragLobinhoStart(e, yid) { lobinhoArrastado = yid; if (e.dataTransfer) { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', yid); } }
+function dropLobinhoEm(e, matilhaId) {
+  if (e.preventDefault) e.preventDefault();
+  const yid = (e.dataTransfer && e.dataTransfer.getData('text/plain')) || lobinhoArrastado; lobinhoArrastado = null;
+  if (!yid) return;
+  if (matilhaId) MATILHA_DE[yid] = matilhaId; else delete MATILHA_DE[yid];
+  saveState(); renderAllTabs();
+}
+function toggleMatilhaMenu(id) { matilhaMenuAbertoId = matilhaMenuAbertoId === id ? null : id; renderMatilhas(); }
+function cardLobinhoMatilha(yid) {
+  const y = YOUTH_DATA.find(x => x.id === yid); if (!y) return '';
+  const idx = JOVENS.indexOf(yid), cor = (idx !== -1 && JCORES[idx]) ? JCORES[idx] : (y.color || '#B26A00');
+  return '<div class="roster-row-sr" draggable="true" ondragstart="dragLobinhoStart(event,\'' + yid + '\')" onclick="showModal(\'' + yid + '\')"><div style="width:30px;height:30px;border-radius:50%;background:' + cor + ';color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;">' + esc(initials(y.name)) + '</div><span style="font-size:12px;font-weight:700;flex:1;">' + esc(y.name) + '</span></div>';
+}
+function secaoMatilha(m, membros) {
+  const c = m ? corDaMatilha(m) : { hex: '#8A94A3', fg: '#fff' }, nome = m ? m.nome : 'Sem matilha', dropId = m ? m.id : '';
+  let h = '<div class="matilha-secao">';
+  if (m && matilhaEditandoId === m.id) h += formMatilha(m);
+  else {
+    h += '<div class="matilha-secao-header" style="background:' + c.hex + ';color:' + c.fg + '"><span>' + esc(nome) + '</span><span class="matilha-secao-header-direita"><span class="matilha-secao-count">' + membros.length + '</span>' + (m ? '<button class="matilha-menu-btn" onclick="event.stopPropagation();toggleMatilhaMenu(\'' + m.id + '\')">⋮</button>' : '') + '</span></div>';
+    if (m && matilhaMenuAbertoId === m.id) h += '<div class="matilha-dropdown" onclick="event.stopPropagation()"><button onclick="abrirEdicaoMatilha(\'' + m.id + '\')">✏️ Trocar cor</button><button class="remover" onclick="excluirMatilha(\'' + m.id + '\')">🗑️ Excluir</button></div>';
+  }
+  h += '<div class="matilha-drop-zone" ondragover="event.preventDefault();this.classList.add(\'drag-over\')" ondragleave="this.classList.remove(\'drag-over\')" ondrop="this.classList.remove(\'drag-over\');dropLobinhoEm(event,\'' + dropId + '\')">' +
+    (membros.length ? membros.map(cardLobinhoMatilha).join('') : '<div class="matilha-vazia">Arraste lobinhos pra cá</div>') + '</div></div>';
+  return h;
+}
+function renderMatilhas() {
+  const el = $('matilhasContainer'), elSem = $('semMatilhaContainer'); if (!el || !elSem) return;
+  const ativos = YOUTH_DATA.filter(y => y && !y.archived).map(y => y.id);
+  let h = '';
+  if (MATILHAS.length) h += '<div class="matilhas-grid">' + MATILHAS.map(m => secaoMatilha(m, ativos.filter(id => MATILHA_DE[id] === m.id))).join('') + '</div>';
+  else if (matilhaEditandoId !== 'nova') h += '<div style="font-size:11px;color:var(--muted);padding:4px 0 0;">Nenhuma matilha criada ainda. Use o botão abaixo pra começar.</div>';
+  h += matilhaEditandoId === 'nova' ? formMatilha(null) : '<button class="btn-sec" style="border-style:dashed;margin-top:10px;width:100%;padding:10px;" onclick="abrirNovaMatilha()">+ Nova matilha</button>';
+  el.innerHTML = h;
+  const ids = MATILHAS.map(m => m.id);
+  elSem.innerHTML = secaoMatilha(null, ativos.filter(id => !ids.includes(MATILHA_DE[id])));
+}
+
 function renderJovens(){
+  renderMatilhas();
   const today = new Date(); $('calc-date').textContent = fmtDate(today);
   const ativos = YOUTH_DATA.filter(y => y && !y.archived), arquivados = YOUTH_DATA.filter(y => y && y.archived);
   const container = $('jovens-cards'); container.innerHTML = '';
@@ -2423,7 +2545,7 @@ function renderJovens(){
     const body = document.createElement('div'); body.style.cssText = 'padding:0 12px 12px;display:flex;flex-direction:column;gap:7px;';
     arquivados.forEach(y => {
       const row = document.createElement('div'); row.style.cssText = 'background:#F5F5F5;border-radius:8px;padding:9px 11px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;';
-      row.innerHTML = `<div style="flex:1;min-width:140px;"><div style="font-size:12px;font-weight:700;color:#555;">${esc(y.name)}</div><div style="font-size:10px;color:#999;">${esc(y.role || 'Sem cargo')} &nbsp;·&nbsp; Passagem: ${fmtDate(dataEm(y.born, IDADE_PARTIDA))}</div></div>
+      row.innerHTML = `<div style="flex:1;min-width:140px;"><div style="font-size:12px;font-weight:700;color:#555;">${esc(y.name)}</div><div style="font-size:10px;color:#999;">${matilhaDe(y.id) ? esc(matilhaDe(y.id).nome) : 'Sem matilha'} &nbsp;·&nbsp; Passagem: ${fmtDate(dataEm(y.born, IDADE_PARTIDA))}</div></div>
         <button class="btn-ic" onclick="showModal('${y.id}')">✏ Editar</button>
         <button class="btn-ic" onclick="verObservacao('${y.id}')">📋${y.observacoes ? ' •' : ''}</button>
         <button class="btn-ic" onclick="unarchiveYouth('${y.id}')">↩ Restaurar</button>
@@ -2449,7 +2571,7 @@ function cardLobinho(e, today){
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:11px;">
       <div style="width:42px;height:42px;border-radius:50%;background:${c.fg};color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;flex-shrink:0;">${esc(initials(e.name))}</div>
       <div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:800;color:#1A1A1A;line-height:1.2;">${esc(e.name)}</div>
-        <div style="font-size:10px;color:${c.fg};font-weight:700;margin-top:2px;">${age.years} anos e ${age.months} meses${e.role ? ' &nbsp;·&nbsp; ' + esc(e.role) : ''}</div></div>
+        <div style="font-size:10px;color:${c.fg};font-weight:700;margin-top:2px;">${age.years} anos e ${age.months} meses${matilhaDe(e.id) ? ' &nbsp;·&nbsp; ' + esc(matilhaDe(e.id).nome) : ''}</div></div>
       <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:5px;">${badge}
         <div style="display:flex;gap:4px;">
           <button class="btn-ic" onclick="showModal('${e.id}')">✏ Editar</button>
@@ -2574,7 +2696,7 @@ function dadosRelatorioTropa() {
   const linhas = YOUTH_DATA.filter(y => y && !y.archived).map(y => {
     const n = BLOCKS.filter(b => feito(S[b.id], y.id)).length;
     return {
-      nome: y.name, patrulha: '', cargo: y.role || '', n, total: BLOCKS.length,
+      nome: y.name, patrulha: (matilhaDe(y.id) || {}).nome || '', cargo: '', n, total: BLOCKS.length,
       etapa: etapaAtual(n).l.replace(/\s*[\u{1F3C6}]/u, ''),
       porEixo: chaves.map(k => EIXOS[k].blockIds.filter(id => feito(S[id], y.id)).length),
       presenca: marcadas.length ? Math.round(marcadas.filter(ev => ev[y.id] === 1).length / marcadas.length * 100) + '%' : ''
@@ -2582,7 +2704,7 @@ function dadosRelatorioTropa() {
   }).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
   const cont = {}; linhas.forEach(l => { cont[l.etapa] = (cont[l.etapa] || 0) + 1; });
   return ({
-    tropa: 'Alcateia',
+    tropa: 'Alcateia', rotuloGrupo: 'Matilha', semCargo: true,
     resumo: { jovens: linhas.length, media: linhas.length ? (linhas.reduce((s, l) => s + l.n, 0) / linhas.length).toFixed(1).replace('.', ',') : '0', total: BLOCKS.length },
     etapas: Object.keys(cont).map(k => [k, cont[k]]),
     colunas: chaves.map(k => ({ nome: EIXOS[k].label, cor: EIXOS[k].cor, total: EIXOS[k].blockIds.length })),
@@ -2602,7 +2724,7 @@ function relatorioJovem(yid) {
   const cont = (obj, ids) => ids.filter(id => obj && obj[id] && obj[id][yid] === 1).length;
   V2.abrirRelatorio({
     tropa: 'Alcateia', nome: y.name,
-    info: [['Nascimento', y.born ? fmtDate(nasc) + (idade ? ' (' + idade + ')' : '') : ''], ['Passagem para o Ramo Escoteiro', y.born ? fmtDate(dataEm(y.born, IDADE_PARTIDA)) : ''], ['Cargo', y.role || '']],
+    info: [['Nascimento', y.born ? fmtDate(nasc) + (idade ? ' (' + idade + ')' : '') : ''], ['Passagem para o Ramo Escoteiro', y.born ? fmtDate(dataEm(y.born, IDADE_PARTIDA)) : '']],
     resumo: { n, total: BLOCKS.length, etapa: et.l.replace(/\s*[\u{1F3C6}]/u, '') },
     presenca,
     eixos: Object.keys(EIXOS).map(k => {
@@ -2714,7 +2836,7 @@ iniciarApp();
     <input type="hidden" id="edit-id">
     <div class="f-field"><label class="f-label">Nome completo *</label><input type="text" class="f-input" id="inp-name" placeholder="Nome do lobinho"></div>
     <div class="f-field"><label class="f-label">Data de nascimento *</label><input type="date" class="f-input" id="inp-born"></div>
-    <div class="f-field"><label class="f-label">Cargo</label><input type="text" class="f-input" id="inp-role" placeholder="Ex: Coordenador de equipe, Secretária…"></div>
+    <div class="f-field"><label class="f-label">Matilha</label><select class="f-input" id="inp-matilha"></select></div>
     <div class="f-field"><label class="f-label">Observações (privado — suporte, restrições, etc.)</label><textarea class="f-input" id="inp-obs" rows="3" style="resize:vertical;" placeholder="Ex: restrição alimentar, necessidade de suporte…"></textarea></div>
     <div class="f-row"><button class="btn-sec" onclick="hideModal()">Cancelar</button><button class="btn-prim" onclick="saveYouth()">Salvar</button></div>
   </div>
