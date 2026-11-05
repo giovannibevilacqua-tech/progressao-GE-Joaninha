@@ -4,17 +4,1318 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Clã Pioneiro — GE Joaninha</title>
-<link rel="stylesheet" href="secao.css">
+<style>
+:root{
+  --vinho:#A31621;--vinho2:#C0392B;--azul:#1B3B6F;--azul2:#2A5298;
+  --hv:#F8D7E3;--hv-b:#9C1B6E;--hv-t:#5A0035;
+  --ma:#D7EDD9;--ma-b:#2D7A3A;--ma-t:#174A1E;
+  --pd:#D3E8FA;--pd-b:#1B5FAA;--pd-t:#0A2F5A;
+  --sb:#FDEED7;--sb-b:#CC6C00;--sb-t:#7A3800;
+  --done:#27AE60;--done-bg:#D5F5E3;--done-dark:#1E8449;
+  --focus-y:#FFFBEA;--focus-b:#F39C12;
+  --bg:#F0EDE8;--card:#FFF;--text:#1A1A1A;--muted:#666;
+  --border:#E0D8D0;--r:10px;--shadow:0 2px 8px rgba(0,0,0,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* HEADER */
+.header{background:linear-gradient(160deg,var(--vinho) 0%,var(--vinho2) 60%,#B03050 100%);color:#fff;padding:20px 16px 16px;text-align:center;}
+.header-flor{font-size:26px;margin-bottom:4px;}
+.header h1{font-size:16px;font-weight:800;letter-spacing:.5px;line-height:1.3;}
+.header .sub{font-size:11px;opacity:.82;margin-top:3px;}
+.header-chips{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-top:9px;}
+.chip{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:20px;font-size:10px;font-weight:600;padding:3px 9px;}
+
+/* TABS */
+.tabs{display:flex;background:#fff;border-bottom:2px solid var(--border);position:sticky;top:0;z-index:200;box-shadow:0 2px 6px rgba(0,0,0,.1);overflow-x:auto;overflow-y:hidden;overflow-anchor:none;}
+.tab-btn{flex:1 1 0;min-width:max-content;padding:16px 14px;border:none;border-bottom:3px solid transparent;background:transparent;font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;position:relative;transition:color .2s, border-color .2s, padding .2s ease;white-space:nowrap;}
+.tabs.compacto .tab-btn{padding:9px 6px;}
+.tab-btn.active{color:var(--vinho);border-bottom-color:var(--vinho);}
+.tab-content{display:none;padding-bottom:32px;}
+.tab-content.active{display:block;}
+
+/* ALERTS */
+.alert{margin:12px 12px 0;background:var(--focus-y);border-left:4px solid var(--focus-b);border-radius:0 var(--r) var(--r) 0;padding:9px 11px;font-size:11px;color:#7A4A00;line-height:1.5;}
+
+/* PROGRESS BARS */
+.progress-section{margin:12px 12px 0;background:var(--card);border-radius:var(--r);padding:13px 13px 9px;box-shadow:var(--shadow);}
+.section-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:11px;}
+.prog-row{margin-bottom:9px;}
+.prog-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+.prog-name{font-size:12px;font-weight:700;}
+.prog-etapa{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;}
+.prog-track{background:#EEEBE7;border-radius:20px;height:9px;overflow:hidden;}
+.prog-bar{height:100%;border-radius:20px;transition:width .5s ease;}
+.prog-hint{font-size:10px;color:var(--muted);margin-top:7px;line-height:1.5;border-top:1px solid var(--border);padding-top:7px;}
+
+/* EIXO HEADER */
+.eixo-hdr{display:flex;align-items:center;gap:7px;margin:14px 12px 6px;padding:9px 11px;border-radius:var(--r);font-size:12px;font-weight:800;letter-spacing:.3px;border-left:4px solid;}
+.chev-eixo-sr{font-size:11px;transition:transform .2s;flex-shrink:0;}
+.eixo-icon{font-size:14px;}
+.eixo-stats{font-size:10px;font-weight:600;margin-left:auto;opacity:.7;}
+
+/* ACCORDION BLOCKS */
+.block-list{margin:0 12px;display:flex;flex-direction:column;gap:6px;}
+.block-item{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;}
+.block-item[open] .block-arrow{transform:rotate(90deg);}
+.block-summary{display:flex;align-items:center;gap:8px;padding:11px 12px;cursor:pointer;list-style:none;user-select:none;-webkit-user-select:none;}
+.block-summary::-webkit-details-marker{display:none;}
+.block-arrow{font-size:10px;color:var(--muted);transition:transform .2s;flex-shrink:0;}
+.block-info{flex:1;min-width:0;}
+.block-title{font-size:12px;font-weight:700;line-height:1.3;}
+.block-meta{font-size:10px;color:var(--muted);margin-top:2px;}
+.block-badges{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto;flex-shrink:0;}
+.b-badge{width:20px;height:20px;border-radius:50%;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.b-done{background:var(--done);color:#fff;}
+.b-part{background:#F39C12;color:#fff;}
+.b-none{background:#E0E0E0;color:#999;}
+.focus-tag{display:inline-block;background:var(--focus-b);color:#fff;font-size:8px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;vertical-align:middle;}
+.semester-tag{display:inline-block;font-size:8px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:3px;vertical-align:middle;}
+.sem1-tag{background:#E8F5E9;color:#2D6E3E;}
+.sem2-tag{background:#E3F2FD;color:#1B5FAA;}
+
+/* BLOCK BODY */
+.block-body{padding:0 12px 12px;border-top:1px solid #F5F2EE;}
+.actions-section{margin-top:10px;}
+.actions-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.fixed-label{color:#C0392B;}
+.var-label{color:var(--azul);}
+.actions-table-wrap{overflow-x:auto;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.08);}
+.actions-table{width:100%;border-collapse:collapse;min-width:360px;background:var(--card);}
+.actions-table th{background:var(--azul);color:#fff;padding:6px 5px;font-size:10px;font-weight:700;text-align:center;white-space:nowrap;}
+.actions-table th.act-col{text-align:left;padding-left:8px;min-width:130px;}
+.actions-table td{padding:6px 5px;border-bottom:1px solid #F0EDE8;font-size:10px;vertical-align:middle;text-align:center;}
+.actions-table td.act-col{text-align:left;padding-left:8px;line-height:1.4;font-weight:500;}
+.actions-table tr:last-child td{border-bottom:none;}
+.actions-table tr:nth-child(even){background:#FAFAF8;}
+.actions-table tr.fixed-row{background:#FFF5F5;}
+.cb{width:26px;height:26px;border-radius:7px;margin:auto;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;border:2px solid transparent;font-size:14px;font-weight:700;user-select:none;-webkit-user-select:none;}
+.cb.done{background:var(--done);color:#fff;border-color:var(--done-dark);}
+.cb.pending{background:#EDEBE8;color:#C0BCB7;border-color:#DDD9D4;}
+.cb.pending:hover{background:var(--done-bg);border-color:var(--done);color:var(--done);}
+.cb.done:hover{background:#E74C3C;border-color:#C0392B;}
+.cb.camp-only{background:#E3F2FD;color:#1565C0;border-color:#BBDEFB;cursor:default;}
+
+/* RESET BTN */
+body:not(.eh-admin) .somente-admin{display:none !important;}
+.reset-btn{display:block;margin:14px auto 0;background:none;border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:11px;color:var(--muted);cursor:pointer;}
+.reset-btn:hover{border-color:#E74C3C;color:#E74C3C;}
+
+/* CALENDAR */
+.cal-section-hdr{margin:14px 12px 8px;font-size:13px;font-weight:800;color:var(--vinho);display:flex;align-items:center;gap:8px;}
+.cal-section-hdr::after{content:'';flex:1;height:1px;background:var(--border);}
+.cal-list{padding:0 12px;display:flex;flex-direction:column;gap:8px;}
+.cal-card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);display:flex;overflow:hidden;position:relative;}
+.cal-strip{width:55px;min-width:55px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px;color:#fff;text-align:center;}
+.strip-idx{font-size:8px;font-weight:700;opacity:.65;letter-spacing:.5px;}
+.strip-day{font-size:18px;font-weight:900;line-height:1.1;}
+.strip-mon{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-top:1px;}
+.cal-body{flex:1;padding:10px 11px;}
+.cal-meta{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;}
+.fmt-badge{font-size:9px;font-weight:800;padding:2px 7px;border-radius:20px;letter-spacing:.5px;}
+.fmt-T{background:#EBF5FB;color:#1565C0;}
+.fmt-P{background:#F4ECF7;color:#6A1B9A;}
+.fmt-PN{background:#D6EAF8;color:#0D47A1;}
+.fmt-Av{background:#EAFAF1;color:#1A7434;}
+.fmt-Esp{background:#FFF9C4;color:#7A4A00;}
+.bloco-tag{font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--focus-y);color:#7A4800;border:1px solid #F5CBA7;}
+.comp-tag{font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;background:#F9EAF0;color:#7A1030;border:1px solid #F1A7BD;}
+.special-banner{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:900;padding:2px 7px;border-radius:4px;margin-bottom:4px;letter-spacing:.5px;}
+.banner-camp{background:#2D6E3E;color:#fff;}
+.banner-enduro{background:#C96A00;color:#fff;}
+.banner-sem{background:#E74C3C;color:#fff;}
+.cal-text{font-size:11px;color:#3A3A3A;line-height:1.55;}
+.cal-text em{color:var(--muted);font-style:normal;font-size:10px;}
+.anexo-upload-label{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#FAFAF8;border:2px dashed var(--border);border-radius:8px;cursor:pointer;}
+.anexo-upload-label input[type=file]{display:none;}
+.anexo-arquivo-row{display:flex;align-items:center;gap:6px;padding:8px 10px;background:#EEF2FF;border:1px solid #C0CCF0;border-radius:8px;}
+.anexo-arquivo-info{flex:1;min-width:0;}
+.anexo-arquivo-nome{font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.anexo-arquivo-tam{font-size:9px;color:var(--muted);}
+.anexo-btn{border:none;border-radius:6px;padding:5px 8px;font-size:10px;font-weight:700;cursor:pointer;flex-shrink:0;}
+.extra-link-input,.extra-resposta-input{width:100%;padding:8px 10px;border:2px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;outline:none;}
+.extra-link-input:focus,.extra-resposta-input:focus{border-color:var(--vinho);}
+.evento-link-sr{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--vinho);text-decoration:none;}
+.toggle-externa-row-sr{display:flex;align-items:center;gap:9px;padding:10px 12px;background:#FAFAF8;border:1px solid var(--border);border-radius:8px;cursor:pointer;}
+.toggle-externa-row-sr input[type=checkbox]{width:17px;height:17px;accent-color:var(--vinho);cursor:pointer;flex-shrink:0;}
+.toggle-externa-row-sr label{font-size:12px;font-weight:600;color:var(--text);cursor:pointer;}
+.externa-badge-sr{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:800;padding:2px 8px;border-radius:20px;background:#E8F5E9;color:#1E7A34;border:1px solid #A8D8B0;margin-right:5px;}
+.grupo-label-sr{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:8px 0 4px;}
+.item-row-sr{display:flex;align-items:flex-start;gap:8px;padding:6px 6px;border-radius:6px;}
+.item-row-sr:hover{background:#F5F2EE;}
+.item-check-sr{width:18px;height:18px;border-radius:5px;border:2px solid #DDD9D4;flex-shrink:0;margin-top:1px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;}
+.item-check-sr.sel{background:var(--vinho);border-color:var(--vinho2);}
+.item-text-sr{font-size:12px;line-height:1.45;cursor:pointer;}
+.chip-select-group-sr{display:flex;flex-wrap:wrap;gap:6px;}
+.chip-toggle-sr{font-size:11px;font-weight:700;padding:7px 12px;border-radius:20px;border:1px solid var(--border);background:#FAFAF8;color:var(--text);cursor:pointer;}
+.chip-toggle-sr:hover{background:#F2EFEA;}
+.chip-toggle-sr.selected{background:var(--vinho);color:#fff;border-color:var(--vinho);}
+.btn-picker-toggle-sr{width:100%;text-align:left;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:#FAFAF8;font-size:12px;font-weight:700;color:var(--text);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.btn-picker-toggle-sr:hover{background:#F2EFEA;}
+.itens-picker-scroll-sr{max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:10px;padding:8px;background:#FAFAF8;margin-top:8px;}
+.eixo-picker-header-sr{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;padding:7px 10px;border-radius:8px;color:#fff;margin-top:8px;}
+.eixo-picker-header-sr:first-child{margin-top:0;}
+.picker-bloco-sr{border:1px solid var(--border);border-radius:8px;margin-top:6px;overflow:hidden;background:var(--card);}
+.picker-bloco-head-sr{display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer;font-size:11px;font-weight:700;}
+.picker-bloco-head-sr:hover{background:#F5F2EE;}
+.picker-bloco-head-sr .chev{margin-left:auto;}
+.picker-bloco-body-sr{display:none;padding:2px 10px 10px;}
+.picker-bloco-sr.open .picker-bloco-body-sr{display:block;}
+.picker-bloco-sr.open .chev{transform:rotate(180deg);}
+.picker-bloco-count-sr{font-size:9px;font-weight:800;padding:2px 6px;border-radius:10px;background:var(--done-bg);color:#1E8449;}
+.presenca-marcar-todos-sr{display:flex;gap:8px;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid #F0EDE8;}
+.presenca-grupo-label-sr{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;padding:8px 4px 4px;border-bottom:2px solid;margin-bottom:2px;}
+.presenca-marcar-todos-sr button{flex:1;font-size:10px;font-weight:700;padding:6px;border-radius:8px;border:1px solid var(--border);background:#FAFAF8;color:var(--text);cursor:pointer;}
+.presenca-marcar-todos-sr button:first-child:hover{border-color:#27AE60;color:#1E8449;background:var(--done-bg);}
+.presenca-marcar-todos-sr button:last-child:hover{border-color:#E74C3C;color:#E74C3C;background:#FDEBEA;}
+.justificar-btn-sr{margin-left:auto;font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px;border:1px solid var(--border);background:#fff;color:var(--muted);cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.justificar-btn-sr:hover{border-color:var(--vinho);color:var(--vinho);}
+.justificar-btn-sr.justificado{background:var(--done-bg);color:#1E8449;border-color:#27AE60;}
+.evento-menu-btn-sr{background:none;border:none;font-size:16px;color:var(--muted);cursor:pointer;padding:2px 6px;flex-shrink:0;}
+.evento-dropdown-sr{position:absolute;right:8px;top:34px;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.15);z-index:50;overflow:hidden;min-width:160px;}
+.evento-dropdown-sr button{display:block;width:100%;text-align:left;padding:10px 14px;border:none;background:none;font-size:12px;font-weight:600;color:var(--text);cursor:pointer;}
+.evento-dropdown-sr button:hover{background:#F5F2EE;}
+.evento-dropdown-sr button.remover{color:#E74C3C;}
+.strip-normal{background:var(--vinho);}
+.strip-leve{background:#78909C;}
+.strip-pernoite{background:#1565C0;}
+.strip-planejar{background:#6A1B9A;}
+.strip-avaliar{background:#1A7434;}
+.strip-sem{background:#B0BEC5;}
+
+/* LEGENDA CAL */
+.cal-legend{margin:12px 12px 0;background:var(--card);border-radius:var(--r);padding:11px 13px;box-shadow:var(--shadow);}
+.legend-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:10px;}
+.legend-dot{width:11px;height:11px;border-radius:3px;flex-shrink:0;}
+
+/* SEMESTRES TAB */
+.sem-section{margin:14px 12px 0;}
+.sem-header{background:linear-gradient(135deg,var(--vinho) 0%,var(--vinho2) 100%);color:#fff;border-radius:var(--r) var(--r) 0 0;padding:12px 14px;}
+.sem-header h3{font-size:14px;font-weight:800;margin-bottom:2px;}
+.sem-header .period{font-size:11px;opacity:.85;}
+.sem-body{background:var(--card);border-radius:0 0 var(--r) var(--r);padding:12px 14px;box-shadow:var(--shadow);}
+.sem-blocks{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}
+.sem-block-row{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;font-size:11px;}
+.sem-block-num{font-size:10px;font-weight:800;color:var(--muted);width:18px;flex-shrink:0;}
+.sem-block-name{font-weight:600;flex:1;}
+.sem-eixo-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.sem-special{margin-top:10px;border-top:1px solid var(--border);padding-top:10px;}
+.sem-special-item{display:flex;align-items:flex-start;gap:6px;font-size:11px;margin-bottom:6px;}
+.sem-special-icon{font-size:14px;flex-shrink:0;}
+.milestone-box{margin-top:10px;border-top:1px solid var(--border);padding-top:10px;}
+.milestone-item{display:flex;align-items:center;gap:6px;margin-bottom:5px;font-size:11px;}
+.milestone-star{font-size:16px;}
+.milestone-text{font-weight:600;}
+.milestone-sub{font-size:10px;color:var(--muted);}
+.prog-overview{margin-top:10px;border-top:1px solid var(--border);padding-top:10px;}
+.prog-overview-title{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:8px;}
+.prog-mini-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.prog-mini-name{font-size:11px;font-weight:700;width:70px;flex-shrink:0;}
+.prog-mini-track{flex:1;background:#EEEBE7;border-radius:20px;height:7px;overflow:hidden;}
+.prog-mini-bar{height:100%;border-radius:20px;}
+.prog-mini-label{font-size:10px;color:var(--muted);width:60px;text-align:right;flex-shrink:0;}
+
+/* MODAL */
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:flex-end;justify-content:center;}
+.modal-ov.open{display:flex;}
+.modal-box{background:#fff;border-radius:16px 16px 0 0;padding:20px 16px 28px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;}
+.modal-ttl{font-size:16px;font-weight:800;color:var(--vinho);margin-bottom:16px;}
+.f-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;display:block;}
+.f-input{width:100%;padding:10px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;outline:none;font-family:inherit;color:var(--text);}
+.f-input:focus{border-color:var(--vinho);}
+.f-field{margin-bottom:12px;}
+.f-row{display:flex;gap:8px;margin-top:14px;}
+.btn-prim{background:var(--vinho);color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;flex:2;}
+.btn-sec{background:var(--border);color:var(--text);border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;flex:1;}
+.btn-ic{background:none;border:1px solid var(--border);border-radius:7px;padding:4px 8px;font-size:11px;cursor:pointer;color:var(--muted);white-space:nowrap;}
+.btn-ic:hover{background:var(--bg);}
+.arch-section{margin:0 12px;background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;margin-top:10px;}
+
+.patrulha-form{display:flex;flex-direction:column;gap:8px;padding:10px;border:1px dashed var(--border);border-radius:10px;}
+.patrulha-form-row{display:flex;gap:8px;align-items:center;}
+.patrulha-form-row input[type=color]{width:44px;height:38px;border-radius:8px;border:1px solid var(--border);padding:2px;cursor:pointer;background:none;}
+.patrulha-form-row .f-input{flex:1;}
+.patrulhas-grid{display:flex;flex-direction:column;}
+.patrulha-secao{margin:10px 0 0;position:relative;}
+@media (min-width:640px){
+  .patrulhas-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:0;}
+  .patrulhas-grid .patrulha-secao{margin:10px 7px 0;}
+}
+.patrulha-secao-header{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-radius:10px 10px 0 0;color:#fff;font-size:11px;font-weight:800;}
+.patrulha-secao-header-direita{display:flex;align-items:center;gap:4px;}
+.patrulha-secao-count{background:rgba(255,255,255,.28);padding:1px 9px;border-radius:20px;font-size:10px;font-weight:800;}
+.patrulha-menu-btn{border:none;background:none;color:#fff;font-size:15px;font-weight:900;cursor:pointer;padding:1px 5px;border-radius:6px;line-height:1;}
+.patrulha-menu-btn:hover{background:rgba(255,255,255,.25);}
+.patrulha-dropdown{position:absolute;top:38px;right:0;background:var(--card);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);overflow:hidden;z-index:20;min-width:130px;}
+.patrulha-dropdown button{display:block;width:100%;text-align:left;padding:10px 12px;font-size:12px;font-weight:700;border:none;background:var(--card);color:var(--text);cursor:pointer;}
+.patrulha-dropdown button:hover{background:#F5F2EE;}
+.patrulha-dropdown button.remover{color:#E74C3C;}
+.patrulha-drop-zone{background:#FAFAF8;border:1px dashed var(--border);border-top:none;border-radius:0 0 10px 10px;padding:6px;min-height:46px;transition:background .15s ease,border-color .15s ease;}
+.patrulha-drop-zone.drag-over{background:#EAFAF1;border-color:#27AE60;}
+.patrulha-vazia{font-size:11px;color:var(--muted);text-align:center;padding:14px;}
+.roster-row-sr{display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer;border-bottom:1px solid #F0EDE8;}
+.roster-row-sr:last-child{border-bottom:none;}
+.roster-row-sr:hover{background:#F5F2EE;}
+
+/* SAVE BAR */
+.save-bar{position:fixed;bottom:0;left:0;right:0;background:var(--azul);color:#fff;
+  padding:9px 14px;display:flex;align-items:center;gap:8px;z-index:600;
+  box-shadow:0 -2px 10px rgba(0,0,0,.25);}
+.save-bar-status{flex:1;font-size:11px;font-weight:600;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sbar-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;
+  border-radius:16px;padding:5px 11px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.sbar-btn:hover{background:rgba(255,255,255,.25);}
+.sbar-btn.prim{background:rgba(255,255,255,.92);color:var(--azul);}
+.sbar-btn.prim:hover{background:#fff;}
+body{padding-bottom:50px;}
+
+/* ESCOTEIRO DA PÁTRIA */
+.ep-pillar{background:var(--card);margin:10px 12px 0;border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;}
+.ep-ph{padding:12px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #F0EDE8;}
+.ep-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:900;color:#fff;flex-shrink:0;}
+.ep-pb{padding:10px 14px 14px;}
+.ep-fl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:8px 0 5px;display:block;}
+.ep-sel{width:100%;padding:9px 10px;border:2px solid var(--border);border-radius:8px;font-size:13px;
+  font-weight:600;background:var(--card);outline:none;cursor:pointer;font-family:inherit;}
+.ep-sel:focus{border-color:var(--vinho);}
+.ep-ta{width:100%;padding:9px 10px;border:2px solid var(--border);border-radius:8px;font-size:12px;
+  resize:vertical;min-height:70px;outline:none;font-family:inherit;}
+.ep-ta:focus{border-color:var(--vinho);}
+.ep-di{width:100%;padding:8px 10px;border:2px solid var(--border);border-radius:8px;
+  font-size:12px;outline:none;font-family:inherit;}
+.ep-di:focus{border-color:var(--vinho);}
+.ep-sub{background:#FAFAF8;border-radius:8px;padding:10px 12px;margin-bottom:8px;}
+.obs-modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:flex-end;justify-content:center;}
+.obs-modal-ov.open{display:flex;}
+.obs-modal-box{background:var(--card);border-radius:16px 16px 0 0;padding:20px 18px 26px;width:100%;max-width:500px;max-height:80vh;overflow-y:auto;}
+.obs-modal-titulo{font-size:15px;font-weight:800;color:var(--vinho);margin-bottom:10px;}
+.obs-modal-texto{font-size:13px;color:var(--text);line-height:1.6;white-space:pre-line;}
+
+/* ─── Busca de Ações ─────────────────────────────── */
+.busca-wrap{margin:10px 12px 0;position:relative;}
+.busca-input{width:100%;box-sizing:border-box;padding:10px 38px 10px 38px;border:1.5px solid var(--border);border-radius:22px;font-size:13px;background:var(--card);color:var(--text);outline:none;transition:border .2s;-webkit-appearance:none;appearance:none;}
+.busca-input:focus{border-color:var(--vinho);}
+.busca-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none;line-height:1;}
+.busca-clear{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:15px;color:var(--muted);cursor:pointer;background:none;border:none;padding:3px 6px;display:none;line-height:1;}
+.busca-results{margin:8px 12px 0;display:none;}
+.busca-count{font-size:10px;font-weight:700;color:var(--muted);margin-bottom:6px;padding:0 2px;}
+.busca-item{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);margin-bottom:7px;padding:10px 13px;cursor:pointer;display:flex;align-items:flex-start;gap:10px;border:1.5px solid transparent;transition:border-color .15s;}
+.busca-item:active{border-color:var(--vinho);}
+.busca-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.busca-body{flex:1;min-width:0;}
+.busca-bloco{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:3px;}
+.busca-acao{font-size:12px;color:var(--text);line-height:1.4;}
+.busca-tipo{font-size:9px;font-weight:800;padding:2px 6px;border-radius:8px;flex-shrink:0;align-self:flex-start;white-space:nowrap;}
+.busca-tipo.f{background:#E8F5E9;color:#27AE60;}
+.busca-tipo.v{background:#E3F2FD;color:#1565C0;}
+.busca-tipo.s{background:#FFF8E1;color:#E67E22;}
+.busca-tipo.g{background:#F4ECF7;color:#8E44AD;}
+.busca-nada{text-align:center;padding:24px 12px;color:var(--muted);font-size:12px;}
+mark.hl{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
+
+
+/* ===== Clã Pioneiro: acréscimos ao estilo da Sênior ===== */
+.etapa-seg{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px;}
+.etapa-pill{font-size:9px;font-weight:800;padding:2px 8px;border-radius:20px;border:1px solid;white-space:nowrap;}
+.etapa-pill.estouro{background:#FDECEA !important;color:#C0392B !important;border-color:#C0392B !important;}
+.etapa-btn{width:26px;height:26px;border-radius:50%;border:2px solid #D8D2CA;background:#F4F1EC;color:#999;font-size:12px;font-weight:800;cursor:pointer;margin:auto;display:flex;align-items:center;justify-content:center;}
+.etapa-btn.e1{background:#CC6C00;border-color:#CC6C00;color:#fff;}
+.etapa-btn.e2{background:#2D6E3E;border-color:#2D6E3E;color:#fff;}
+.etapa-btn.e3{background:#1565C0;border-color:#1565C0;color:#fff;}
+.intencao-box{background:#FAF7F2;border-left:4px solid var(--vinho);border-radius:0 8px 8px 0;padding:9px 11px;font-size:11px;color:#555;line-height:1.5;margin-bottom:10px;}
+.intencao-box b{display:block;font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--vinho);margin-bottom:2px;}
+.custom-add{display:flex;gap:6px;padding:8px 10px;border-top:1px dashed var(--border);background:#FCFBF9;}
+.custom-add input{flex:1;min-width:0;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12px;font-family:inherit;}
+.custom-add button{border:none;background:var(--vinho);color:#fff;border-radius:8px;padding:0 14px;font-weight:700;font-size:12px;cursor:pointer;}
+.custom-x{border:none;background:none;color:#C0392B;cursor:pointer;font-size:12px;margin-left:6px;}
+.vista-toggle{display:flex;margin:12px 12px 0;background:var(--card);border-radius:10px;box-shadow:var(--shadow);overflow:hidden;}
+.vista-toggle button{flex:1;border:none;background:transparent;padding:11px 6px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;}
+.vista-toggle button.on{color:var(--vinho);border-bottom-color:var(--vinho);}
+.etapa-card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);margin:10px 12px 0;padding:12px 13px;}
+.etapa-quem{font-size:13px;font-weight:800;border-left:5px solid;padding-left:8px;margin-bottom:8px;}
+.etapa-linha{padding:8px 0;border-top:1px solid #F2EFEA;}
+.etapa-nome{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;}
+.etapa-nome small{font-weight:700;color:var(--muted);margin-left:4px;}
+.etapa-blocos{display:flex;flex-wrap:wrap;gap:5px;}
+.etapa-bloco{font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;border:1.5px solid;background:#fff;color:#444;}
+.etapa-bloco.ok{background:#E6F4EA;color:#1E6B34;}
+.etapa-vazio{font-size:10px;color:#aaa;font-style:italic;}
+.bp-card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);margin:10px 12px 0;overflow:hidden;}
+.bp-head{display:flex;align-items:center;gap:10px;padding:12px 13px;cursor:pointer;list-style:none;}
+.bp-head::-webkit-details-marker{display:none;}
+.bp-avatar{width:34px;height:34px;border-radius:50%;color:#fff;font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.bp-nome{flex:1;min-width:0;font-size:13px;font-weight:800;}
+.bp-nome small{display:block;font-size:10px;font-weight:600;color:var(--muted);margin-top:1px;}
+.bp-count{font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;background:#F4F1EC;color:var(--muted);white-space:nowrap;}
+.bp-count.ok{background:#E6F4EA;color:#1E6B34;}
+.bp-corpo{padding:2px 13px 14px;border-top:1px solid #F2EFEA;}
+.bp-item{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid #F5F2EC;}
+.bp-item:last-child{border-bottom:none;}
+.bp-check{width:24px;height:24px;border-radius:50%;border:2px solid #D8D2CA;background:#fff;color:#fff;font-size:13px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;}
+.bp-check.ok{background:#27AE60;border-color:#27AE60;}
+.bp-check.auto{cursor:default;}
+.bp-txt{flex:1;min-width:0;font-size:12px;line-height:1.35;}
+.bp-txt small{display:block;font-size:10px;color:var(--muted);margin-top:1px;}
+.bp-data{border:1.5px solid var(--border);border-radius:7px;padding:5px 6px;font-size:11px;font-family:inherit;width:122px;flex-shrink:0;}
+.bp-nota{width:100%;margin-top:8px;border:1.5px solid var(--border);border-radius:8px;padding:9px 10px;font-size:12px;font-family:inherit;resize:vertical;}
+.cla-vazio{text-align:center;padding:30px 18px;color:var(--muted);font-size:12px;line-height:1.5;}
+.cla-vazio .ico{font-size:34px;display:block;margin-bottom:8px;}
+.itens-evento-sr{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px;}
+</style>
 <script src="v2.js"></script>
 </head>
 <body>
-<div class="cabecalho-fixo"><nav class="tabs-linha"><button class="tab-btn-linha" data-aba="prog" onclick="mostrarAba('prog',this)">📊 Progressão</button><button class="tab-btn-linha" data-aba="cal" onclick="mostrarAba('cal',this)">📅 Calendário</button><button class="tab-btn-linha" data-aba="jov" onclick="mostrarAba('jov',this)">👥 Pioneiros</button><button class="tab-btn-linha" data-aba="almox" onclick="mostrarAba('almox',this)">📦 Almoxarifado</button></nav></div>
-<div class="pagina" id="pg-prog"><div class="pagina-ttl">Progressão</div><div class="pagina-sub">Progressão dos pioneiros</div><div class="card vazio"><span class="ico">📊</span>A tabela de progressão do Clã será montada aqui.<br><span class="em-breve">em construção</span></div></div><div class="pagina" id="pg-cal"><div class="pagina-ttl">Calendário</div><div class="pagina-sub">Atividades e encontros do Clã</div><div class="card vazio"><span class="ico">📅</span>O calendário do Clã será montado aqui.<br><span class="em-breve">em construção</span></div></div><div class="pagina" id="pg-jov"><div class="pagina-ttl">Pioneiros</div><div class="pagina-sub">Cadastro e ficha dos pioneiros</div><div class="card vazio"><span class="ico">👥</span>A lista de pioneiros será montada aqui.<br><span class="em-breve">em construção</span></div></div><div class="pagina" id="pg-almox"><div id="almox-box"></div></div>
+
+<div id="scrollSentinel" style="position:absolute;top:0;left:0;width:1px;height:1px;"></div>
+
+<nav class="tabs" id="tabsCla">
+  <button class="tab-btn active" data-tab="prog" onclick="showTab('prog',this)">⚡ Progressão</button>
+  <button class="tab-btn" data-tab="cal" onclick="showTab('cal',this)">📅 Calendário</button>
+  <button class="tab-btn" data-tab="jovens" onclick="showTab('jovens',this)">👥 Pioneiros</button>
+  <button class="tab-btn" data-tab="bp" onclick="showTab('bp',this)">🏅 Insígnia de B-P</button>
+  <button class="tab-btn" data-tab="alm" onclick="showTab('alm',this);V2_ALMOX.abrir();">📦 Almoxarifado</button>
+</nav>
+
+<!-- ═══ TAB: PROGRESSÃO ═══════════════════════════════ -->
+<div id="prog" class="tab-content active">
+  <div class="alert">
+    Toque em ▶ para abrir um bloco. Marque cada ação feita por pioneiro; o bloco se conclui sozinho quando todas as fixas estão feitas e há uma ação variável (ou uma especialidade/insígnia do bloco). Em cada bloco, escolha também a <strong>etapa</strong> em que o pioneiro vai desenvolvê-lo (1 Descoberta · 2 Destino · 3 Horizonte): são 6 blocos por etapa. Salvo automaticamente.
+  </div>
+
+  <div class="busca-wrap">
+    <span class="busca-icon">🔍</span>
+    <input type="search" class="busca-input" id="buscaAcoes" placeholder="Buscar ação nos blocos..." autocomplete="off" oninput="filtrarAcoes(this.value)" onsearch="filtrarAcoes(this.value)">
+    <button class="busca-clear" id="buscaAcoesClear" onclick="limparBusca()" aria-label="Limpar busca">✕</button>
+  </div>
+  <div class="busca-results" id="buscaResults"></div>
+
+  <div class="progress-section">
+    <div class="section-label">Progresso por pioneiro</div>
+    <div id="pbars"></div>
+    <div class="prog-hint">
+      Descoberta: 6 blocos &nbsp;|&nbsp; Destino: 6 blocos &nbsp;|&nbsp; Horizonte: 6 blocos &nbsp;|&nbsp; 18 blocos + Expedição Pioneira = Insígnia de B-P
+    </div>
+  </div>
+
+  <div class="vista-toggle">
+    <button id="vistaEixo" class="on" onclick="mudarVista('eixo')">Por eixo</button>
+    <button id="vistaEtapa" onclick="mudarVista('etapa')">Por etapa</button>
+  </div>
+
+  <div id="vista-eixo">
+    <div class="eixo-hdr" id="hdr-hv" style="background:var(--hv);border-color:var(--hv-b);color:var(--hv-t);cursor:pointer;" onclick="toggleEixo('hv')">
+      <span class="eixo-icon">⚙</span><span>Habilidades para a Vida</span>
+      <span class="eixo-stats" id="stats-hv"></span><span class="chev-eixo-sr" id="chev-hv">▾</span>
+    </div>
+    <div class="block-list" id="bl-hv"></div>
+
+    <div class="eixo-hdr" id="hdr-ma" style="background:var(--ma);border-color:var(--ma-b);color:var(--ma-t);cursor:pointer;" onclick="toggleEixo('ma')">
+      <span class="eixo-icon">🌿</span><span>Meio Ambiente</span>
+      <span class="eixo-stats" id="stats-ma"></span><span class="chev-eixo-sr" id="chev-ma">▾</span>
+    </div>
+    <div class="block-list" id="bl-ma"></div>
+
+    <div class="eixo-hdr" id="hdr-pd" style="background:var(--pd);border-color:var(--pd-b);color:var(--pd-t);cursor:pointer;" onclick="toggleEixo('pd')">
+      <span class="eixo-icon">🕊</span><span>Paz e Desenvolvimento</span>
+      <span class="eixo-stats" id="stats-pd"></span><span class="chev-eixo-sr" id="chev-pd">▾</span>
+    </div>
+    <div class="block-list" id="bl-pd"></div>
+
+    <div class="eixo-hdr" id="hdr-sb" style="background:var(--sb);border-color:var(--sb-b);color:var(--sb-t);cursor:pointer;" onclick="toggleEixo('sb')">
+      <span class="eixo-icon">💪</span><span>Saúde e Bem-estar</span>
+      <span class="eixo-stats" id="stats-sb"></span><span class="chev-eixo-sr" id="chev-sb">▾</span>
+    </div>
+    <div class="block-list" id="bl-sb"></div>
+  </div>
+
+  <div id="vista-etapa" style="display:none;padding-bottom:6px;"></div>
+
+  <button class="reset-btn somente-admin" onclick="confirmReset()">↺ Restaurar dados iniciais</button>
+</div>
+
+<!-- ═══ TAB: CALENDÁRIO ═══════════════════════════════ -->
+<div id="cal" class="tab-content">
+  <div style="margin-top:12px;">
+
+    <div style="margin:0 12px 12px;background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;">
+      <div style="background:var(--azul);padding:10px 13px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="toggleResumoPresencas()">
+        <span style="color:#fff;font-size:12px;font-weight:800;">📋 Resumo de Presenças</span>
+        <span id="chevResumoPresencas" style="color:#fff;font-size:11px;transition:transform .2s;">▾</span>
+      </div>
+      <div id="presenca-summary" style="padding:8px 13px 10px;display:none;"></div>
+    </div>
+
+    <div class="cal-legend" style="margin-top:0;">
+      <div class="section-label">Legenda</div>
+      <div class="legend-grid">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--vinho)"></div>Clã (C)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#6A1B9A"></div>Equipe de Interesse (EI)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#1565C0"></div>Pernoite (PN)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#1A7434"></div>Avaliação (Av)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#E67E22"></div>Especial (Esp)</div>
+      </div>
+    </div>
+
+    <div class="roster-section" style="padding:0;overflow:hidden;margin:0 12px 12px;">
+      <div class="bloco-head cabecalho-secao" id="cabecalhoAddEvento" style="padding:14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;" onclick="toggleAddEvento()">
+        <span class="bloco-name" style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted);" id="tituloFormEvento">+ Adicionar atividade</span>
+        <span class="chev" id="chevAddEvento">▾</span>
+      </div>
+      <div id="addEventoBody" style="padding:4px 14px 14px;display:none;flex-direction:column;gap:10px;">
+        <div><label class="f-label">Data *</label><input type="date" id="eventoData" class="f-input"></div>
+        <div><label class="f-label">Nome da atividade *</label><input type="text" id="eventoNome" class="f-input" placeholder="Ex: Reunião de clã"></div>
+        <div><label class="f-label">Local</label><input type="text" id="eventoLocal" class="f-input" placeholder="Ex: Sede do Grupo Escoteiro Joaninha"></div>
+        <div>
+          <label class="f-label">Formato</label>
+          <select class="f-input" id="eventoFmt">
+            <option value="C">Clã (C)</option>
+            <option value="EI">Equipe de Interesse (EI)</option>
+            <option value="PN">Pernoite (PN)</option>
+            <option value="Av">Avaliação (Av)</option>
+            <option value="Exp">Expedição (Exp)</option>
+            <option value="Cer">Cerimônia (Cer)</option>
+            <option value="Esp">Especial (Esp)</option>
+          </select>
+        </div>
+        <div class="toggle-externa-row-sr" onclick="event.stopPropagation();document.getElementById('eventoExterna').click()">
+          <input type="checkbox" id="eventoExterna">
+          <label for="eventoExterna" onclick="event.stopPropagation()">🌍 Atividade externa (fora da rotina normal do clã)</label>
+        </div>
+        <div>
+          <label class="f-label">Blocos de aprendizagem trabalhados</label>
+          <button type="button" class="btn-picker-toggle-sr" onclick="toggleItensPicker()">
+            <span id="resumoItensPicker">Nenhum bloco selecionado</span><span class="chev" id="chevItensPicker">▾</span>
+          </button>
+          <div class="itens-picker-scroll-sr" id="eventoItensPicker" style="display:none;"></div>
+        </div>
+        <div><label class="f-label">Responsável</label><input type="text" id="eventoResp" class="f-input" placeholder="Quem conduz a atividade"></div>
+        <div><label class="f-label">Descrição</label><textarea id="eventoTxt" class="f-input" rows="3" placeholder="Detalhes da atividade..." style="resize:vertical;"></textarea></div>
+        <button class="btn-prim" id="btnSalvarEvento" onclick="salvarEvento()">+ Adicionar atividade</button>
+        <button class="btn-sec" id="btnCancelarEvento" style="display:none;" onclick="cancelarEdicaoEvento()">Cancelar edição</button>
+      </div>
+    </div>
+
+    <div id="cal-lista"></div>
+  </div>
+</div>
+
+<!-- ═══ TAB: PIONEIROS ═══════════════════════════════ -->
+<div id="jovens" class="tab-content">
+  <div class="alert" style="margin-top:12px;">
+    O Clã recebe jovens de <strong>18 a 22 anos incompletos</strong>. A cor vai do <strong style="color:#27AE60">verde</strong> (mais tempo até a Partida) ao <strong style="color:#E74C3C">vermelho</strong> (Partida próxima). Quem ainda não fez 18 anos aparece como <strong>Caminho</strong>.
+  </div>
+  <div style="margin:12px 12px 0;display:flex;justify-content:space-between;align-items:center;">
+    <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Calculado em: <span id="calc-date" style="color:var(--text);font-weight:800;">—</span></div>
+    <button onclick="renderJovens()" style="background:var(--vinho);color:#fff;border:none;border-radius:20px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer;">↺ Atualizar</button>
+  </div>
+  <div style="margin:16px 12px 0;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">👤 Todos os pioneiros</div>
+  <div id="jovens-cards" style="padding:12px;display:flex;flex-direction:column;gap:10px;"></div>
+</div>
+
+<!-- ═══ TAB: INSÍGNIA DE B-P ═════════════════════════ -->
+<div id="bp" class="tab-content">
+  <div style="margin:12px 12px 0;background:var(--card);border-radius:var(--r);padding:10px 13px;box-shadow:var(--shadow);font-size:11px;color:var(--muted);line-height:1.5;">
+    🏅 <strong style="color:var(--vinho);">Insígnia de B-P</strong> — Reconhecimento do Ramo Pioneiro. Requer: todos os Blocos de Aprendizagem concluídos, o Desafio Pessoal (Expedição Pioneira), a autoavaliação e a avaliação do clã com recomendação dos escotistas.
+  </div>
+  <div id="bp-conteudo"></div>
+</div>
+
+<!-- ═══ TAB: ALMOXARIFADO ════════════════════════════ -->
+<div id="alm" class="tab-content" style="padding-bottom:80px;"></div>
+
 <script>
+// ╔═══════════════════════════════════════════════════╗
+// ║                    DADOS                          ║
+// ╚═══════════════════════════════════════════════════╝
+// Blocos de Aprendizagem — Guia do Horizonte Pioneiro v1.3 (págs. 73-119).
+// minVariable = quantas ações variáveis o pioneiro precisa fazer quando não usa especialidade/insígnia.
+// O guia deixa as variáveis a cargo do pioneiro (sem número fixo); por isso o mínimo é 1. Ajuste aqui se o clã decidir outro valor.
+const BLOCKS = [
+ {
+  "id": "aprendizagem",
+  "name": "Aprendizagem Contínua e Desenvolvimento Vocacional",
+  "eixo": "hv",
+  "intencao": "Buscar constantemente novos conhecimentos e habilidades, analisando informações com senso crítico e aplicando-as de forma responsável. Explorar suas opções vocacionais para escolher um caminho profissional que lhe proporcione realização e dignidade.",
+  "minVariable": 1,
+  "fixed": [
+   {
+    "id": "f1",
+    "name": "Conquistar, no Ramo Pioneiro, uma especialidade sobre um tema de seu interesse e que seja um conhecimento novo."
+   }
+  ],
+  "variable": [
+   {
+    "id": "v1",
+    "name": "Assumir um papel ativo em atividades voluntárias ou estágios em instituições alinhadas com seus valores, interesses e objetivos pessoais, visando ampliar a experiência prática, fortalecer o compromisso social e desenvolver habilidades para sua formação cidadã e profissional."
+   },
+   {
+    "id": "v2",
+    "name": "Participar de programas voltados a jovens em início de carreira, que oferecem capacitação estruturada e oportunidades de crescimento dentro de uma organização."
+   },
+   {
+    "id": "v3",
+    "name": "Fazer cursos técnicos, de idiomas ou certificações reconhecidas no mercado, ampliando as qualificações profissionais."
+   },
+   {
+    "id": "v4",
+    "name": "Engajar-se em projetos acadêmicos, contribuindo tanto para o desenvolvimento científico quanto para a experiência prática."
+   },
+   {
+    "id": "v5",
+    "name": "Envolver-se em iniciativas empreendedoras ou incubadoras universitárias, experimentando o ambiente de inovação e gestão de projetos."
+   },
+   {
+    "id": "v6",
+    "name": "Frequentar eventos, congressos e seminários para criar conexões e ampliar o contato com diferentes áreas de atuação."
+   },
+   {
+    "id": "v7",
+    "name": "Buscar experiências em outras cidades, estados ou países, conciliando aprendizado cultural, acadêmico e profissional."
+   }
+  ],
+  "specialties": [
+   {
+    "id": "s1",
+    "name": "Gastronomia"
+   },
+   {
+    "id": "s2",
+    "name": "Tecnologia"
+   },
+   {
+    "id": "s3",
+    "name": "Educação"
+   },
+   {
+    "id": "s4",
+    "name": "Idiomas"
+   }
+  ],
+  "insignias": [
+   {
+    "id": "g1",
+    "name": "Insígnia do Aprender"
+   }
+  ]
+ },
+ {
+  "id": "autonomia",
+  "name": "Autonomia e Liderança",
+  "eixo": "hv",
+  "intencao": "Assumir o compromisso de conquistar sua independência financeira de forma ética, valorizando seu próprio trabalho e o dos outros. Participar ativamente de projetos individuais e coletivos, tomar decisões com consciência e responsabilidade, avaliando os impactos de suas escolhas.",
+  "minVariable": 1,
+  "fixed": [
+   {
+    "id": "f1",
+    "name": "Planejar e realizar uma viagem para um município próximo, de forma individual ou em equipe, desenvolvendo um roteiro detalhado que inclua o destino, distância, meios de transporte, custos estimados, hospedagem (se necessário), pontos de interesse, aspectos culturais e históricos da região, além do contato com uma Unidade Escoteira Local, se houver. Durante a viagem, registrar as experiências e aprendizados adquiridos para compartilhar com a comunidade escoteira."
+   }
+  ],
+  "variable": [
+   {
+    "id": "v1",
+    "name": "Participar de um evento externo como representante da Unidade Escoteira Local ou do Escotismo."
+   },
+   {
+    "id": "v2",
+    "name": "Organizar uma oficina sobre finanças pessoais para o clã, UEL ou a comunidade."
+   },
+   {
+    "id": "v3",
+    "name": "Criar pequenos projetos de geração de renda, como startups sociais ou negócios criativos."
+   },
+   {
+    "id": "v4",
+    "name": "Elaborar uma atividade de reflexão sobre consequências de decisões no âmbito profissional ou financeiro."
+   },
+   {
+    "id": "v5",
+    "name": "Apoiar jovens mais novos, compartilhando aprendizados acadêmicos, profissionais e de vida."
+   }
+  ],
+  "specialties": [
+   {
+    "id": "s1",
+    "name": "Empreendedorismo e Negócios"
+   },
+   {
+    "id": "s2",
+    "name": "Finanças e Economia"
+   },
+   {
+    "id": "s3",
+    "name": "Liderança e Gestão"
+   },
+   {
+    "id": "s4",
+    "name": "Viagens"
+   }
+  ],
+  "insignias": []
+ },
+ {
+  "id": "criatividade",
+  "name": "Criatividade e Inovação",
+  "eixo": "hv",
+  "intencao": "Utilizar a criatividade para se adaptar a diferentes situações do dia a dia, explorando novas soluções para desafios e inovando ao enfrentar mudanças.",
+  "minVariable": 1,
+  "fixed": [
+   {
+    "id": "f1",
+    "name": "Planejar e executar atividades ao ar livre, prevendo possíveis imprevistos e adaptando criativamente as soluções quando necessário."
+   }
+  ],
+  "variable": [
+   {
+    "id": "v1",
+    "name": "Identificar um problema ou necessidade na comunidade local e implementar uma solução criativa, inovadora e prática (arte urbana e comunitária, tecnologia criativa, oficinas criativas, espaço de expressão comunitária)."
+   },
+   {
+    "id": "v2",
+    "name": "Realizar ou participar de uma campanha para garantir a primeira participação de um jovem em uma atividade escoteira regional, nacional ou internacional."
+   },
+   {
+    "id": "v3",
+    "name": "Participar de atividades que ensinem metodologias criativas para resolver problemas, estimulando colaboração e inovação."
+   },
+   {
+    "id": "v4",
+    "name": "Organizar uma maratona de ideias em que grupos de jovens criem soluções inovadoras para desafios reais da comunidade (alimentação, transporte, inclusão digital ou meio ambiente)."
+   },
+   {
+    "id": "v5",
+    "name": "Estimular o desenvolvimento de produtos ou serviços com impacto social positivo."
+   }
+  ],
+  "specialties": [
+   {
+    "id": "s1",
+    "name": "Comunicações"
+   }
+  ],
+  "insignias": [
+   {
+    "id": "g1",
+    "name": "Inovadores de Impacto"
+   }
+  ]
+ },
+ {
+  "id": "inteligencia",
+  "name": "Inteligência Emocional",
+  "eixo": "hv",
+  "intencao": "Fortalecer a resiliência, refletindo sobre seus pontos fortes e áreas de melhoria, sabendo lidar com suas emoções e construindo relações saudáveis. Incentivar a busca pela realização dos próprios sonhos, por meio do estabelecimento e da execução de planos com equilíbrio, propósito e respeito consigo mesmo e com os outros.",
+  "minVariable": 1,
+  "fixed": [
+   {
+    "id": "f1",
+    "name": "Estabelecer metas pessoais de curto e médio prazo e avaliá-las regularmente em seu Projeto de Vida, ajustando estratégias quando necessário."
+   }
+  ],
+  "variable": [
+   {
+    "id": "v1",
+    "name": "Organizar uma atividade para o clã, grupo ou a comunidade sobre um dos temas: autoconhecimento, relações humanas, ética e moral, estresse e ansiedade, técnicas de resolução de conflitos (escuta ativa, comunicação não violenta, negociação, empatia, feedback)."
+   },
+   {
+    "id": "v2",
+    "name": "Exercitar práticas integrativas que combinam respiração consciente, percepção do corpo e das emoções, pequenas meditações guiadas, momentos de escuta ativa em duplas e exercícios simples como caminhada silenciosa ou alongamentos."
+   }
+  ],
+  "specialties": [],
+  "insignias": []
+ },
+ {
+  "id": "consumo",
+  "name": "Consumo Responsável",
+  "eixo": "ma",
+  "intencao": "Agir com responsabilidade ambiental, adotando a prática do consumo consciente e desenvolvendo iniciativas que contribuam para a construção de um futuro sustentável.",
+  "minVariable": 1,
+  "fixed": [
+   {
+    "id": "f1",
+    "name": "Assumir o compromisso de consumo consciente, praticando durante as atividades cotidianas e nas atividades do clã escolhas sustentáveis que priorizem o essencial e minimizem resíduos. Em conjunto com o clã, avaliar os benefícios pessoais, coletivos e ambientais."
+   }
+  ],
+  "variable": [
+   {
+    "id": "v1",
+    "name": "Engajar-se em organizações ou projetos que promovam consumo consciente e práticas sustentáveis."
+   },
+   {
+    "id": "v2",
+    "name": "Propor uma ação para reduzir o impacto ambiental em um dos espaços que frequenta, focando em consumo consciente de água e energia e em melhor gerenciamento de resíduos."
+   },
+   {
+    "id": "v3",
+    "name": "Comprometer-se, durante 30 dias, a só comprar o que seja realmente essencial (como comida, medicamentos ou transporte), avaliando ao final do período os benefícios pessoais e para o meio ambiente."
+   },
+   {
+    "id": "v4",
+    "name": "Conhecer organizações que promovam reciclagem, economia circular ou hortas urbanas, entendendo na prática como o consumo consciente é aplicado."
+   },
+   {
+    "id": "v5",
+    "name": "Organizar um evento comunitário para troca de roupas, livros, eletrônicos e outros objetos, reduzindo o consumo e incentivando a economia colaborativa."
+   }
+  ],
+  "specialties": [
+   {
+    "id": "s1",
+    "name": "Agricultura Sustentável"
+   }
+  ],
+  "insignias": [
+   {
+    "id": "g1",
+    "name": "Reduzir, Reciclar, Reutilizar"
+   }
+  ]
+ },
+ {
+  "id": "mudancas",
+  "name": "Mudanças Climáticas",
+  "eixo": "ma",
+  "intencao": "Compreender os impactos e as causas das mudanças climáticas, buscando soluções para minimizá-las. Liderar ações que promovam a conscientização e a adoção de práticas sustentáveis.",
+  "minVariable": 1,
+  "fixed": [],
+  "variable": [
+   {
+    "id": "v1",
+    "name": "Organizar, individual ou coletivamente, um projeto que promova práticas sustentáveis, com o objetivo de aumentar a conscientização sobre o assunto (horta orgânica comunitária, viveiro de mudas, cisterna para água de chuva, aquecedor solar com garrafas PET, separação de resíduos, uso responsável de água e energia, sacolas retornáveis, plantio de árvores, entre outras)."
+   },
+   {
+    "id": "v2",
+    "name": "Participar de cursos, workshops, conferências, eventos sobre sustentabilidade e mudanças climáticas."
+   },
+   {
+    "id": "v3",
+    "name": "Identificar áreas da cidade ou comunidade mais afetadas por fenômenos climáticos e propor soluções de prevenção ou mitigação."
+   },
+   {
+    "id": "v4",
+    "name": "Assistir um documentário, filme ou curta-metragem sobre Mudanças Climáticas e promover debates no seu clã, grupo escoteiro ou comunidade."
+   }
+  ],
+  "specialties": [
+   {
+    "id": "s1",
+    "name": "Sustentabilidade"
+   }
+  ],
+  "insignias": [
+   {
+    "id": "g1",
+    "name": "Escoteiros pela Energia Solar"
+   }
+  ]
+ },
+ {
+  "id": "preservacao",
+  "name": "Preservação da Biodiversidade",
+  "eixo": "ma",
+  "intencao": "Atuar na preservação da biodiversidade, entendendo as causas e os impactos das ações humanas na sua perda. Implementar estratégias para proteger a vida no planeta.",
+  "minVariable": 1,
+  "fixed": [],
+  "variable": [
+   {
+    "id": "v1",
+    "name": "Planejar e executar atividades educativas para crianças ou adolescentes sobre a preservação da biodiversidade."
+   },
+   {
+    "id": "v2",
+    "name": "Conhecer órgãos e ONGs de proteção ambiental e engajar-se em ações promovidas por eles."
+   },
+   {
+    "id": "v3",
+    "name": "Atuar como voluntário em uma área de proteção ambiental."
+   },
+   {
+    "id": "v4",
+    "name": "Participar de projetos que coletam dados ambientais, monitoram biodiversidade, qualidade da água ou poluição."
+   },
+   {
+    "id": "v5",
+    "name": "Oferecer habilidades profissionais (marketing, design, finanças, direito) para apoiar projetos ambientais."
+   }
+  ],
+  "specialties": [
+   {
+    "id": "s1",
+    "name": "Natureza e Ciências Naturais"
+   },
+   {
+    "id": "s2",
+    "name": "Educação Ambiental"
+   }
+  ],
+  "insignias": [
+   {
+    "id": "g1",
+    "name": "Campeões da Natureza"
+   }
+  ]
+ },
+ {
+  "id": "vida_ar",
+  "name": "Vida ao Ar Livre",
+  "eixo": "ma",
+  "intencao": "Usufruir do contato com a natureza e das atividades ao ar livre, adotando práticas conscientes que minimizem seu impacto ao meio ambiente e contribuam para a preservação do equilíbrio ecológico.",
+  "minVariable": 1,
+  "fixed": [
+   {
+    "id": "f1",
+    "name": "Planejar e executar uma das seguintes opções: acampamento, atividade aventureira, expedição ou travessia. A atividade deve considerar: segurança e análise de riscos; campismo de baixo impacto; intenso contato com a natureza; duração mínima de quatro dias."
+   }
+  ],
+  "variable": [
+   {
+    "id": "v1",
+    "name": "Colaborar no planejamento e execução de atividades ao ar livre de outras Seções, incentivando o contato com a natureza."
+   }
+  ],
+  "specialties": [
+   {
+    "id": "s1",
+    "name": "Esportes de Aventura"
+   },
+   {
+    "id": "s2",
+    "name": "Ecoturismo"
+   },
+   {
+    "id": "s3",
+    "name": "Habilidades Escoteiras"
+   }
+  ],
+  "insignias": []
+ },
+ {
+  "id": "comunidade",
+  "name": "Comunidade",
+  "eixo": "pd",
+  "intencao": "Agir proativamente na comunidade, identificando desafios locais e liderando iniciativas que promovam mudanças positivas para a construção de um mundo melhor. Trabalhar em parceria com instituições alinhadas aos mesmos valores e propósito do Escotismo, potencializando o impacto das ações coletivas.",
+  "minVariable": 1,
+  "fixed": [
+   {
+    "id": "f1",
+    "name": "Participar, sozinho ou em equipe, de pelo menos trinta horas de serviço comunitário com outras instituições."
+   },
+   {
+    "id": "f2",
+    "name": "Capacitar-se em curso promovido por entidades de referência (como a Defesa Civil, Cruz Vermelha, Corpo de Bombeiros…), preparando-se para atuar em crises humanitárias."
+   }
+  ],
+  "variable": [
+   {
+    "id": "v1",
+    "name": "Conhecer o trabalho da Defesa Civil local e identificar estratégias de atuação individual ou em equipe, quando necessário."
+   },
+   {
+    "id": "v2",
+    "name": "Organizar e realizar um projeto de desenvolvimento comunitário."
+   },
+   {
+    "id": "v3",
+    "name": "Apresentar o Escotismo para um público não escoteiro."
+   }
+  ],
+  "specialties": [
+   {
+    "id": "s1",
+    "name": "Desenvolvimento Comunitário"
+   },
+   {
+    "id": "s2",
+    "name": "Ações Humanitárias"
+   },
+   {
+    "id": "s3",
+    "name": "Inclusão e Acessibilidade"
+   }
+  ],
+  "insignias": [
+   {
+    "id": "g1",
+    "name": "Escoteiros do Mundo"
+   },
+   {
+    "id": "g2",
+    "name": "Mensageiros da Paz"
+   }
+  ]
+ },
+ {
+  "id": "democracia",
+  "name": "Democracia",
+  "eixo": "pd",
+  "intencao": "Participar ativamente de processos democráticos, colaborando na tomada de decisões coletivas e contribuindo para que todos tenham voz, espaço para se expressar e igualdade de oportunidades para participar plenamente.",
+  "minVariable": 1,
+  "fixed": [
+   {
+    "id": "f1",
+    "name": "Conhecer a Carta Pioneira e participar ativamente da vida democrática do clã."
+   }
+  ],
+  "variable": [
+   {
+    "id": "v1",
+    "name": "Participar de Fóruns Regionais e Nacionais de Jovens, Conferências da Juventude e outros espaços de debate sobre o papel da juventude."
+   },
+   {
+    "id": "v2",
+    "name": "Atuar como mesário, presidente de seção ou outro serviço voluntário nas eleições."
+   },
+   {
+    "id": "v3",
+    "name": "Participar de uma Assembleia Regional ou Nacional Escoteira, preferencialmente como delegado de sua UEL ou Região."
+   },
+   {
+    "id": "v4",
+    "name": "Organizar e realizar um Fórum de Grupo Escoteiro ou Fórum de Jovens do Ramo Pioneiro."
+   },
+   {
+    "id": "v5",
+    "name": "Participar de conselhos municipais de juventude ou semelhantes."
+   }
+  ],
+  "specialties": [
+   {
+    "id": "s1",
+    "name": "Políticas Públicas"
+   },
+   {
+    "id": "s2",
+    "name": "Equidade"
+   }
+  ],
+  "insignias": []
+ },
+ {
+  "id": "heranca",
+  "name": "Herança Cultural",
+  "eixo": "pd",
+  "intencao": "Valorizar e compartilhar a herança cultural de sua comunidade e do seu país. Reconhecer e respeitar os saberes e tradições dos povos originários, promovendo sua importância na sociedade atual.",
+  "minVariable": 1,
+  "fixed": [],
+  "variable": [
+   {
+    "id": "v1",
+    "name": "Organizar uma atividade sobre herança cultural em uma cidade, centro ou bairro histórico, desenvolvendo uma ação sobre diversidade cultural, preservação de tradições ou o impacto da globalização na cultura."
+   },
+   {
+    "id": "v2",
+    "name": "Colaborar com coletivos, associações ou projetos que atuem pela preservação de línguas, danças, festas populares ou saberes tradicionais."
+   }
+  ],
+  "specialties": [
+   {
+    "id": "s1",
+    "name": "Cultura e Arte"
+   }
+  ],
+  "insignias": []
+ },
+ {
+  "id": "paz",
+  "name": "Promoção da Paz",
+  "eixo": "pd",
+  "intencao": "Promover ações inclusivas, respeitando as diferenças e incentivando o diálogo empático entre as pessoas, independentemente de crença, etnia ou cultura, de modo a construir um ambiente de compreensão e respeito mútuo.",
+  "minVariable": 1,
+  "fixed": [
+   {
+    "id": "f1",
+    "name": "Realizar um serviço voluntário contribuindo para resolver um problema relacionado à atual agenda global de desenvolvimento."
+   }
+  ],
+  "variable": [
+   {
+    "id": "v1",
+    "name": "Organizar e coordenar uma vigília sobre respeito às diferenças e superação de preconceitos, proporcionando um espaço de união e diálogo, de inclusão e de reconhecimento da diversidade como uma força que enriquece a humanidade."
+   },
+   {
+    "id": "v2",
+    "name": "Organizar uma iniciativa (oficina, diálogo guiado, atividade colaborativa) para trabalhar o desenvolvimento de habilidades em comunicação não violenta, mediação e resolução pacífica de conflitos."
+   }
+  ],
+  "specialties": [
+   {
+    "id": "s1",
+    "name": "Ciências Humanas"
+   },
+   {
+    "id": "s2",
+    "name": "Direitos Humanos"
+   },
+   {
+    "id": "s3",
+    "name": "Diversidades"
+   },
+   {
+    "id": "s4",
+    "name": "Fé, Crenças e Diálogo Inter-religioso"
+   }
+  ],
+  "insignias": [
+   {
+    "id": "g1",
+    "name": "Insígnia da Lusofonia"
+   },
+   {
+    "id": "g2",
+    "name": "Insígnia do Cone Sul"
+   },
+   {
+    "id": "g3",
+    "name": "Diálogos pela Paz"
+   }
+  ]
+ },
+ {
+  "id": "valores",
+  "name": "Valores",
+  "eixo": "pd",
+  "intencao": "Alinhar suas ações aos seus valores pessoais e aos princípios do Movimento Escoteiro, vivenciando a Promessa e a Lei Escoteira de forma autêntica, incorporando-os em cada escolha do dia a dia, sendo um exemplo de compromisso com a construção de um mundo melhor.",
+  "minVariable": 1,
+  "fixed": [
+   {
+    "id": "f1",
+    "name": "Avaliar sua vivência sobre a Promessa e a Lei Escoteira e realizar a Investidura Pioneira."
+   }
+  ],
+  "variable": [
+   {
+    "id": "v1",
+    "name": "Elaborar um projeto ou ação inspirada em um artigo da Lei Escoteira, avaliando em equipe como seu desenvolvimento refletiu os valores do Movimento."
+   },
+   {
+    "id": "v2",
+    "name": "Participar de estudos de caso que apresentem dilemas éticos do cotidiano e propor soluções coerentes com a Promessa e a Lei Escoteira."
+   }
+  ],
+  "specialties": [],
+  "insignias": []
+ },
+ {
+  "id": "cuidado",
+  "name": "Cuidado com o Corpo",
+  "eixo": "sb",
+  "intencao": "Responsabilizar-se pelo cuidado com seu corpo, reconhecendo suas capacidades, enfrentando desafios e respeitando seus limites. Expressar sua sexualidade com autorrespeito e respeito ao próximo, valorizando a diversidade e a individualidade.",
+  "minVariable": 1,
+  "fixed": [
+   {
+    "id": "f1",
+    "name": "Participar de uma capacitação em primeiros socorros, aplicando os aprendizados em simulações práticas."
+   },
+   {
+    "id": "f2",
+    "name": "Participar de uma capacitação em respostas a desastres, aplicando os aprendizados em simulações práticas."
+   }
+  ],
+  "variable": [
+   {
+    "id": "v1",
+    "name": "Convidar profissional de saúde para organizar e participar de um curso de primeiros socorros no grupo escoteiro ou na comunidade."
+   },
+   {
+    "id": "v2",
+    "name": "Realizar atividades físicas desafiadoras (trilhas, escaladas, corridas), avaliando capacidades, superações e limites individuais."
+   },
+   {
+    "id": "v3",
+    "name": "Participar de oficinas ou rodas de conversa sobre saúde física, sexualidade e diversidade, conduzidas por profissionais ou especialistas convidados."
+   }
+  ],
+  "specialties": [
+   {
+    "id": "s1",
+    "name": "Saúde"
+   }
+  ],
+  "insignias": []
+ },
+ {
+  "id": "espiritualidade",
+  "name": "Espiritualidade",
+  "eixo": "sb",
+  "intencao": "Buscar compreender e vivenciar sua espiritualidade, encontrando sentido para sua vida por meio de suas crenças e valores. Procurar agir com coerência, incorporando seus valores de forma contínua nas escolhas do cotidiano e na sua atuação na comunidade.",
+  "minVariable": 1,
+  "fixed": [
+   {
+    "id": "f1",
+    "name": "Integrar ao Projeto de Vida compromissos espirituais e éticos, avaliando periodicamente sua coerência com atitudes cotidianas."
+   }
+  ],
+  "variable": [
+   {
+    "id": "v1",
+    "name": "Liderar ações que promovam o diálogo inter-religioso e a valorização das diferentes expressões de fé na comunidade, incentivando o respeito, a empatia e a convivência pacífica."
+   },
+   {
+    "id": "v2",
+    "name": "Promover ou colaborar em ações de serviço em espaços religiosos diversos."
+   }
+  ],
+  "specialties": [],
+  "insignias": [
+   {
+    "id": "g1",
+    "name": "Diálogo inter-religioso"
+   }
+  ]
+ },
+ {
+  "id": "habitos",
+  "name": "Hábitos Saudáveis",
+  "eixo": "sb",
+  "intencao": "Cuidar do próprio bem-estar, adotando uma rotina de autocuidado que inclua a prática regular de atividades físicas, uma alimentação equilibrada e a manutenção da higiene pessoal e do ambiente ao seu redor.",
+  "minVariable": 1,
+  "fixed": [
+   {
+    "id": "f1",
+    "name": "Implementar, em sua comunidade, iniciativas que abordem um dos seguintes temas: alimentação saudável; atividades físicas; higiene."
+   }
+  ],
+  "variable": [
+   {
+    "id": "v1",
+    "name": "Organizar oficina sobre culinária saudável, explorando receitas equilibradas e sustentáveis para aplicar em acampamentos ou no dia a dia."
+   },
+   {
+    "id": "v2",
+    "name": "Desenvolver uma campanha de conscientização sobre higiene pessoal e coletiva."
+   }
+  ],
+  "specialties": [
+   {
+    "id": "s1",
+    "name": "Esportes"
+   },
+   {
+    "id": "s2",
+    "name": "Educação Alimentar e Nutricional"
+   }
+  ],
+  "insignias": []
+ },
+ {
+  "id": "saude_mental",
+  "name": "Saúde Mental",
+  "eixo": "sb",
+  "intencao": "Manter hábitos que promovam o equilíbrio da saúde mental, adotando estratégias que favoreçam o bem-estar próprio e coletivo, contribuindo para a construção de ambientes mais saudáveis, empáticos e acolhedores.",
+  "minVariable": 1,
+  "fixed": [
+   {
+    "id": "f1",
+    "name": "Participar de capacitação em primeiros socorros em saúde mental, praticando técnicas de escuta qualificada, apoio inicial e encaminhamento responsável em situações de crise."
+   }
+  ],
+  "variable": [
+   {
+    "id": "v1",
+    "name": "Participar de ações e iniciativas em conjunto com especialistas ou organizações voltadas a esta temática."
+   },
+   {
+    "id": "v2",
+    "name": "Organizar atividade para outras seções, clã ou a comunidade sobre a importância da gestão do tempo, incluindo os impactos negativos do uso excessivo de tecnologias e redes sociais, além de destacar práticas de bem-estar que favorecem o equilíbrio emocional e a saúde mental, como meditação, exercícios físicos, momentos de lazer offline e conexões interpessoais saudáveis."
+   }
+  ],
+  "specialties": [
+   {
+    "id": "s1",
+    "name": "Saúde Mental e Bem-estar Emocional"
+   },
+   {
+    "id": "s2",
+    "name": "Hobbies e Lazer"
+   }
+  ],
+  "insignias": []
+ },
+ {
+  "id": "vinculos",
+  "name": "Vínculos Saudáveis",
+  "eixo": "sb",
+  "intencao": "Construir vínculos saudáveis e relações interpessoais baseadas na empatia, no respeito e no crescimento mútuo, promovendo um ambiente positivo e acolhedor para todos.",
+  "minVariable": 1,
+  "fixed": [
+   {
+    "id": "f1",
+    "name": "Participar de momentos regulares de celebração e confraternização no clã (Fogos de Conselho, encontros culturais, atividades de partilha), fortalecendo os vínculos afetivos."
+   },
+   {
+    "id": "f2",
+    "name": "Praticar escuta ativa e feedback construtivo nas atividades do clã, fortalecendo a cooperação e o respeito mútuo."
+   }
+  ],
+  "variable": [
+   {
+    "id": "v1",
+    "name": "Conhecer o Estatuto da Juventude, especialmente quanto ao Direito à Saúde, e organizar visita solidária a uma instituição que atue nessa área. Durante a visita, desenvolver ações que contribuam para o bem-estar dos atendidos, gerando impacto social positivo."
+   }
+  ],
+  "specialties": [
+   {
+    "id": "s1",
+    "name": "Saúde sexual e reprodutiva"
+   }
+  ],
+  "insignias": []
+ }
+];
+const EIXOS = {
+  hv:{label:'Habilidades para a Vida',cor:'#E0355F'},
+  ma:{label:'Meio Ambiente',cor:'#5CB85C'},
+  pd:{label:'Paz e Desenvolvimento',cor:'#1B3B6F'},
+  sb:{label:'Saúde e Bem-estar',cor:'#DB9270'}
+};
+Object.keys(EIXOS).forEach(k => { EIXOS[k].blockIds = BLOCKS.filter(b => b.eixo === k).map(b => b.id); });
+const ETAPAS = {
+  1:{nome:'Descoberta',cor:'#CC6C00'},
+  2:{nome:'Destino',cor:'#2D6E3E'},
+  3:{nome:'Horizonte',cor:'#1565C0'}
+};
+const BLOCOS_POR_ETAPA = 6;
+const TOTAL_BLOCOS = BLOCKS.length; // 18
+const IDADE_PARTIDA = 22;
+const FMT_CLASSE = {C:'T',EI:'P',PN:'PN',Av:'Av',Esp:'Esp',Exp:'Esp',Cer:'Esp'};
+const FMT_NOME = {C:'Clã',EI:'Equipe de Interesse',PN:'Pernoite',Av:'Avaliação',Exp:'Expedição',Cer:'Cerimônia',Esp:'Especial'};
+const COLOR_PALETTE = ['#A31621','#1B3B6F','#2D6E3E','#6A1B9A','#CA6F1E','#1F618D','#16A085','#8E44AD','#7D3C98','#1A7434','#E67E22','#1ABC9C'];
+
+let YOUTH_DATA = [];      // pioneiros
+let JOVENS = [], JNOMES = [], JCORES = []; // ativos (derivados de YOUTH_DATA)
+let S = {};               // progressão: S[bloco].{concluded,etapa,f,v,s,g,custom}[...][pioneiroId]
+let PRESENCA = {};        // PRESENCA[eventoId][pioneiroId] = 1 presente | 0 ausente
+let eventos = {};         // eventos[id] = {id,dataISO,nome,local,fmt,externa,itens,responsavel,txt}
+let CAL_EXTRAS = {};      // link e relato por evento
+let JUSTIFICATIVAS_SR = {}; // faltas justificadas por pioneiro
+let INSIGNIA_BP = {};     // marcos da Insígnia de B-P por pioneiro
+
+const $ = id => document.getElementById(id);
+function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function nomeCurto(n){ const p = String(n || '').trim().split(/\s+/); return p.slice(0,2).join(' '); }
+function syncJovens(){
+  const ativos = YOUTH_DATA.filter(y => y && !y.archived);
+  ativos.forEach((y,i) => { if (!y.color) y.color = COLOR_PALETTE[i % COLOR_PALETTE.length]; });
+  JOVENS = ativos.map(y => y.id);
+  JNOMES = ativos.map(y => nomeCurto(y.name));
+  JCORES = ativos.map(y => y.color);
+}
+function actJ(){ return JOVENS.map((yid,i) => ({yid:yid,i:i})); }
+function renderAllTabs(){ renderAll(); renderCal(); renderJovens(); renderBP(); }
+
+// ╔═══════════════════════════════════════════════════╗
+// ║              LOGIN E ARMAZENAMENTO               ║
+// ╚═══════════════════════════════════════════════════╝
 const DB_URL = "https://joaninha-progressao-default-rtdb.firebaseio.com";
 const SECAO = "cla";
+const V2_NODE = "cla"; // dados ficam em /v2/cla
 let firebaseAuthToken = null, firebaseRefreshToken = null, firebaseUid = null, registroLogado = null;
 let souAdmin = false, nomeLogado = '', tropaDoChefeLogado = null;
+let __store = null, __resolverPrimeira = null;
+
 function lerSessaoSalva() { try { const v = localStorage.getItem('chefeSessao'); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
 function salvarSessao() {
   try {
@@ -53,37 +1354,815 @@ async function autenticarComSessaoCompartilhada() {
   setTimeout(renovarAgendado, 50 * 60 * 1000);
   return true;
 }
-function mostrarAba(id, btn) {
-  document.querySelectorAll('.pagina').forEach(p => p.classList.toggle('ativa', p.id === 'pg-' + id));
-  document.querySelectorAll('.tab-btn-linha').forEach(b => b.classList.toggle('active', b === btn));
-  try { localStorage.setItem('aba_' + SECAO, id); } catch (e) {}
-  if (id === 'almox') V2_ALMOX.abrir();
-  if (typeof aoAbrirAba === 'function') aoAbrirAba(id);
+async function renovarSessaoV2() {
+  if (!firebaseRefreshToken) return;
+  const r = await renovarTokenSessao(firebaseRefreshToken);
+  if (r) { firebaseAuthToken = r.idToken; firebaseRefreshToken = r.refreshToken; salvarSessao(); }
 }
-function iniciarObservadorHeaderCompacto() {
-  const FECHA_APOS = 200, ABRE_ATE = 60; let agendado = false, compacto = false;
-  function avaliar() {
-    agendado = false; const y = window.scrollY; let novo = compacto;
-    if (!compacto && y > FECHA_APOS) novo = true; else if (compacto && y < ABRE_ATE) novo = false;
-    if (novo !== compacto) { compacto = novo; try { window.parent.postMessage({ tipo: 'headerCompacto', compacto }, '*'); } catch (e) {} }
+function mostrarModoLeitura(motivo) {
+  if ($('bannerLeitura')) return;
+  const d = document.createElement('div');
+  d.id = 'bannerLeitura';
+  d.style.cssText = 'position:sticky;top:0;z-index:9999;background:#E8EEF7;border-bottom:2px solid #1B3B6F;color:#1B3B6F;padding:8px 12px;font-size:12px;text-align:center;';
+  d.textContent = '📴 Sem conexão — você pode continuar usando e marcando. As alterações ficam guardadas neste aparelho e são enviadas sozinhas quando o sinal voltar (não feche o app antes disso, nem saia da conta).';
+  document.body.insertBefore(d, document.body.firstChild);
+}
+function sincronizadoOffline(res, recarregar) {
+  if (res && res.n) {
+    V2.registrarHistorico(V2_NODE, registroLogado, '', 'Enviou ' + res.n + ' alteração(ões) feitas sem internet', res.n);
+    alert('✓ ' + res.n + ' alteração(ões) feitas sem internet foram enviadas.');
   }
-  window.addEventListener('scroll', () => { if (!agendado) { agendado = true; requestAnimationFrame(avaliar); } }, { passive: true });
+  if (recarregar) location.reload();
 }
-iniciarObservadorHeaderCompacto();
-async function iniciarSecao() {
-  const ok = await autenticarComSessaoCompartilhada();
-  if (!ok) {
+function montarDados() {
+  return { S, YOUTH_DATA, PRESENCA, eventos, CAL_EXTRAS, JUSTIFICATIVAS_SR, INSIGNIA_BP };
+}
+function aplicarDados(dados) {
+  if (!dados) return;
+  S = dados.S || {};
+  YOUTH_DATA = Array.isArray(dados.YOUTH_DATA) ? dados.YOUTH_DATA.filter(Boolean) : Object.values(dados.YOUTH_DATA || {});
+  PRESENCA = dados.PRESENCA || {};
+  eventos = dados.eventos || {};
+  CAL_EXTRAS = dados.CAL_EXTRAS || {};
+  JUSTIFICATIVAS_SR = dados.JUSTIFICATIVAS_SR || {};
+  INSIGNIA_BP = dados.INSIGNIA_BP || {};
+}
+async function loadState(){
+  const logado = await autenticarComSessaoCompartilhada();
+  if (!logado) {
     document.body.innerHTML = '<div style="padding:40px 20px;text-align:center;font-family:sans-serif;color:#666;"><div style="font-size:34px;margin-bottom:10px;">⚜</div><div style="font-weight:700;margin-bottom:6px;">Sem acesso a esta seção</div><div style="font-size:13px;">Entre pela página inicial do sistema com uma conta que tenha acesso.</div></div>';
-    return;
+    throw new Error('Sem sessão de login — o Clã Pioneiro precisa ser aberto a partir da tela principal.');
   }
-  let aba = null; try { aba = localStorage.getItem('aba_' + SECAO); } catch (e) {}
-  const btn = document.querySelector('.tab-btn-linha[data-aba="' + aba + '"]') || document.querySelector('.tab-btn-linha');
-  mostrarAba(btn.dataset.aba, btn);
+  V2.configurarAuth({ getToken: () => firebaseAuthToken, renovar: renovarSessaoV2 });
+  __store = V2.criarStore({
+    node: V2_NODE, stream: true,
+    getToken: () => firebaseAuthToken,
+    renovarToken: renovarSessaoV2,
+    onModoOffline: (m) => mostrarModoLeitura(m),
+    onSessaoInvalida: () => { alert('Sua sessão expirou ou não tem mais permissão para ler os dados. Entre de novo.'); try { localStorage.removeItem('chefeSessao'); } catch (e) {} try { window.top.location.reload(); } catch (e) { location.reload(); } },
+    onSincronizado: (res, recarregar) => sincronizadoOffline(res, recarregar),
+    onSalvo: (d) => {
+      const nomeDe = (id) => { const y = YOUTH_DATA.find(v => v.id === id); return y ? y.name : null; };
+      V2.registrarHistorico(V2_NODE, registroLogado, '', V2.resumirDiff(d, nomeDe), Object.keys(d.sets).length + Object.keys(d.dels).length);
+    },
+    temPendente: () => { const a = document.activeElement; return !!(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)); },
+    onErroCarga: (e) => {
+      console.error('Clã Pioneiro: falha ao carregar dados:', e);
+      alert('⚠️ Não consegui carregar os dados do Clã Pioneiro.\n\nO app abriu vazio e o SALVAMENTO FICOU BLOQUEADO para não apagar nada. Recarregue a página.');
+    },
+    onDados: (dados, primeira) => {
+      try { aplicarDados(dados); syncJovens(); } catch (e) { console.error(e); }
+      if (primeira) { if (__resolverPrimeira) __resolverPrimeira(); }
+      else preservarScroll(() => renderAllTabs());
+    }
+  });
+  await new Promise(res => { __resolverPrimeira = res; __store.iniciar(); });
 }
+async function saveState(){
+  const el = $('save-status');
+  if (el) el.textContent = '● Salvando…';
+  try { await __store.salvar(montarDados()); onDataSaved(); }
+  catch (e) {
+    console.error('Não foi possível salvar dados do Clã Pioneiro:', e);
+    if (el) el.innerHTML = '<span style="color:#E74C3C;cursor:pointer;" onclick="saveState()">⚠️ Não salvou — toque para tentar de novo</span>';
+  }
+}
+function preservarScroll(fn){ const y = window.scrollY; fn(); window.scrollTo(0, y); }
+
+// ── estado de abas/blocos abertos (só neste aparelho) ──
+function persistir(chave, valor){ try { localStorage.setItem('cla_' + chave, JSON.stringify(valor)); } catch (e) {} }
+function restaurar(chave, padrao){ try { const v = localStorage.getItem('cla_' + chave); return v !== null ? JSON.parse(v) : padrao; } catch (e) { return padrao; } }
+let blocosAbertos = restaurar('blocosAbertos', {});
+let eixosAbertos = restaurar('eixosAbertos', {});
+function toggleEixo(id){ eixosAbertos[id] = !(eixosAbertos[id] ?? true); persistir('eixosAbertos', eixosAbertos); aplicarEstadoEixo(id); }
+function aplicarEstadoEixo(id){
+  const aberto = eixosAbertos[id] ?? true;
+  $('bl-' + id).style.display = aberto ? '' : 'none';
+  $('chev-' + id).style.transform = aberto ? '' : 'rotate(-90deg)';
+}
+
+// ╔═══════════════════════════════════════════════════╗
+// ║                  PROGRESSÃO                      ║
+// ╚═══════════════════════════════════════════════════╝
+function getBlock(id){ return BLOCKS.find(b => b.id === id); }
+// cria só as pastas pedidas (evita gravar objetos vazios no banco)
+function garantirBloco(id, ...chaves){
+  if (!S[id] || typeof S[id] !== 'object') S[id] = {};
+  chaves.forEach(k => { if (!S[id][k] || Array.isArray(S[id][k])) S[id][k] = {}; });
+  return S[id];
+}
+function marcarConcluido(bid, yid){
+  const novo = concluidoCalc(bid, yid), atual = isConcluido(bid, yid);
+  if (novo === atual) return;
+  garantirBloco(bid, 'concluded').concluded[yid] = novo ? 1 : 0;
+}
+function variaveisDe(bl){
+  const cust = S[bl.id]?.custom || {};
+  return bl.variable.concat(Object.keys(cust).map(cid => ({id:cid, name:cust[cid].name, custom:true})));
+}
+function feito(bid, tipo, aid, yid){ return S[bid]?.[tipo]?.[aid]?.[yid] === 1; }
+function concluidoCalc(bid, yid){
+  const bl = getBlock(bid);
+  if (bl.fixed.some(a => !feito(bid,'f',a.id,yid))) return false;
+  if (bl.specialties.some(a => feito(bid,'s',a.id,yid))) return true;
+  if (bl.insignias.some(a => feito(bid,'g',a.id,yid))) return true;
+  return variaveisDe(bl).filter(a => feito(bid,'v',a.id,yid)).length >= bl.minVariable;
+}
+function isConcluido(bid, yid){ return S[bid]?.concluded?.[yid] === 1; }
+function statsJovem(yid){
+  let n = 0; const porEtapa = {1:0,2:0,3:0}, escolhidos = {1:0,2:0,3:0};
+  BLOCKS.forEach(b => {
+    const c = isConcluido(b.id, yid), e = S[b.id]?.etapa?.[yid];
+    if (c) n++;
+    if (e) { escolhidos[e]++; if (c) porEtapa[e]++; }
+  });
+  return { n, porEtapa, escolhidos };
+}
+function etapaAtual(n){
+  if (n >= TOTAL_BLOCOS) return {l:'Insígnia de B-P 🏆', c:'#6A1B9A'};
+  if (n >= 2*BLOCOS_POR_ETAPA) return {l:'Horizonte', c:ETAPAS[3].cor};
+  if (n >= BLOCOS_POR_ETAPA) return {l:'Destino', c:ETAPAS[2].cor};
+  return {l:'Descoberta', c:ETAPAS[1].cor};
+}
+function toggle(bid, tipo, aid, yid){
+  const bl = garantirBloco(bid, tipo);
+  if (!bl[tipo][aid] || typeof bl[tipo][aid] !== 'object') bl[tipo][aid] = {};
+  bl[tipo][aid][yid] = bl[tipo][aid][yid] === 1 ? 0 : 1;
+  marcarConcluido(bid, yid);
+  saveState(); preservarScroll(renderAll);
+}
+function ciclarEtapa(bid, yid){
+  const bl = garantirBloco(bid, 'etapa');
+  const prox = ((bl.etapa[yid] || 0) + 1) % 4;
+  if (prox === 0) delete bl.etapa[yid]; else bl.etapa[yid] = prox;
+  saveState(); preservarScroll(renderAll);
+}
+function addCustom(bid){
+  const inp = $('cust-' + bid); const nome = (inp.value || '').trim();
+  if (!nome) return;
+  const bl = garantirBloco(bid, 'custom');
+  bl.custom['c' + Date.now().toString(36)] = { name: nome };
+  inp.value = '';
+  saveState(); preservarScroll(renderAll);
+}
+function removerCustom(bid, cid){
+  if (!confirm('Remover esta ação personalizada? As marcações feitas nela também deixam de contar.')) return;
+  const bl = garantirBloco(bid, 'custom', 'v');
+  delete bl.custom[cid]; delete bl.v[cid];
+  YOUTH_DATA.forEach(y => marcarConcluido(bid, y.id));
+  saveState(); preservarScroll(renderAll);
+}
+async function confirmReset(){
+  if (!souAdmin) { alert('Esta ação é só para administradores.'); return; }
+  const senha = prompt('Ação sensível: isso apaga TODAS as marcações de progressão do Clã, pra todo mundo.\n\nDigite a senha para confirmar:');
+  if (senha === null) return;
+  if (senha !== '980070') { alert('Senha incorreta. Nada foi alterado.'); return; }
+  if (!(await V2.protegerAntes(V2_NODE, montarDados(), 'Antes de restaurar dados iniciais', registroLogado))) return;
+  V2.registrarHistorico(V2_NODE, registroLogado, '', 'Limpou a progressão do Clã', 0);
+  S = {}; saveState(); renderAll();
+  alert('Progressão do Clã limpa.');
+}
+
+function renderProgressBars(){
+  const c = $('pbars'); c.innerHTML = '';
+  if (!actJ().length) { c.innerHTML = '<div class="cla-vazio"><span class="ico">👥</span>Nenhum pioneiro cadastrado ainda.<br>Cadastre na aba <strong>👥 Pioneiros</strong>.</div>'; return; }
+  actJ().forEach(({yid,i}) => {
+    const st = statsJovem(yid), et = etapaAtual(st.n), pct = Math.round(st.n / TOTAL_BLOCOS * 100);
+    const pills = [1,2,3].map(k => {
+      const estouro = st.escolhidos[k] > BLOCOS_POR_ETAPA;
+      return `<span class="etapa-pill${estouro?' estouro':''}" style="color:${ETAPAS[k].cor};border-color:${ETAPAS[k].cor};background:${ETAPAS[k].cor}12" title="${st.escolhidos[k]} bloco(s) escolhido(s) para esta etapa">${ETAPAS[k].nome} ${st.porEtapa[k]}/${BLOCOS_POR_ETAPA}${estouro?' ⚠ '+st.escolhidos[k]+' escolhidos':''}</span>`;
+    }).join('');
+    const div = document.createElement('div'); div.className = 'prog-row';
+    div.innerHTML = `<div class="prog-meta"><span class="prog-name">${esc(JNOMES[i])}</span><span class="prog-etapa" style="background:${et.c}22;color:${et.c}">${st.n}/${TOTAL_BLOCOS} — ${et.l}</span></div>
+      <div class="prog-track"><div class="prog-bar" style="width:${pct}%;background:${JCORES[i]};"></div></div>
+      <div class="etapa-seg">${pills}</div>`;
+    c.appendChild(div);
+  });
+}
+
+function tabelaCabecalho(rotulo){
+  return `<thead><tr><th class="act-col">${rotulo}</th>${actJ().map(({i}) => `<th>${esc(JNOMES[i].split(' ')[0])}</th>`).join('')}</tr></thead>`;
+}
+function secaoAcoes(bid, tipo, lista, rotulo, rotuloClasse, estilo){
+  if (!lista.length) return '';
+  const rows = lista.map(a => {
+    const cells = actJ().map(({yid}) => {
+      const ok = feito(bid, tipo, a.id, yid);
+      const st = estilo ? (ok ? estilo.on : estilo.off) : '';
+      return `<td><div class="cb ${ok?'done':'pending'}" ${st?`style="${st}"`:''} onclick="toggle('${bid}','${tipo}','${a.id}','${yid}')">${ok ? (estilo ? '★' : '✓') : '·'}</div></td>`;
+    }).join('');
+    const icone = tipo === 'f' ? '📌 ' : tipo === 's' ? '🎖 ' : tipo === 'g' ? '🏅 ' : '';
+    const x = a.custom ? `<button class="custom-x" title="Remover ação personalizada" onclick="removerCustom('${bid}','${a.id}')">✕</button>` : '';
+    return `<tr class="${tipo==='f'?'fixed-row':''}"><td class="act-col">${icone}${esc(a.name)}${a.custom?' <em style="color:#999;font-size:9px;">(personalizada)</em>':''}${x}</td>${cells}</tr>`;
+  }).join('');
+  return `<div class="actions-section">${rotuloClasse}<div class="actions-table-wrap"><table class="actions-table">${tabelaCabecalho(rotulo)}<tbody>${rows}</tbody></table></div></div>`;
+}
+
+function renderEixo(eixoId){
+  const eixo = EIXOS[eixoId];
+  const container = $('bl-' + eixoId); container.innerHTML = '';
+  let feitos = 0; const total = eixo.blockIds.length * actJ().length;
+  eixo.blockIds.forEach(bid => actJ().forEach(({yid}) => { if (isConcluido(bid, yid)) feitos++; }));
+  $('stats-' + eixoId).textContent = `${feitos}/${total} concluídos`;
+
+  eixo.blockIds.forEach(bid => {
+    const bl = getBlock(bid);
+    actJ().forEach(({yid}) => marcarConcluido(bid, yid));
+    const vars = variaveisDe(bl);
+
+    const badges = actJ().map(({yid,i}) => {
+      const done = isConcluido(bid, yid);
+      const parcial = bl.fixed.filter(a => feito(bid,'f',a.id,yid)).length + vars.filter(a => feito(bid,'v',a.id,yid)).length;
+      const cls = done ? 'b-done' : parcial > 0 ? 'b-part' : 'b-none';
+      const e = S[bid]?.etapa?.[yid];
+      return `<div class="b-badge ${cls}" title="${esc(JNOMES[i])}: ${done?'Concluído':parcial+' ação(ões)'}${e?' · '+ETAPAS[e].nome:''}">${esc(JNOMES[i][0] || '?')}</div>`;
+    }).join('');
+
+    const etapaRow = `<div class="actions-section">
+      <div class="actions-label" style="margin-bottom:5px;"><span style="color:var(--vinho);font-weight:800;">📍 ETAPA DO BLOCO</span>
+        <span style="font-size:9px;font-weight:400;color:var(--muted);margin-left:6px;">toque para escolher: 1 Descoberta · 2 Destino · 3 Horizonte</span></div>
+      <div class="actions-table-wrap"><table class="actions-table">${tabelaCabecalho('Quando fazer')}<tbody><tr><td class="act-col" style="font-size:10px;">Etapa em que vai desenvolver</td>
+      ${actJ().map(({yid}) => { const e = S[bid]?.etapa?.[yid] || 0; return `<td><button class="etapa-btn ${e?'e'+e:''}" title="${e?ETAPAS[e].nome:'Sem etapa definida'}" onclick="ciclarEtapa('${bid}','${yid}')">${e || '·'}</button></td>`; }).join('')}
+      </tr></tbody></table></div></div>`;
+
+    const status = `<div class="actions-section">
+      <div class="actions-label" style="margin-bottom:5px;"><span style="color:var(--azul);font-weight:800;">⚡ STATUS AUTOMÁTICO</span>
+        <span style="font-size:9px;font-weight:400;color:var(--muted);margin-left:6px;">Completa quando: todas as fixas + (≥${bl.minVariable} variável OU 1 especialidade/insígnia)</span></div>
+      <div class="actions-table-wrap"><table class="actions-table">${tabelaCabecalho('Critério')}<tbody>
+        <tr><td class="act-col" style="font-size:10px;">📌 Fixas (${bl.fixed.length} obrigatória${bl.fixed.length!==1?'s':''})</td>
+          ${actJ().map(({yid}) => { const n = bl.fixed.filter(a => feito(bid,'f',a.id,yid)).length, t = bl.fixed.length, ok = t === 0 || n >= t; return `<td><span style="font-size:10px;font-weight:800;color:${ok?'#27AE60':'#E67E22'}">${t===0?'—':ok?'✓':n+'/'+t}</span></td>`; }).join('')}</tr>
+        <tr><td class="act-col" style="font-size:10px;">☑ Variáveis (≥${bl.minVariable}) ou ★ Especialidade/Insígnia</td>
+          ${actJ().map(({yid}) => { const v = vars.filter(a => feito(bid,'v',a.id,yid)).length, sp = bl.specialties.filter(a => feito(bid,'s',a.id,yid)).length, ins = bl.insignias.filter(a => feito(bid,'g',a.id,yid)).length; const ok = v >= bl.minVariable || sp > 0 || ins > 0; const txt = sp > 0 ? '★ esp.' : ins > 0 ? '★ ins.' : v + '/' + bl.minVariable; return `<td><span style="font-size:10px;font-weight:800;color:${ok?'#27AE60':'#E67E22'}">${txt}</span></td>`; }).join('')}</tr>
+        <tr><td class="act-col" style="font-size:11px;font-weight:800;">🏆 Conclusão</td>
+          ${actJ().map(({yid}) => { const d = isConcluido(bid, yid); return `<td><div style="width:26px;height:26px;border-radius:50%;background:${d?'#27AE60':'#E0E0E0'};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:${d?'#fff':'#999'};margin:auto;">${d?'✓':'○'}</div></td>`; }).join('')}</tr>
+      </tbody></table></div></div>`;
+
+    const fixSec = secaoAcoes(bid, 'f', bl.fixed, 'Ação', '<div class="actions-label fixed-label">📌 Ações Fixas (obrigatórias)</div>');
+    const varSec = secaoAcoes(bid, 'v', vars, 'Ação', `<div class="actions-label var-label">☑ Ações Variáveis (mín. ${bl.minVariable}) <span style="font-weight:400;font-size:9px;">— escolhidas de acordo com o Projeto de Vida</span></div>`);
+    const addCustomHtml = `<div class="custom-add"><input id="cust-${bid}" type="text" placeholder="Ação personalizada (de acordo com o Projeto de Vida)" onkeydown="if(event.key==='Enter')addCustom('${bid}')"><button onclick="addCustom('${bid}')">+ Adicionar</button></div>`;
+    const espSec = secaoAcoes(bid, 's', bl.specialties, 'Especialidade', '<div class="actions-label" style="color:#E67E22;font-weight:800;">🎖 Especialidades <span style="font-weight:400;font-size:9px;">(1 especialidade do bloco substitui as variáveis)</span></div>', {on:'background:#F39C12;border-color:#E67E22;color:#fff',off:'background:#FFF8E1;border-color:#F5CBA7;color:#E67E22'});
+    const insSec = secaoAcoes(bid, 'g', bl.insignias, 'Insígnia', '<div class="actions-label" style="color:#8E44AD;font-weight:800;">🏅 Insígnias <span style="font-weight:400;font-size:9px;">(1 insígnia do bloco substitui as variáveis)</span></div>', {on:'background:#8E44AD;border-color:#7D3C98;color:#fff',off:'background:#F4ECF7;border-color:#D7BDE2;color:#8E44AD'});
+
+    const el = document.createElement('details');
+    el.className = 'block-item'; el.dataset.blockId = bid; el.open = !!blocosAbertos[bid];
+    el.addEventListener('toggle', () => { blocosAbertos[bid] = el.open; persistir('blocosAbertos', blocosAbertos); });
+    const resumoEsp = (bl.specialties.length + bl.insignias.length) ? ` · ${bl.specialties.length} esp. · ${bl.insignias.length} ins.` : '';
+    el.innerHTML = `<summary class="block-summary"><span class="block-arrow">▶</span>
+      <div class="block-info"><div class="block-title">${esc(bl.name)}</div>
+      <div class="block-meta">${bl.fixed.length} fixas · ${bl.variable.length} variáveis sugeridas${resumoEsp}</div></div>
+      <div class="block-badges">${badges}</div></summary>
+      <div class="block-body">
+        <div class="intencao-box"><b>Intencionalidade educativa</b>${esc(bl.intencao)}</div>
+        ${etapaRow}${status}${fixSec}${varSec}${addCustomHtml}${espSec}${insSec}
+      </div>`;
+    container.appendChild(el);
+  });
+}
+
+function renderEtapas(){
+  const c = $('vista-etapa');
+  if (!actJ().length) { c.innerHTML = '<div class="cla-vazio"><span class="ico">👥</span>Cadastre os pioneiros na aba <strong>👥 Pioneiros</strong>.</div>'; return; }
+  c.innerHTML = actJ().map(({yid,i}) => {
+    const semEtapa = BLOCKS.filter(b => !S[b.id]?.etapa?.[yid]).length;
+    const linhas = [1,2,3].map(k => {
+      const bs = BLOCKS.filter(b => S[b.id]?.etapa?.[yid] === k);
+      const feitos = bs.filter(b => isConcluido(b.id, yid)).length;
+      const chips = bs.length ? bs.map(b => { const ok = isConcluido(b.id, yid); return `<span class="etapa-bloco ${ok?'ok':''}" style="border-color:${EIXOS[b.eixo].cor}">${ok?'✓ ':''}${esc(b.name)}</span>`; }).join('') : '<span class="etapa-vazio">nenhum bloco escolhido</span>';
+      return `<div class="etapa-linha"><div class="etapa-nome" style="color:${ETAPAS[k].cor}">${k}. ${ETAPAS[k].nome}<small>${feitos}/${BLOCOS_POR_ETAPA} concluídos · ${bs.length} escolhidos</small></div><div class="etapa-blocos">${chips}</div></div>`;
+    }).join('');
+    return `<div class="etapa-card"><div class="etapa-quem" style="border-color:${JCORES[i]}">${esc(JNOMES[i])} <small style="font-weight:600;color:var(--muted);">· ${semEtapa} bloco(s) sem etapa definida</small></div>${linhas}</div>`;
+  }).join('');
+}
+function mudarVista(v){
+  $('vista-eixo').style.display = v === 'eixo' ? '' : 'none';
+  $('vista-etapa').style.display = v === 'etapa' ? '' : 'none';
+  $('vistaEixo').classList.toggle('on', v === 'eixo');
+  $('vistaEtapa').classList.toggle('on', v === 'etapa');
+  persistir('vista', v);
+}
+function renderAll(){
+  renderProgressBars();
+  Object.keys(EIXOS).forEach(renderEixo);
+  renderEtapas();
+  renderBP();
+}
+
+// ── busca de ações ──
+function filtrarAcoes(q){
+  q = (q || '').trim().toLowerCase();
+  $('buscaAcoesClear').style.display = q ? 'block' : 'none';
+  const box = $('buscaResults');
+  if (!q) { box.style.display = 'none'; box.innerHTML = ''; return; }
+  const achados = [];
+  BLOCKS.forEach(b => {
+    const todas = b.fixed.map(a => ({a, t:'f'})).concat(variaveisDe(b).map(a => ({a, t:'v'})), b.specialties.map(a => ({a, t:'s'})), b.insignias.map(a => ({a, t:'g'})));
+    todas.forEach(({a,t}) => { if (a.name.toLowerCase().includes(q) || b.name.toLowerCase().includes(q)) achados.push({b, a, t}); });
+  });
+  const rot = {f:'Fixa', v:'Variável', s:'Especialidade', g:'Insígnia'};
+  box.style.display = 'block';
+  box.innerHTML = achados.length ? `<div class="busca-count">${achados.length} resultado(s)</div>` + achados.slice(0, 40).map(({b,a,t}) =>
+    `<div class="busca-item" onclick="irParaBloco('${b.id}')"><div class="busca-dot" style="background:${EIXOS[b.eixo].cor}"></div><div class="busca-body"><div class="busca-bloco">${esc(b.name)}</div><div class="busca-acao">${esc(a.name)}</div></div><span class="busca-tipo ${t}">${rot[t]}</span></div>`).join('')
+    : '<div class="busca-nada">Nenhuma ação encontrada.</div>';
+}
+function limparBusca(){ $('buscaAcoes').value = ''; filtrarAcoes(''); }
+function irParaBloco(bid){
+  mudarVista('eixo');
+  const b = getBlock(bid); eixosAbertos[b.eixo] = true; aplicarEstadoEixo(b.eixo);
+  const el = document.querySelector(`details[data-block-id="${bid}"]`);
+  if (el) { el.open = true; blocosAbertos[bid] = true; persistir('blocosAbertos', blocosAbertos); el.scrollIntoView({behavior:'smooth', block:'start'}); }
+}
+
+// ╔═══════════════════════════════════════════════════╗
+// ║                  CALENDÁRIO                      ║
+// ╚═══════════════════════════════════════════════════╝
+let eventoEditandoId = null, eventoMenuAbertoId = null, itensSelecionados = [];
+const MESES = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+function eventosOrdenados(){ return Object.values(eventos).filter(Boolean).sort((a,b) => String(a.dataISO).localeCompare(String(b.dataISO)) || String(a.nome).localeCompare(String(b.nome))); }
+function getExtra(eid){ if (!CAL_EXTRAS[eid]) CAL_EXTRAS[eid] = {link:'', resposta:''}; return CAL_EXTRAS[eid]; }
+function salvarLinkEvento(eid, v){ getExtra(eid).link = v; saveState(); }
+function salvarRespostaEvento(eid, v){ getExtra(eid).resposta = v; saveState(); }
+function linkSeguro(u){ return /^https?:\/\//i.test(u || '') ? u : ''; }
+
+function toggleAddEvento(forcar){
+  const body = $('addEventoBody'); const abrir = forcar === undefined ? body.style.display === 'none' : !!forcar;
+  body.style.display = abrir ? 'flex' : 'none';
+  $('chevAddEvento').style.transform = abrir ? 'rotate(180deg)' : '';
+  if (abrir) renderItensPicker();
+}
+function toggleItensPicker(){ const p = $('eventoItensPicker'); const abrir = p.style.display === 'none'; p.style.display = abrir ? 'block' : 'none'; $('chevItensPicker').style.transform = abrir ? 'rotate(180deg)' : ''; if (abrir) renderItensPicker(); }
+function atualizarResumoItens(){
+  $('resumoItensPicker').textContent = itensSelecionados.length ? itensSelecionados.length + ' bloco(s) selecionado(s)' : 'Nenhum bloco selecionado';
+}
+function renderItensPicker(){
+  const p = $('eventoItensPicker');
+  p.innerHTML = Object.keys(EIXOS).map(k => `<div class="eixo-picker-header-sr" style="background:${EIXOS[k].cor};color:#fff;">${esc(EIXOS[k].label)}</div>` +
+    EIXOS[k].blockIds.map(bid => { const sel = itensSelecionados.includes(bid); return `<div class="item-row-sr" onclick="toggleItemEvento('${bid}')"><div class="item-check-sr ${sel?'sel':''}">${sel?'✓':''}</div><div class="item-text-sr">${esc(getBlock(bid).name)}</div></div>`; }).join('')).join('');
+  atualizarResumoItens();
+}
+function toggleItemEvento(bid){ const i = itensSelecionados.indexOf(bid); if (i >= 0) itensSelecionados.splice(i,1); else itensSelecionados.push(bid); renderItensPicker(); }
+function limparFormEvento(){
+  ['eventoData','eventoNome','eventoLocal','eventoResp','eventoTxt'].forEach(id => $(id).value = '');
+  $('eventoFmt').value = 'C'; $('eventoExterna').checked = false; itensSelecionados = []; eventoEditandoId = null;
+  $('btnSalvarEvento').textContent = '+ Adicionar atividade'; $('tituloFormEvento').textContent = '+ Adicionar atividade'; $('btnCancelarEvento').style.display = 'none';
+  atualizarResumoItens();
+}
+function salvarEvento(){
+  const dataISO = $('eventoData').value, nome = $('eventoNome').value.trim();
+  if (!dataISO || !nome) { alert('Informe a data e o nome da atividade.'); return; }
+  const id = eventoEditandoId || ('ev_' + Date.now());
+  eventos[id] = { id, dataISO, nome, local: $('eventoLocal').value.trim(), fmt: $('eventoFmt').value, externa: $('eventoExterna').checked,
+    itens: itensSelecionados.slice(), responsavel: $('eventoResp').value.trim(), txt: $('eventoTxt').value.trim() };
+  limparFormEvento(); toggleAddEvento(false);
+  saveState(); renderCal();
+}
+function editarEvento(id){
+  const ev = eventos[id]; if (!ev) return;
+  eventoMenuAbertoId = null; eventoEditandoId = id;
+  $('eventoData').value = ev.dataISO || ''; $('eventoNome').value = ev.nome || ''; $('eventoLocal').value = ev.local || '';
+  $('eventoFmt').value = ev.fmt || 'C'; $('eventoExterna').checked = !!ev.externa; $('eventoResp').value = ev.responsavel || ''; $('eventoTxt').value = ev.txt || '';
+  itensSelecionados = Array.isArray(ev.itens) ? ev.itens.slice() : Object.values(ev.itens || {});
+  $('btnSalvarEvento').textContent = '💾 Salvar alterações'; $('tituloFormEvento').textContent = '✏️ Editando atividade'; $('btnCancelarEvento').style.display = 'block';
+  toggleAddEvento(true); renderCal(); $('cabecalhoAddEvento').scrollIntoView({behavior:'smooth', block:'start'});
+}
+function cancelarEdicaoEvento(){ limparFormEvento(); toggleAddEvento(false); renderCal(); }
+function removerEvento(id){
+  const ev = eventos[id]; if (!ev) return;
+  if (!confirm('Excluir a atividade "' + ev.nome + '"? A lista de presença dela também será apagada.')) return;
+  delete eventos[id]; delete PRESENCA[id]; delete CAL_EXTRAS[id]; eventoMenuAbertoId = null;
+  saveState(); renderCal();
+}
+function toggleEventoMenu(id){ eventoMenuAbertoId = eventoMenuAbertoId === id ? null : id; renderCal(); }
+
+function togglePresenca(eid, yid){
+  if (!PRESENCA[eid]) PRESENCA[eid] = {};
+  const cur = PRESENCA[eid][yid];
+  if (cur === undefined || cur === null) PRESENCA[eid][yid] = 1;
+  else if (cur === 1) PRESENCA[eid][yid] = 0;
+  else delete PRESENCA[eid][yid];
+  saveState(); fillPresencaGrid(eid); renderPresencaSummary();
+}
+function marcarTodosPresentes(eid, presente){
+  if (!PRESENCA[eid]) PRESENCA[eid] = {};
+  actJ().forEach(({yid}) => { if (presente) PRESENCA[eid][yid] = 1; else delete PRESENCA[eid][yid]; });
+  saveState(); fillPresencaGrid(eid); renderPresencaSummary();
+}
+function toggleJustificativa(eid, yid){
+  let l = JUSTIFICATIVAS_SR[yid]; if (!Array.isArray(l)) l = l ? Object.values(l) : [];
+  const i = l.indexOf(eid); if (i >= 0) l.splice(i,1); else l.push(eid);
+  JUSTIFICATIVAS_SR[yid] = l; saveState(); fillPresencaGrid(eid); renderPresencaSummary();
+}
+function justificadas(yid){ const l = JUSTIFICATIVAS_SR[yid]; return Array.isArray(l) ? l : (l ? Object.values(l) : []); }
+function fillPresencaGrid(eid){
+  const grid = $('pg-' + eid), badge = $('pb-' + eid); if (!grid) return;
+  grid.innerHTML = '';
+  if (!actJ().length) { grid.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:6px 0;">Cadastre pioneiros para marcar presença.</div>'; return; }
+  const topo = document.createElement('div'); topo.className = 'presenca-marcar-todos-sr';
+  topo.innerHTML = `<button onclick="event.stopPropagation();marcarTodosPresentes('${eid}',true)">✓ Marcar todos</button><button onclick="event.stopPropagation();marcarTodosPresentes('${eid}',false)">✗ Desmarcar todos</button>`;
+  grid.appendChild(topo);
+  let presentes = 0, marcados = 0;
+  actJ().forEach(({yid,i}) => {
+    const val = PRESENCA[eid]?.[yid]; let bg, fg, lbl;
+    if (val === 1) { bg = '#27AE60'; fg = '#fff'; lbl = '✓'; presentes++; marcados++; }
+    else if (val === 0) { bg = '#E74C3C'; fg = '#fff'; lbl = '✗'; marcados++; }
+    else { bg = '#E8E5E0'; fg = '#999'; lbl = '·'; }
+    const just = justificadas(yid).includes(eid);
+    const row = document.createElement('div'); row.className = 'presenca-row'; row.onclick = () => togglePresenca(eid, yid);
+    row.innerHTML = `<div style="width:24px;height:24px;border-radius:7px;background:${bg};color:${fg};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;">${lbl}</div><span class="presenca-nome">${esc(JNOMES[i])}</span>` +
+      (val === 0 ? `<button class="justificar-btn-sr${just?' justificado':''}" onclick="event.stopPropagation();toggleJustificativa('${eid}','${yid}')">${just?'✓ Justificada':'Justificar falta'}</button>` : '');
+    grid.appendChild(row);
+  });
+  if (badge) {
+    if (!marcados) badge.textContent = '';
+    else { const total = actJ().length, cor = presentes === total ? '#27AE60' : presentes < Math.ceil(total/2) ? '#E74C3C' : '#E67E22'; badge.innerHTML = `<span style="color:${cor};font-weight:800;font-size:9px;">${presentes}/${total} presentes</span>`; }
+  }
+}
+let resumoAberto = restaurar('resumoPresencasAberto', false);
+function toggleResumoPresencas(){ resumoAberto = !resumoAberto; persistir('resumoPresencasAberto', resumoAberto); renderPresencaSummary(); }
+function renderPresencaSummary(){
+  const box = $('presenca-summary'); if (!box) return;
+  box.style.display = resumoAberto ? 'block' : 'none';
+  $('chevResumoPresencas').style.transform = resumoAberto ? 'rotate(180deg)' : '';
+  if (!resumoAberto) return;
+  if (!actJ().length) { box.innerHTML = '<div style="font-size:11px;color:var(--muted);">Nenhum pioneiro cadastrado.</div>'; return; }
+  const comMarcas = Object.keys(PRESENCA).filter(eid => eventos[eid] && PRESENCA[eid] && Object.keys(PRESENCA[eid]).length);
+  box.innerHTML = actJ().map(({yid,i}) => {
+    let p = 0, f = 0;
+    comMarcas.forEach(eid => { const v = PRESENCA[eid][yid]; if (v === 1) p++; else if (v === 0 && !justificadas(yid).includes(eid)) f++; });
+    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #F2EFEA;font-size:12px;"><span style="flex:1;font-weight:700;">${esc(JNOMES[i])}</span><span style="color:#27AE60;font-weight:800;">${p} presença(s)</span><span style="color:${f?'#E74C3C':'#999'};font-weight:800;">${f} falta(s)</span></div>`;
+  }).join('');
+}
+function renderCal(){
+  const list = $('cal-lista'); list.innerHTML = '';
+  const evs = eventosOrdenados();
+  if (!evs.length) { list.innerHTML = '<div class="cla-vazio"><span class="ico">📅</span>Nenhuma atividade cadastrada ainda.<br>Use <strong>+ Adicionar atividade</strong> acima.</div>'; renderPresencaSummary(); return; }
+  let mesAtual = '', n = 0;
+  evs.forEach(ev => {
+    n++;
+    const d = new Date((ev.dataISO || '') + 'T12:00:00'); const valida = !isNaN(d);
+    const mes = valida ? ev.dataISO.slice(0,7) : 'sem-data';
+    if (mes !== mesAtual) {
+      mesAtual = mes;
+      const h = document.createElement('div'); h.className = 'cal-section-hdr'; h.style.marginTop = list.children.length ? '20px' : '';
+      h.textContent = '📅 ' + (valida ? d.toLocaleDateString('pt-BR', {month:'long', year:'numeric'}) : 'Sem data');
+      list.appendChild(h);
+    }
+    const eid = ev.id, fmt = ev.fmt || 'C';
+    const itens = Array.isArray(ev.itens) ? ev.itens : Object.values(ev.itens || {});
+    const card = document.createElement('div'); card.className = 'cal-card'; card.style.flexDirection = 'column'; card.style.margin = '0 12px 8px';
+    const tags = itens.map(b => getBlock(b)).filter(Boolean).map(b => `<span class="bloco-tag">📌 ${esc(b.name)}</span>`).join('');
+    const menu = eventoMenuAbertoId === eid;
+    const main = document.createElement('div'); main.style.cssText = 'display:flex;';
+    main.innerHTML = `<div class="cal-strip strip-normal"><div class="strip-idx">${n}</div><div class="strip-day" style="font-size:18px">${valida ? String(d.getDate()).padStart(2,'0') : '--'}</div><div class="strip-mon">${valida ? MESES[d.getMonth()] : ''}</div></div>
+      <div class="cal-body" style="flex:1;position:relative;">
+        <button class="evento-menu-btn-sr" style="position:absolute;top:0;right:0;" onclick="event.stopPropagation();toggleEventoMenu('${eid}')">⋮</button>
+        <div style="padding-right:20px;">
+          <div style="font-size:12px;font-weight:800;color:var(--vinho);margin-bottom:3px;">${ev.externa ? '<span class="externa-badge-sr">🌍 Externa</span>' : ''}${esc(ev.nome)}</div>
+          ${ev.local ? `<div style="font-size:10px;color:var(--muted);margin-bottom:2px;">📍 ${esc(ev.local)}</div>` : ''}
+          ${ev.responsavel ? `<div style="font-size:10px;color:var(--muted);margin-bottom:4px;">👤 ${esc(ev.responsavel)}</div>` : ''}
+          <div class="cal-meta"><span class="fmt-badge fmt-${FMT_CLASSE[fmt] || 'T'}" title="${esc(FMT_NOME[fmt] || '')}">${esc(fmt)}</span>${tags}</div>
+          ${ev.txt ? `<div class="cal-text">${esc(ev.txt)}</div>` : ''}
+        </div>
+        ${menu ? `<div class="evento-dropdown-sr" onclick="event.stopPropagation()"><button onclick="editarEvento('${eid}')">✏️ Editar</button><button class="remover" onclick="removerEvento('${eid}')">🗑️ Excluir</button></div>` : ''}
+      </div>`;
+    card.appendChild(main);
+    const det = document.createElement('details'); det.style.cssText = 'border-top:1px solid #F0EDE8;';
+    det.innerHTML = `<summary style="cursor:pointer;padding:7px 11px;font-size:10px;font-weight:700;color:var(--muted);list-style:none;display:flex;align-items:center;gap:6px;user-select:none;"><span>📋 Lista de Presença</span><span id="pb-${eid}" style="margin-left:auto;"></span><span style="font-size:9px;">▼</span></summary><div style="padding:6px 11px 10px;"><div style="display:flex;flex-direction:column;gap:2px;" id="pg-${eid}"></div></div>`;
+    card.appendChild(det);
+    const ex = getExtra(eid), lk = linkSeguro(ex.link);
+    const det2 = document.createElement('details'); det2.style.cssText = 'border-top:1px solid #F0EDE8;';
+    det2.innerHTML = `<summary style="cursor:pointer;padding:7px 11px;font-size:10px;font-weight:700;color:var(--muted);list-style:none;display:flex;align-items:center;gap:6px;user-select:none;"><span>📎 Link e relato</span><span style="font-size:9px;margin-left:auto;">▼</span></summary>
+      <div style="padding:6px 11px 12px;display:flex;flex-direction:column;gap:8px;">
+        <div><div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px;">Link (Google Drive, fotos, documento etc.)</div>
+          <input type="url" class="extra-link-input" placeholder="https://drive.google.com/..." value="${esc(ex.link || '')}" onchange="salvarLinkEvento('${eid}',this.value)">
+          ${lk ? `<a class="evento-link-sr" href="${esc(lk)}" target="_blank" rel="noopener" style="display:inline-block;margin-top:4px;">🔗 Abrir link</a>` : ''}</div>
+        <div><div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px;">Como foi a atividade? Relato e observações</div>
+          <textarea class="extra-resposta-input" rows="3" placeholder="Escreva aqui..." onchange="salvarRespostaEvento('${eid}',this.value)">${esc(ex.resposta || '')}</textarea></div>
+      </div>`;
+    card.appendChild(det2);
+    list.appendChild(card);
+    fillPresencaGrid(eid);
+  });
+  renderPresencaSummary();
+}
+
+// ╔═══════════════════════════════════════════════════╗
+// ║                   PIONEIROS                      ║
+// ╚═══════════════════════════════════════════════════╝
+function calcAge(bornStr, today){
+  const b = new Date(bornStr + 'T12:00:00');
+  let y = today.getFullYear() - b.getFullYear(), m = today.getMonth() - b.getMonth(), d = today.getDate() - b.getDate();
+  if (d < 0) m--; if (m < 0) { y--; m += 12; }
+  return {years:y, months:m};
+}
+function dataEm(bornStr, anos){ const b = new Date(bornStr + 'T12:00:00'); return new Date(b.getFullYear() + anos, b.getMonth(), b.getDate(), 12); }
+function diasAte(d, today){ return Math.ceil((d - today) / 86400000); }
+function fmtDate(d){ return d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'}); }
+function timeStr(days){
+  if (days <= 0) return 'Prazo encerrado';
+  const tm = Math.floor(days / 30.44), y = Math.floor(tm / 12), m = tm % 12;
+  if (y > 0 && m > 0) return `${y} ano${y>1?'s':''} e ${m} mês${m!==1?'es':''}`;
+  if (y > 0) return `${y} ano${y>1?'s':''}`;
+  if (m > 0) return `${m} mês${m!==1?'es':''}`;
+  return `${days} dia${days!==1?'s':''}`;
+}
+function timeColor(days, maxDays){
+  if (days <= 0) return {fg:'#95A5A6', bg:'#F5F5F5', border:'#CCCCCC'};
+  const hue = Math.round(Math.min(1, Math.max(0, days / maxDays)) * 120);
+  return {fg:`hsl(${hue},65%,38%)`, bg:`hsl(${hue},60%,95%)`, border:`hsl(${hue},55%,60%)`};
+}
+function initials(name){ return String(name).split(' ').filter(w => w.length > 2).slice(0,2).map(w => w[0]).join('').toUpperCase() || '?'; }
+
+function showModal(yid){
+  $('youth-modal').classList.add('open'); $('edit-id').value = yid || '';
+  const y = yid ? YOUTH_DATA.find(x => x.id === yid) : null;
+  $('modal-ttl').textContent = y ? 'Editar Pioneiro' : 'Adicionar Pioneiro';
+  $('inp-name').value = y ? y.name : ''; $('inp-born').value = y ? y.born : ''; $('inp-role').value = y ? (y.role || '') : ''; $('inp-obs').value = y ? (y.observacoes || '') : '';
+}
+function hideModal(){ $('youth-modal').classList.remove('open'); }
+function saveYouth(){
+  const name = $('inp-name').value.trim(), born = $('inp-born').value, role = $('inp-role').value.trim(), observacoes = $('inp-obs').value.trim();
+  if (!name || !born) { alert('Nome e data de nascimento são obrigatórios.'); return; }
+  const eid = $('edit-id').value;
+  if (eid) { const y = YOUTH_DATA.find(x => x.id === eid); if (y) { y.name = name; y.born = born; y.role = role; y.observacoes = observacoes; } }
+  else YOUTH_DATA.push({id:'y_' + Date.now(), name, born, role, observacoes, archived:false, color:COLOR_PALETTE[YOUTH_DATA.length % COLOR_PALETTE.length]});
+  syncJovens(); saveState(); hideModal(); renderAllTabs();
+}
+function verObservacao(yid){
+  const y = YOUTH_DATA.find(v => v.id === yid); if (!y) return;
+  $('obsModalTitulo').textContent = '📋 ' + y.name; $('obsModalTexto').textContent = y.observacoes || 'Nenhuma observação registrada.';
+  $('obsModalOv').classList.add('open');
+}
+function fecharObservacao(){ $('obsModalOv').classList.remove('open'); }
+function archiveYouth(yid){
+  const y = YOUTH_DATA.find(v => v.id === yid); if (!y) return;
+  if (!confirm('Arquivar ' + y.name + '? O histórico é mantido e dá para restaurar depois.')) return;
+  y.archived = true; syncJovens(); saveState(); renderAllTabs();
+}
+function unarchiveYouth(yid){ const y = YOUTH_DATA.find(v => v.id === yid); if (!y) return; y.archived = false; syncJovens(); saveState(); renderAllTabs(); }
+async function deleteYouth(yid){
+  if (!souAdmin) { alert('Esta ação é só para administradores.'); return; }
+  const y = YOUTH_DATA.find(v => v.id === yid); if (!y) return;
+  if (!confirm('EXCLUIR DEFINITIVAMENTE ' + y.name + '?\n\nIsso apaga também a progressão e as presenças dessa pessoa. (Fica um snapshot de segurança.)')) return;
+  if (!(await V2.protegerAntes(V2_NODE, montarDados(), 'Antes de excluir ' + y.name, registroLogado))) return;
+  V2.registrarHistorico(V2_NODE, registroLogado, y.name, 'Excluiu o pioneiro', 0);
+  YOUTH_DATA = YOUTH_DATA.filter(v => v.id !== yid);
+  Object.keys(S).forEach(b => {
+    const bl = S[b] || {};
+    ['concluded','etapa'].forEach(k => { if (bl[k]) delete bl[k][yid]; });
+    ['f','v','s','g'].forEach(t => { const m = bl[t] || {}; Object.keys(m).forEach(a => { if (m[a]) delete m[a][yid]; }); });
+  });
+  Object.keys(PRESENCA).forEach(e => { if (PRESENCA[e]) delete PRESENCA[e][yid]; });
+  delete JUSTIFICATIVAS_SR[yid]; delete INSIGNIA_BP[yid];
+  syncJovens(); await saveState(); renderAllTabs();
+}
+function renderJovens(){
+  const today = new Date(); $('calc-date').textContent = fmtDate(today);
+  const ativos = YOUTH_DATA.filter(y => y && !y.archived), arquivados = YOUTH_DATA.filter(y => y && y.archived);
+  const container = $('jovens-cards'); container.innerHTML = '';
+  ativos.map(y => ({...y, days: diasAte(dataEm(y.born, IDADE_PARTIDA), today), dias18: diasAte(dataEm(y.born, 18), today)})).sort((a,b) => a.days - b.days).forEach(e => container.appendChild(cardPioneiro(e, today)));
+  if (!ativos.length) { const v = document.createElement('div'); v.className = 'cla-vazio'; v.innerHTML = '<span class="ico">👥</span>Nenhum pioneiro cadastrado ainda.'; container.appendChild(v); }
+  const add = document.createElement('button');
+  add.style.cssText = 'width:100%;margin-top:4px;padding:14px;background:var(--card);border:2px dashed var(--border);border-radius:var(--r);font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;';
+  add.textContent = '+ Adicionar Pioneiro'; add.onclick = () => showModal(null); container.appendChild(add);
+  if (arquivados.length) {
+    const sec = document.createElement('details'); sec.className = 'arch-section';
+    sec.innerHTML = '<summary style="cursor:pointer;padding:11px 13px;font-size:12px;font-weight:700;color:var(--muted);list-style:none;display:flex;align-items:center;justify-content:space-between;"><span>📦 Arquivados (' + arquivados.length + ')</span><span>▼</span></summary>';
+    const body = document.createElement('div'); body.style.cssText = 'padding:0 12px 12px;display:flex;flex-direction:column;gap:7px;';
+    arquivados.forEach(y => {
+      const row = document.createElement('div'); row.style.cssText = 'background:#F5F5F5;border-radius:8px;padding:9px 11px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;';
+      row.innerHTML = `<div style="flex:1;min-width:140px;"><div style="font-size:12px;font-weight:700;color:#555;">${esc(y.name)}</div><div style="font-size:10px;color:#999;">${esc(y.role || 'Sem cargo')} &nbsp;·&nbsp; Partida: ${fmtDate(dataEm(y.born, IDADE_PARTIDA))}</div></div>
+        <button class="btn-ic" onclick="showModal('${y.id}')">✏ Editar</button>
+        <button class="btn-ic" onclick="verObservacao('${y.id}')">📋${y.observacoes ? ' •' : ''}</button>
+        <button class="btn-ic" onclick="unarchiveYouth('${y.id}')">↩ Restaurar</button>
+        <button class="btn-ic somente-admin" onclick="deleteYouth('${y.id}')" style="color:#E74C3C;border-color:#E74C3C;">🗑 Excluir</button>`;
+      body.appendChild(row);
+    });
+    sec.appendChild(body); container.appendChild(sec);
+  }
+}
+function cardPioneiro(e, today){
+  const maxDays = (IDADE_PARTIDA - 18) * 365;
+  const c = timeColor(e.days, maxDays), passou = e.days <= 0, caminho = e.dias18 > 0, partida = !passou && !caminho && e.days <= 180;
+  const age = calcAge(e.born, today), tPartida = dataEm(e.born, IDADE_PARTIDA);
+  const st = statsJovem(e.id), et = etapaAtual(st.n);
+  let badge;
+  if (caminho) badge = '<span style="background:#E67E22;color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;">🛤 CAMINHO</span>';
+  else if (passou) badge = '<span style="background:#95A5A6;color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;">✓ PASSOU DOS 22</span>';
+  else if (partida) badge = '<span style="background:#6A1B9A;color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;">🌅 PARTIDA PRÓXIMA</span>';
+  else badge = `<span style="background:${c.fg};color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;">🔥 NO CLÃ</span>`;
+  const pct = passou ? 0 : Math.min(100, Math.max(2, (e.days / maxDays) * 100));
+  const card = document.createElement('div');
+  card.style.cssText = `background:${c.bg};border-left:5px solid ${c.border};border-radius:10px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.09);`;
+  card.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:11px;">
+      <div style="width:42px;height:42px;border-radius:50%;background:${c.fg};color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;flex-shrink:0;">${esc(initials(e.name))}</div>
+      <div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:800;color:#1A1A1A;line-height:1.2;">${esc(e.name)}</div>
+        <div style="font-size:10px;color:${c.fg};font-weight:700;margin-top:2px;">${age.years} anos e ${age.months} meses${e.role ? ' &nbsp;·&nbsp; ' + esc(e.role) : ''}</div></div>
+      <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:5px;">${badge}
+        <div style="display:flex;gap:4px;">
+          <button class="btn-ic" onclick="showModal('${e.id}')">✏ Editar</button>
+          <button class="btn-ic" onclick="verObservacao('${e.id}')">📋${e.observacoes ? ' •' : ''}</button>
+          <button class="btn-ic" style="color:#E74C3C;" onclick="archiveYouth('${e.id}')" title="Arquivar">📦</button>
+        </div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px;">
+      <div style="background:rgba(255,255,255,.75);border-radius:8px;padding:8px 10px;"><div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#999;margin-bottom:2px;">${caminho ? 'Entra no clã aos 18' : 'Limite de permanência (22)'}</div>
+        <div style="font-size:12px;font-weight:700;color:#1A1A1A;">${fmtDate(caminho ? dataEm(e.born, 18) : tPartida)}</div></div>
+      <div style="background:rgba(255,255,255,.75);border-radius:8px;padding:8px 10px;"><div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#999;margin-bottom:2px;">${caminho ? 'Falta para o clã' : 'Tempo até a Partida'}</div>
+        <div style="font-size:11px;font-weight:800;color:${c.fg};">${timeStr(caminho ? e.dias18 : e.days)}</div></div>
+    </div>
+    <div style="background:rgba(255,255,255,.75);border-radius:8px;padding:8px 10px;margin-bottom:${passou ? '0' : '10px'};display:flex;align-items:center;gap:8px;">
+      <span style="font-size:11px;font-weight:800;color:${et.c};">${esc(et.l)}</span><span style="font-size:10px;color:#777;">${st.n}/${TOTAL_BLOCOS} blocos concluídos</span></div>
+    ${!passou && !caminho ? `<div style="background:rgba(255,255,255,.5);border-radius:20px;height:7px;overflow:hidden;"><div style="width:${pct}%;height:100%;border-radius:20px;background:${c.fg};"></div></div>
+      <div style="display:flex;justify-content:space-between;margin-top:3px;"><span style="font-size:9px;color:#999;">Hoje</span><span style="font-size:9px;color:#999;">${fmtDate(tPartida)}</span></div>` : ''}`;
+  return card;
+}
+window.addEventListener('message', async function(ev){
+  const msg = ev.data;
+  if (!msg || msg.tipo !== 'transferirJovem') return;
+  YOUTH_DATA.push({ id:'y_' + Date.now(), name:msg.nome, born:msg.nascimento || '2008-01-01', role:'', archived:false, color:COLOR_PALETTE[YOUTH_DATA.length % COLOR_PALETTE.length] });
+  syncJovens(); await saveState(); renderAllTabs();
+});
+
+// ╔═══════════════════════════════════════════════════╗
+// ║                INSÍGNIA DE B-P                   ║
+// ╚═══════════════════════════════════════════════════╝
+// Marcos do caminho até a Insígnia de B-P (guia, págs. 49-72 e 155-169). 'auto' = calculado pela progressão.
+const MARCOS_BP = [
+  {k:'promessa', t:'Promessa Escoteira no Ramo Pioneiro', d:'Marca o início da Progressão Pessoal.'},
+  {k:'pv1', t:'Projeto de Vida — etapa Descoberta', d:'1ª versão apresentada ao escotista em até 1 mês após a Promessa (recebe o distintivo Descoberta).'},
+  {k:'etD', t:'6 blocos da etapa Descoberta concluídos', auto:1},
+  {k:'pv2', t:'Projeto de Vida — etapa Destino', d:'Revisão do que já conquistou + planejamento da Vigília e Investidura.'},
+  {k:'investidura', t:'Vigília e Investidura Pioneira', d:'Acontece entre a etapa Descoberta e a etapa Destino.'},
+  {k:'etDs', t:'6 blocos da etapa Destino concluídos', auto:2},
+  {k:'pv3', t:'Projeto de Vida — etapa Horizonte', d:'Inclui o planejamento da Expedição Pioneira.'},
+  {k:'etH', t:'6 blocos da etapa Horizonte concluídos', auto:3},
+  {k:'fixas', t:'Todas as ações fixas dos 18 blocos concluídas', auto:4},
+  {k:'expedicao', t:'Expedição Pioneira realizada', d:'Desafio Pessoal: planejamento, autonomia, impacto comunitário e reflexão final.'},
+  {k:'autoav', t:'Autoavaliação feita e avaliação positiva dos pares na Assembleia de Clã'},
+  {k:'recomendacao', t:'Recomendação formalizada pela COMAD e escotistas'},
+  {k:'homologacao', t:'Homologação da diretoria da UEL no Paxtu', d:'Solicita certificado, distintivo e barreta.'},
+  {k:'partida', t:'Celebração da Partida', d:'Antes de completar 22 anos (ou antes, por decisão do jovem).'}
+];
+function fixasCompletas(yid){ return BLOCKS.every(b => b.fixed.every(a => feito(b.id,'f',a.id,yid))); }
+function marcoAuto(m, yid){
+  const st = statsJovem(yid);
+  if (m.auto >= 1 && m.auto <= 3) return st.porEtapa[m.auto] >= BLOCOS_POR_ETAPA;
+  if (m.auto === 4) return fixasCompletas(yid);
+  return false;
+}
+function setMarcoData(yid, k, v){
+  if (!INSIGNIA_BP[yid]) INSIGNIA_BP[yid] = {};
+  if (v) INSIGNIA_BP[yid][k] = v; else delete INSIGNIA_BP[yid][k];
+  saveState(); preservarScroll(renderBP);
+}
+function toggleMarco(yid, k){
+  const atual = INSIGNIA_BP[yid]?.[k];
+  setMarcoData(yid, k, atual ? '' : new Date().toISOString().slice(0,10));
+}
+function salvarNotaExpedicao(yid, v){ if (!INSIGNIA_BP[yid]) INSIGNIA_BP[yid] = {}; INSIGNIA_BP[yid].notaExpedicao = v; saveState(); }
+let bpAbertos = restaurar('bpAbertos', {});
+function renderBP(){
+  const c = $('bp-conteudo'); if (!c) return;
+  if (!actJ().length) { c.innerHTML = '<div class="cla-vazio"><span class="ico">🏅</span>Cadastre os pioneiros na aba <strong>👥 Pioneiros</strong>.</div>'; return; }
+  c.innerHTML = actJ().map(({yid,i}) => {
+    const bp = INSIGNIA_BP[yid] || {}; let ok = 0;
+    const itens = MARCOS_BP.map(m => {
+      const feitoM = m.auto ? marcoAuto(m, yid) : !!bp[m.k]; if (feitoM) ok++;
+      const data = m.auto ? '<span style="font-size:9px;font-weight:800;color:#999;white-space:nowrap;">automático</span>' : `<input type="date" class="bp-data" value="${esc(bp[m.k] || '')}" onchange="setMarcoData('${yid}','${m.k}',this.value)">`;
+      const check = m.auto ? `<div class="bp-check auto ${feitoM?'ok':''}">${feitoM?'✓':''}</div>` : `<div class="bp-check ${feitoM?'ok':''}" onclick="toggleMarco('${yid}','${m.k}')">${feitoM?'✓':''}</div>`;
+      const nota = m.k === 'expedicao' ? `<textarea class="bp-nota" rows="2" placeholder="Tema, objetivos, itinerário, impacto e quem estará junto..." onchange="salvarNotaExpedicao('${yid}',this.value)">${esc(bp.notaExpedicao || '')}</textarea>` : '';
+      return `<div style="border-bottom:1px solid #F5F2EC;"><div class="bp-item" style="border-bottom:none;">${check}<div class="bp-txt">${esc(m.t)}${m.d ? `<small>${esc(m.d)}</small>` : ''}</div>${data}</div>${nota ? `<div style="padding:0 0 10px 33px;">${nota}</div>` : ''}</div>`;
+    }).join('');
+    const completo = MARCOS_BP.filter(m => m.k !== 'partida').every(m => m.auto ? marcoAuto(m, yid) : !!bp[m.k]); // a Partida vem depois do reconhecimento
+    return `<details class="bp-card" ${bpAbertos[yid] ? 'open' : ''} ontoggle="bpAbertos['${yid}']=this.open;persistir('bpAbertos',bpAbertos)">
+      <summary class="bp-head"><div class="bp-avatar" style="background:${JCORES[i]}">${esc(initials(JNOMES[i]))}</div>
+      <div class="bp-nome">${esc(JNOMES[i])}<small>${etapaAtual(statsJovem(yid).n).l}</small></div>
+      <span class="bp-count ${completo?'ok':''}">${ok}/${MARCOS_BP.length}</span></summary>
+      <div class="bp-corpo">${itens}</div></details>`;
+  }).join('');
+}
+
+// ╔═══════════════════════════════════════════════════╗
+// ║              SALVAR / EXPORTAR                   ║
+// ╚═══════════════════════════════════════════════════╝
+let _savedTimer = null;
+function onDataSaved(){
+  clearTimeout(_savedTimer);
+  const el = $('save-status'); if (el) el.textContent = '● Salvando…';
+  _savedTimer = setTimeout(() => { const t = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit', second:'2-digit'}); if (el) el.textContent = '✓ Salvo automaticamente às ' + t; }, 350);
+}
+async function saveAll(){
+  clearTimeout(_savedTimer); await saveState();
+  const t = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  const el = $('save-status'); if (el) el.textContent = '✓ Dados salvos às ' + t;
+  const btn = $('save-main-btn');
+  if (btn) { const o = btn.textContent; btn.textContent = '✓ Salvo!'; btn.style.background = '#27AE60'; btn.style.color = '#fff'; setTimeout(() => { btn.textContent = o; btn.style.background = ''; btn.style.color = ''; }, 2000); }
+}
+async function exportData(){
+  await saveAll();
+  const data = { version:'cla-1.0', exportedAt:new Date().toISOString(), exportedBy:'GE Joaninha — Clã Pioneiro', ...montarDados() };
+  const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], {type:'application/json'}));
+  const a = document.createElement('a'); a.href = url; a.download = 'backup_cla_pioneiro_' + new Date().toISOString().slice(0,10) + '.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  const el = $('save-status'); if (el) el.textContent = '✓ Backup exportado com sucesso!';
+  V2.registrarBackup(V2_NODE, registroLogado).then(() => { try { window.parent.postMessage({backupFeitoSr:true}, '*'); } catch (e) {} });
+}
+async function desfazerSnapshot(){
+  if (!souAdmin) { alert('Esta ação é só para administradores.'); return; }
+  let lista; try { lista = await V2.listarSnapshots(V2_NODE); } catch (e) { alert('Não consegui ler os snapshots. Confira a conexão.'); return; }
+  if (!lista.length) { alert('Ainda não há snapshots.\n\nEles são criados automaticamente antes de excluir pioneiro, restaurar dados iniciais ou importar backup.'); return; }
+  const fmt = s => new Date(s.em).toLocaleString('pt-BR', {dateStyle:'short', timeStyle:'short'});
+  const r = prompt('Voltar o Clã Pioneiro para o estado de ANTES de:\n\n' + lista.map((s,i) => (i+1) + ') ' + fmt(s) + ' — ' + s.motivo).join('\n') + '\n\nDigite o número:');
+  if (r === null || r === '') return;
+  const sel = lista[parseInt(r,10) - 1]; if (!sel) { alert('Número inválido.'); return; }
+  if (!confirm('Restaurar o estado de ' + fmt(sel) + '?\n\nO estado atual também fica guardado como snapshot.')) return;
+  try {
+    const dados = await V2.lerSnapshot(V2_NODE, sel.id);
+    if (!(await V2.protegerAntes(V2_NODE, montarDados(), 'Antes de restaurar snapshot', registroLogado))) return;
+    V2.registrarHistorico(V2_NODE, registroLogado, '', 'Restaurou o snapshot de ' + fmt(sel), 0);
+    aplicarDados(dados); syncJovens(); await saveState(); renderAllTabs(); alert('Dados restaurados.');
+  } catch (e) { alert('Não consegui restaurar: ' + e.message); }
+}
+function importData(event){
+  if (!souAdmin) { alert('Esta ação é só para administradores.'); if (event.target) event.target.value = ''; return; }
+  const file = event.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async e => {
+    try {
+      const d = JSON.parse(e.target.result);
+      if (d.version !== 'cla-1.0') throw new Error('Arquivo não reconhecido');
+      if (!(await V2.protegerAntes(V2_NODE, montarDados(), 'Antes de importar backup', registroLogado))) { event.target.value = ''; return; }
+      V2.registrarHistorico(V2_NODE, registroLogado, '', 'Importou um backup', 0);
+      aplicarDados(d); syncJovens(); await saveState();
+      alert('✓ Dados importados com sucesso!\nA página será recarregada.'); location.reload();
+    } catch (err) { alert('Arquivo inválido.\nUtilize apenas backups exportados pelo Clã Pioneiro deste sistema.'); }
+  };
+  reader.readAsText(file);
+}
+
+// ╔═══════════════════════════════════════════════════╗
+// ║                  INICIALIZAÇÃO                   ║
+// ╚═══════════════════════════════════════════════════╝
+function showTab(id, btn){
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.toggle('active', t.id === id));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+  persistir('aba', id); window.scrollTo(0, 0);
+}
+function restaurarUltimaAba(){
+  const id = restaurar('aba', 'prog');
+  const btn = document.querySelector('.tab-btn[data-tab="' + id + '"]') || document.querySelector('.tab-btn');
+  showTab(btn.dataset.tab, btn);
+  if (btn.dataset.tab === 'alm') V2_ALMOX.abrir();
+}
+async function iniciarApp(){
+  await loadState();
+  syncJovens();
+  V2_ALMOX.montar({ secao:'cla', nomeTropa:'Clã Pioneiro', outraTropa:'as outras seções', rotuloComp:'Compartilhado com as outras seções', subComp:'Aparece no almoxarifado de todas as seções', subTitulo:'Materiais do Clã Pioneiro. Itens compartilhados aparecem também nas outras seções.', container:'alm', padX:12 });
+  renderAll(); renderCal(); renderJovens();
+  Object.keys(EIXOS).forEach(aplicarEstadoEixo);
+  mudarVista(restaurar('vista', 'eixo'));
+  restaurarUltimaAba();
+}
+let compactoAtual = false, scrollAgendado = false;
+window.addEventListener('scroll', () => {
+  if (scrollAgendado) return; scrollAgendado = true;
+  requestAnimationFrame(() => {
+    scrollAgendado = false; const y = window.scrollY; let novo = compactoAtual;
+    if (!compactoAtual && y > 200) novo = true; else if (compactoAtual && y < 60) novo = false;
+    if (novo !== compactoAtual) { compactoAtual = novo; $('tabsCla').classList.toggle('compacto', novo); try { window.parent.postMessage({ tipo:'headerCompacto', compacto:novo }, '*'); } catch (e) {} }
+  });
+}, { passive:true });
+iniciarApp();
 </script>
-<script>
-V2_ALMOX.montar({ secao:'cla', nomeTropa:'Clã Pioneiro', outraTropa:'as outras seções', rotuloComp:'Compartilhado com as outras seções', subComp:'Aparece no almoxarifado de todas as seções', subTitulo:'Materiais da Clã Pioneiro. Itens compartilhados aparecem também nas outras seções.', container:'almox-box', padX:14 });
-iniciarSecao();
-</script>
+
+<div class="modal-ov" id="youth-modal" onclick="if(event.target===this)hideModal()">
+  <div class="modal-box">
+    <div class="modal-ttl" id="modal-ttl">Adicionar Pioneiro</div>
+    <input type="hidden" id="edit-id">
+    <div class="f-field"><label class="f-label">Nome completo *</label><input type="text" class="f-input" id="inp-name" placeholder="Nome do pioneiro"></div>
+    <div class="f-field"><label class="f-label">Data de nascimento *</label><input type="date" class="f-input" id="inp-born"></div>
+    <div class="f-field"><label class="f-label">Cargo</label><input type="text" class="f-input" id="inp-role" placeholder="Ex: Coordenador de equipe, Secretária…"></div>
+    <div class="f-field"><label class="f-label">Observações (privado — suporte, restrições, etc.)</label><textarea class="f-input" id="inp-obs" rows="3" style="resize:vertical;" placeholder="Ex: restrição alimentar, necessidade de suporte…"></textarea></div>
+    <div class="f-row"><button class="btn-sec" onclick="hideModal()">Cancelar</button><button class="btn-prim" onclick="saveYouth()">Salvar</button></div>
+  </div>
+</div>
+
+<div class="save-bar" id="saveBarSr">
+  <span id="save-status" class="save-bar-status">✓ Sistema carregado</span>
+  <button class="sbar-btn somente-admin" onclick="desfazerSnapshot()" title="Voltar a um snapshot automático">↩</button>
+  <label class="sbar-btn somente-admin" title="Importar backup">📥<input type="file" accept=".json" onchange="importData(event)" style="display:none;"></label>
+  <button class="sbar-btn" onclick="exportData()" title="Baixar backup em JSON">📤 Exportar</button>
+  <button class="sbar-btn prim" id="save-main-btn" onclick="saveAll()">💾 Salvar</button>
+</div>
+
+<div class="obs-modal-ov" id="obsModalOv" onclick="if(event.target===this)fecharObservacao()">
+  <div class="obs-modal-box">
+    <div class="obs-modal-titulo" id="obsModalTitulo"></div>
+    <div class="obs-modal-texto" id="obsModalTexto"></div>
+    <button class="btn-sec" style="width:100%;margin-top:14px;" onclick="fecharObservacao()">Fechar</button>
+  </div>
+</div>
+
 </body>
 </html>

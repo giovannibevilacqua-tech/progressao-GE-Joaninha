@@ -3,18 +3,1847 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Alcateia — GE Joaninha</title>
-<link rel="stylesheet" href="secao.css">
+<title>Alcateia Lobinho — GE Joaninha</title>
+<style>
+:root{
+  --vinho:#B26A00;--vinho2:#D98A00;--azul:#1B3B6F;--azul2:#2A5298;
+  --hv:#F8D7E3;--hv-b:#9C1B6E;--hv-t:#5A0035;
+  --ma:#D7EDD9;--ma-b:#2D7A3A;--ma-t:#174A1E;
+  --pd:#D3E8FA;--pd-b:#1B5FAA;--pd-t:#0A2F5A;
+  --sb:#FDEED7;--sb-b:#CC6C00;--sb-t:#7A3800;
+  --done:#27AE60;--done-bg:#D5F5E3;--done-dark:#1E8449;
+  --focus-y:#FFFBEA;--focus-b:#F39C12;
+  --bg:#F0EDE8;--card:#FFF;--text:#1A1A1A;--muted:#666;
+  --border:#E0D8D0;--r:10px;--shadow:0 2px 8px rgba(0,0,0,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* HEADER */
+.header{background:linear-gradient(160deg,var(--vinho) 0%,var(--vinho2) 60%,#B03050 100%);color:#fff;padding:20px 16px 16px;text-align:center;}
+.header-flor{font-size:26px;margin-bottom:4px;}
+.header h1{font-size:16px;font-weight:800;letter-spacing:.5px;line-height:1.3;}
+.header .sub{font-size:11px;opacity:.82;margin-top:3px;}
+.header-chips{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-top:9px;}
+.chip{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:20px;font-size:10px;font-weight:600;padding:3px 9px;}
+
+/* TABS */
+.tabs{display:flex;background:#fff;border-bottom:2px solid var(--border);position:sticky;top:0;z-index:200;box-shadow:0 2px 6px rgba(0,0,0,.1);overflow-x:auto;overflow-y:hidden;overflow-anchor:none;}
+.tab-btn{flex:1 1 0;min-width:max-content;padding:16px 14px;border:none;border-bottom:3px solid transparent;background:transparent;font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;position:relative;transition:color .2s, border-color .2s, padding .2s ease;white-space:nowrap;}
+.tabs.compacto .tab-btn{padding:9px 6px;}
+.tab-btn.active{color:var(--vinho);border-bottom-color:var(--vinho);}
+.tab-content{display:none;padding-bottom:32px;}
+.tab-content.active{display:block;}
+
+/* ALERTS */
+.alert{margin:12px 12px 0;background:var(--focus-y);border-left:4px solid var(--focus-b);border-radius:0 var(--r) var(--r) 0;padding:9px 11px;font-size:11px;color:#7A4A00;line-height:1.5;}
+
+/* PROGRESS BARS */
+.progress-section{margin:12px 12px 0;background:var(--card);border-radius:var(--r);padding:13px 13px 9px;box-shadow:var(--shadow);}
+.section-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:11px;}
+.prog-row{margin-bottom:9px;}
+.prog-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+.prog-name{font-size:12px;font-weight:700;}
+.prog-etapa{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;}
+.prog-track{background:#EEEBE7;border-radius:20px;height:9px;overflow:hidden;}
+.prog-bar{height:100%;border-radius:20px;transition:width .5s ease;}
+.prog-hint{font-size:10px;color:var(--muted);margin-top:7px;line-height:1.5;border-top:1px solid var(--border);padding-top:7px;}
+
+/* EIXO HEADER */
+.eixo-hdr{display:flex;align-items:center;gap:7px;margin:14px 12px 6px;padding:9px 11px;border-radius:var(--r);font-size:12px;font-weight:800;letter-spacing:.3px;border-left:4px solid;}
+.chev-eixo-sr{font-size:11px;transition:transform .2s;flex-shrink:0;}
+.eixo-icon{font-size:14px;}
+.eixo-stats{font-size:10px;font-weight:600;margin-left:auto;opacity:.7;}
+
+/* ACCORDION BLOCKS */
+.block-list{margin:0 12px;display:flex;flex-direction:column;gap:6px;}
+.block-item{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;}
+.block-item[open] .block-arrow{transform:rotate(90deg);}
+.block-summary{display:flex;align-items:center;gap:8px;padding:11px 12px;cursor:pointer;list-style:none;user-select:none;-webkit-user-select:none;}
+.block-summary::-webkit-details-marker{display:none;}
+.block-arrow{font-size:10px;color:var(--muted);transition:transform .2s;flex-shrink:0;}
+.block-info{flex:1;min-width:0;}
+.block-title{font-size:12px;font-weight:700;line-height:1.3;}
+.block-meta{font-size:10px;color:var(--muted);margin-top:2px;}
+.block-badges{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto;flex-shrink:0;}
+.b-badge{width:20px;height:20px;border-radius:50%;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.b-done{background:var(--done);color:#fff;}
+.b-part{background:#F39C12;color:#fff;}
+.b-none{background:#E0E0E0;color:#999;}
+.focus-tag{display:inline-block;background:var(--focus-b);color:#fff;font-size:8px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;vertical-align:middle;}
+.semester-tag{display:inline-block;font-size:8px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:3px;vertical-align:middle;}
+.sem1-tag{background:#E8F5E9;color:#2D6E3E;}
+.sem2-tag{background:#E3F2FD;color:#1B5FAA;}
+
+/* BLOCK BODY */
+.block-body{padding:0 12px 12px;border-top:1px solid #F5F2EE;}
+.actions-section{margin-top:10px;}
+.actions-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.fixed-label{color:#C0392B;}
+.var-label{color:var(--azul);}
+.actions-table-wrap{overflow-x:auto;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.08);}
+.actions-table{width:100%;border-collapse:collapse;min-width:360px;background:var(--card);}
+.actions-table th{background:var(--azul);color:#fff;padding:6px 5px;font-size:10px;font-weight:700;text-align:center;white-space:nowrap;}
+.actions-table th.act-col{text-align:left;padding-left:8px;min-width:130px;}
+.actions-table td{padding:6px 5px;border-bottom:1px solid #F0EDE8;font-size:10px;vertical-align:middle;text-align:center;}
+.actions-table td.act-col{text-align:left;padding-left:8px;line-height:1.4;font-weight:500;}
+.actions-table tr:last-child td{border-bottom:none;}
+.actions-table tr:nth-child(even){background:#FAFAF8;}
+.actions-table tr.fixed-row{background:#FFF5F5;}
+.cb{width:26px;height:26px;border-radius:7px;margin:auto;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;border:2px solid transparent;font-size:14px;font-weight:700;user-select:none;-webkit-user-select:none;}
+.cb.done{background:var(--done);color:#fff;border-color:var(--done-dark);}
+.cb.pending{background:#EDEBE8;color:#C0BCB7;border-color:#DDD9D4;}
+.cb.pending:hover{background:var(--done-bg);border-color:var(--done);color:var(--done);}
+.cb.done:hover{background:#E74C3C;border-color:#C0392B;}
+.cb.camp-only{background:#E3F2FD;color:#1565C0;border-color:#BBDEFB;cursor:default;}
+
+/* RESET BTN */
+body:not(.eh-admin) .somente-admin{display:none !important;}
+.reset-btn{display:block;margin:14px auto 0;background:none;border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:11px;color:var(--muted);cursor:pointer;}
+.reset-btn:hover{border-color:#E74C3C;color:#E74C3C;}
+
+/* CALENDAR */
+.cal-section-hdr{margin:14px 12px 8px;font-size:13px;font-weight:800;color:var(--vinho);display:flex;align-items:center;gap:8px;}
+.cal-section-hdr::after{content:'';flex:1;height:1px;background:var(--border);}
+.cal-list{padding:0 12px;display:flex;flex-direction:column;gap:8px;}
+.cal-card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);display:flex;overflow:hidden;position:relative;}
+.cal-strip{width:55px;min-width:55px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px;color:#fff;text-align:center;}
+.strip-idx{font-size:8px;font-weight:700;opacity:.65;letter-spacing:.5px;}
+.strip-day{font-size:18px;font-weight:900;line-height:1.1;}
+.strip-mon{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-top:1px;}
+.cal-body{flex:1;padding:10px 11px;}
+.cal-meta{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;}
+.fmt-badge{font-size:9px;font-weight:800;padding:2px 7px;border-radius:20px;letter-spacing:.5px;}
+.fmt-T{background:#EBF5FB;color:#1565C0;}
+.fmt-P{background:#F4ECF7;color:#6A1B9A;}
+.fmt-PN{background:#D6EAF8;color:#0D47A1;}
+.fmt-Av{background:#EAFAF1;color:#1A7434;}
+.fmt-Esp{background:#FFF9C4;color:#7A4A00;}
+.bloco-tag{font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--focus-y);color:#7A4800;border:1px solid #F5CBA7;}
+.comp-tag{font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;background:#F9EAF0;color:#7A1030;border:1px solid #F1A7BD;}
+.special-banner{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:900;padding:2px 7px;border-radius:4px;margin-bottom:4px;letter-spacing:.5px;}
+.banner-camp{background:#2D6E3E;color:#fff;}
+.banner-enduro{background:#C96A00;color:#fff;}
+.banner-sem{background:#E74C3C;color:#fff;}
+.cal-text{font-size:11px;color:#3A3A3A;line-height:1.55;}
+.cal-text em{color:var(--muted);font-style:normal;font-size:10px;}
+.anexo-upload-label{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#FAFAF8;border:2px dashed var(--border);border-radius:8px;cursor:pointer;}
+.anexo-upload-label input[type=file]{display:none;}
+.anexo-arquivo-row{display:flex;align-items:center;gap:6px;padding:8px 10px;background:#EEF2FF;border:1px solid #C0CCF0;border-radius:8px;}
+.anexo-arquivo-info{flex:1;min-width:0;}
+.anexo-arquivo-nome{font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.anexo-arquivo-tam{font-size:9px;color:var(--muted);}
+.anexo-btn{border:none;border-radius:6px;padding:5px 8px;font-size:10px;font-weight:700;cursor:pointer;flex-shrink:0;}
+.extra-link-input,.extra-resposta-input{width:100%;padding:8px 10px;border:2px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;outline:none;}
+.extra-link-input:focus,.extra-resposta-input:focus{border-color:var(--vinho);}
+.evento-link-sr{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--vinho);text-decoration:none;}
+.toggle-externa-row-sr{display:flex;align-items:center;gap:9px;padding:10px 12px;background:#FAFAF8;border:1px solid var(--border);border-radius:8px;cursor:pointer;}
+.toggle-externa-row-sr input[type=checkbox]{width:17px;height:17px;accent-color:var(--vinho);cursor:pointer;flex-shrink:0;}
+.toggle-externa-row-sr label{font-size:12px;font-weight:600;color:var(--text);cursor:pointer;}
+.externa-badge-sr{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:800;padding:2px 8px;border-radius:20px;background:#E8F5E9;color:#1E7A34;border:1px solid #A8D8B0;margin-right:5px;}
+.grupo-label-sr{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:8px 0 4px;}
+.item-row-sr{display:flex;align-items:flex-start;gap:8px;padding:6px 6px;border-radius:6px;}
+.item-row-sr:hover{background:#F5F2EE;}
+.item-check-sr{width:18px;height:18px;border-radius:5px;border:2px solid #DDD9D4;flex-shrink:0;margin-top:1px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;}
+.item-check-sr.sel{background:var(--vinho);border-color:var(--vinho2);}
+.item-text-sr{font-size:12px;line-height:1.45;cursor:pointer;}
+.chip-select-group-sr{display:flex;flex-wrap:wrap;gap:6px;}
+.chip-toggle-sr{font-size:11px;font-weight:700;padding:7px 12px;border-radius:20px;border:1px solid var(--border);background:#FAFAF8;color:var(--text);cursor:pointer;}
+.chip-toggle-sr:hover{background:#F2EFEA;}
+.chip-toggle-sr.selected{background:var(--vinho);color:#fff;border-color:var(--vinho);}
+.btn-picker-toggle-sr{width:100%;text-align:left;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:#FAFAF8;font-size:12px;font-weight:700;color:var(--text);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.btn-picker-toggle-sr:hover{background:#F2EFEA;}
+.itens-picker-scroll-sr{max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:10px;padding:8px;background:#FAFAF8;margin-top:8px;}
+.eixo-picker-header-sr{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;padding:7px 10px;border-radius:8px;color:#fff;margin-top:8px;}
+.eixo-picker-header-sr:first-child{margin-top:0;}
+.picker-bloco-sr{border:1px solid var(--border);border-radius:8px;margin-top:6px;overflow:hidden;background:var(--card);}
+.picker-bloco-head-sr{display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer;font-size:11px;font-weight:700;}
+.picker-bloco-head-sr:hover{background:#F5F2EE;}
+.picker-bloco-head-sr .chev{margin-left:auto;}
+.picker-bloco-body-sr{display:none;padding:2px 10px 10px;}
+.picker-bloco-sr.open .picker-bloco-body-sr{display:block;}
+.picker-bloco-sr.open .chev{transform:rotate(180deg);}
+.picker-bloco-count-sr{font-size:9px;font-weight:800;padding:2px 6px;border-radius:10px;background:var(--done-bg);color:#1E8449;}
+.presenca-marcar-todos-sr{display:flex;gap:8px;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid #F0EDE8;}
+.presenca-grupo-label-sr{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;padding:8px 4px 4px;border-bottom:2px solid;margin-bottom:2px;}
+.presenca-marcar-todos-sr button{flex:1;font-size:10px;font-weight:700;padding:6px;border-radius:8px;border:1px solid var(--border);background:#FAFAF8;color:var(--text);cursor:pointer;}
+.presenca-marcar-todos-sr button:first-child:hover{border-color:#27AE60;color:#1E8449;background:var(--done-bg);}
+.presenca-marcar-todos-sr button:last-child:hover{border-color:#E74C3C;color:#E74C3C;background:#FDEBEA;}
+.justificar-btn-sr{margin-left:auto;font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px;border:1px solid var(--border);background:#fff;color:var(--muted);cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.justificar-btn-sr:hover{border-color:var(--vinho);color:var(--vinho);}
+.justificar-btn-sr.justificado{background:var(--done-bg);color:#1E8449;border-color:#27AE60;}
+.evento-menu-btn-sr{background:none;border:none;font-size:16px;color:var(--muted);cursor:pointer;padding:2px 6px;flex-shrink:0;}
+.evento-dropdown-sr{position:absolute;right:8px;top:34px;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.15);z-index:50;overflow:hidden;min-width:160px;}
+.evento-dropdown-sr button{display:block;width:100%;text-align:left;padding:10px 14px;border:none;background:none;font-size:12px;font-weight:600;color:var(--text);cursor:pointer;}
+.evento-dropdown-sr button:hover{background:#F5F2EE;}
+.evento-dropdown-sr button.remover{color:#E74C3C;}
+.strip-normal{background:var(--vinho);}
+.strip-leve{background:#78909C;}
+.strip-pernoite{background:#1565C0;}
+.strip-planejar{background:#6A1B9A;}
+.strip-avaliar{background:#1A7434;}
+.strip-sem{background:#B0BEC5;}
+
+/* LEGENDA CAL */
+.cal-legend{margin:12px 12px 0;background:var(--card);border-radius:var(--r);padding:11px 13px;box-shadow:var(--shadow);}
+.legend-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:10px;}
+.legend-dot{width:11px;height:11px;border-radius:3px;flex-shrink:0;}
+
+/* SEMESTRES TAB */
+.sem-section{margin:14px 12px 0;}
+.sem-header{background:linear-gradient(135deg,var(--vinho) 0%,var(--vinho2) 100%);color:#fff;border-radius:var(--r) var(--r) 0 0;padding:12px 14px;}
+.sem-header h3{font-size:14px;font-weight:800;margin-bottom:2px;}
+.sem-header .period{font-size:11px;opacity:.85;}
+.sem-body{background:var(--card);border-radius:0 0 var(--r) var(--r);padding:12px 14px;box-shadow:var(--shadow);}
+.sem-blocks{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}
+.sem-block-row{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;font-size:11px;}
+.sem-block-num{font-size:10px;font-weight:800;color:var(--muted);width:18px;flex-shrink:0;}
+.sem-block-name{font-weight:600;flex:1;}
+.sem-eixo-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.sem-special{margin-top:10px;border-top:1px solid var(--border);padding-top:10px;}
+.sem-special-item{display:flex;align-items:flex-start;gap:6px;font-size:11px;margin-bottom:6px;}
+.sem-special-icon{font-size:14px;flex-shrink:0;}
+.milestone-box{margin-top:10px;border-top:1px solid var(--border);padding-top:10px;}
+.milestone-item{display:flex;align-items:center;gap:6px;margin-bottom:5px;font-size:11px;}
+.milestone-star{font-size:16px;}
+.milestone-text{font-weight:600;}
+.milestone-sub{font-size:10px;color:var(--muted);}
+.prog-overview{margin-top:10px;border-top:1px solid var(--border);padding-top:10px;}
+.prog-overview-title{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:8px;}
+.prog-mini-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.prog-mini-name{font-size:11px;font-weight:700;width:70px;flex-shrink:0;}
+.prog-mini-track{flex:1;background:#EEEBE7;border-radius:20px;height:7px;overflow:hidden;}
+.prog-mini-bar{height:100%;border-radius:20px;}
+.prog-mini-label{font-size:10px;color:var(--muted);width:60px;text-align:right;flex-shrink:0;}
+
+/* MODAL */
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:flex-end;justify-content:center;}
+.modal-ov.open{display:flex;}
+.modal-box{background:#fff;border-radius:16px 16px 0 0;padding:20px 16px 28px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;}
+.modal-ttl{font-size:16px;font-weight:800;color:var(--vinho);margin-bottom:16px;}
+.f-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;display:block;}
+.f-input{width:100%;padding:10px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;outline:none;font-family:inherit;color:var(--text);}
+.f-input:focus{border-color:var(--vinho);}
+.f-field{margin-bottom:12px;}
+.f-row{display:flex;gap:8px;margin-top:14px;}
+.btn-prim{background:var(--vinho);color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;flex:2;}
+.btn-sec{background:var(--border);color:var(--text);border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;flex:1;}
+.btn-ic{background:none;border:1px solid var(--border);border-radius:7px;padding:4px 8px;font-size:11px;cursor:pointer;color:var(--muted);white-space:nowrap;}
+.btn-ic:hover{background:var(--bg);}
+.arch-section{margin:0 12px;background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;margin-top:10px;}
+
+.patrulha-form{display:flex;flex-direction:column;gap:8px;padding:10px;border:1px dashed var(--border);border-radius:10px;}
+.patrulha-form-row{display:flex;gap:8px;align-items:center;}
+.patrulha-form-row input[type=color]{width:44px;height:38px;border-radius:8px;border:1px solid var(--border);padding:2px;cursor:pointer;background:none;}
+.patrulha-form-row .f-input{flex:1;}
+.patrulhas-grid{display:flex;flex-direction:column;}
+.patrulha-secao{margin:10px 0 0;position:relative;}
+@media (min-width:640px){
+  .patrulhas-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:0;}
+  .patrulhas-grid .patrulha-secao{margin:10px 7px 0;}
+}
+.patrulha-secao-header{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-radius:10px 10px 0 0;color:#fff;font-size:11px;font-weight:800;}
+.patrulha-secao-header-direita{display:flex;align-items:center;gap:4px;}
+.patrulha-secao-count{background:rgba(255,255,255,.28);padding:1px 9px;border-radius:20px;font-size:10px;font-weight:800;}
+.patrulha-menu-btn{border:none;background:none;color:#fff;font-size:15px;font-weight:900;cursor:pointer;padding:1px 5px;border-radius:6px;line-height:1;}
+.patrulha-menu-btn:hover{background:rgba(255,255,255,.25);}
+.patrulha-dropdown{position:absolute;top:38px;right:0;background:var(--card);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);overflow:hidden;z-index:20;min-width:130px;}
+.patrulha-dropdown button{display:block;width:100%;text-align:left;padding:10px 12px;font-size:12px;font-weight:700;border:none;background:var(--card);color:var(--text);cursor:pointer;}
+.patrulha-dropdown button:hover{background:#F5F2EE;}
+.patrulha-dropdown button.remover{color:#E74C3C;}
+.patrulha-drop-zone{background:#FAFAF8;border:1px dashed var(--border);border-top:none;border-radius:0 0 10px 10px;padding:6px;min-height:46px;transition:background .15s ease,border-color .15s ease;}
+.patrulha-drop-zone.drag-over{background:#EAFAF1;border-color:#27AE60;}
+.patrulha-vazia{font-size:11px;color:var(--muted);text-align:center;padding:14px;}
+.roster-row-sr{display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer;border-bottom:1px solid #F0EDE8;}
+.roster-row-sr:last-child{border-bottom:none;}
+.roster-row-sr:hover{background:#F5F2EE;}
+
+/* SAVE BAR */
+.save-bar{position:fixed;bottom:0;left:0;right:0;background:var(--azul);color:#fff;
+  padding:9px 14px;display:flex;align-items:center;gap:8px;z-index:600;
+  box-shadow:0 -2px 10px rgba(0,0,0,.25);}
+.save-bar-status{flex:1;font-size:11px;font-weight:600;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sbar-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;
+  border-radius:16px;padding:5px 11px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.sbar-btn:hover{background:rgba(255,255,255,.25);}
+.sbar-btn.prim{background:rgba(255,255,255,.92);color:var(--azul);}
+.sbar-btn.prim:hover{background:#fff;}
+body{padding-bottom:50px;}
+
+/* ESCOTEIRO DA PÁTRIA */
+.ep-pillar{background:var(--card);margin:10px 12px 0;border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;}
+.ep-ph{padding:12px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #F0EDE8;}
+.ep-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:900;color:#fff;flex-shrink:0;}
+.ep-pb{padding:10px 14px 14px;}
+.ep-fl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:8px 0 5px;display:block;}
+.ep-sel{width:100%;padding:9px 10px;border:2px solid var(--border);border-radius:8px;font-size:13px;
+  font-weight:600;background:var(--card);outline:none;cursor:pointer;font-family:inherit;}
+.ep-sel:focus{border-color:var(--vinho);}
+.ep-ta{width:100%;padding:9px 10px;border:2px solid var(--border);border-radius:8px;font-size:12px;
+  resize:vertical;min-height:70px;outline:none;font-family:inherit;}
+.ep-ta:focus{border-color:var(--vinho);}
+.ep-di{width:100%;padding:8px 10px;border:2px solid var(--border);border-radius:8px;
+  font-size:12px;outline:none;font-family:inherit;}
+.ep-di:focus{border-color:var(--vinho);}
+.ep-sub{background:#FAFAF8;border-radius:8px;padding:10px 12px;margin-bottom:8px;}
+.obs-modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:flex-end;justify-content:center;}
+.obs-modal-ov.open{display:flex;}
+.obs-modal-box{background:var(--card);border-radius:16px 16px 0 0;padding:20px 18px 26px;width:100%;max-width:500px;max-height:80vh;overflow-y:auto;}
+.obs-modal-titulo{font-size:15px;font-weight:800;color:var(--vinho);margin-bottom:10px;}
+.obs-modal-texto{font-size:13px;color:var(--text);line-height:1.6;white-space:pre-line;}
+
+/* ─── Busca de Ações ─────────────────────────────── */
+.busca-wrap{margin:10px 12px 0;position:relative;}
+.busca-input{width:100%;box-sizing:border-box;padding:10px 38px 10px 38px;border:1.5px solid var(--border);border-radius:22px;font-size:13px;background:var(--card);color:var(--text);outline:none;transition:border .2s;-webkit-appearance:none;appearance:none;}
+.busca-input:focus{border-color:var(--vinho);}
+.busca-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none;line-height:1;}
+.busca-clear{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:15px;color:var(--muted);cursor:pointer;background:none;border:none;padding:3px 6px;display:none;line-height:1;}
+.busca-results{margin:8px 12px 0;display:none;}
+.busca-count{font-size:10px;font-weight:700;color:var(--muted);margin-bottom:6px;padding:0 2px;}
+.busca-item{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);margin-bottom:7px;padding:10px 13px;cursor:pointer;display:flex;align-items:flex-start;gap:10px;border:1.5px solid transparent;transition:border-color .15s;}
+.busca-item:active{border-color:var(--vinho);}
+.busca-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.busca-body{flex:1;min-width:0;}
+.busca-bloco{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:3px;}
+.busca-acao{font-size:12px;color:var(--text);line-height:1.4;}
+.busca-tipo{font-size:9px;font-weight:800;padding:2px 6px;border-radius:8px;flex-shrink:0;align-self:flex-start;white-space:nowrap;}
+.busca-tipo.f{background:#E8F5E9;color:#27AE60;}
+.busca-tipo.v{background:#E3F2FD;color:#1565C0;}
+.busca-tipo.s{background:#FFF8E1;color:#E67E22;}
+.busca-tipo.g{background:#F4ECF7;color:#8E44AD;}
+.busca-nada{text-align:center;padding:24px 12px;color:var(--muted);font-size:12px;}
+mark.hl{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
+
+
+/* ===== Clã Pioneiro: acréscimos ao estilo da Sênior ===== */
+.etapa-seg{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px;}
+.etapa-pill{font-size:9px;font-weight:800;padding:2px 8px;border-radius:20px;border:1px solid;white-space:nowrap;}
+.etapa-pill.estouro{background:#FDECEA !important;color:#C0392B !important;border-color:#C0392B !important;}
+.etapa-btn{width:26px;height:26px;border-radius:50%;border:2px solid #D8D2CA;background:#F4F1EC;color:#999;font-size:12px;font-weight:800;cursor:pointer;margin:auto;display:flex;align-items:center;justify-content:center;}
+.etapa-btn.e1{background:#CC6C00;border-color:#CC6C00;color:#fff;}
+.etapa-btn.e2{background:#2D6E3E;border-color:#2D6E3E;color:#fff;}
+.etapa-btn.e3{background:#1565C0;border-color:#1565C0;color:#fff;}
+.intencao-box{background:#FAF7F2;border-left:4px solid var(--vinho);border-radius:0 8px 8px 0;padding:9px 11px;font-size:11px;color:#555;line-height:1.5;margin-bottom:10px;}
+.intencao-box b{display:block;font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--vinho);margin-bottom:2px;}
+.custom-add{display:flex;gap:6px;padding:8px 10px;border-top:1px dashed var(--border);background:#FCFBF9;}
+.custom-add input{flex:1;min-width:0;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12px;font-family:inherit;}
+.custom-add button{border:none;background:var(--vinho);color:#fff;border-radius:8px;padding:0 14px;font-weight:700;font-size:12px;cursor:pointer;}
+.custom-x{border:none;background:none;color:#C0392B;cursor:pointer;font-size:12px;margin-left:6px;}
+.vista-toggle{display:flex;margin:12px 12px 0;background:var(--card);border-radius:10px;box-shadow:var(--shadow);overflow:hidden;}
+.vista-toggle button{flex:1;border:none;background:transparent;padding:11px 6px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;}
+.vista-toggle button.on{color:var(--vinho);border-bottom-color:var(--vinho);}
+.etapa-card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);margin:10px 12px 0;padding:12px 13px;}
+.etapa-quem{font-size:13px;font-weight:800;border-left:5px solid;padding-left:8px;margin-bottom:8px;}
+.etapa-linha{padding:8px 0;border-top:1px solid #F2EFEA;}
+.etapa-nome{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;}
+.etapa-nome small{font-weight:700;color:var(--muted);margin-left:4px;}
+.etapa-blocos{display:flex;flex-wrap:wrap;gap:5px;}
+.etapa-bloco{font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;border:1.5px solid;background:#fff;color:#444;}
+.etapa-bloco.ok{background:#E6F4EA;color:#1E6B34;}
+.etapa-vazio{font-size:10px;color:#aaa;font-style:italic;}
+.bp-card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);margin:10px 12px 0;overflow:hidden;}
+.bp-head{display:flex;align-items:center;gap:10px;padding:12px 13px;cursor:pointer;list-style:none;}
+.bp-head::-webkit-details-marker{display:none;}
+.bp-avatar{width:34px;height:34px;border-radius:50%;color:#fff;font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.bp-nome{flex:1;min-width:0;font-size:13px;font-weight:800;}
+.bp-nome small{display:block;font-size:10px;font-weight:600;color:var(--muted);margin-top:1px;}
+.bp-count{font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;background:#F4F1EC;color:var(--muted);white-space:nowrap;}
+.bp-count.ok{background:#E6F4EA;color:#1E6B34;}
+.bp-corpo{padding:2px 13px 14px;border-top:1px solid #F2EFEA;}
+.bp-item{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid #F5F2EC;}
+.bp-item:last-child{border-bottom:none;}
+.bp-check{width:24px;height:24px;border-radius:50%;border:2px solid #D8D2CA;background:#fff;color:#fff;font-size:13px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;}
+.bp-check.ok{background:#27AE60;border-color:#27AE60;}
+.bp-check.auto{cursor:default;}
+.bp-txt{flex:1;min-width:0;font-size:12px;line-height:1.35;}
+.bp-txt small{display:block;font-size:10px;color:var(--muted);margin-top:1px;}
+.bp-data{border:1.5px solid var(--border);border-radius:7px;padding:5px 6px;font-size:11px;font-family:inherit;width:122px;flex-shrink:0;}
+.bp-nota{width:100%;margin-top:8px;border:1.5px solid var(--border);border-radius:8px;padding:9px 10px;font-size:12px;font-family:inherit;resize:vertical;}
+.cla-vazio{text-align:center;padding:30px 18px;color:var(--muted);font-size:12px;line-height:1.5;}
+.cla-vazio .ico{font-size:34px;display:block;margin-bottom:8px;}
+.itens-evento-sr{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px;}
+.modal-row{margin:10px 12px 0;background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:10px 12px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;}
+.modal-row label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);}
+.modal-row select{flex:1;min-width:150px;}
+.modal-row small{flex-basis:100%;font-size:10px;color:var(--muted);line-height:1.4;}
+</style>
 <script src="v2.js"></script>
 </head>
 <body>
-<div class="cabecalho-fixo"><nav class="tabs-linha"><button class="tab-btn-linha" data-aba="prog" onclick="mostrarAba('prog',this)">📊 Progressão</button><button class="tab-btn-linha" data-aba="cal" onclick="mostrarAba('cal',this)">📅 Calendário</button><button class="tab-btn-linha" data-aba="jov" onclick="mostrarAba('jov',this)">👥 Lobinhos</button><button class="tab-btn-linha" data-aba="almox" onclick="mostrarAba('almox',this)">📦 Almoxarifado</button></nav></div>
-<div class="pagina" id="pg-prog"><div class="pagina-ttl">Progressão</div><div class="pagina-sub">Progressão dos lobinhos</div><div class="card vazio"><span class="ico">📊</span>A tabela de progressão da Alcateia será montada aqui.<br><span class="em-breve">em construção</span></div></div><div class="pagina" id="pg-cal"><div class="pagina-ttl">Calendário</div><div class="pagina-sub">Atividades e encontros da Alcateia</div><div class="card vazio"><span class="ico">📅</span>O calendário da Alcateia será montado aqui.<br><span class="em-breve">em construção</span></div></div><div class="pagina" id="pg-jov"><div class="pagina-ttl">Lobinhos</div><div class="pagina-sub">Cadastro e ficha dos lobinhos</div><div class="card vazio"><span class="ico">👥</span>A lista de lobinhos será montada aqui.<br><span class="em-breve">em construção</span></div></div><div class="pagina" id="pg-almox"><div id="almox-box"></div></div>
+
+<div id="scrollSentinel" style="position:absolute;top:0;left:0;width:1px;height:1px;"></div>
+
+<nav class="tabs" id="tabsCla">
+  <button class="tab-btn active" data-tab="prog" onclick="showTab('prog',this)">⚡ Progressão</button>
+  <button class="tab-btn" data-tab="cal" onclick="showTab('cal',this)">📅 Calendário</button>
+  <button class="tab-btn" data-tab="jovens" onclick="showTab('jovens',this)">🐺 Lobinhos</button>
+  <button class="tab-btn" data-tab="bp" onclick="showTab('bp',this)">🌟 Cruzeiro do Sul</button>
+  <button class="tab-btn" data-tab="alm" onclick="showTab('alm',this);V2_ALMOX.abrir();">📦 Almoxarifado</button>
+</nav>
+
+<!-- ═══ TAB: PROGRESSÃO ═══════════════════════════════ -->
+<div id="prog" class="tab-content active">
+  <div class="alert">
+    Toque em ▶ para abrir um bloco. Marque cada ação feita por lobinho; o bloco se conclui sozinho quando todas as fixas estão feitas e o número de ações variáveis pedido no bloco foi cumprido (ou há uma especialidade/insígnia do bloco). A etapa vem do total de blocos concluídos: <strong>4</strong> = Saltador · <strong>8</strong> = Rastreador · <strong>13</strong> = Caçador · <strong>18</strong> = Cruzeiro do Sul. Os blocos podem ser feitos em qualquer ordem. Salvo automaticamente.
+  </div>
+  <div class="modal-row"><label for="selModalidade">Modalidade do grupo</label>
+    <select id="selModalidade" class="f-input" onchange="setModalidade(this.value)"><option value="basica">Básica (sem Ar/Mar)</option><option value="ar">Do Ar ✈️</option><option value="mar">Do Mar ⛵</option></select>
+    <small>As ações marcadas com ✈️ (Ar) ou ⛵ (Mar) só são obrigatórias na modalidade correspondente.</small></div>
+
+  <div class="busca-wrap">
+    <span class="busca-icon">🔍</span>
+    <input type="search" class="busca-input" id="buscaAcoes" placeholder="Buscar ação nos blocos..." autocomplete="off" oninput="filtrarAcoes(this.value)" onsearch="filtrarAcoes(this.value)">
+    <button class="busca-clear" id="buscaAcoesClear" onclick="limparBusca()" aria-label="Limpar busca">✕</button>
+  </div>
+  <div class="busca-results" id="buscaResults"></div>
+
+  <div class="progress-section">
+    <div class="section-label">Progresso por lobinho</div>
+    <div id="pbars"></div>
+    <div class="prog-hint">Pata Tenra: 4 blocos &nbsp;|&nbsp; Saltador: +4 (8) &nbsp;|&nbsp; Rastreador: +5 (13) &nbsp;|&nbsp; Caçador: +5 (18) &nbsp;|&nbsp; 18 blocos + Caminho do Caçador = Cruzeiro do Sul</div>
+  </div>
+
+  <div id="vista-eixo">
+    <div class="eixo-hdr" id="hdr-hv" style="background:var(--hv);border-color:var(--hv-b);color:var(--hv-t);cursor:pointer;" onclick="toggleEixo('hv')">
+      <span class="eixo-icon">⚙</span><span>Habilidades para a Vida</span>
+      <span class="eixo-stats" id="stats-hv"></span><span class="chev-eixo-sr" id="chev-hv">▾</span>
+    </div>
+    <div class="block-list" id="bl-hv"></div>
+
+    <div class="eixo-hdr" id="hdr-ma" style="background:var(--ma);border-color:var(--ma-b);color:var(--ma-t);cursor:pointer;" onclick="toggleEixo('ma')">
+      <span class="eixo-icon">🌿</span><span>Meio Ambiente</span>
+      <span class="eixo-stats" id="stats-ma"></span><span class="chev-eixo-sr" id="chev-ma">▾</span>
+    </div>
+    <div class="block-list" id="bl-ma"></div>
+
+    <div class="eixo-hdr" id="hdr-pd" style="background:var(--pd);border-color:var(--pd-b);color:var(--pd-t);cursor:pointer;" onclick="toggleEixo('pd')">
+      <span class="eixo-icon">🕊</span><span>Paz e Desenvolvimento</span>
+      <span class="eixo-stats" id="stats-pd"></span><span class="chev-eixo-sr" id="chev-pd">▾</span>
+    </div>
+    <div class="block-list" id="bl-pd"></div>
+
+    <div class="eixo-hdr" id="hdr-sb" style="background:var(--sb);border-color:var(--sb-b);color:var(--sb-t);cursor:pointer;" onclick="toggleEixo('sb')">
+      <span class="eixo-icon">💪</span><span>Saúde e Bem-estar</span>
+      <span class="eixo-stats" id="stats-sb"></span><span class="chev-eixo-sr" id="chev-sb">▾</span>
+    </div>
+    <div class="block-list" id="bl-sb"></div>
+  </div>
+
+  <button class="reset-btn somente-admin" onclick="confirmReset()">↺ Restaurar dados iniciais</button>
+</div>
+
+<!-- ═══ TAB: CALENDÁRIO ═══════════════════════════════ -->
+<div id="cal" class="tab-content">
+  <div style="margin-top:12px;">
+
+    <div style="margin:0 12px 12px;background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;">
+      <div style="background:var(--azul);padding:10px 13px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="toggleResumoPresencas()">
+        <span style="color:#fff;font-size:12px;font-weight:800;">📋 Resumo de Presenças</span>
+        <span id="chevResumoPresencas" style="color:#fff;font-size:11px;transition:transform .2s;">▾</span>
+      </div>
+      <div id="presenca-summary" style="padding:8px 13px 10px;display:none;"></div>
+    </div>
+
+    <div class="cal-legend" style="margin-top:0;">
+      <div class="section-label">Legenda</div>
+      <div class="legend-grid">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--vinho)"></div>Alcateia (A)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#1565C0"></div>Acampamento (Ac)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#1A7434"></div>Excursão (Ex)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#E67E22"></div>Especial (Esp)</div>
+      </div>
+    </div>
+
+
+    <div class="roster-section" style="padding:0;overflow:hidden;margin:0 12px 12px;">
+      <div class="bloco-head cabecalho-secao" id="cabecalhoAddEvento" style="padding:14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;" onclick="toggleAddEvento()">
+        <span class="bloco-name" style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted);" id="tituloFormEvento">+ Adicionar atividade</span>
+        <span class="chev" id="chevAddEvento">▾</span>
+      </div>
+      <div id="addEventoBody" style="padding:4px 14px 14px;display:none;flex-direction:column;gap:10px;">
+        <div><label class="f-label">Data *</label><input type="date" id="eventoData" class="f-input"></div>
+        <div><label class="f-label">Nome da atividade *</label><input type="text" id="eventoNome" class="f-input" placeholder="Ex: Reunião de alcateia"></div>
+        <div><label class="f-label">Local</label><input type="text" id="eventoLocal" class="f-input" placeholder="Ex: Sede do Grupo Escoteiro"></div>
+        <div>
+          <label class="f-label">Formato</label>
+          <select class="f-input" id="eventoFmt">
+            <option value="C">Alcateia (A)</option>
+            <option value="PN">Acampamento (Ac)</option>
+            <option value="Exc">Excursão (Ex)</option>
+            <option value="Cer">Cerimônia (Cer)</option>
+            <option value="Esp">Especial (Esp)</option>
+          </select>
+        </div>
+        <div class="toggle-externa-row-sr" onclick="event.stopPropagation();document.getElementById('eventoExterna').click()">
+          <input type="checkbox" id="eventoExterna">
+          <label for="eventoExterna" onclick="event.stopPropagation()">🌍 Atividade externa (fora da rotina normal da alcateia)</label>
+        </div>
+        <div>
+          <label class="f-label">Blocos de aprendizagem trabalhados</label>
+          <button type="button" class="btn-picker-toggle-sr" onclick="toggleItensPicker()">
+            <span id="resumoItensPicker">Nenhum bloco selecionado</span><span class="chev" id="chevItensPicker">▾</span>
+          </button>
+          <div class="itens-picker-scroll-sr" id="eventoItensPicker" style="display:none;"></div>
+        </div>
+        <div><label class="f-label">Responsável</label><input type="text" id="eventoResp" class="f-input" placeholder="Quem conduz a atividade"></div>
+        <div><label class="f-label">Descrição</label><textarea id="eventoTxt" class="f-input" rows="3" placeholder="Detalhes da atividade..." style="resize:vertical;"></textarea></div>
+        <button class="btn-prim" id="btnSalvarEvento" onclick="salvarEvento()">+ Adicionar atividade</button>
+        <button class="btn-sec" id="btnCancelarEvento" style="display:none;" onclick="cancelarEdicaoEvento()">Cancelar edição</button>
+      </div>
+    </div>
+
+    <div id="cal-lista"></div>
+  </div>
+</div>
+
+<!-- ═══ TAB: PIONEIROS ═══════════════════════════════ -->
+<div id="jovens" class="tab-content">
+  <div class="alert" style="margin-top:12px;">
+    A Alcateia acompanha o lobinho até a <strong>passagem para o Ramo Escoteiro</strong> (considerada aos 11 anos). A cor vai do <strong style="color:#27AE60">verde</strong> (mais tempo até a passagem) ao <strong style="color:#E74C3C">vermelho</strong> (passagem próxima). Nos últimos 4 meses o lobinho faz o <strong>Caminho</strong> para a Tropa.
+  </div>
+  <div style="margin:12px 12px 0;display:flex;justify-content:space-between;align-items:center;">
+    <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Calculado em: <span id="calc-date" style="color:var(--text);font-weight:800;">—</span></div>
+    <button onclick="renderJovens()" style="background:var(--vinho);color:#fff;border:none;border-radius:20px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer;">↺ Atualizar</button>
+  </div>
+  <div style="margin:16px 12px 0;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">👤 Todos os lobinhos</div>
+  <div id="jovens-cards" style="padding:12px;display:flex;flex-direction:column;gap:10px;"></div>
+</div>
+
+<!-- ═══ TAB: INSÍGNIA DE B-P ═════════════════════════ -->
+<div id="bp" class="tab-content">
+  <div style="margin:12px 12px 0;background:var(--card);border-radius:var(--r);padding:10px 13px;box-shadow:var(--shadow);font-size:11px;color:var(--muted);line-height:1.5;">
+    🌟 <strong style="color:var(--vinho);">Reconhecimento Cruzeiro do Sul</strong> — celebra o lobinho que concluiu a Progressão Pessoal. Requer: os 18 Blocos de Aprendizagem (todas as ações fixas), o Caminho do Caçador, a autoavaliação e a avaliação positiva na Roca de Conselho, com o reconhecimento da alcateia e dos Velhos Lobos.
+  </div>
+  <div id="bp-conteudo"></div>
+</div>
+
+<!-- ═══ TAB: ALMOXARIFADO ════════════════════════════ -->
+<div id="alm" class="tab-content" style="padding-bottom:80px;"></div>
+
 <script>
+// ╔═══════════════════════════════════════════════════╗
+// ║                    DADOS                          ║
+// ╚═══════════════════════════════════════════════════╝
+// Blocos de Aprendizagem — Guia do Povo Livre, Ramo Lobinho (págs. 83-146).
+// minVariable = nº de ações variáveis que o guia pede em cada bloco (ou 1 especialidade/insígnia do bloco no lugar).
+const BLOCKS = [
+ {
+  "id": "aprendizagem",
+  "name": "Aprendizagem Contínua e Desenvolvimento Vocacional",
+  "eixo": "hv",
+  "intencao": "Gosto de conhecer muitos assuntos, aprender com diferentes pessoas e buscar informações em vários lugares para descobrir novas ideias e usar tudo isso nas atividades.",
+  "minVariable": 5,
+  "fixed": [
+   {
+    "id": "f1",
+    "name": "Conquistar uma especialidade sobre um tema de seu interesse e que seja um conhecimento novo."
+   },
+   {
+    "id": "f2",
+    "name": "Visitar, com a alcateia, um aeródromo, conhecendo seu funcionamento.",
+    "modal": "ar"
+   },
+   {
+    "id": "f3",
+    "name": "Visitar, com a alcateia, um porto, marina ou iate clube, conhecendo seu funcionamento.",
+    "modal": "mar"
+   }
+  ],
+  "variable": [
+   {
+    "id": "v1",
+    "name": "Escolher um novo idioma e aprender cinco frases úteis."
+   },
+   {
+    "id": "v2",
+    "name": "Contar para a alcateia a história de um livro que tenha lido."
+   },
+   {
+    "id": "v3",
+    "name": "Conhecer uma biblioteca e pedir a recomendação de um livro ao bibliotecário, sobre temas de seu interesse."
+   },
+   {
+    "id": "v4",
+    "name": "Demonstrar para a alcateia um conhecimento ou habilidade que possui."
+   },
+   {
+    "id": "v5",
+    "name": "Ouvir a história “O aguilhão do rei” e contar suas conclusões."
+   },
+   {
+    "id": "v6",
+    "name": "Com a ajuda dos responsáveis, escrever uma carta para um Velho Lobo e enviá-la pelo correio ou por e-mail."
+   },
+   {
+    "id": "v7",
+    "name": "Apresentar à alcateia uma profissão de seu interesse, explicando os requisitos necessários para exercê-la."
+   },
+   {
+    "id": "v8",
+    "name": "Demonstrar para a alcateia uma habilidade que aprendeu com outra pessoa (familiares, amigos ou convidados)."
+   },
+   {
+    "id": "v9",
+    "name": "Montar um “diário de curiosidades” com cinco coisas novas aprendidas e contar para a alcateia."
+   },
+   {
+    "id": "v10",
+    "name": "✈️ Participar de um evento aeronáutico, como demonstração de acrobacias aéreas, portões abertos em bases aéreas ou aeroportos, torneios de aeromodelismo ou eventos similares."
+   },
+   {
+    "id": "v11",
+    "name": "✈️ Identificar as partes básicas de uma aeronave, em maquete, desenho ou visita."
+   },
+   {
+    "id": "v12",
+    "name": "⛵ Identificar partes básicas de uma embarcação em maquete, desenho ou visita."
+   },
+   {
+    "id": "v13",
+    "name": "⛵ Reconhecer tipos de água (doce/salgada) e listar 3 diferenças percebidas."
+   },
+   {
+    "id": "v14",
+    "name": "🎖 Conquistar uma especialidade da lista (vale como 1 ação variável): Arquitetura e Urbanismo, Astronáutica, Astronomia, Aeromodelismo, Biblioteconomia, Cartografia, Comunicações, Confeitaria, Construção Civil, Criptografia, Culinária, Design de Interiores, E-Sports, Etiqueta, Ferramentas de Corte, Fiscalização de Pátio de Aeródromo, Informática, Investimentos, Jornalismo, Manicure, Manutenção Elétrica, Marcenaria, Marinharia, Matemática, Mecânica Aérea, Mecânica de Automóveis, Navegação Aérea, Observação Aérea, Planador, Prevenção de Incêndio, Produção Gráfica, Programação, Química, Radioamadorismo, Radioescuta, Redes de Computadores, Segurança e Emergência Náutica, Segurança no Trânsito, Simulação Aérea, Sinalização, Técnica Aeronáutica, Vendas, Web Design"
+   }
+  ],
+  "specialties": [],
+  "insignias": [
+   {
+    "id": "g1",
+    "name": "Insígnia do Aprender"
+   }
+  ]
+ },
+ {
+  "id": "autonomia",
+  "name": "Autonomia e Liderança",
+  "eixo": "hv",
+  "intencao": "Participo das atividades com responsabilidade, cumpro minhas tarefas e ajudo sempre que posso. Penso sobre o que vivo, faço escolhas com cuidado e aprendo a usar o dinheiro de maneira correta no meu dia a dia.",
+  "minVariable": 4,
+  "fixed": [
+   {
+    "id": "f1",
+    "name": "Organizar os materiais individuais e arrumar sua mochila para um acampamento de alcateia."
+   },
+   {
+    "id": "f2",
+    "name": "Navegar em uma embarcação e usar corretamente o colete salva-vidas, seguindo as regras de segurança.",
+    "modal": "mar"
+   }
+  ],
+  "variable": [
+   {
+    "id": "v1",
+    "name": "Avaliar as atividades das quais participou, identificando pontos positivos e negativos e sugerindo melhorias."
+   },
+   {
+    "id": "v2",
+    "name": "Fazer uma compra e prestar contas do pagamento."
+   },
+   {
+    "id": "v3",
+    "name": "Conhecer os meios de transporte, farmácias, correios, hospitais, supermercados, pontos de ônibus/estações de trem/metrô, igrejas e parques próximos à sua casa."
+   },
+   {
+    "id": "v4",
+    "name": "Participar de uma atividade sobre o uso do dinheiro de forma responsável."
+   },
+   {
+    "id": "v5",
+    "name": "Identificar riscos domésticos (facas, fogo, eletricidade, gás, janelas etc.) e realizar uma ação para prevenir acidentes (cartaz, panfleto, entre outros)."
+   },
+   {
+    "id": "v6",
+    "name": "Registrar em um quadro ou tabela simples como usou o dinheiro da mesada."
+   }
+  ],
+  "specialties": [
+   {
+    "id": "s1",
+    "name": "Empreendedorismo"
+   },
+   {
+    "id": "s2",
+    "name": "Educação Financeira"
+   },
+   {
+    "id": "s3",
+    "name": "Administração"
+   },
+   {
+    "id": "s4",
+    "name": "Reparos Domésticos"
+   },
+   {
+    "id": "s5",
+    "name": "Oratória"
+   }
+  ],
+  "insignias": []
+ },
+ {
+  "id": "criatividade",
+  "name": "Criatividade e Inovação",
+  "eixo": "hv",
+  "intencao": "Uso minha criatividade para encontrar diferentes soluções para os desafios do dia a dia e gosto de testar novas formas de resolver problemas.",
+  "minVariable": 5,
+  "fixed": [
+   {
+    "id": "f1",
+    "name": "Construir uma engenhoca simples (varal, suporte de panela)."
+   },
+   {
+    "id": "f2",
+    "name": "Construir três diferentes modelos de avião de papel, testando os princípios da aerodinâmica.",
+    "modal": "ar"
+   }
+  ],
+  "variable": [
+   {
+    "id": "v1",
+    "name": "Em uma atividade de trabalhos manuais, utilizar a técnica de embrulho de presente e encapar um livro para sua melhor conservação."
+   },
+   {
+    "id": "v2",
+    "name": "Costurar um distintivo em seu uniforme ou vestuário escoteiro."
+   },
+   {
+    "id": "v3",
+    "name": "Criar e apresentar com sua matilha uma esquete em uma Flor Vermelha."
+   },
+   {
+    "id": "v4",
+    "name": "Divulgar sua UEL na escola por meio de cartazes, depoimentos, vídeos e folders."
+   },
+   {
+    "id": "v5",
+    "name": "Apresentar um trabalho artístico para sua alcateia, como: pintura, modelagem, colagem etc."
+   },
+   {
+    "id": "v6",
+    "name": "Planejar, organizar e executar um pequeno projeto científico, artístico ou utilitário."
+   },
+   {
+    "id": "v7",
+    "name": "Ensinar um jogo para outros lobinhos."
+   },
+   {
+    "id": "v8",
+    "name": "Durante uma Flor Vermelha, utilizar diversos materiais para criar uma caracterização."
+   },
+   {
+    "id": "v9",
+    "name": "Criar um código simples (cores, símbolos ou sons) para enviar uma mensagem para outro lobinho decifrar."
+   },
+   {
+    "id": "v10",
+    "name": "✈️ Montar uma biruta simples e registrar a direção do vento em três dias diferentes."
+   },
+   {
+    "id": "v11",
+    "name": "✈️ Fazer e empinar uma pipa seguindo as regras de segurança."
+   },
+   {
+    "id": "v12",
+    "name": "⛵ Fazer um trabalho artesanal marinheiro com cabos, usando nós característicos da marinharia."
+   }
+  ],
+  "specialties": [
+   {
+    "id": "s1",
+    "name": "Arte Digital"
+   },
+   {
+    "id": "s2",
+    "name": "Artes Visuais"
+   },
+   {
+    "id": "s3",
+    "name": "Artesanato"
+   },
+   {
+    "id": "s4",
+    "name": "Comédia"
+   },
+   {
+    "id": "s5",
+    "name": "Costura e Estilismo"
+   },
+   {
+    "id": "s6",
+    "name": "Encadernação"
+   },
+   {
+    "id": "s7",
+    "name": "Grafite"
+   },
+   {
+    "id": "s8",
+    "name": "HQ"
+   },
+   {
+    "id": "s9",
+    "name": "Maquete"
+   },
+   {
+    "id": "s10",
+    "name": "Pintura"
+   },
+   {
+    "id": "s11",
+    "name": "Propaganda e Marketing"
+   },
+   {
+    "id": "s12",
+    "name": "Robótica"
+   },
+   {
+    "id": "s13",
+    "name": "Videomaker"
+   }
+  ],
+  "insignias": []
+ },
+ {
+  "id": "inteligencia",
+  "name": "Inteligência Emocional",
+  "eixo": "hv",
+  "intencao": "Reconheço minhas emoções e aprendo a lidar com diferentes situações, sempre tentando tirar algo bom de cada experiência.",
+  "minVariable": 3,
+  "fixed": [],
+  "variable": [
+   {
+    "id": "v1",
+    "name": "Conversar com a família, responsáveis ou Velhos Lobos sobre pontos que gosta e não gosta em si mesmo e como melhorá-los."
+   },
+   {
+    "id": "v2",
+    "name": "Contar a um Velho Lobo sobre um momento difícil recente e descrever o que ajudou a melhorar a situação."
+   },
+   {
+    "id": "v3",
+    "name": "Cantar canções com a alcateia e participar de uma dança da Jângal."
+   },
+   {
+    "id": "v4",
+    "name": "Identificar situações perigosas, sabendo como agir e a quem recorrer."
+   },
+   {
+    "id": "v5",
+    "name": "Escolher um pequeno desafio que dá insegurança (ex.: falar em público) e tentar superá-lo; depois contar a um Velho Lobo o que mudou."
+   },
+   {
+    "id": "v6",
+    "name": "Aprender e ensinar para a alcateia uma atividade de relaxamento."
+   }
+  ],
+  "specialties": [],
+  "insignias": []
+ },
+ {
+  "id": "consumo",
+  "name": "Consumo Responsável",
+  "eixo": "ma",
+  "intencao": "Procuro usar apenas o que preciso, sem desperdiçar, e consumo com cuidado para ajudar a preservar a natureza e seus recursos.",
+  "minVariable": 5,
+  "fixed": [
+   {
+    "id": "f1",
+    "name": "Participar de um piquenique, excursão ou acampamento com a alcateia, sem a utilização de plásticos descartáveis."
+   }
+  ],
+  "variable": [
+   {
+    "id": "v1",
+    "name": "Separar e classificar materiais para coleta seletiva do lixo em casa."
+   },
+   {
+    "id": "v2",
+    "name": "Observar os rótulos e as embalagens dos produtos usados no dia a dia, entender sua origem e destino, e conversar com os Velhos Lobos sobre o tema."
+   },
+   {
+    "id": "v3",
+    "name": "Consertar roupas ou brinquedos com a ajuda de adultos."
+   },
+   {
+    "id": "v4",
+    "name": "Adotar diariamente práticas sustentáveis, como apagar luzes, separar o lixo e reduzir o uso de plástico, motivando o seu entorno a fazer o mesmo."
+   },
+   {
+    "id": "v5",
+    "name": "Escolher frutas e vegetais da estação e produzidos localmente e utilizá-los em um lanche coletivo da alcateia."
+   },
+   {
+    "id": "v6",
+    "name": "Nas refeições, colocar apenas a quantidade de comida que vai consumir e aproveitar as sobras quando possível."
+   },
+   {
+    "id": "v7",
+    "name": "Selecionar brinquedos e roupas em bom estado e doar para uma campanha, ação comunitária ou instituição de caridade."
+   },
+   {
+    "id": "v8",
+    "name": "Reutilizar cadernos com folhas sobrando e outros materiais escolares, como mochilas ou estojos em bom estado."
+   },
+   {
+    "id": "v9",
+    "name": "Cuidar dos materiais da sua alcateia."
+   },
+   {
+    "id": "v10",
+    "name": "Evitar desperdício de água, fechando a torneira ao escovar os dentes ou lavar a louça e reduzindo o tempo de banho, sem ficar com a água ligada sem necessidade."
+   },
+   {
+    "id": "v11",
+    "name": "✈️ Fazer um modelo de aeronave à sua escolha (avião, helicóptero, foguete, drone, balão etc.), reutilizando materiais e embalagens que seriam descartados."
+   },
+   {
+    "id": "v12",
+    "name": "🎖 Conquistar uma especialidade da lista (vale como 1 ação variável): Agricultura, Aquicultura, Energia"
+   }
+  ],
+  "specialties": [
+   {
+    "id": "s1",
+    "name": "Horticultura"
+   },
+   {
+    "id": "s2",
+    "name": "Reduzir, Reciclar, Reutilizar"
+   }
+  ],
+  "insignias": []
+ },
+ {
+  "id": "mudancas",
+  "name": "Mudanças Climáticas",
+  "eixo": "ma",
+  "intencao": "Cuido do planeta com atitudes que ajudam a diminuir os efeitos das mudanças climáticas no meu dia a dia.",
+  "minVariable": 4,
+  "fixed": [],
+  "variable": [
+   {
+    "id": "v1",
+    "name": "Reconhecer na natureza os sinais de mudança do tempo."
+   },
+   {
+    "id": "v2",
+    "name": "Cultivar uma horta sozinho ou com a alcateia, promovendo o cuidado com a natureza."
+   },
+   {
+    "id": "v3",
+    "name": "Realizar uma experiência de condensação do vapor da água, relacionando-a com as nuvens e as chuvas."
+   },
+   {
+    "id": "v4",
+    "name": "Participar de uma caçada urbana para identificar práticas prejudiciais e sustentáveis para a natureza, e sugerir soluções."
+   },
+   {
+    "id": "v5",
+    "name": "Participar de um plantio de árvores em áreas urbanas e discutir com os Velhos Lobos sobre a importância da arborização."
+   },
+   {
+    "id": "v6",
+    "name": "Conversar com os Velhos Lobos sobre como as ações cotidianas afetam as mudanças climáticas."
+   },
+   {
+    "id": "v7",
+    "name": "Visitar um local que use energia renovável para entender seu impacto."
+   },
+   {
+    "id": "v8",
+    "name": "Ser bem avaliado pelos pais e responsáveis sobre o consumo consciente de água e energia elétrica em casa."
+   },
+   {
+    "id": "v9",
+    "name": "✈️ Em uma atividade ao ar livre, observar as nuvens no céu, reconhecendo diferentes aparências e altitudes."
+   },
+   {
+    "id": "v10",
+    "name": "🎖 Conquistar uma especialidade da lista (vale como 1 ação variável): Energia, Agricultura, Jardinagem e Paisagismo"
+   }
+  ],
+  "specialties": [
+   {
+    "id": "s1",
+    "name": "Meteorologia"
+   }
+  ],
+  "insignias": [
+   {
+    "id": "g1",
+    "name": "Escoteiros pela Energia Solar"
+   }
+  ]
+ },
+ {
+  "id": "biodiversidade",
+  "name": "Preservação da Biodiversidade",
+  "eixo": "ma",
+  "intencao": "Observo e respeito todos os seres vivos, entendendo que cada um tem um papel importante na natureza.",
+  "minVariable": 5,
+  "fixed": [
+   {
+    "id": "f1",
+    "name": "Explorar a fauna e a flora local em uma atividade com a alcateia, compreendendo a importância da preservação."
+   },
+   {
+    "id": "f2",
+    "name": "Identificar as aves da região e seus hábitos.",
+    "modal": "ar"
+   },
+   {
+    "id": "f3",
+    "name": "Conhecer as características do bioma aquático local.",
+    "modal": "mar"
+   }
+  ],
+  "variable": [
+   {
+    "id": "v1",
+    "name": "Cuidar de uma planta ou de um animal de estimação em casa, demonstrando estes cuidados para a alcateia."
+   },
+   {
+    "id": "v2",
+    "name": "Em uma atividade ao ar livre com a alcateia, identificar as características da região onde mora, como relevo, clima, hidrografia, bioma, fauna e flora."
+   },
+   {
+    "id": "v3",
+    "name": "Criar um “diário da biodiversidade”, registrando plantas, animais e insetos encontrados na vizinhança."
+   },
+   {
+    "id": "v4",
+    "name": "Participar, com a alcateia, da limpeza de praias, rios ou parques."
+   },
+   {
+    "id": "v5",
+    "name": "Visitar um zoológico, jardim botânico, abrigo de animais, horto florestal, viveiro de plantas ou propriedade rural de produção agrícola."
+   },
+   {
+    "id": "v6",
+    "name": "Plantar flores que atraem abelhas e borboletas, discutindo com os Velhos Lobos sobre o papel desses insetos na reprodução das plantas."
+   },
+   {
+    "id": "v7",
+    "name": "Ler ou ouvir histórias sobre animais em ameaça de extinção, florestas e a importância dos ecossistemas e explicar a um Velho Lobo."
+   },
+   {
+    "id": "v8",
+    "name": "Montar comedouros simples para atrair aves para o quintal/varanda ou para a sua unidade escoteira local (UEL)."
+   },
+   {
+    "id": "v9",
+    "name": "Criar ecossistemas em miniatura, como terrários ou aquários, e observar a convivência entre os seres."
+   },
+   {
+    "id": "v10",
+    "name": "Pesquisar um animal nativo ameaçado da região, fazer um cartaz para a alcateia e sugerir como ajudar sua preservação."
+   },
+   {
+    "id": "v11",
+    "name": "🎖 Conquistar uma especialidade da lista (vale como 1 ação variável): Animais Venenosos e Peçonhentos, Aquarismo, Biologia, Cuidados com Animais de Estimação, Entomologia, Geologia, Meliponicultura, Microbiologia"
+   }
+  ],
+  "specialties": [
+   {
+    "id": "s1",
+    "name": "Ciências da Terra"
+   },
+   {
+    "id": "s2",
+    "name": "Zoologia"
+   },
+   {
+    "id": "s3",
+    "name": "Oceanologia"
+   },
+   {
+    "id": "s4",
+    "name": "Botânica"
+   }
+  ],
+  "insignias": [
+   {
+    "id": "g1",
+    "name": "Campeões da Natureza"
+   }
+  ]
+ },
+ {
+  "id": "vida_ar",
+  "name": "Vida ao Ar Livre",
+  "eixo": "ma",
+  "intencao": "Aproveito as atividades ao ar livre com cuidado e responsabilidade, sempre protegendo a natureza e deixando cada lugar melhor do que encontrei.",
+  "minVariable": 4,
+  "fixed": [
+   {
+    "id": "f1",
+    "name": "Aplicar os seguintes nós: direito, escota alceado, aselha, de correr e volta do fiel, sabendo suas funções, durante um acampamento com a alcateia."
+   },
+   {
+    "id": "f2",
+    "name": "Montar, pernoitar, desmontar e acondicionar corretamente a barraca durante um acampamento."
+   },
+   {
+    "id": "f3",
+    "name": "Acender uma pequena fogueira para fazer uma bebida quente ou lanche, demonstrando as técnicas de segurança no uso de fósforos e acendedores em um acampamento com a alcateia."
+   },
+   {
+    "id": "f4",
+    "name": "Conhecer a Rosa dos Ventos e a constelação do Cruzeiro do Sul, usando-os para sua orientação."
+   },
+   {
+    "id": "f5",
+    "name": "Participar de pelo menos dois acampamentos ou acantonamentos com a alcateia."
+   },
+   {
+    "id": "f6",
+    "name": "Cozinhar um prato de comida mateira com a alcateia."
+   }
+  ],
+  "variable": [
+   {
+    "id": "v1",
+    "name": "Percorrer uma pista de obstáculos em uma atividade da alcateia."
+   },
+   {
+    "id": "v2",
+    "name": "Participar de caçadas ao ar livre com a alcateia, seguindo as regras de etiqueta e de segurança para trilhas."
+   },
+   {
+    "id": "v3",
+    "name": "Participar de jogos ao ar livre com a alcateia."
+   },
+   {
+    "id": "v4",
+    "name": "Em uma caminhada com a alcateia, observar a natureza, identificar diferentes sons e agradecer por sua existência."
+   },
+   {
+    "id": "v5",
+    "name": "🎖 Conquistar uma especialidade da lista (vale como 1 ação variável): Corrida de Orientação, Culinária Mateira, Escalada, Espeleoturismo, Ferramentas de Corte, Mountain Bike, Pesca, Rastreamento"
+   }
+  ],
+  "specialties": [
+   {
+    "id": "s1",
+    "name": "Acampamento"
+   },
+   {
+    "id": "s2",
+    "name": "Excursões"
+   },
+   {
+    "id": "s3",
+    "name": "Montanhismo"
+   },
+   {
+    "id": "s4",
+    "name": "Pioneiria"
+   },
+   {
+    "id": "s5",
+    "name": "Sobrevivência"
+   }
+  ],
+  "insignias": []
+ },
+ {
+  "id": "comunidade",
+  "name": "Comunidade",
+  "eixo": "pd",
+  "intencao": "Procuro fazer boas ações todos os dias, em casa, na escola e na comunidade, ajudando a tornar o mundo um lugar melhor.",
+  "minVariable": 3,
+  "fixed": [
+   {
+    "id": "f1",
+    "name": "Identificar, com sua alcateia, uma necessidade da unidade escoteira local e participar de uma ação coletiva de melhoria."
+   },
+   {
+    "id": "f2",
+    "name": "Conhecer os hospitais próximos à sua casa e os contatos de emergência (Bombeiros, SAMU, Polícia)."
+   }
+  ],
+  "variable": [
+   {
+    "id": "v1",
+    "name": "Participar ativamente com sua alcateia ou grupo escoteiro, de uma campanha de ajuda ao próximo."
+   },
+   {
+    "id": "v2",
+    "name": "Visitar um lar de idosos, creche ou entidade assistencial, prestando apoio conforme necessidade."
+   },
+   {
+    "id": "v3",
+    "name": "Identificar uma forma de praticar uma Boa Ação e realizá-la."
+   },
+   {
+    "id": "v4",
+    "name": "Conhecer ações solidárias realizadas por instituições de sua comunidade."
+   },
+   {
+    "id": "v5",
+    "name": "Preparar e entregar cartinhas, desenhos ou mensagens de carinho para pessoas em hospitais ou instituições."
+   },
+   {
+    "id": "v6",
+    "name": "Participar de uma ação de apoio a animais, como arrecadação de ração para abrigos."
+   },
+   {
+    "id": "v7",
+    "name": "Com a ajuda de sua família, separar brinquedos ou roupas em bom estado para doação e relatar para onde foram."
+   },
+   {
+    "id": "v8",
+    "name": "🎖 Conquistar uma especialidade da lista (vale como 1 ação variável): Inclusão, Libras"
+   }
+  ],
+  "specialties": [
+   {
+    "id": "s1",
+    "name": "Defesa Civil"
+   }
+  ],
+  "insignias": [
+   {
+    "id": "g1",
+    "name": "Mensageiros da Paz"
+   },
+   {
+    "id": "g2",
+    "name": "Insígnia da Boa Ação"
+   }
+  ]
+ },
+ {
+  "id": "democracia",
+  "name": "Democracia",
+  "eixo": "pd",
+  "intencao": "Participo das decisões em grupo com respeito, ouvindo os outros e ajudando para que todos possam falar e escolher juntos.",
+  "minVariable": 2,
+  "fixed": [
+   {
+    "id": "f1",
+    "name": "Participar ativamente de uma Roca de Conselho, expressando opiniões de forma respeitosa."
+   },
+   {
+    "id": "f2",
+    "name": "Conhecer a história “Caçadas de Kaa” e discutir com os companheiros a conduta dos personagens."
+   },
+   {
+    "id": "f3",
+    "name": "Participar da eleição de primo e segundo da matilha e combinar suas responsabilidades."
+   }
+  ],
+  "variable": [
+   {
+    "id": "v1",
+    "name": "Visitar a câmara dos vereadores ou prefeitura, discutindo com os Velhos Lobos o que aprendeu."
+   },
+   {
+    "id": "v2",
+    "name": "Participar de um fórum de grupo escoteiro."
+   },
+   {
+    "id": "v3",
+    "name": "Participar de um debate com a alcateia, sobre um tema de interesse dos lobinhos."
+   },
+   {
+    "id": "v4",
+    "name": "Participar de um jogo democrático com a alcateia."
+   },
+   {
+    "id": "v5",
+    "name": "Participar da criação de um “acordo de convivência” da alcateia (ou conhecê-lo) e assiná-lo."
+   },
+   {
+    "id": "v6",
+    "name": "🎖 Conquistar uma especialidade da lista (vale como 1 ação variável): Prevenção de Fake News, Geografia, Paz e Justiça"
+   }
+  ],
+  "specialties": [],
+  "insignias": []
+ },
+ {
+  "id": "heranca",
+  "name": "Herança Cultural",
+  "eixo": "pd",
+  "intencao": "Gosto de conhecer e valorizar a cultura da minha comunidade e do meu país, explorando histórias, tradições e costumes em diferentes atividades.",
+  "minVariable": 5,
+  "fixed": [
+   {
+    "id": "f1",
+    "name": "Realizar o hasteamento ou arriamento da Bandeira Nacional em cerimônia de abertura ou de encerramento de atividade."
+   }
+  ],
+  "variable": [
+   {
+    "id": "v1",
+    "name": "Criar um álbum com fotos (ou desenhos), histórias e tradições familiares ou de onde vive."
+   },
+   {
+    "id": "v2",
+    "name": "Aprender e cantar o Hino Nacional Brasileiro com a alcateia e conhecer os elementos e o simbolismo da Bandeira Nacional, demonstrando respeito por estes símbolos."
+   },
+   {
+    "id": "v3",
+    "name": "Contar ou encenar, em uma Flor Vermelha, a história de uma pessoa que teve destaque na história do Brasil ou da sua cidade."
+   },
+   {
+    "id": "v4",
+    "name": "Participar de atividades sobre a cultura popular brasileira."
+   },
+   {
+    "id": "v5",
+    "name": "Visitar um museu histórico com a alcateia e contar o que mais chamou a atenção."
+   },
+   {
+    "id": "v6",
+    "name": "Preparar e degustar com a sua alcateia, uma receita típica de sua cidade ou região."
+   },
+   {
+    "id": "v7",
+    "name": "Reproduzir jogos e brincadeiras típicas de diferentes épocas ou culturas, como amarelinha ou pião."
+   },
+   {
+    "id": "v8",
+    "name": "Conversar com avós ou membros mais velhos da comunidade sobre histórias do passado."
+   },
+   {
+    "id": "v9",
+    "name": "Participar de feiras, festas ou eventos que celebrem tradições locais."
+   },
+   {
+    "id": "v10",
+    "name": "Aprender alguma técnica de artesanato local e produzir um presente."
+   },
+   {
+    "id": "v11",
+    "name": "Apresentar uma canção, dança ou brincadeira folclórica do Brasil em uma Flor Vermelha."
+   },
+   {
+    "id": "v12",
+    "name": "🎖 Conquistar uma especialidade da lista (vale como 1 ação variável): Anime, Arqueologia, Arte da Marinharia, Artes Cênicas, Capoeira, Civilizações da Antiguidade, Cosplay, Culinária Típica, Danças Folclóricas, História Aeroespacial, História da Aviação, História Brasileira, História da Arte, História do Escotismo, História Local, História Marítima, Literatura, Mitologias, Museologia, Origami, Paleontologia, Poesia, Tradições dos Povos Indígenas"
+   }
+  ],
+  "specialties": [
+   {
+    "id": "s1",
+    "name": "Brasilidades"
+   },
+   {
+    "id": "s2",
+    "name": "Genealogia"
+   },
+   {
+    "id": "s3",
+    "name": "Informações Turísticas"
+   },
+   {
+    "id": "s4",
+    "name": "Tradições dos Povos Indígenas"
+   }
+  ],
+  "insignias": []
+ },
+ {
+  "id": "paz",
+  "name": "Promoção da Paz",
+  "eixo": "pd",
+  "intencao": "Participo de atividades que incentivam a paz e o respeito entre as pessoas, aprendendo a conviver bem com diferentes crenças e jeitos de pensar.",
+  "minVariable": 5,
+  "fixed": [
+   {
+    "id": "f1",
+    "name": "Ouvir as histórias “Flor Vermelha” e “Os Irmãos de Mowgli”, do Livro da Jângal."
+   }
+  ],
+  "variable": [
+   {
+    "id": "v1",
+    "name": "Participar de jogos e atividades relacionados ao diálogo e à cultura de paz."
+   },
+   {
+    "id": "v2",
+    "name": "Visitar um templo de uma religião diferente da sua e, após a visita, expressar suas impressões por meio de um desenho ou depoimento."
+   },
+   {
+    "id": "v3",
+    "name": "Organizar e apresentar um jogo tradicional de outro país, promovendo troca cultural e cooperação."
+   },
+   {
+    "id": "v4",
+    "name": "Visitar outra UEL e refletir sobre o que é a Fraternidade Escoteira."
+   },
+   {
+    "id": "v5",
+    "name": "Participar de uma “feira cultural” com comidas, músicas, danças e vestimentas típicas de diferentes países, envolvendo a matilha e as famílias ou responsáveis."
+   },
+   {
+    "id": "v6",
+    "name": "Criar com sua alcateia um mural sobre as religiões do mundo, expressando artisticamente as principais características (símbolos, datas comemorativas etc.)."
+   },
+   {
+    "id": "v7",
+    "name": "Conhecer uma festa ou celebração de uma religião diferente da sua e apresentar para sua alcateia."
+   },
+   {
+    "id": "v8",
+    "name": "Apresentar com a alcateia, em uma Flor Vermelha, um esquete sobre a cultura de outro país."
+   },
+   {
+    "id": "v9",
+    "name": "Registrar no calendário as celebrações religiosas e as festividades das crenças ou religiões dos membros da alcateia."
+   },
+   {
+    "id": "v10",
+    "name": "🎖 Conquistar uma especialidade da lista (vale como 1 ação variável): Geografia, História Mundial, Inclusão, Libras, Línguas, Paz e Justiça"
+   }
+  ],
+  "specialties": [],
+  "insignias": [
+   {
+    "id": "g1",
+    "name": "Insígnia da Lusofonia"
+   },
+   {
+    "id": "g2",
+    "name": "Insígnia do Cone-Sul"
+   },
+   {
+    "id": "g3",
+    "name": "Diálogos pela Paz"
+   }
+  ]
+ },
+ {
+  "id": "valores",
+  "name": "Valores",
+  "eixo": "pd",
+  "intencao": "Procuro agir sempre de acordo com os valores da minha Promessa de Lobinho, sendo amigo, leal e prestativo com todos ao meu redor.",
+  "minVariable": 5,
+  "fixed": [
+   {
+    "id": "f1",
+    "name": "Ouvir a história “Tigre Tigre” e comparar a conduta de Mowgli com a sua Promessa de Lobinho."
+   }
+  ],
+  "variable": [
+   {
+    "id": "v1",
+    "name": "Contar a um Velho Lobo sobre três boas ações que praticou."
+   },
+   {
+    "id": "v2",
+    "name": "Explicar o significado da Lei e da Promessa do Lobinho a um novo lobinho ou lobinha na alcateia."
+   },
+   {
+    "id": "v3",
+    "name": "Ensinar aos novos membros da alcateia o aperto de mão e a Saudação do Lobinho."
+   },
+   {
+    "id": "v4",
+    "name": "Participar com a alcateia de jogos distintos, respeitando as suas regras e agindo com cordialidade."
+   },
+   {
+    "id": "v5",
+    "name": "Escrever ou desenhar uma história sobre uma situação em que agiu conforme os ensinamentos da Lei e da Promessa do Lobinho."
+   },
+   {
+    "id": "v6",
+    "name": "Saber quem é Baloo e o motivo dele ensinar a viver de acordo com a Lei da Jângal."
+   },
+   {
+    "id": "v7",
+    "name": "Discutir com um Velho Lobo as principais regras dos locais onde convive, compreendendo a importância do respeito."
+   },
+   {
+    "id": "v8",
+    "name": "🎖 Conquistar uma especialidade da lista (vale como 1 ação variável): Fogo de Conselho, História do Escotismo"
+   }
+  ],
+  "specialties": [
+   {
+    "id": "s1",
+    "name": "Escotismo Mundial"
+   }
+  ],
+  "insignias": []
+ },
+ {
+  "id": "cuidado",
+  "name": "Cuidado com o Corpo",
+  "eixo": "sb",
+  "intencao": "Conheço meu corpo, respeito as diferenças entre as pessoas e pratico atividades que me ajudam a ficar mais ágil, forte e flexível. Também aprendo técnicas simples de primeiros socorros para ajudar quando alguém precisa.",
+  "minVariable": 4,
+  "fixed": [
+   {
+    "id": "f1",
+    "name": "Saber realizar os primeiros socorros em cortes, queimaduras e outros pequenos ferimentos."
+   },
+   {
+    "id": "f2",
+    "name": "Saber utilizar ataduras e tipoias."
+   },
+   {
+    "id": "f3",
+    "name": "Saber usar um termômetro."
+   },
+   {
+    "id": "f4",
+    "name": "Cuidar de sua segurança e dos demais nas atividades da alcateia, seguindo as orientações dos Velhos Lobos."
+   }
+  ],
+  "variable": [
+   {
+    "id": "v1",
+    "name": "Em atividades da alcateia, mostrar que conhece os limites do próprio corpo e dos demais, respeitando a privacidade de cada um."
+   },
+   {
+    "id": "v2",
+    "name": "Participar de atividades voltadas à prevenção das doenças mais comuns na infância (viroses, febre, gripe, dengue, catapora, caxumba, sarampo etc.), identificando seus sintomas e aprendendo formas de prevenção."
+   },
+   {
+    "id": "v3",
+    "name": "Proteger-se do calor e do frio nas atividades da alcateia, utilizando boné, protetor solar, blusas para o frio, beber água e respeitar os limites do seu corpo."
+   },
+   {
+    "id": "v4",
+    "name": "Realizar atividades físicas desafiadoras como passar por uma falsa baiana, subir em uma árvore, dar cambalhota ou fazer estrela."
+   },
+   {
+    "id": "v5",
+    "name": "Durante o Jogo do Kim, acertar a maioria dos objetos usando visão, audição, tato, olfato ou paladar."
+   },
+   {
+    "id": "v6",
+    "name": "Conhecer e saber utilizar os recursos da caixa de primeiros socorros da alcateia."
+   },
+   {
+    "id": "v7",
+    "name": "Fazer um checklist de segurança para a próxima atividade ao ar livre (hidratação, protetor, boné, calçado)."
+   },
+   {
+    "id": "v8",
+    "name": "Simular como pedir ajuda: quem chamar, o que dizer, onde estamos e como manter a calma."
+   },
+   {
+    "id": "v9",
+    "name": "🎖 Conquistar uma especialidade da lista (vale como 1 ação variável): Babá, Cuidados com Idosos, Vigilância Epidemiológica, Salvamento, Segurança"
+   }
+  ],
+  "specialties": [
+   {
+    "id": "s1",
+    "name": "Anatomia Humana"
+   },
+   {
+    "id": "s2",
+    "name": "Prevenção em Saúde"
+   },
+   {
+    "id": "s3",
+    "name": "Primeiros Socorros"
+   }
+  ],
+  "insignias": []
+ },
+ {
+  "id": "espiritualidade",
+  "name": "Espiritualidade",
+  "eixo": "sb",
+  "intencao": "Descubro e respeito as diferentes crenças espirituais da minha comunidade, demonstrando a minha fé com respeito e bondade em casa e entre meus amigos.",
+  "minVariable": 4,
+  "fixed": [],
+  "variable": [
+   {
+    "id": "v1",
+    "name": "Realizar orações de agradecimento ou momento de reflexão nas atividades da alcateia."
+   },
+   {
+    "id": "v2",
+    "name": "Representar artisticamente um símbolo de sua religião e explicá-lo à alcateia."
+   },
+   {
+    "id": "v3",
+    "name": "Participar das celebrações e compromissos com sua crença ou religião regularmente."
+   },
+   {
+    "id": "v4",
+    "name": "Durante um momento de reflexão, fazer a leitura de um texto de sua crença ou religião."
+   },
+   {
+    "id": "v5",
+    "name": "Participar de uma atividade que expressa gratidão sobre coisas da vida e da natureza."
+   },
+   {
+    "id": "v6",
+    "name": "Criar uma mandala com elementos da natureza, representando a união e harmonia, e explicar a importância de cada elemento."
+   }
+  ],
+  "specialties": [
+   {
+    "id": "s1",
+    "name": "Yoga"
+   }
+  ],
+  "insignias": [
+   {
+    "id": "g1",
+    "name": "Diálogo inter-religioso"
+   }
+  ]
+ },
+ {
+  "id": "habitos",
+  "name": "Hábitos Saudáveis",
+  "eixo": "sb",
+  "intencao": "Cuido de mim praticando atividades físicas, tendo uma alimentação saudável e mantendo minha higiene e a do lugar onde estou sempre em dia.",
+  "minVariable": 5,
+  "fixed": [
+   {
+    "id": "f1",
+    "name": "Auxiliar na preparação de uma refeição saudável em um acampamento ou acantonamento da alcateia e experimentá-la."
+   },
+   {
+    "id": "f2",
+    "name": "Preparar um lanche saudável para uma caçada, contendo pelo menos três tipos de legumes e dois tipos de frutas."
+   },
+   {
+    "id": "f3",
+    "name": "Participar de pelo menos uma caminhada ao ar livre com a alcateia (entre 2 e 3 km) registrando três observações sobre o local durante o percurso."
+   },
+   {
+    "id": "f4",
+    "name": "Saber remar em bote ou canoa, demonstrando embarque e desembarque.",
+    "modal": "mar"
+   }
+  ],
+  "variable": [
+   {
+    "id": "v1",
+    "name": "Utilizar o vestuário ou uniforme de lobinho adequadamente, demonstrando aplicação correta dos distintivos."
+   },
+   {
+    "id": "v2",
+    "name": "Participar de atividades que demonstrem a importância de uma boa alimentação para a saúde, consumindo alimentos variados e cuidando da higiene."
+   },
+   {
+    "id": "v3",
+    "name": "Escolher um esporte, aprender sobre ele e praticá-lo. Contar para a alcateia sobre o esporte que você pratica, suas características e regras."
+   },
+   {
+    "id": "v4",
+    "name": "Cuidar da limpeza do corpo, manter uma boa rotina de sono, alimentação e brincadeiras e dedicar um tempo adequado aos estudos."
+   },
+   {
+    "id": "v5",
+    "name": "Manter seu quarto e pertences em ordem."
+   },
+   {
+    "id": "v6",
+    "name": "Fazer refeições saudáveis nos horários estabelecidos por sua família."
+   },
+   {
+    "id": "v7",
+    "name": "Conhecer Bagheera e entender como ela ensina a viver de forma saudável."
+   },
+   {
+    "id": "v8",
+    "name": "Preparar um espetinho com pelo menos quatro legumes diferentes e assá-lo em uma fogueira para seu consumo."
+   },
+   {
+    "id": "v9",
+    "name": "🎖 Conquistar uma especialidade da lista (vale como 1 ação variável): Artes Marciais, Canoagem, Ciclismo, Corrida de Rua, Culinária Vegetariana, Cuidados Bucais, Dança, Desportos Inclusivos, Esportes de Quadra, Futebol, Ginásticas, Hipismo, Mergulho, Natação, Patinação, Plantas Medicinais, Remo, Skateboard, Slackline, Técnicas Verticais, Tênis, Tênis de Mesa, Tiro com Arco, Triatlo, Vela, Yoga"
+   }
+  ],
+  "specialties": [
+   {
+    "id": "s1",
+    "name": "Noções Desportivas"
+   },
+   {
+    "id": "s2",
+    "name": "Nutrição"
+   }
+  ],
+  "insignias": []
+ },
+ {
+  "id": "saude_mental",
+  "name": "Saúde Mental",
+  "eixo": "sb",
+  "intencao": "Adoto hábitos que me ajudam a ficar bem, tirando momentos para relaxar, me divertir e cuidar do meu bem-estar e do bem-estar das pessoas ao meu redor.",
+  "minVariable": 4,
+  "fixed": [],
+  "variable": [
+   {
+    "id": "v1",
+    "name": "Representar de maneira artística, com a sua alcateia, quais emoções está sentindo e que coisas te deixam feliz."
+   },
+   {
+    "id": "v2",
+    "name": "Ajudar um amigo com alguma dificuldade e relatar a experiência a um Velho Lobo."
+   },
+   {
+    "id": "v3",
+    "name": "Elogiar os lobinhos da alcateia e agradecer pela ajuda recebida."
+   },
+   {
+    "id": "v4",
+    "name": "Saber a quem pedir ajuda quando sentir que algo está incomodando."
+   },
+   {
+    "id": "v5",
+    "name": "Propor momentos divertidos e de relaxamento com a sua família, como ir ao parque, praticar esportes, ler um livro, montar um quebra-cabeça etc. e relatar para os Velhos Lobos como foi essa experiência."
+   },
+   {
+    "id": "v6",
+    "name": "Identificar suas atividades favoritas e separar um tempo para praticá-las."
+   },
+   {
+    "id": "v7",
+    "name": "Praticar uma atividade que te faça sentir feliz e relaxado, encaixando na sua rotina e vendo quanto tempo gasta em suas atividades diárias."
+   },
+   {
+    "id": "v8",
+    "name": "🎖 Conquistar uma especialidade da lista (vale como 1 ação variável): Canto, Coleções, Cubo Mágico, Expressão Musical, Ioiô, Jogos de Cartas Colecionáveis, Jogos de Tabuleiro, Mágica e Ilusionismo, Pipas, Plastimodelismo, Quebra-Cabeças, RPG, Xadrez"
+   }
+  ],
+  "specialties": [
+   {
+    "id": "s1",
+    "name": "Prevenção aos Vícios"
+   }
+  ],
+  "insignias": []
+ },
+ {
+  "id": "vinculos",
+  "name": "Vínculos Saudáveis",
+  "eixo": "sb",
+  "intencao": "Faço novas amizades, fortaleço meus laços com os amigos e procuro me relacionar de um jeito saudável e positivo com todos.",
+  "minVariable": 5,
+  "fixed": [
+   {
+    "id": "f1",
+    "name": "Participar com entusiasmo das atividades da alcateia, brincando, conversando e respeitando os lobinhos e os Velhos Lobos."
+   },
+   {
+    "id": "f2",
+    "name": "Cumprimentar membros do grupo com a Saudação do Lobinho e o aperto de mão."
+   }
+  ],
+  "variable": [
+   {
+    "id": "v1",
+    "name": "Conhecer a história “Como apareceu o medo”."
+   },
+   {
+    "id": "v2",
+    "name": "Com sua alcateia, ir ao cinema ou teatro, se divertir com outros lobinhos e os Velhos Lobos."
+   },
+   {
+    "id": "v3",
+    "name": "Participar de uma atividade sobre bullying e formas para evitar essa prática."
+   },
+   {
+    "id": "v4",
+    "name": "Convidar um amigo ou parente para conhecer e participar de uma atividade da alcateia."
+   },
+   {
+    "id": "v5",
+    "name": "Participar de uma atividade da alcateia que conte com a presença das famílias."
+   },
+   {
+    "id": "v6",
+    "name": "Participar de um jogo ou atividade de expressão de sentimentos."
+   },
+   {
+    "id": "v7",
+    "name": "Acolher os novos lobinhos e ajudá-los a se integrar na alcateia."
+   },
+   {
+    "id": "v8",
+    "name": "Conhecer as seções do seu grupo escoteiro e participar de uma atividade com outra seção."
+   },
+   {
+    "id": "v9",
+    "name": "Participar de uma atividade entre diferentes Unidades Escoteiras ou atividade regional do Ramo Lobinho."
+   },
+   {
+    "id": "v10",
+    "name": "Participar de uma atividade com outra alcateia."
+   },
+   {
+    "id": "v11",
+    "name": "Manter contato com amigos da alcateia, além da atividade semanal."
+   }
+  ],
+  "specialties": [
+   {
+    "id": "s1",
+    "name": "Prevenção ao Bullying"
+   }
+  ],
+  "insignias": []
+ }
+];
+const EIXOS = {
+  hv:{label:'Habilidades para a Vida',cor:'#E0355F'},
+  ma:{label:'Meio Ambiente',cor:'#5CB85C'},
+  pd:{label:'Paz e Desenvolvimento',cor:'#1B3B6F'},
+  sb:{label:'Saúde e Bem-estar',cor:'#DB9270'}
+};
+Object.keys(EIXOS).forEach(k => { EIXOS[k].blockIds = BLOCKS.filter(b => b.eixo === k).map(b => b.id); });
+const ETAPAS = {
+  1:{nome:'Pata Tenra',cor:'#8B5A2B'},
+  2:{nome:'Saltador',cor:'#2D6E3E'},
+  3:{nome:'Rastreador',cor:'#1565C0'},
+  4:{nome:'Caçador',cor:'#6A1B9A'}
+};
+const BLOCOS_ETAPA = {1:4,2:4,3:5,4:5};  // 4 + 4 + 5 + 5 = 18
+const TOTAL_BLOCOS = BLOCKS.length; // 18
+const IDADE_PARTIDA = 11; // passagem para o Ramo Escoteiro
+const FMT_CLASSE = {C:'T',PN:'PN',Exc:'Av',Esp:'Esp',Cer:'Esp'};
+const FMT_NOME = {C:'Alcateia',PN:'Acampamento',Exc:'Excursão',Cer:'Cerimônia',Esp:'Especial'};
+const COLOR_PALETTE = ['#A31621','#1B3B6F','#2D6E3E','#6A1B9A','#CA6F1E','#1F618D','#16A085','#8E44AD','#7D3C98','#1A7434','#E67E22','#1ABC9C'];
+
+let YOUTH_DATA = [];      // lobinhos
+let JOVENS = [], JNOMES = [], JCORES = []; // ativos (derivados de YOUTH_DATA)
+let S = {};               // progressão: S[bloco].{concluded,etapa,f,v,s,g,custom}[...][lobinhoId]
+let PRESENCA = {};        // PRESENCA[eventoId][lobinhoId] = 1 presente | 0 ausente
+let eventos = {};         // eventos[id] = {id,dataISO,nome,local,fmt,externa,itens,responsavel,txt}
+let CAL_EXTRAS = {};      // link e relato por evento
+let JUSTIFICATIVAS_SR = {}; // faltas justificadas por lobinho
+let INSIGNIA_BP = {};     // marcos do Cruzeiro do Sul por lobinho
+let CFG = {};             // configurações da seção (modalidade)
+
+const $ = id => document.getElementById(id);
+function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function nomeCurto(n){ const p = String(n || '').trim().split(/\s+/); return p.slice(0,2).join(' '); }
+function syncJovens(){
+  const ativos = YOUTH_DATA.filter(y => y && !y.archived);
+  ativos.forEach((y,i) => { if (!y.color) y.color = COLOR_PALETTE[i % COLOR_PALETTE.length]; });
+  JOVENS = ativos.map(y => y.id);
+  JNOMES = ativos.map(y => nomeCurto(y.name));
+  JCORES = ativos.map(y => y.color);
+}
+function actJ(){ return JOVENS.map((yid,i) => ({yid:yid,i:i})); }
+function renderAllTabs(){ renderAll(); renderCal(); renderJovens(); renderBP(); }
+
+// ╔═══════════════════════════════════════════════════╗
+// ║              LOGIN E ARMAZENAMENTO               ║
+// ╚═══════════════════════════════════════════════════╝
 const DB_URL = "https://joaninha-progressao-default-rtdb.firebaseio.com";
 const SECAO = "alcateia";
+const V2_NODE = "alcateia"; // dados ficam em /v2/alcateia
 let firebaseAuthToken = null, firebaseRefreshToken = null, firebaseUid = null, registroLogado = null;
 let souAdmin = false, nomeLogado = '', tropaDoChefeLogado = null;
+let __store = null, __resolverPrimeira = null;
+
 function lerSessaoSalva() { try { const v = localStorage.getItem('chefeSessao'); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
 function salvarSessao() {
   try {
@@ -53,37 +1882,781 @@ async function autenticarComSessaoCompartilhada() {
   setTimeout(renovarAgendado, 50 * 60 * 1000);
   return true;
 }
-function mostrarAba(id, btn) {
-  document.querySelectorAll('.pagina').forEach(p => p.classList.toggle('ativa', p.id === 'pg-' + id));
-  document.querySelectorAll('.tab-btn-linha').forEach(b => b.classList.toggle('active', b === btn));
-  try { localStorage.setItem('aba_' + SECAO, id); } catch (e) {}
-  if (id === 'almox') V2_ALMOX.abrir();
-  if (typeof aoAbrirAba === 'function') aoAbrirAba(id);
+async function renovarSessaoV2() {
+  if (!firebaseRefreshToken) return;
+  const r = await renovarTokenSessao(firebaseRefreshToken);
+  if (r) { firebaseAuthToken = r.idToken; firebaseRefreshToken = r.refreshToken; salvarSessao(); }
 }
-function iniciarObservadorHeaderCompacto() {
-  const FECHA_APOS = 200, ABRE_ATE = 60; let agendado = false, compacto = false;
-  function avaliar() {
-    agendado = false; const y = window.scrollY; let novo = compacto;
-    if (!compacto && y > FECHA_APOS) novo = true; else if (compacto && y < ABRE_ATE) novo = false;
-    if (novo !== compacto) { compacto = novo; try { window.parent.postMessage({ tipo: 'headerCompacto', compacto }, '*'); } catch (e) {} }
+function mostrarModoLeitura(motivo) {
+  if ($('bannerLeitura')) return;
+  const d = document.createElement('div');
+  d.id = 'bannerLeitura';
+  d.style.cssText = 'position:sticky;top:0;z-index:9999;background:#E8EEF7;border-bottom:2px solid #1B3B6F;color:#1B3B6F;padding:8px 12px;font-size:12px;text-align:center;';
+  d.textContent = '📴 Sem conexão — você pode continuar usando e marcando. As alterações ficam guardadas neste aparelho e são enviadas sozinhas quando o sinal voltar (não feche o app antes disso, nem saia da conta).';
+  document.body.insertBefore(d, document.body.firstChild);
+}
+function sincronizadoOffline(res, recarregar) {
+  if (res && res.n) {
+    V2.registrarHistorico(V2_NODE, registroLogado, '', 'Enviou ' + res.n + ' alteração(ões) feitas sem internet', res.n);
+    alert('✓ ' + res.n + ' alteração(ões) feitas sem internet foram enviadas.');
   }
-  window.addEventListener('scroll', () => { if (!agendado) { agendado = true; requestAnimationFrame(avaliar); } }, { passive: true });
+  if (recarregar) location.reload();
 }
-iniciarObservadorHeaderCompacto();
-async function iniciarSecao() {
-  const ok = await autenticarComSessaoCompartilhada();
-  if (!ok) {
+function montarDados() {
+  return { S, YOUTH_DATA, PRESENCA, eventos, CAL_EXTRAS, JUSTIFICATIVAS_SR, INSIGNIA_BP, CFG };
+}
+function aplicarDados(dados) {
+  if (!dados) return;
+  S = dados.S || {};
+  YOUTH_DATA = Array.isArray(dados.YOUTH_DATA) ? dados.YOUTH_DATA.filter(Boolean) : Object.values(dados.YOUTH_DATA || {});
+  PRESENCA = dados.PRESENCA || {};
+  eventos = dados.eventos || {};
+  CAL_EXTRAS = dados.CAL_EXTRAS || {};
+  JUSTIFICATIVAS_SR = dados.JUSTIFICATIVAS_SR || {};
+  INSIGNIA_BP = dados.INSIGNIA_BP || {};
+  CFG = dados.CFG || {};
+}
+async function loadState(){
+  const logado = await autenticarComSessaoCompartilhada();
+  if (!logado) {
     document.body.innerHTML = '<div style="padding:40px 20px;text-align:center;font-family:sans-serif;color:#666;"><div style="font-size:34px;margin-bottom:10px;">⚜</div><div style="font-weight:700;margin-bottom:6px;">Sem acesso a esta seção</div><div style="font-size:13px;">Entre pela página inicial do sistema com uma conta que tenha acesso.</div></div>';
-    return;
+    throw new Error('Sem sessão de login — o Alcateia Lobinho precisa ser aberto a partir da tela principal.');
   }
-  let aba = null; try { aba = localStorage.getItem('aba_' + SECAO); } catch (e) {}
-  const btn = document.querySelector('.tab-btn-linha[data-aba="' + aba + '"]') || document.querySelector('.tab-btn-linha');
-  mostrarAba(btn.dataset.aba, btn);
+  V2.configurarAuth({ getToken: () => firebaseAuthToken, renovar: renovarSessaoV2 });
+  __store = V2.criarStore({
+    node: V2_NODE, stream: true,
+    getToken: () => firebaseAuthToken,
+    renovarToken: renovarSessaoV2,
+    onModoOffline: (m) => mostrarModoLeitura(m),
+    onSessaoInvalida: () => { alert('Sua sessão expirou ou não tem mais permissão para ler os dados. Entre de novo.'); try { localStorage.removeItem('chefeSessao'); } catch (e) {} try { window.top.location.reload(); } catch (e) { location.reload(); } },
+    onSincronizado: (res, recarregar) => sincronizadoOffline(res, recarregar),
+    onSalvo: (d) => {
+      const nomeDe = (id) => { const y = YOUTH_DATA.find(v => v.id === id); return y ? y.name : null; };
+      V2.registrarHistorico(V2_NODE, registroLogado, '', V2.resumirDiff(d, nomeDe), Object.keys(d.sets).length + Object.keys(d.dels).length);
+    },
+    temPendente: () => { const a = document.activeElement; return !!(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)); },
+    onErroCarga: (e) => {
+      console.error('Alcateia Lobinho: falha ao carregar dados:', e);
+      alert('⚠️ Não consegui carregar os dados do Alcateia Lobinho.\n\nO app abriu vazio e o SALVAMENTO FICOU BLOQUEADO para não apagar nada. Recarregue a página.');
+    },
+    onDados: (dados, primeira) => {
+      try { aplicarDados(dados); syncJovens(); } catch (e) { console.error(e); }
+      if (primeira) { if (__resolverPrimeira) __resolverPrimeira(); }
+      else preservarScroll(() => renderAllTabs());
+    }
+  });
+  await new Promise(res => { __resolverPrimeira = res; __store.iniciar(); });
 }
+async function saveState(){
+  const el = $('save-status');
+  if (el) el.textContent = '● Salvando…';
+  try { await __store.salvar(montarDados()); onDataSaved(); }
+  catch (e) {
+    console.error('Não foi possível salvar dados do Alcateia Lobinho:', e);
+    if (el) el.innerHTML = '<span style="color:#E74C3C;cursor:pointer;" onclick="saveState()">⚠️ Não salvou — toque para tentar de novo</span>';
+  }
+}
+function preservarScroll(fn){ const y = window.scrollY; fn(); window.scrollTo(0, y); }
+
+// ── estado de abas/blocos abertos (só neste aparelho) ──
+function persistir(chave, valor){ try { localStorage.setItem('lobo_' + chave, JSON.stringify(valor)); } catch (e) {} }
+function restaurar(chave, padrao){ try { const v = localStorage.getItem('lobo_' + chave); return v !== null ? JSON.parse(v) : padrao; } catch (e) { return padrao; } }
+let blocosAbertos = restaurar('blocosAbertos', {});
+let eixosAbertos = restaurar('eixosAbertos', {});
+function toggleEixo(id){ eixosAbertos[id] = !(eixosAbertos[id] ?? true); persistir('eixosAbertos', eixosAbertos); aplicarEstadoEixo(id); }
+function aplicarEstadoEixo(id){
+  const aberto = eixosAbertos[id] ?? true;
+  $('bl-' + id).style.display = aberto ? '' : 'none';
+  $('chev-' + id).style.transform = aberto ? '' : 'rotate(-90deg)';
+}
+
+// ╔═══════════════════════════════════════════════════╗
+// ║                  PROGRESSÃO                      ║
+// ╚═══════════════════════════════════════════════════╝
+function getBlock(id){ return BLOCKS.find(b => b.id === id); }
+// cria só as pastas pedidas (evita gravar objetos vazios no banco)
+function garantirBloco(id, ...chaves){
+  if (!S[id] || typeof S[id] !== 'object') S[id] = {};
+  chaves.forEach(k => { if (!S[id][k] || Array.isArray(S[id][k])) S[id][k] = {}; });
+  return S[id];
+}
+function marcarConcluido(bid, yid){
+  const novo = concluidoCalc(bid, yid), atual = isConcluido(bid, yid);
+  if (novo === atual) return;
+  garantirBloco(bid, 'concluded').concluded[yid] = novo ? 1 : 0;
+}
+function modalidade(){ return CFG.modalidade || 'basica'; }
+function fixasDe(bl){
+  const m = modalidade();
+  return bl.fixed.filter(a => !a.modal || a.modal === m).map(a => a.modal ? Object.assign({}, a, {name:(a.modal === 'ar' ? '✈️ ' : '⛵ ') + a.name}) : a);
+}
+function setModalidade(v){
+  CFG.modalidade = v;
+  preservarScroll(renderAll); saveState();
+}
+function variaveisDe(bl){
+  const cust = S[bl.id]?.custom || {};
+  return bl.variable.concat(Object.keys(cust).map(cid => ({id:cid, name:cust[cid].name, custom:true})));
+}
+function feito(bid, tipo, aid, yid){ return S[bid]?.[tipo]?.[aid]?.[yid] === 1; }
+function concluidoCalc(bid, yid){
+  const bl = getBlock(bid);
+  if (fixasDe(bl).some(a => !feito(bid,'f',a.id,yid))) return false;
+  if (bl.specialties.some(a => feito(bid,'s',a.id,yid))) return true;
+  if (bl.insignias.some(a => feito(bid,'g',a.id,yid))) return true;
+  return variaveisDe(bl).filter(a => feito(bid,'v',a.id,yid)).length >= bl.minVariable;
+}
+function isConcluido(bid, yid){ return S[bid]?.concluded?.[yid] === 1; }
+function statsJovem(yid){
+  let n = 0;
+  BLOCKS.forEach(b => { if (isConcluido(b.id, yid)) n++; });
+  const porEtapa = {}; let resto = n;
+  [1,2,3,4].forEach(k => { porEtapa[k] = Math.max(0, Math.min(BLOCOS_ETAPA[k], resto)); resto -= BLOCOS_ETAPA[k]; });
+  return { n, porEtapa };
+}
+function etapaAtual(n){
+  if (n >= TOTAL_BLOCOS) return {l:'Cruzeiro do Sul 🏆', c:'#B8860B'};
+  if (n >= 13) return {l:'Caçador', c:ETAPAS[4].cor};
+  if (n >= 8) return {l:'Rastreador', c:ETAPAS[3].cor};
+  if (n >= 4) return {l:'Saltador', c:ETAPAS[2].cor};
+  return {l:'Pata Tenra', c:ETAPAS[1].cor};
+}
+function toggle(bid, tipo, aid, yid){
+  const bl = garantirBloco(bid, tipo);
+  if (!bl[tipo][aid] || typeof bl[tipo][aid] !== 'object') bl[tipo][aid] = {};
+  bl[tipo][aid][yid] = bl[tipo][aid][yid] === 1 ? 0 : 1;
+  marcarConcluido(bid, yid);
+  saveState(); preservarScroll(renderAll);
+}
+function addCustom(bid){
+  const inp = $('cust-' + bid); const nome = (inp.value || '').trim();
+  if (!nome) return;
+  const bl = garantirBloco(bid, 'custom');
+  bl.custom['c' + Date.now().toString(36)] = { name: nome };
+  inp.value = '';
+  saveState(); preservarScroll(renderAll);
+}
+function removerCustom(bid, cid){
+  if (!confirm('Remover esta ação personalizada? As marcações feitas nela também deixam de contar.')) return;
+  const bl = garantirBloco(bid, 'custom', 'v');
+  delete bl.custom[cid]; delete bl.v[cid];
+  YOUTH_DATA.forEach(y => marcarConcluido(bid, y.id));
+  saveState(); preservarScroll(renderAll);
+}
+async function confirmReset(){
+  if (!souAdmin) { alert('Esta ação é só para administradores.'); return; }
+  const senha = prompt('Ação sensível: isso apaga TODAS as marcações de progressão da Alcateia, pra todo mundo.\n\nDigite a senha para confirmar:');
+  if (senha === null) return;
+  if (senha !== '980070') { alert('Senha incorreta. Nada foi alterado.'); return; }
+  if (!(await V2.protegerAntes(V2_NODE, montarDados(), 'Antes de restaurar dados iniciais', registroLogado))) return;
+  V2.registrarHistorico(V2_NODE, registroLogado, '', 'Limpou a progressão da Alcateia', 0);
+  S = {}; saveState(); renderAll();
+  alert('Progressão da Alcateia limpa.');
+}
+
+function renderProgressBars(){
+  const c = $('pbars'); c.innerHTML = '';
+  if (!actJ().length) { c.innerHTML = '<div class="cla-vazio"><span class="ico">👥</span>Nenhum lobinho cadastrado ainda.<br>Cadastre na aba <strong>👥 Lobinhos</strong>.</div>'; return; }
+  actJ().forEach(({yid,i}) => {
+    const st = statsJovem(yid), et = etapaAtual(st.n), pct = Math.round(st.n / TOTAL_BLOCOS * 100);
+    const pills = [1,2,3,4].map(k => `<span class="etapa-pill" style="color:${ETAPAS[k].cor};border-color:${ETAPAS[k].cor};background:${ETAPAS[k].cor}12">${ETAPAS[k].nome} ${st.porEtapa[k]}/${BLOCOS_ETAPA[k]}</span>`).join('');
+    const div = document.createElement('div'); div.className = 'prog-row';
+    div.innerHTML = `<div class="prog-meta"><span class="prog-name">${esc(JNOMES[i])}</span><span class="prog-etapa" style="background:${et.c}22;color:${et.c}">${st.n}/${TOTAL_BLOCOS} — ${et.l}</span></div>
+      <div class="prog-track"><div class="prog-bar" style="width:${pct}%;background:${JCORES[i]};"></div></div>
+      <div class="etapa-seg">${pills}</div>`;
+    c.appendChild(div);
+  });
+}
+
+function tabelaCabecalho(rotulo){
+  return `<thead><tr><th class="act-col">${rotulo}</th>${actJ().map(({i}) => `<th>${esc(JNOMES[i].split(' ')[0])}</th>`).join('')}</tr></thead>`;
+}
+function secaoAcoes(bid, tipo, lista, rotulo, rotuloClasse, estilo){
+  if (!lista.length) return '';
+  const rows = lista.map(a => {
+    const cells = actJ().map(({yid}) => {
+      const ok = feito(bid, tipo, a.id, yid);
+      const st = estilo ? (ok ? estilo.on : estilo.off) : '';
+      return `<td><div class="cb ${ok?'done':'pending'}" ${st?`style="${st}"`:''} onclick="toggle('${bid}','${tipo}','${a.id}','${yid}')">${ok ? (estilo ? '★' : '✓') : '·'}</div></td>`;
+    }).join('');
+    const icone = tipo === 'f' ? '📌 ' : tipo === 's' ? '🎖 ' : tipo === 'g' ? '🏅 ' : '';
+    const x = a.custom ? `<button class="custom-x" title="Remover ação personalizada" onclick="removerCustom('${bid}','${a.id}')">✕</button>` : '';
+    return `<tr class="${tipo==='f'?'fixed-row':''}"><td class="act-col">${icone}${esc(a.name)}${a.custom?' <em style="color:#999;font-size:9px;">(personalizada)</em>':''}${x}</td>${cells}</tr>`;
+  }).join('');
+  return `<div class="actions-section">${rotuloClasse}<div class="actions-table-wrap"><table class="actions-table">${tabelaCabecalho(rotulo)}<tbody>${rows}</tbody></table></div></div>`;
+}
+
+function renderEixo(eixoId){
+  const eixo = EIXOS[eixoId];
+  const container = $('bl-' + eixoId); container.innerHTML = '';
+  let feitos = 0; const total = eixo.blockIds.length * actJ().length;
+  eixo.blockIds.forEach(bid => actJ().forEach(({yid}) => { if (isConcluido(bid, yid)) feitos++; }));
+  $('stats-' + eixoId).textContent = `${feitos}/${total} concluídos`;
+
+  eixo.blockIds.forEach(bid => {
+    const bl = getBlock(bid);
+    actJ().forEach(({yid}) => marcarConcluido(bid, yid));
+    const vars = variaveisDe(bl);
+
+    const badges = actJ().map(({yid,i}) => {
+      const done = isConcluido(bid, yid);
+      const parcial = fixasDe(bl).filter(a => feito(bid,'f',a.id,yid)).length + vars.filter(a => feito(bid,'v',a.id,yid)).length;
+      const cls = done ? 'b-done' : parcial > 0 ? 'b-part' : 'b-none';
+      return `<div class="b-badge ${cls}" title="${esc(JNOMES[i])}: ${done?'Concluído':parcial+' ação(ões)'}">${esc(JNOMES[i][0] || '?')}</div>`;
+    }).join('');
+
+    const status = `<div class="actions-section">
+      <div class="actions-label" style="margin-bottom:5px;"><span style="color:var(--azul);font-weight:800;">⚡ STATUS AUTOMÁTICO</span>
+        <span style="font-size:9px;font-weight:400;color:var(--muted);margin-left:6px;">Completa quando: todas as fixas + (≥${bl.minVariable} variável OU 1 especialidade/insígnia)</span></div>
+      <div class="actions-table-wrap"><table class="actions-table">${tabelaCabecalho('Critério')}<tbody>
+        <tr><td class="act-col" style="font-size:10px;">📌 Fixas (${fixasDe(bl).length} obrigatória${fixasDe(bl).length!==1?'s':''})</td>
+          ${actJ().map(({yid}) => { const n = fixasDe(bl).filter(a => feito(bid,'f',a.id,yid)).length, t = fixasDe(bl).length, ok = t === 0 || n >= t; return `<td><span style="font-size:10px;font-weight:800;color:${ok?'#27AE60':'#E67E22'}">${t===0?'—':ok?'✓':n+'/'+t}</span></td>`; }).join('')}</tr>
+        <tr><td class="act-col" style="font-size:10px;">☑ Variáveis (≥${bl.minVariable}) ou ★ Especialidade/Insígnia</td>
+          ${actJ().map(({yid}) => { const v = vars.filter(a => feito(bid,'v',a.id,yid)).length, sp = bl.specialties.filter(a => feito(bid,'s',a.id,yid)).length, ins = bl.insignias.filter(a => feito(bid,'g',a.id,yid)).length; const ok = v >= bl.minVariable || sp > 0 || ins > 0; const txt = sp > 0 ? '★ esp.' : ins > 0 ? '★ ins.' : v + '/' + bl.minVariable; return `<td><span style="font-size:10px;font-weight:800;color:${ok?'#27AE60':'#E67E22'}">${txt}</span></td>`; }).join('')}</tr>
+        <tr><td class="act-col" style="font-size:11px;font-weight:800;">🏆 Conclusão</td>
+          ${actJ().map(({yid}) => { const d = isConcluido(bid, yid); return `<td><div style="width:26px;height:26px;border-radius:50%;background:${d?'#27AE60':'#E0E0E0'};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:${d?'#fff':'#999'};margin:auto;">${d?'✓':'○'}</div></td>`; }).join('')}</tr>
+      </tbody></table></div></div>`;
+
+    const fixSec = secaoAcoes(bid, 'f', fixasDe(bl), 'Ação', '<div class="actions-label fixed-label">📌 Ações Fixas (obrigatórias)</div>');
+    const varSec = secaoAcoes(bid, 'v', vars, 'Ação', `<div class="actions-label var-label">☑ Ações Variáveis (mín. ${bl.minVariable}) <span style="font-weight:400;font-size:9px;">— escolhidas com os Velhos Lobos</span></div>`);
+    const addCustomHtml = `<div class="custom-add"><input id="cust-${bid}" type="text" placeholder="Ação proposta com os Velhos Lobos" onkeydown="if(event.key==='Enter')addCustom('${bid}')"><button onclick="addCustom('${bid}')">+ Adicionar</button></div>`;
+    const espSec = secaoAcoes(bid, 's', bl.specialties, 'Especialidade', '<div class="actions-label" style="color:#E67E22;font-weight:800;">🎖 Especialidades <span style="font-weight:400;font-size:9px;">(1 especialidade do bloco substitui as variáveis)</span></div>', {on:'background:#F39C12;border-color:#E67E22;color:#fff',off:'background:#FFF8E1;border-color:#F5CBA7;color:#E67E22'});
+    const insSec = secaoAcoes(bid, 'g', bl.insignias, 'Insígnia', '<div class="actions-label" style="color:#8E44AD;font-weight:800;">🏅 Insígnias <span style="font-weight:400;font-size:9px;">(1 insígnia do bloco substitui as variáveis)</span></div>', {on:'background:#8E44AD;border-color:#7D3C98;color:#fff',off:'background:#F4ECF7;border-color:#D7BDE2;color:#8E44AD'});
+
+    const el = document.createElement('details');
+    el.className = 'block-item'; el.dataset.blockId = bid; el.open = !!blocosAbertos[bid];
+    el.addEventListener('toggle', () => { blocosAbertos[bid] = el.open; persistir('blocosAbertos', blocosAbertos); });
+    const resumoEsp = (bl.specialties.length + bl.insignias.length) ? ` · ${bl.specialties.length} esp. · ${bl.insignias.length} ins.` : '';
+    el.innerHTML = `<summary class="block-summary"><span class="block-arrow">▶</span>
+      <div class="block-info"><div class="block-title">${esc(bl.name)}</div>
+      <div class="block-meta">${fixasDe(bl).length} fixas · ${bl.variable.length} variáveis sugeridas${resumoEsp}</div></div>
+      <div class="block-badges">${badges}</div></summary>
+      <div class="block-body">
+        <div class="intencao-box"><b>Intencionalidade educativa</b>${esc(bl.intencao)}</div>
+        ${status}${fixSec}${varSec}${addCustomHtml}${espSec}${insSec}
+      </div>`;
+    container.appendChild(el);
+  });
+}
+
+function mudarVista(v){}
+function renderAll(){
+  renderProgressBars();
+  Object.keys(EIXOS).forEach(renderEixo);
+  renderBP();
+}
+
+// ── busca de ações ──
+function filtrarAcoes(q){
+  q = (q || '').trim().toLowerCase();
+  $('buscaAcoesClear').style.display = q ? 'block' : 'none';
+  const box = $('buscaResults');
+  if (!q) { box.style.display = 'none'; box.innerHTML = ''; return; }
+  const achados = [];
+  BLOCKS.forEach(b => {
+    const todas = fixasDe(b).map(a => ({a, t:'f'})).concat(variaveisDe(b).map(a => ({a, t:'v'})), b.specialties.map(a => ({a, t:'s'})), b.insignias.map(a => ({a, t:'g'})));
+    todas.forEach(({a,t}) => { if (a.name.toLowerCase().includes(q) || b.name.toLowerCase().includes(q)) achados.push({b, a, t}); });
+  });
+  const rot = {f:'Fixa', v:'Variável', s:'Especialidade', g:'Insígnia'};
+  box.style.display = 'block';
+  box.innerHTML = achados.length ? `<div class="busca-count">${achados.length} resultado(s)</div>` + achados.slice(0, 40).map(({b,a,t}) =>
+    `<div class="busca-item" onclick="irParaBloco('${b.id}')"><div class="busca-dot" style="background:${EIXOS[b.eixo].cor}"></div><div class="busca-body"><div class="busca-bloco">${esc(b.name)}</div><div class="busca-acao">${esc(a.name)}</div></div><span class="busca-tipo ${t}">${rot[t]}</span></div>`).join('')
+    : '<div class="busca-nada">Nenhuma ação encontrada.</div>';
+}
+function limparBusca(){ $('buscaAcoes').value = ''; filtrarAcoes(''); }
+function irParaBloco(bid){
+  mudarVista('eixo');
+  const b = getBlock(bid); eixosAbertos[b.eixo] = true; aplicarEstadoEixo(b.eixo);
+  const el = document.querySelector(`details[data-block-id="${bid}"]`);
+  if (el) { el.open = true; blocosAbertos[bid] = true; persistir('blocosAbertos', blocosAbertos); el.scrollIntoView({behavior:'smooth', block:'start'}); }
+}
+
+// ╔═══════════════════════════════════════════════════╗
+// ║                  CALENDÁRIO                      ║
+// ╚═══════════════════════════════════════════════════╝
+let eventoEditandoId = null, eventoMenuAbertoId = null, itensSelecionados = [];
+const MESES = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+function eventosOrdenados(){ return Object.values(eventos).filter(Boolean).sort((a,b) => String(a.dataISO).localeCompare(String(b.dataISO)) || String(a.nome).localeCompare(String(b.nome))); }
+function getExtra(eid){ if (!CAL_EXTRAS[eid]) CAL_EXTRAS[eid] = {link:'', resposta:''}; return CAL_EXTRAS[eid]; }
+function salvarLinkEvento(eid, v){ getExtra(eid).link = v; saveState(); }
+function salvarRespostaEvento(eid, v){ getExtra(eid).resposta = v; saveState(); }
+function linkSeguro(u){ return /^https?:\/\//i.test(u || '') ? u : ''; }
+
+function toggleAddEvento(forcar){
+  const body = $('addEventoBody'); const abrir = forcar === undefined ? body.style.display === 'none' : !!forcar;
+  body.style.display = abrir ? 'flex' : 'none';
+  $('chevAddEvento').style.transform = abrir ? 'rotate(180deg)' : '';
+  if (abrir) renderItensPicker();
+}
+function toggleItensPicker(){ const p = $('eventoItensPicker'); const abrir = p.style.display === 'none'; p.style.display = abrir ? 'block' : 'none'; $('chevItensPicker').style.transform = abrir ? 'rotate(180deg)' : ''; if (abrir) renderItensPicker(); }
+function atualizarResumoItens(){
+  $('resumoItensPicker').textContent = itensSelecionados.length ? itensSelecionados.length + ' bloco(s) selecionado(s)' : 'Nenhum bloco selecionado';
+}
+function renderItensPicker(){
+  const p = $('eventoItensPicker');
+  p.innerHTML = Object.keys(EIXOS).map(k => `<div class="eixo-picker-header-sr" style="background:${EIXOS[k].cor};color:#fff;">${esc(EIXOS[k].label)}</div>` +
+    EIXOS[k].blockIds.map(bid => { const sel = itensSelecionados.includes(bid); return `<div class="item-row-sr" onclick="toggleItemEvento('${bid}')"><div class="item-check-sr ${sel?'sel':''}">${sel?'✓':''}</div><div class="item-text-sr">${esc(getBlock(bid).name)}</div></div>`; }).join('')).join('');
+  atualizarResumoItens();
+}
+function toggleItemEvento(bid){ const i = itensSelecionados.indexOf(bid); if (i >= 0) itensSelecionados.splice(i,1); else itensSelecionados.push(bid); renderItensPicker(); }
+function limparFormEvento(){
+  ['eventoData','eventoNome','eventoLocal','eventoResp','eventoTxt'].forEach(id => $(id).value = '');
+  $('eventoFmt').value = 'C'; $('eventoExterna').checked = false; itensSelecionados = []; eventoEditandoId = null;
+  $('btnSalvarEvento').textContent = '+ Adicionar atividade'; $('tituloFormEvento').textContent = '+ Adicionar atividade'; $('btnCancelarEvento').style.display = 'none';
+  atualizarResumoItens();
+}
+function salvarEvento(){
+  const dataISO = $('eventoData').value, nome = $('eventoNome').value.trim();
+  if (!dataISO || !nome) { alert('Informe a data e o nome da atividade.'); return; }
+  const id = eventoEditandoId || ('ev_' + Date.now());
+  eventos[id] = { id, dataISO, nome, local: $('eventoLocal').value.trim(), fmt: $('eventoFmt').value, externa: $('eventoExterna').checked,
+    itens: itensSelecionados.slice(), responsavel: $('eventoResp').value.trim(), txt: $('eventoTxt').value.trim() };
+  limparFormEvento(); toggleAddEvento(false);
+  saveState(); renderCal();
+}
+function editarEvento(id){
+  const ev = eventos[id]; if (!ev) return;
+  eventoMenuAbertoId = null; eventoEditandoId = id;
+  $('eventoData').value = ev.dataISO || ''; $('eventoNome').value = ev.nome || ''; $('eventoLocal').value = ev.local || '';
+  $('eventoFmt').value = ev.fmt || 'C'; $('eventoExterna').checked = !!ev.externa; $('eventoResp').value = ev.responsavel || ''; $('eventoTxt').value = ev.txt || '';
+  itensSelecionados = Array.isArray(ev.itens) ? ev.itens.slice() : Object.values(ev.itens || {});
+  $('btnSalvarEvento').textContent = '💾 Salvar alterações'; $('tituloFormEvento').textContent = '✏️ Editando atividade'; $('btnCancelarEvento').style.display = 'block';
+  toggleAddEvento(true); renderCal(); $('cabecalhoAddEvento').scrollIntoView({behavior:'smooth', block:'start'});
+}
+function cancelarEdicaoEvento(){ limparFormEvento(); toggleAddEvento(false); renderCal(); }
+function removerEvento(id){
+  const ev = eventos[id]; if (!ev) return;
+  if (!confirm('Excluir a atividade "' + ev.nome + '"? A lista de presença dela também será apagada.')) return;
+  delete eventos[id]; delete PRESENCA[id]; delete CAL_EXTRAS[id]; eventoMenuAbertoId = null;
+  saveState(); renderCal();
+}
+function toggleEventoMenu(id){ eventoMenuAbertoId = eventoMenuAbertoId === id ? null : id; renderCal(); }
+
+function togglePresenca(eid, yid){
+  if (!PRESENCA[eid]) PRESENCA[eid] = {};
+  const cur = PRESENCA[eid][yid];
+  if (cur === undefined || cur === null) PRESENCA[eid][yid] = 1;
+  else if (cur === 1) PRESENCA[eid][yid] = 0;
+  else delete PRESENCA[eid][yid];
+  saveState(); fillPresencaGrid(eid); renderPresencaSummary();
+}
+function marcarTodosPresentes(eid, presente){
+  if (!PRESENCA[eid]) PRESENCA[eid] = {};
+  actJ().forEach(({yid}) => { if (presente) PRESENCA[eid][yid] = 1; else delete PRESENCA[eid][yid]; });
+  saveState(); fillPresencaGrid(eid); renderPresencaSummary();
+}
+function toggleJustificativa(eid, yid){
+  let l = JUSTIFICATIVAS_SR[yid]; if (!Array.isArray(l)) l = l ? Object.values(l) : [];
+  const i = l.indexOf(eid); if (i >= 0) l.splice(i,1); else l.push(eid);
+  JUSTIFICATIVAS_SR[yid] = l; saveState(); fillPresencaGrid(eid); renderPresencaSummary();
+}
+function justificadas(yid){ const l = JUSTIFICATIVAS_SR[yid]; return Array.isArray(l) ? l : (l ? Object.values(l) : []); }
+function fillPresencaGrid(eid){
+  const grid = $('pg-' + eid), badge = $('pb-' + eid); if (!grid) return;
+  grid.innerHTML = '';
+  if (!actJ().length) { grid.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:6px 0;">Cadastre lobinhos para marcar presença.</div>'; return; }
+  const topo = document.createElement('div'); topo.className = 'presenca-marcar-todos-sr';
+  topo.innerHTML = `<button onclick="event.stopPropagation();marcarTodosPresentes('${eid}',true)">✓ Marcar todos</button><button onclick="event.stopPropagation();marcarTodosPresentes('${eid}',false)">✗ Desmarcar todos</button>`;
+  grid.appendChild(topo);
+  let presentes = 0, marcados = 0;
+  actJ().forEach(({yid,i}) => {
+    const val = PRESENCA[eid]?.[yid]; let bg, fg, lbl;
+    if (val === 1) { bg = '#27AE60'; fg = '#fff'; lbl = '✓'; presentes++; marcados++; }
+    else if (val === 0) { bg = '#E74C3C'; fg = '#fff'; lbl = '✗'; marcados++; }
+    else { bg = '#E8E5E0'; fg = '#999'; lbl = '·'; }
+    const just = justificadas(yid).includes(eid);
+    const row = document.createElement('div'); row.className = 'presenca-row'; row.onclick = () => togglePresenca(eid, yid);
+    row.innerHTML = `<div style="width:24px;height:24px;border-radius:7px;background:${bg};color:${fg};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;">${lbl}</div><span class="presenca-nome">${esc(JNOMES[i])}</span>` +
+      (val === 0 ? `<button class="justificar-btn-sr${just?' justificado':''}" onclick="event.stopPropagation();toggleJustificativa('${eid}','${yid}')">${just?'✓ Justificada':'Justificar falta'}</button>` : '');
+    grid.appendChild(row);
+  });
+  if (badge) {
+    if (!marcados) badge.textContent = '';
+    else { const total = actJ().length, cor = presentes === total ? '#27AE60' : presentes < Math.ceil(total/2) ? '#E74C3C' : '#E67E22'; badge.innerHTML = `<span style="color:${cor};font-weight:800;font-size:9px;">${presentes}/${total} presentes</span>`; }
+  }
+}
+let resumoAberto = restaurar('resumoPresencasAberto', false);
+function toggleResumoPresencas(){ resumoAberto = !resumoAberto; persistir('resumoPresencasAberto', resumoAberto); renderPresencaSummary(); }
+function renderPresencaSummary(){
+  const box = $('presenca-summary'); if (!box) return;
+  box.style.display = resumoAberto ? 'block' : 'none';
+  $('chevResumoPresencas').style.transform = resumoAberto ? 'rotate(180deg)' : '';
+  if (!resumoAberto) return;
+  if (!actJ().length) { box.innerHTML = '<div style="font-size:11px;color:var(--muted);">Nenhum lobinho cadastrado.</div>'; return; }
+  const comMarcas = Object.keys(PRESENCA).filter(eid => eventos[eid] && PRESENCA[eid] && Object.keys(PRESENCA[eid]).length);
+  box.innerHTML = actJ().map(({yid,i}) => {
+    let p = 0, f = 0;
+    comMarcas.forEach(eid => { const v = PRESENCA[eid][yid]; if (v === 1) p++; else if (v === 0 && !justificadas(yid).includes(eid)) f++; });
+    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #F2EFEA;font-size:12px;"><span style="flex:1;font-weight:700;">${esc(JNOMES[i])}</span><span style="color:#27AE60;font-weight:800;">${p} presença(s)</span><span style="color:${f?'#E74C3C':'#999'};font-weight:800;">${f} falta(s)</span></div>`;
+  }).join('');
+}
+function renderCal(){
+  const list = $('cal-lista'); list.innerHTML = '';
+  const evs = eventosOrdenados();
+  if (!evs.length) { list.innerHTML = '<div class="cla-vazio"><span class="ico">📅</span>Nenhuma atividade cadastrada ainda.<br>Use <strong>+ Adicionar atividade</strong> acima.</div>'; renderPresencaSummary(); return; }
+  let mesAtual = '', n = 0;
+  evs.forEach(ev => {
+    n++;
+    const d = new Date((ev.dataISO || '') + 'T12:00:00'); const valida = !isNaN(d);
+    const mes = valida ? ev.dataISO.slice(0,7) : 'sem-data';
+    if (mes !== mesAtual) {
+      mesAtual = mes;
+      const h = document.createElement('div'); h.className = 'cal-section-hdr'; h.style.marginTop = list.children.length ? '20px' : '';
+      h.textContent = '📅 ' + (valida ? d.toLocaleDateString('pt-BR', {month:'long', year:'numeric'}) : 'Sem data');
+      list.appendChild(h);
+    }
+    const eid = ev.id, fmt = ev.fmt || 'C';
+    const itens = Array.isArray(ev.itens) ? ev.itens : Object.values(ev.itens || {});
+    const card = document.createElement('div'); card.className = 'cal-card'; card.style.flexDirection = 'column'; card.style.margin = '0 12px 8px';
+    const tags = itens.map(b => getBlock(b)).filter(Boolean).map(b => `<span class="bloco-tag">📌 ${esc(b.name)}</span>`).join('');
+    const menu = eventoMenuAbertoId === eid;
+    const main = document.createElement('div'); main.style.cssText = 'display:flex;';
+    main.innerHTML = `<div class="cal-strip strip-normal"><div class="strip-idx">${n}</div><div class="strip-day" style="font-size:18px">${valida ? String(d.getDate()).padStart(2,'0') : '--'}</div><div class="strip-mon">${valida ? MESES[d.getMonth()] : ''}</div></div>
+      <div class="cal-body" style="flex:1;position:relative;">
+        <button class="evento-menu-btn-sr" style="position:absolute;top:0;right:0;" onclick="event.stopPropagation();toggleEventoMenu('${eid}')">⋮</button>
+        <div style="padding-right:20px;">
+          <div style="font-size:12px;font-weight:800;color:var(--vinho);margin-bottom:3px;">${ev.externa ? '<span class="externa-badge-sr">🌍 Externa</span>' : ''}${esc(ev.nome)}</div>
+          ${ev.local ? `<div style="font-size:10px;color:var(--muted);margin-bottom:2px;">📍 ${esc(ev.local)}</div>` : ''}
+          ${ev.responsavel ? `<div style="font-size:10px;color:var(--muted);margin-bottom:4px;">👤 ${esc(ev.responsavel)}</div>` : ''}
+          <div class="cal-meta"><span class="fmt-badge fmt-${FMT_CLASSE[fmt] || 'T'}" title="${esc(FMT_NOME[fmt] || '')}">${esc(fmt)}</span>${tags}</div>
+          ${ev.txt ? `<div class="cal-text">${esc(ev.txt)}</div>` : ''}
+        </div>
+        ${menu ? `<div class="evento-dropdown-sr" onclick="event.stopPropagation()"><button onclick="editarEvento('${eid}')">✏️ Editar</button><button class="remover" onclick="removerEvento('${eid}')">🗑️ Excluir</button></div>` : ''}
+      </div>`;
+    card.appendChild(main);
+    const det = document.createElement('details'); det.style.cssText = 'border-top:1px solid #F0EDE8;';
+    det.innerHTML = `<summary style="cursor:pointer;padding:7px 11px;font-size:10px;font-weight:700;color:var(--muted);list-style:none;display:flex;align-items:center;gap:6px;user-select:none;"><span>📋 Lista de Presença</span><span id="pb-${eid}" style="margin-left:auto;"></span><span style="font-size:9px;">▼</span></summary><div style="padding:6px 11px 10px;"><div style="display:flex;flex-direction:column;gap:2px;" id="pg-${eid}"></div></div>`;
+    card.appendChild(det);
+    const ex = getExtra(eid), lk = linkSeguro(ex.link);
+    const det2 = document.createElement('details'); det2.style.cssText = 'border-top:1px solid #F0EDE8;';
+    det2.innerHTML = `<summary style="cursor:pointer;padding:7px 11px;font-size:10px;font-weight:700;color:var(--muted);list-style:none;display:flex;align-items:center;gap:6px;user-select:none;"><span>📎 Link e relato</span><span style="font-size:9px;margin-left:auto;">▼</span></summary>
+      <div style="padding:6px 11px 12px;display:flex;flex-direction:column;gap:8px;">
+        <div><div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px;">Link (Google Drive, fotos, documento etc.)</div>
+          <input type="url" class="extra-link-input" placeholder="https://drive.google.com/..." value="${esc(ex.link || '')}" onchange="salvarLinkEvento('${eid}',this.value)">
+          ${lk ? `<a class="evento-link-sr" href="${esc(lk)}" target="_blank" rel="noopener" style="display:inline-block;margin-top:4px;">🔗 Abrir link</a>` : ''}</div>
+        <div><div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px;">Como foi a atividade? Relato e observações</div>
+          <textarea class="extra-resposta-input" rows="3" placeholder="Escreva aqui..." onchange="salvarRespostaEvento('${eid}',this.value)">${esc(ex.resposta || '')}</textarea></div>
+      </div>`;
+    card.appendChild(det2);
+    list.appendChild(card);
+    fillPresencaGrid(eid);
+  });
+  renderPresencaSummary();
+}
+
+// ╔═══════════════════════════════════════════════════╗
+// ║                   PIONEIROS                      ║
+// ╚═══════════════════════════════════════════════════╝
+function calcAge(bornStr, today){
+  const b = new Date(bornStr + 'T12:00:00');
+  let y = today.getFullYear() - b.getFullYear(), m = today.getMonth() - b.getMonth(), d = today.getDate() - b.getDate();
+  if (d < 0) m--; if (m < 0) { y--; m += 12; }
+  return {years:y, months:m};
+}
+function dataEm(bornStr, anos){ const b = new Date(bornStr + 'T12:00:00'); return new Date(b.getFullYear() + anos, b.getMonth(), b.getDate(), 12); }
+function diasAte(d, today){ return Math.ceil((d - today) / 86400000); }
+function fmtDate(d){ return d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'}); }
+function timeStr(days){
+  if (days <= 0) return 'Prazo encerrado';
+  const tm = Math.floor(days / 30.44), y = Math.floor(tm / 12), m = tm % 12;
+  if (y > 0 && m > 0) return `${y} ano${y>1?'s':''} e ${m} mês${m!==1?'es':''}`;
+  if (y > 0) return `${y} ano${y>1?'s':''}`;
+  if (m > 0) return `${m} mês${m!==1?'es':''}`;
+  return `${days} dia${days!==1?'s':''}`;
+}
+function timeColor(days, maxDays){
+  if (days <= 0) return {fg:'#95A5A6', bg:'#F5F5F5', border:'#CCCCCC'};
+  const hue = Math.round(Math.min(1, Math.max(0, days / maxDays)) * 120);
+  return {fg:`hsl(${hue},65%,38%)`, bg:`hsl(${hue},60%,95%)`, border:`hsl(${hue},55%,60%)`};
+}
+function initials(name){ return String(name).split(' ').filter(w => w.length > 2).slice(0,2).map(w => w[0]).join('').toUpperCase() || '?'; }
+
+function showModal(yid){
+  $('youth-modal').classList.add('open'); $('edit-id').value = yid || '';
+  const y = yid ? YOUTH_DATA.find(x => x.id === yid) : null;
+  $('modal-ttl').textContent = y ? 'Editar Lobinho' : 'Adicionar Lobinho';
+  $('inp-name').value = y ? y.name : ''; $('inp-born').value = y ? y.born : ''; $('inp-role').value = y ? (y.role || '') : ''; $('inp-obs').value = y ? (y.observacoes || '') : '';
+}
+function hideModal(){ $('youth-modal').classList.remove('open'); }
+function saveYouth(){
+  const name = $('inp-name').value.trim(), born = $('inp-born').value, role = $('inp-role').value.trim(), observacoes = $('inp-obs').value.trim();
+  if (!name || !born) { alert('Nome e data de nascimento são obrigatórios.'); return; }
+  const eid = $('edit-id').value;
+  if (eid) { const y = YOUTH_DATA.find(x => x.id === eid); if (y) { y.name = name; y.born = born; y.role = role; y.observacoes = observacoes; } }
+  else YOUTH_DATA.push({id:'y_' + Date.now(), name, born, role, observacoes, archived:false, color:COLOR_PALETTE[YOUTH_DATA.length % COLOR_PALETTE.length]});
+  syncJovens(); saveState(); hideModal(); renderAllTabs();
+}
+function verObservacao(yid){
+  const y = YOUTH_DATA.find(v => v.id === yid); if (!y) return;
+  $('obsModalTitulo').textContent = '📋 ' + y.name; $('obsModalTexto').textContent = y.observacoes || 'Nenhuma observação registrada.';
+  $('obsModalOv').classList.add('open');
+}
+function fecharObservacao(){ $('obsModalOv').classList.remove('open'); }
+function archiveYouth(yid){
+  const y = YOUTH_DATA.find(v => v.id === yid); if (!y) return;
+  if (!confirm('Arquivar ' + y.name + '? O histórico é mantido e dá para restaurar depois.')) return;
+  y.archived = true; syncJovens(); saveState(); renderAllTabs();
+}
+function unarchiveYouth(yid){ const y = YOUTH_DATA.find(v => v.id === yid); if (!y) return; y.archived = false; syncJovens(); saveState(); renderAllTabs(); }
+async function deleteYouth(yid){
+  if (!souAdmin) { alert('Esta ação é só para administradores.'); return; }
+  const y = YOUTH_DATA.find(v => v.id === yid); if (!y) return;
+  if (!confirm('EXCLUIR DEFINITIVAMENTE ' + y.name + '?\n\nIsso apaga também a progressão e as presenças dessa pessoa. (Fica um snapshot de segurança.)')) return;
+  if (!(await V2.protegerAntes(V2_NODE, montarDados(), 'Antes de excluir ' + y.name, registroLogado))) return;
+  V2.registrarHistorico(V2_NODE, registroLogado, y.name, 'Excluiu o lobinho', 0);
+  YOUTH_DATA = YOUTH_DATA.filter(v => v.id !== yid);
+  Object.keys(S).forEach(b => {
+    const bl = S[b] || {};
+    ['concluded'].forEach(k => { if (bl[k]) delete bl[k][yid]; });
+    ['f','v','s','g'].forEach(t => { const m = bl[t] || {}; Object.keys(m).forEach(a => { if (m[a]) delete m[a][yid]; }); });
+  });
+  Object.keys(PRESENCA).forEach(e => { if (PRESENCA[e]) delete PRESENCA[e][yid]; });
+  delete JUSTIFICATIVAS_SR[yid]; delete INSIGNIA_BP[yid];
+  syncJovens(); await saveState(); renderAllTabs();
+}
+function renderJovens(){
+  const today = new Date(); $('calc-date').textContent = fmtDate(today);
+  const ativos = YOUTH_DATA.filter(y => y && !y.archived), arquivados = YOUTH_DATA.filter(y => y && y.archived);
+  const container = $('jovens-cards'); container.innerHTML = '';
+  ativos.map(y => ({...y, days: diasAte(dataEm(y.born, IDADE_PARTIDA), today), dias18: 0})).sort((a,b) => a.days - b.days).forEach(e => container.appendChild(cardLobinho(e, today)));
+  if (!ativos.length) { const v = document.createElement('div'); v.className = 'cla-vazio'; v.innerHTML = '<span class="ico">👥</span>Nenhum lobinho cadastrado ainda.'; container.appendChild(v); }
+  const add = document.createElement('button');
+  add.style.cssText = 'width:100%;margin-top:4px;padding:14px;background:var(--card);border:2px dashed var(--border);border-radius:var(--r);font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;';
+  add.textContent = '+ Adicionar Lobinho'; add.onclick = () => showModal(null); container.appendChild(add);
+  if (arquivados.length) {
+    const sec = document.createElement('details'); sec.className = 'arch-section';
+    sec.innerHTML = '<summary style="cursor:pointer;padding:11px 13px;font-size:12px;font-weight:700;color:var(--muted);list-style:none;display:flex;align-items:center;justify-content:space-between;"><span>📦 Arquivados (' + arquivados.length + ')</span><span>▼</span></summary>';
+    const body = document.createElement('div'); body.style.cssText = 'padding:0 12px 12px;display:flex;flex-direction:column;gap:7px;';
+    arquivados.forEach(y => {
+      const row = document.createElement('div'); row.style.cssText = 'background:#F5F5F5;border-radius:8px;padding:9px 11px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;';
+      row.innerHTML = `<div style="flex:1;min-width:140px;"><div style="font-size:12px;font-weight:700;color:#555;">${esc(y.name)}</div><div style="font-size:10px;color:#999;">${esc(y.role || 'Sem cargo')} &nbsp;·&nbsp; Passagem: ${fmtDate(dataEm(y.born, IDADE_PARTIDA))}</div></div>
+        <button class="btn-ic" onclick="showModal('${y.id}')">✏ Editar</button>
+        <button class="btn-ic" onclick="verObservacao('${y.id}')">📋${y.observacoes ? ' •' : ''}</button>
+        <button class="btn-ic" onclick="unarchiveYouth('${y.id}')">↩ Restaurar</button>
+        <button class="btn-ic somente-admin" onclick="deleteYouth('${y.id}')" style="color:#E74C3C;border-color:#E74C3C;">🗑 Excluir</button>`;
+      body.appendChild(row);
+    });
+    sec.appendChild(body); container.appendChild(sec);
+  }
+}
+function cardLobinho(e, today){
+  const maxDays = 5 * 365;
+  const c = timeColor(e.days, maxDays), passou = e.days <= 0, caminho = !passou && e.days <= 122;
+  const age = calcAge(e.born, today), tPassagem = dataEm(e.born, IDADE_PARTIDA);
+  const st = statsJovem(e.id), et = etapaAtual(st.n);
+  let badge;
+  if (passou) badge = '<span style="background:#95A5A6;color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;">✓ HORA DE PASSAR</span>';
+  else if (caminho) badge = '<span style="background:#E67E22;color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;">🛤 CAMINHO</span>';
+  else badge = `<span style="background:${c.fg};color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;">🐺 NA ALCATEIA</span>`;
+  const pct = passou ? 0 : Math.min(100, Math.max(2, (e.days / maxDays) * 100));
+  const card = document.createElement('div');
+  card.style.cssText = `background:${c.bg};border-left:5px solid ${c.border};border-radius:10px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.09);`;
+  card.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:11px;">
+      <div style="width:42px;height:42px;border-radius:50%;background:${c.fg};color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;flex-shrink:0;">${esc(initials(e.name))}</div>
+      <div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:800;color:#1A1A1A;line-height:1.2;">${esc(e.name)}</div>
+        <div style="font-size:10px;color:${c.fg};font-weight:700;margin-top:2px;">${age.years} anos e ${age.months} meses${e.role ? ' &nbsp;·&nbsp; ' + esc(e.role) : ''}</div></div>
+      <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:5px;">${badge}
+        <div style="display:flex;gap:4px;">
+          <button class="btn-ic" onclick="showModal('${e.id}')">✏ Editar</button>
+          <button class="btn-ic" onclick="verObservacao('${e.id}')">📋${e.observacoes ? ' •' : ''}</button>
+          <button class="btn-ic" style="color:#E74C3C;" onclick="archiveYouth('${e.id}')" title="Arquivar">📦</button>
+        </div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px;">
+      <div style="background:rgba(255,255,255,.75);border-radius:8px;padding:8px 10px;"><div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#999;margin-bottom:2px;">Passagem para o Ramo Escoteiro (11)</div>
+        <div style="font-size:12px;font-weight:700;color:#1A1A1A;">${fmtDate(tPassagem)}</div></div>
+      <div style="background:rgba(255,255,255,.75);border-radius:8px;padding:8px 10px;"><div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#999;margin-bottom:2px;">Tempo até a passagem</div>
+        <div style="font-size:11px;font-weight:800;color:${c.fg};">${passou ? 'Já pode passar' : timeStr(e.days)}</div></div>
+    </div>
+    <div style="background:rgba(255,255,255,.75);border-radius:8px;padding:8px 10px;margin-bottom:${passou ? '0' : '10px'};display:flex;align-items:center;gap:8px;">
+      <span style="font-size:11px;font-weight:800;color:${et.c};">${esc(et.l)}</span><span style="font-size:10px;color:#777;">${st.n}/${TOTAL_BLOCOS} blocos concluídos</span></div>
+    ${!passou ? `<div style="background:rgba(255,255,255,.5);border-radius:20px;height:7px;overflow:hidden;"><div style="width:${pct}%;height:100%;border-radius:20px;background:${c.fg};"></div></div>
+      <div style="display:flex;justify-content:space-between;margin-top:3px;"><span style="font-size:9px;color:#999;">Hoje</span><span style="font-size:9px;color:#999;">${fmtDate(tPassagem)}</span></div>` : ''}`;
+  return card;
+}
+window.addEventListener('message', async function(ev){
+  const msg = ev.data;
+  if (!msg || msg.tipo !== 'transferirJovem') return;
+  YOUTH_DATA.push({ id:'y_' + Date.now(), name:msg.nome, born:msg.nascimento || '2016-01-01', role:'', archived:false, color:COLOR_PALETTE[YOUTH_DATA.length % COLOR_PALETTE.length] });
+  syncJovens(); await saveState(); renderAllTabs();
+});
+
+// ╔═══════════════════════════════════════════════════╗
+// ║                INSÍGNIA DE B-P                   ║
+// ╚═══════════════════════════════════════════════════╝
+// Marcos do Reconhecimento Cruzeiro do Sul (guia, págs. 189-206). 'auto' = calculado pela progressão.
+const MARCOS_BP = [
+  {k:'promessa', t:'Promessa do Lobinho realizada', d:'A Progressão Pessoal começa depois da Promessa.'},
+  {k:'etPT', t:'4 blocos da etapa Pata Tenra concluídos', auto:1},
+  {k:'etSa', t:'4 blocos da etapa Saltador concluídos', auto:2},
+  {k:'etRa', t:'5 blocos da etapa Rastreador concluídos', auto:3},
+  {k:'etCa', t:'5 blocos da etapa Caçador concluídos', auto:4},
+  {k:'fixas', t:'Todas as ações fixas dos 18 blocos concluídas', auto:5},
+  {k:'caminho', t:'Caminho do Caçador realizado', d:'Aventura de 1 dia ao ar livre: planejar e convidar até 2 amigos, mochila própria, trilha com pistas e obstáculos, Cruzeiro do Sul no céu, fogueira com segurança e refeição simples.'},
+  {k:'autoav', t:'Autoavaliação feita e avaliado positivamente na Roca de Conselho'},
+  {k:'entrega', t:'Entrega do Reconhecimento Cruzeiro do Sul', d:'Celebração com a alcateia.'},
+  {k:'passagem', t:'Caminho e passagem para o Ramo Escoteiro', d:'O Caminho dura até 4 meses antes da passagem para a Tropa.'}
+];
+function fixasCompletas(yid){ return BLOCKS.every(b => fixasDe(b).every(a => feito(b.id,'f',a.id,yid))); }
+function marcoAuto(m, yid){
+  const st = statsJovem(yid);
+  if (m.auto >= 1 && m.auto <= 4) return st.porEtapa[m.auto] >= BLOCOS_ETAPA[m.auto];
+  if (m.auto === 5) return fixasCompletas(yid);
+  return false;
+}
+function setMarcoData(yid, k, v){
+  if (!INSIGNIA_BP[yid]) INSIGNIA_BP[yid] = {};
+  if (v) INSIGNIA_BP[yid][k] = v; else delete INSIGNIA_BP[yid][k];
+  saveState(); preservarScroll(renderBP);
+}
+function toggleMarco(yid, k){
+  const atual = INSIGNIA_BP[yid]?.[k];
+  setMarcoData(yid, k, atual ? '' : new Date().toISOString().slice(0,10));
+}
+function salvarNotaExpedicao(yid, v){ if (!INSIGNIA_BP[yid]) INSIGNIA_BP[yid] = {}; INSIGNIA_BP[yid].notaExpedicao = v; saveState(); }
+let bpAbertos = restaurar('bpAbertos', {});
+function renderBP(){
+  const c = $('bp-conteudo'); if (!c) return;
+  if (!actJ().length) { c.innerHTML = '<div class="cla-vazio"><span class="ico">🏅</span>Cadastre os lobinhos na aba <strong>👥 Lobinhos</strong>.</div>'; return; }
+  c.innerHTML = actJ().map(({yid,i}) => {
+    const bp = INSIGNIA_BP[yid] || {}; let ok = 0;
+    const itens = MARCOS_BP.map(m => {
+      const feitoM = m.auto ? marcoAuto(m, yid) : !!bp[m.k]; if (feitoM) ok++;
+      const data = m.auto ? '<span style="font-size:9px;font-weight:800;color:#999;white-space:nowrap;">automático</span>' : `<input type="date" class="bp-data" value="${esc(bp[m.k] || '')}" onchange="setMarcoData('${yid}','${m.k}',this.value)">`;
+      const check = m.auto ? `<div class="bp-check auto ${feitoM?'ok':''}">${feitoM?'✓':''}</div>` : `<div class="bp-check ${feitoM?'ok':''}" onclick="toggleMarco('${yid}','${m.k}')">${feitoM?'✓':''}</div>`;
+      const nota = m.k === 'caminho' ? `<textarea class="bp-nota" rows="2" placeholder="Data, local, quem foi junto, como foi..." onchange="salvarNotaExpedicao('${yid}',this.value)">${esc(bp.notaExpedicao || '')}</textarea>` : '';
+      return `<div style="border-bottom:1px solid #F5F2EC;"><div class="bp-item" style="border-bottom:none;">${check}<div class="bp-txt">${esc(m.t)}${m.d ? `<small>${esc(m.d)}</small>` : ''}</div>${data}</div>${nota ? `<div style="padding:0 0 10px 33px;">${nota}</div>` : ''}</div>`;
+    }).join('');
+    const completo = MARCOS_BP.filter(m => m.k !== 'passagem').every(m => m.auto ? marcoAuto(m, yid) : !!bp[m.k]); // a Partida vem depois do reconhecimento
+    return `<details class="bp-card" ${bpAbertos[yid] ? 'open' : ''} ontoggle="bpAbertos['${yid}']=this.open;persistir('bpAbertos',bpAbertos)">
+      <summary class="bp-head"><div class="bp-avatar" style="background:${JCORES[i]}">${esc(initials(JNOMES[i]))}</div>
+      <div class="bp-nome">${esc(JNOMES[i])}<small>${etapaAtual(statsJovem(yid).n).l}</small></div>
+      <span class="bp-count ${completo?'ok':''}">${ok}/${MARCOS_BP.length}</span></summary>
+      <div class="bp-corpo">${itens}</div></details>`;
+  }).join('');
+}
+
+// ╔═══════════════════════════════════════════════════╗
+// ║              SALVAR / EXPORTAR                   ║
+// ╚═══════════════════════════════════════════════════╝
+let _savedTimer = null;
+function onDataSaved(){
+  clearTimeout(_savedTimer);
+  const el = $('save-status'); if (el) el.textContent = '● Salvando…';
+  _savedTimer = setTimeout(() => { const t = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit', second:'2-digit'}); if (el) el.textContent = '✓ Salvo automaticamente às ' + t; }, 350);
+}
+async function saveAll(){
+  clearTimeout(_savedTimer); await saveState();
+  const t = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  const el = $('save-status'); if (el) el.textContent = '✓ Dados salvos às ' + t;
+  const btn = $('save-main-btn');
+  if (btn) { const o = btn.textContent; btn.textContent = '✓ Salvo!'; btn.style.background = '#27AE60'; btn.style.color = '#fff'; setTimeout(() => { btn.textContent = o; btn.style.background = ''; btn.style.color = ''; }, 2000); }
+}
+async function exportData(){
+  await saveAll();
+  const data = { version:'lobo-1.0', exportedAt:new Date().toISOString(), exportedBy:'GE Joaninha — Alcateia Lobinho', ...montarDados() };
+  const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], {type:'application/json'}));
+  const a = document.createElement('a'); a.href = url; a.download = 'backup_alcateia_lobinho_' + new Date().toISOString().slice(0,10) + '.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  const el = $('save-status'); if (el) el.textContent = '✓ Backup exportado com sucesso!';
+  V2.registrarBackup(V2_NODE, registroLogado).then(() => { try { window.parent.postMessage({backupFeitoSr:true}, '*'); } catch (e) {} });
+}
+async function desfazerSnapshot(){
+  if (!souAdmin) { alert('Esta ação é só para administradores.'); return; }
+  let lista; try { lista = await V2.listarSnapshots(V2_NODE); } catch (e) { alert('Não consegui ler os snapshots. Confira a conexão.'); return; }
+  if (!lista.length) { alert('Ainda não há snapshots.\n\nEles são criados automaticamente antes de excluir lobinho, restaurar dados iniciais ou importar backup.'); return; }
+  const fmt = s => new Date(s.em).toLocaleString('pt-BR', {dateStyle:'short', timeStyle:'short'});
+  const r = prompt('Voltar o Alcateia Lobinho para o estado de ANTES de:\n\n' + lista.map((s,i) => (i+1) + ') ' + fmt(s) + ' — ' + s.motivo).join('\n') + '\n\nDigite o número:');
+  if (r === null || r === '') return;
+  const sel = lista[parseInt(r,10) - 1]; if (!sel) { alert('Número inválido.'); return; }
+  if (!confirm('Restaurar o estado de ' + fmt(sel) + '?\n\nO estado atual também fica guardado como snapshot.')) return;
+  try {
+    const dados = await V2.lerSnapshot(V2_NODE, sel.id);
+    if (!(await V2.protegerAntes(V2_NODE, montarDados(), 'Antes de restaurar snapshot', registroLogado))) return;
+    V2.registrarHistorico(V2_NODE, registroLogado, '', 'Restaurou o snapshot de ' + fmt(sel), 0);
+    aplicarDados(dados); syncJovens(); await saveState(); renderAllTabs(); alert('Dados restaurados.');
+  } catch (e) { alert('Não consegui restaurar: ' + e.message); }
+}
+function importData(event){
+  if (!souAdmin) { alert('Esta ação é só para administradores.'); if (event.target) event.target.value = ''; return; }
+  const file = event.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async e => {
+    try {
+      const d = JSON.parse(e.target.result);
+      if (d.version !== 'lobo-1.0') throw new Error('Arquivo não reconhecido');
+      if (!(await V2.protegerAntes(V2_NODE, montarDados(), 'Antes de importar backup', registroLogado))) { event.target.value = ''; return; }
+      V2.registrarHistorico(V2_NODE, registroLogado, '', 'Importou um backup', 0);
+      aplicarDados(d); syncJovens(); await saveState();
+      alert('✓ Dados importados com sucesso!\nA página será recarregada.'); location.reload();
+    } catch (err) { alert('Arquivo inválido.\nUtilize apenas backups exportados pelo Alcateia Lobinho deste sistema.'); }
+  };
+  reader.readAsText(file);
+}
+
+// ╔═══════════════════════════════════════════════════╗
+// ║                  INICIALIZAÇÃO                   ║
+// ╚═══════════════════════════════════════════════════╝
+function showTab(id, btn){
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.toggle('active', t.id === id));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+  persistir('aba', id); window.scrollTo(0, 0);
+}
+function restaurarUltimaAba(){
+  const id = restaurar('aba', 'prog');
+  const btn = document.querySelector('.tab-btn[data-tab="' + id + '"]') || document.querySelector('.tab-btn');
+  showTab(btn.dataset.tab, btn);
+  if (btn.dataset.tab === 'alm') V2_ALMOX.abrir();
+}
+async function iniciarApp(){
+  await loadState();
+  syncJovens();
+  V2_ALMOX.montar({ secao:'alcateia', nomeTropa:'Alcateia Lobinho', outraTropa:'as outras seções', rotuloComp:'Compartilhado com as outras seções', subComp:'Aparece no almoxarifado de todas as seções', subTitulo:'Materiais do Alcateia Lobinho. Itens compartilhados aparecem também nas outras seções.', container:'alm', padX:12 });
+  renderAll(); renderCal(); renderJovens();
+  Object.keys(EIXOS).forEach(aplicarEstadoEixo);
+  mudarVista(restaurar('vista', 'eixo'));
+  restaurarUltimaAba();
+}
+let compactoAtual = false, scrollAgendado = false;
+window.addEventListener('scroll', () => {
+  if (scrollAgendado) return; scrollAgendado = true;
+  requestAnimationFrame(() => {
+    scrollAgendado = false; const y = window.scrollY; let novo = compactoAtual;
+    if (!compactoAtual && y > 200) novo = true; else if (compactoAtual && y < 60) novo = false;
+    if (novo !== compactoAtual) { compactoAtual = novo; $('tabsCla').classList.toggle('compacto', novo); try { window.parent.postMessage({ tipo:'headerCompacto', compacto:novo }, '*'); } catch (e) {} }
+  });
+}, { passive:true });
+iniciarApp();
 </script>
-<script>
-V2_ALMOX.montar({ secao:'alcateia', nomeTropa:'Alcateia', outraTropa:'as outras seções', rotuloComp:'Compartilhado com as outras seções', subComp:'Aparece no almoxarifado de todas as seções', subTitulo:'Materiais da Alcateia. Itens compartilhados aparecem também nas outras seções.', container:'almox-box', padX:14 });
-iniciarSecao();
-</script>
+
+<div class="modal-ov" id="youth-modal" onclick="if(event.target===this)hideModal()">
+  <div class="modal-box">
+    <div class="modal-ttl" id="modal-ttl">Adicionar Lobinho</div>
+    <input type="hidden" id="edit-id">
+    <div class="f-field"><label class="f-label">Nome completo *</label><input type="text" class="f-input" id="inp-name" placeholder="Nome do lobinho"></div>
+    <div class="f-field"><label class="f-label">Data de nascimento *</label><input type="date" class="f-input" id="inp-born"></div>
+    <div class="f-field"><label class="f-label">Cargo</label><input type="text" class="f-input" id="inp-role" placeholder="Ex: Coordenador de equipe, Secretária…"></div>
+    <div class="f-field"><label class="f-label">Observações (privado — suporte, restrições, etc.)</label><textarea class="f-input" id="inp-obs" rows="3" style="resize:vertical;" placeholder="Ex: restrição alimentar, necessidade de suporte…"></textarea></div>
+    <div class="f-row"><button class="btn-sec" onclick="hideModal()">Cancelar</button><button class="btn-prim" onclick="saveYouth()">Salvar</button></div>
+  </div>
+</div>
+
+<div class="save-bar" id="saveBarSr">
+  <span id="save-status" class="save-bar-status">✓ Sistema carregado</span>
+  <button class="sbar-btn somente-admin" onclick="desfazerSnapshot()" title="Voltar a um snapshot automático">↩</button>
+  <label class="sbar-btn somente-admin" title="Importar backup">📥<input type="file" accept=".json" onchange="importData(event)" style="display:none;"></label>
+  <button class="sbar-btn" onclick="exportData()" title="Baixar backup em JSON">📤 Exportar</button>
+  <button class="sbar-btn prim" id="save-main-btn" onclick="saveAll()">💾 Salvar</button>
+</div>
+
+<div class="obs-modal-ov" id="obsModalOv" onclick="if(event.target===this)fecharObservacao()">
+  <div class="obs-modal-box">
+    <div class="obs-modal-titulo" id="obsModalTitulo"></div>
+    <div class="obs-modal-texto" id="obsModalTexto"></div>
+    <button class="btn-sec" style="width:100%;margin-top:14px;" onclick="fecharObservacao()">Fechar</button>
+  </div>
+</div>
+
 </body>
 </html>
