@@ -218,8 +218,9 @@ function htmlFicha() {
   const p = E.perfil || {}, linhas = [];
   if (RK.indexOf(p.ramo) >= 0 && p.nivel != null) linhas.push([p.ramo, p.nivel, '1ª linha']);
   if (RK.indexOf(p.ramo2) >= 0 && p.nivel2 != null) linhas.push([p.ramo2, p.nivel2, '2ª linha']);
-  const atalhos = linhas.length > 1 ? `<div class="lv lv-lin" style="margin-top:12px">${linhas.map(l => `<button type="button" class="t-${l[0]}" data-linha="${l[0]}:${l[1]}" aria-pressed="${l[0] === rk && l[1] === ni}">${l[2]}: ${esc(CAT[l[0]].n)} · ${NV[l[1]]}</button>`).join('')}</div>` : '';
-  let h = `${atalhos}<div class="tiles">${tiles}</div><div class="t-${rk}"><div class="lv">${lvs}</div><div class="foldbar"><button data-foldall="close">Recolher tudo</button><button data-foldall="open">Expandir tudo</button></div>`;
+  const atalhos = linhas.length ? `<div class="lv lv-lin" style="margin-top:12px">${linhas.map(l => `<button type="button" class="t-${l[0]}" data-linha="${l[0]}:${l[1]}" aria-pressed="${l[0] === rk && l[1] === ni}">${l[2]}: ${esc(CAT[l[0]].n)} · ${NV[l[1]]}</button>`).join('')}</div>` : '';
+  const seletor = linhas.length ? '' : `<div class="tiles">${tiles}</div>`, nivs = linhas.length ? '' : `<div class="lv">${lvs}</div>`;
+  let h = `${atalhos}${seletor}<div class="t-${rk}">${nivs}<div class="foldbar"><button data-foldall="close">Recolher tudo</button><button data-foldall="open">Expandir tudo</button></div>`;
   CAT[rk].g.forEach(g => {
     h += `<div class="grupo"><h3>${esc(g.t)}</h3><div class="grid">`;
     g.c.forEach(c => {
