@@ -1,0 +1,91 @@
+{
+  "rules": {
+    "usuarios": {
+      ".read": "root.child('usuarios').child(auth.uid).child('admin').val() === true",
+      ".write": "root.child('usuarios').child(auth.uid).child('admin').val() === true || !root.child('usuarios').exists()",
+      "$uid": {
+        ".read": "auth.uid === $uid"
+      }
+    },
+    "equipe": {
+      ".read": "root.child('usuarios').child(auth.uid).exists()",
+      ".write": "root.child('usuarios').child(auth.uid).child('admin').val() === true"
+    },
+    "almoxarifado": {
+      ".read": "auth != null",
+      "$id": {
+        ".write": "root.child('usuarios').child(auth.uid).exists() && ($id === '_config' || root.child('usuarios').child(auth.uid).child('admin').val() === true || root.child('usuarios').child(auth.uid).child('tropa').val() === 'diretoria' || (data.exists() ? (data.child('tropa').val() === null || data.child('tropa').val() === root.child('usuarios').child(auth.uid).child('tropa').val() || data.child('tropa').val() === root.child('usuarios').child(auth.uid).child('tropa2').val()) : (newData.child('tropa').val() === null || newData.child('tropa').val() === root.child('usuarios').child(auth.uid).child('tropa').val() || newData.child('tropa').val() === root.child('usuarios').child(auth.uid).child('tropa2').val())))"
+      }
+    },
+    "v2": {
+      ".read": "root.child('usuarios').child(auth.uid).exists()",
+      "escoteira": {
+        ".write": "root.child('usuarios').child(auth.uid).child('admin').val() === true || (root.child('usuarios').child(auth.uid).child('tropa').val() === 'escoteira' || root.child('usuarios').child(auth.uid).child('tropa2').val() === 'escoteira')",
+        "eventos": {
+          ".read": true
+        },
+        "ciclo": {
+          ".read": true
+        },
+        "cicloInfo": {
+          ".read": true
+        }
+      },
+      "senior": {
+        ".write": "root.child('usuarios').child(auth.uid).child('admin').val() === true || (root.child('usuarios').child(auth.uid).child('tropa').val() === 'senior' || root.child('usuarios').child(auth.uid).child('tropa2').val() === 'senior')",
+        "CAL_EXTRAS": {
+          ".read": true
+        },
+        "CAL_2S26": {
+          ".read": true
+        },
+        "CAL_1S27": {
+          ".read": true
+        },
+        "CICLO_BLOCOS_SR": {
+          ".read": true
+        },
+        "SEMESTRES_SR": {
+          ".read": true
+        },
+        "semAbertoSr": {
+          ".read": true
+        }
+      },
+      "alcateia": {
+        ".write": "root.child('usuarios').child(auth.uid).child('admin').val() === true || (root.child('usuarios').child(auth.uid).child('tropa').val() === 'alcateia' || root.child('usuarios').child(auth.uid).child('tropa2').val() === 'alcateia')"
+      },
+      "cla": {
+        ".write": "root.child('usuarios').child(auth.uid).child('admin').val() === true || (root.child('usuarios').child(auth.uid).child('tropa').val() === 'cla' || root.child('usuarios').child(auth.uid).child('tropa2').val() === 'cla')"
+      },
+      "historico": {
+        "$t": {
+          ".write": "root.child('usuarios').child(auth.uid).child('admin').val() === true || (root.child('usuarios').child(auth.uid).child('tropa').val() === $t || root.child('usuarios').child(auth.uid).child('tropa2').val() === $t)"
+        }
+      },
+      "snapshots": {
+        "$t": {
+          ".write": "root.child('usuarios').child(auth.uid).child('admin').val() === true || (root.child('usuarios').child(auth.uid).child('tropa').val() === $t || root.child('usuarios').child(auth.uid).child('tropa2').val() === $t)"
+        }
+      },
+      "paxtu": {
+        ".write": "root.child('usuarios').child(auth.uid).child('admin').val() === true"
+      },
+      "meta": {
+        "backups": {
+          "$ciclo": {
+            "$t": {
+              ".write": "root.child('usuarios').child(auth.uid).child('admin').val() === true || (root.child('usuarios').child(auth.uid).child('tropa').val() === $t || root.child('usuarios').child(auth.uid).child('tropa2').val() === $t)"
+            }
+          }
+        }
+      },
+      "anexos": {
+        ".write": "root.child('usuarios').child(auth.uid).exists()",
+        "$id": {
+          ".read": true
+        }
+      }
+    }
+  }
+}

@@ -982,8 +982,17 @@ async function carregarListaChefes() {
 try {
 const r = await fetch(urlComAuthFirebase(DB_URL + '/usuarios.json'));
 const dados = await r.json();
+if (souAdmin && dados && !dados.error) espelharEquipe(dados);
 return dados || {};
 } catch (e) { return {}; }
+}
+// Cópia pública da equipe (sem senha) em /equipe: é daí que a Diretoria lê a lista, porque /usuarios fica restrito ao admin.
+async function espelharEquipe(usuarios) {
+try {
+const eq = {};
+Object.keys(usuarios || {}).forEach(uid => { const u = usuarios[uid]; if (!u || typeof u !== 'object') return; const o = { registro: u.registro || '', nome: u.nome || '', tropa: u.tropa || null, funcao: u.funcao || 'chefe', tropa2: u.tropa2 || null, funcao2: u.funcao2 || null, admin: u.admin === true }; eq[uid] = o; });
+await fetch(urlComAuthFirebase(DB_URL + '/equipe.json'), { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(eq) });
+} catch (e) {}
 }
 async function criarNovoChefe(registro, papel, nome, funcao, ehAdmin) {
 // papel: seção ('alcateia'|'escoteira'|'senior'|'cla'|'diretoria'); funcao: 'chefe'|'assistente'; admin: boolean
@@ -1294,7 +1303,7 @@ if (txt) txt.textContent = nomeLogado ? nomeLogado : ('Registro ' + (registroLog
 const btnAdmin = document.getElementById('btnGerenciarChefes');
 if (btnAdmin) btnAdmin.style.display = souAdmin ? '' : 'none';
 document.body.classList.toggle('eh-admin', !!souAdmin);
-if (souAdmin) { migrarSenhasParaHash(); atualizarLembreteBackup(); }
+if (souAdmin) { migrarSenhasParaHash(); atualizarLembreteBackup(); carregarListaChefes(); }
 else { const lb = document.getElementById('lembreteBackup'); if (lb) lb.remove(); }
 
 // Restrição de acesso por seção
