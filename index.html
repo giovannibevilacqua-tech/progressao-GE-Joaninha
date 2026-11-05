@@ -198,7 +198,8 @@ scrollbar-width: thin; scrollbar-color: rgba(0,0,0,.25) transparent;
 #fichaModalOv .lis-modal-box::-webkit-scrollbar-track { background: transparent; margin: 10px 0; }
 #fichaModalOv .lis-modal-box::-webkit-scrollbar-thumb { background: rgba(0,0,0,.25); border-radius: 10px; }
 #chefesModalOv { align-items: center; }
-#chefesModalOv .lis-modal-box { border-radius: 16px; margin: 20px auto; max-height: 85vh; max-height: 85dvh; }
+#chefesModalOv .lis-modal-box { border-radius: 16px; margin: 20px auto; max-height: 85vh; max-height: 85dvh; overflow: hidden; display: flex; flex-direction: column; }
+#chefesModalOv .lis-modal-body { overflow-y: auto; flex: 1 1 auto; min-height: 0; scrollbar-width: thin; }
 .chefe-add-row { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
 .chefe-add-row input { width: 100%; }
 .chefe-add-btn { align-self: flex-end; width: auto; background: var(--vinho); color: #fff; border: none; border-radius: 8px; padding: 8px 16px; font-size: 12px; font-weight: 800; cursor: pointer; white-space: nowrap; }
@@ -1123,7 +1124,7 @@ const ehAss = c.funcao === 'assistente';
 const rotSecao = { senior: '🎓 Sênior', alcateia: '🐺 Alcateia', cla: '🔥 Clã Pioneiro', diretoria: '🏛️ Diretoria', escoteira: '🏕️ Escoteira' };
 return `<div class="chefe-row" style="flex-wrap:wrap;gap:6px;">
 <span class="chefe-row-registro" style="flex:1;min-width:120px;">${c.nome ? c.nome : c.registro || uid}${c.nome ? `<br><span style="font-size:10px;font-weight:500;color:var(--muted);">Registro ${c.registro || uid}</span>` : ''}
-<br><span class="chefe-tag ${ehAss ? 'ass' : 'chefe'}">${ehAss ? 'Assistente' : 'Chefe de seção'}</span>${c.tropa2 ? ` <span class="chefe-tag ${c.funcao2 === 'assistente' ? 'ass' : 'chefe'}">${c.funcao2 === 'assistente' ? 'Assistente' : 'Chefe'} · ${(rotSecao[c.tropa2] || c.tropa2).replace(/^\S+\s/, '')}</span>` : ''}${c.admin ? ' <span class="chefe-tag adm">⭐ Admin</span>' : ''}</span>
+<br><span class="chefe-tag ${ehAss ? 'ass' : 'chefe'}">${ehAss ? 'Assistente' : 'Chefe'} · ${secao ? (rotSecao[secao] || secao).replace(/^\S+\s/, '') : 'Sem seção'}</span>${c.tropa2 ? ` <span class="chefe-tag ${c.funcao2 === 'assistente' ? 'ass' : 'chefe'}">${c.funcao2 === 'assistente' ? 'Assistente' : 'Chefe'} · ${(rotSecao[c.tropa2] || c.tropa2).replace(/^\S+\s/, '')}</span>` : ''}${c.admin ? ' <span class="chefe-tag adm">⭐ Admin</span>' : ''}</span>
 <details class="chefe-det" data-k="${uid}:f" ${chefeAbertos.has(uid+":f")?"open":""} ontoggle="chefeToggle(this)"><summary>Seção e função</summary><div class="chefe-det-corpo">
 <select class="campo-input" style="font-size:11px;padding:4px 6px;flex:0 0 auto;" onchange="alterarRoleChefeUI('${uid}', this.value)" title="Seção">
 <option value="" ${secao===''?'selected':''}>Sem seção</option>
