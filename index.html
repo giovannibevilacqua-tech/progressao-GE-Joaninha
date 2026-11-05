@@ -744,8 +744,7 @@ REGISTRO ESCOTEIRO
 <div class="conta-barra">
 <span class="conta-barra-registro">👤 <strong id="contaRegistroTxt"></strong></span>
 <button class="conta-barra-btn" id="btnMinhaFormacao" onclick="location.href=V2.pagina('formacao')">🎓 Minha formação</button>
-<button class="conta-barra-btn" id="btnGerenciarChefes" style="display:none;" onclick="abrirGerenciarChefes()">⚙️ Gerenciar Chefes</button>
-<button class="conta-barra-btn somente-admin" id="btnVisaoPropria" style="display:none;" onclick="alternarVisaoPropria()">👁 Ver só minhas seções</button>
+<button class="conta-barra-btn" id="btnAdminVolta" style="display:none;" onclick="pedirSenhaModoAdmin()">🔑 Admin</button>
 <button class="conta-barra-btn somente-admin" id="btnHistorico" onclick="abrirHistorico()">📜 Histórico</button>
 <button class="conta-barra-btn somente-admin" id="btnImportarPaxtu" onclick="ImportarPaxtu.abrir()">📥 Importar PAXTU</button>
 <button class="conta-barra-btn" onclick="if(confirm('Sair da sua conta neste navegador?'))fazerLogout()">🚪 Sair</button>
@@ -1315,10 +1314,56 @@ function alternarVisaoPropria() {
   try { localStorage.setItem('visaoPropriaAdmin', visaoPropria ? '1' : '0'); } catch (e) {}
   aplicarVisibilidadeSecoes();
 }
+// Faixa de backup (embaixo de cada seção): só para admin trabalhando como admin
+function estadoAdminParaSecoes() { return { admin: !!souAdmin, propria: !!(tropaDoChefeLogado || tropa2DoChefeLogado) }; }
+function aplicarBarraBackup() {
+  const ok = verTudo();
+  Object.keys(SECOES).forEach(k => {
+    const f = document.getElementById(SECOES[k].frame);
+    try {
+      const d = f && f.contentDocument; if (!d || !d.head) return;
+      let st = d.getElementById('estilo-sem-backup');
+      if (!st) { st = d.createElement('style'); st.id = 'estilo-sem-backup'; st.textContent = '.save-bar{display:none !important;}'; d.head.appendChild(st); }
+      st.disabled = ok;
+    } catch (e) {}
+  });
+}
+function pedirSenhaModoAdmin() {
+  let m = document.getElementById('modalSenhaAdmin');
+  if (!m) {
+    m = document.createElement('div'); m.id = 'modalSenhaAdmin';
+    m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:16px;';
+    m.innerHTML = '<div style="background:#fff;color:#1a1a1a;border-radius:14px;padding:20px 18px;width:100%;max-width:340px;box-shadow:0 10px 40px rgba(0,0,0,.35);"><div style="font-size:16px;font-weight:800;margin-bottom:6px;">Voltar ao modo admin</div><div style="font-size:12px;color:#666;margin-bottom:12px;">Digite a sua senha para continuar (se não trocou, é o número do seu registro).</div><input type="password" id="senhaAdminInput" autocomplete="current-password" style="width:100%;padding:11px 12px;border:2px solid #ddd;border-radius:8px;font-size:14px;box-sizing:border-box;"><div id="senhaAdminErro" style="display:none;color:#C0392B;font-size:12px;margin-top:8px;"></div><div style="display:flex;gap:8px;margin-top:14px;"><button type="button" id="senhaAdminCancela" style="flex:1;padding:11px;border:none;border-radius:8px;background:#E4DFD6;font-weight:700;cursor:pointer;">Cancelar</button><button type="button" id="senhaAdminOk" style="flex:1;padding:11px;border:none;border-radius:8px;background:#8B1A2B;color:#fff;font-weight:700;cursor:pointer;">Entrar</button></div></div>';
+    document.body.appendChild(m);
+    const fechar = () => { m.style.display = 'none'; };
+    document.getElementById('senhaAdminCancela').onclick = fechar;
+    m.addEventListener('click', e => { if (e.target === m) fechar(); });
+    const confirmar = async () => {
+      const inp = document.getElementById('senhaAdminInput'), erro = document.getElementById('senhaAdminErro'), btn = document.getElementById('senhaAdminOk');
+      btn.disabled = true; erro.style.display = 'none';
+      let ok = false;
+      try {
+        const r = await fetch(urlComAuthFirebase(DB_URL + '/usuarios/' + firebaseUid + '.json'));
+        const v = await r.json();
+        ok = !!(v && v.admin === true) && await V2.conferirSenha((inp.value || '').trim() || registroLogado, v.senha, registroLogado);
+      } catch (e) { ok = false; }
+      btn.disabled = false;
+      if (!ok) { erro.textContent = 'Senha incorreta.'; erro.style.display = 'block'; return; }
+      fechar(); visaoPropria = false; try { localStorage.setItem('visaoPropriaAdmin', '0'); } catch (e) {}
+      aplicarVisibilidadeSecoes();
+    };
+    document.getElementById('senhaAdminOk').onclick = confirmar;
+    document.getElementById('senhaAdminInput').addEventListener('keydown', e => { if (e.key === 'Enter') confirmar(); });
+  }
+  document.getElementById('senhaAdminInput').value = ''; document.getElementById('senhaAdminErro').style.display = 'none';
+  m.style.display = 'flex';
+  setTimeout(() => document.getElementById('senhaAdminInput').focus(), 50);
+}
 function ramoPermitido(r) { return verTudo() || tropaDoChefeLogado === r || tropa2DoChefeLogado === r; }
 let ramoAtual = null;
 const compactoPorRamo = {};
 
+document.addEventListener('DOMContentLoaded', () => { Object.keys(SECOES).forEach(k => { const f = document.getElementById(SECOES[k].frame); if (f) f.addEventListener('load', aplicarBarraBackup); }); });
 function ajustarAlturaIframes() {
   Object.keys(SECOES).forEach(k => {
     const f = document.getElementById(SECOES[k].frame);
@@ -1391,21 +1436,17 @@ async function atualizarLembreteBackup() {
 function aplicarEstadoContaLogada() {
 const txt = document.getElementById('contaRegistroTxt');
 if (txt) txt.textContent = nomeLogado ? nomeLogado : ('Registro ' + (registroLogado || ''));
-const btnAdmin = document.getElementById('btnGerenciarChefes');
-if (btnAdmin) btnAdmin.style.display = souAdmin ? '' : 'none';
-document.body.classList.toggle('eh-admin', !!souAdmin);
+document.body.classList.toggle('eh-admin', verTudo());
 if (souAdmin) { migrarSenhasParaHash(); atualizarLembreteBackup(); carregarListaChefes(); }
 else { const lb = document.getElementById('lembreteBackup'); if (lb) lb.remove(); }
 
 aplicarVisibilidadeSecoes();
 }
 function aplicarVisibilidadeSecoes() {
-const btnVis = document.getElementById('btnVisaoPropria');
-if (btnVis) {
-  const temPropria = !!souAdmin && !!(tropaDoChefeLogado || tropa2DoChefeLogado);
-  btnVis.style.display = temPropria ? '' : 'none';
-  btnVis.textContent = verTudo() ? '👁 Ver só minhas seções' : '👁 Ver todas as seções';
-}
+const btnVolta = document.getElementById('btnAdminVolta');
+if (btnVolta) btnVolta.style.display = (souAdmin && !verTudo()) ? '' : 'none';
+document.body.classList.toggle('eh-admin', verTudo());
+aplicarBarraBackup();
 // Restrição de acesso por seção
 const ramoSwitch = document.getElementById('ramoSwitch');
 const vePrimeiraSecao = verTudo();

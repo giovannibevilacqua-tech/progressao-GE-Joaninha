@@ -17,7 +17,7 @@
 <div class="cabecalho-fixo"><nav class="tabs-linha"><button class="tab-btn-linha" data-aba="almox" onclick="mostrarAba('almox',this)">📦 Almoxarifado geral</button><button class="tab-btn-linha" data-aba="secoes" onclick="mostrarAba('secoes',this)">🗂️ Seções</button><button class="tab-btn-linha" data-aba="forms" onclick="mostrarAba('forms',this)">🎓 Formação dos chefes</button><button class="tab-btn-linha" data-aba="docs" onclick="mostrarAba('docs',this)">📄 Documentação</button></nav></div>
 <div class="pagina" id="pg-almox"><div id="almox-box"></div></div>
 <div class="pagina" id="pg-secoes"><div class="pagina-ttl">Seções</div><div class="pagina-sub">Resumo de progressão de cada seção. Toque no nome para abrir os detalhes.</div>
-<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"><button type="button" class="btn-ic" id="btnRelGrupo" style="font-weight:700;padding:10px 14px" disabled onclick="relatorioGrupo()">📄 Relatório do grupo inteiro</button><button type="button" class="btn-ic" style="padding:10px 14px" onclick="carregarSecoes(true)">↻ Atualizar</button></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"><button type="button" class="btn-ic" id="btnRelGrupo" style="font-weight:700;padding:10px 14px" disabled onclick="relatorioGrupo()">📄 Relatório do grupo inteiro</button><button type="button" class="btn-ic" style="padding:10px 14px" onclick="carregarSecoes(true)">↻ Atualizar</button><button type="button" class="btn-ic" id="btnGerChefes" style="display:none;font-weight:700;padding:10px 14px" onclick="try{window.parent.abrirGerenciarChefes()}catch(e){}">⚙️ Gerenciar Chefes</button><button type="button" class="btn-ic" id="btnVisaoPropria" style="display:none;font-weight:700;padding:10px 14px" onclick="try{window.parent.alternarVisaoPropria()}catch(e){}">👁 Ver só minhas seções</button></div>
 <div id="secoes-lista"></div><div id="secoes-frames" style="position:absolute;width:0;height:0;overflow:hidden;visibility:hidden"></div></div>
 <div class="pagina" id="pg-forms"><div class="pagina-ttl">Formação dos chefes</div><div class="pagina-sub">Ramo de formação, nível, APF e atividades marcadas por chefe. Toque em Abrir ficha para ver o detalhe.</div><div id="forms-lista"><div class="vazio">Carregando…</div></div></div>
 <div class="pagina" id="pg-docs"><div class="pagina-ttl">Documentação</div><div class="pagina-sub">Documentos de gestão do Grupo Escoteiro.</div>
@@ -90,6 +90,7 @@ async function iniciarSecao() {
     document.body.innerHTML = '<div style="padding:40px 20px;text-align:center;font-family:sans-serif;color:#666;"><div style="font-size:34px;margin-bottom:10px;">⚜</div><div style="font-weight:700;margin-bottom:6px;">Sem acesso a esta seção</div><div style="font-size:13px;">Entre pela página inicial do sistema com uma conta que tenha acesso.</div></div>';
     return;
   }
+  try { const P = window.parent; if (P !== window) { const e = P.estadoAdminParaSecoes(); if (e.admin) { document.getElementById('btnGerChefes').style.display = ''; if (e.propria) document.getElementById('btnVisaoPropria').style.display = ''; } } } catch (e) {}
   let aba = null; try { aba = localStorage.getItem('aba_' + SECAO); } catch (e) {}
   const btn = document.querySelector('.tab-btn-linha[data-aba="' + aba + '"]') || document.querySelector('.tab-btn-linha');
   mostrarAba(btn.dataset.aba, btn);
