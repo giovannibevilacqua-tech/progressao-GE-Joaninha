@@ -715,14 +715,13 @@ Toque em ▶ para abrir um bloco. Marque cada ação feita por jovem; o bloco se
 </div>
 <div class="busca-results-esc" id="buscaResultsEsc"></div>
 <div id="topoTabela">
-<div class="progress-section">
-<div class="section-label">Progresso por jovem</div>
-<div id="pbars"></div>
+<details class="progress-section" id="detProgJovens" open ontoggle="try{localStorage.setItem('escoteira_progJovensAberto',this.open?'1':'0')}catch(e){}">
+<summary class="section-label" style="cursor:pointer;margin-bottom:0;list-style:none;display:flex;justify-content:space-between;align-items:center;">Progresso por jovem <span style="font-size:11px;">▾</span></summary>
+<div id="pbars" style="margin-top:11px;"></div>
 <div class="prog-hint">Pistas: 0–3 blocos &nbsp;|&nbsp; Trilha: 4–7 &nbsp;|&nbsp; Rumo: 8–12 &nbsp;|&nbsp; Travessia: 13–17 &nbsp;|&nbsp; 18 blocos concluídos = Lis de Ouro. Toque em um jovem para abrir a ficha.</div>
-</div>
+</details>
 <button type="button" class="btn-secundario" id="btnRelatorioTropa" style="width:calc(100% - 28px);margin:10px 14px;padding:12px;font-weight:700;" onclick="relatorioTropa()">📄 Relatório da tropa</button>
 
-<div id="resumoContainer"></div>
 <div style="margin:14px 14px 0;position:relative;">
 <label class="campo-label">🔎 Destacar jovens na tabela</label>
 <input type="text" class="campo-input" id="filtroJovemPBInput" placeholder="Digite um nome..." autocomplete="off" oninput="autocompleteJovemPB(this.value)" onfocus="autocompleteJovemPB(this.value)" onkeydown="if(event.key==='Enter')adicionarPrimeiraSugestaoPB()">
@@ -2468,12 +2467,21 @@ function renderProgressoJovens() {
 const c = document.getElementById('pbars'); if (!c) return;
 if (!JOVENS.length) { c.innerHTML = '<div style="text-align:center;padding:18px 8px;color:var(--muted);font-size:12px;">Nenhum jovem cadastrado ainda.<br>Cadastre na aba <strong>🏕️ Jovens</strong>.</div>'; return; }
 const lim = [['Pistas', 0, 4, '#27AE60'], ['Trilha', 4, 4, '#D4A017'], ['Rumo', 8, 5, '#1565C0'], ['Travessia', 13, 5, '#E74C3C']];
-c.innerHTML = JOVENS.map(j => {
+const linha = j => {
 const n = countConcluidos(j), et = etapa(n), pct = Math.round(n / 18 * 100);
 const pills = lim.map(([nome, ini, tam, cor]) => `<span class="etapa-pill" style="color:${cor};border-color:${cor};background:${cor}12">${nome} ${Math.max(0, Math.min(tam, n - ini))}/${tam}</span>`).join('');
 return `<div class="prog-row" onclick="selecionarJovem('${j}')"><div class="prog-meta"><span class="prog-name">${JNOMES[j]}</span><span class="prog-etapa" style="background:${et.bg || et.c + '22'};color:${et.bg ? '#fff' : et.c}">${n}/18 — ${et.l}</span></div>
 <div class="prog-track"><div class="prog-bar" style="width:${pct}%;background:${JCOR[j]};"></div></div>
 <div class="etapa-seg">${pills}</div></div>`;
+};
+const grupos = {};
+JOVENS.forEach(j => { const pid = PATRULHA_DE[j] || '_sem'; (grupos[pid] = grupos[pid] || []).push(j); });
+const ordem = PATRULHAS.map(p => p.id).filter(pid => grupos[pid]);
+if (grupos['_sem']) ordem.push('_sem');
+c.innerHTML = ordem.map(pid => {
+const pat = pid === '_sem' ? { nome: 'Sem patrulha', cor: '#999', icone: '' } : PATRULHAS.find(p => p.id === pid);
+const cor = pat.cor || '#999';
+return `<div style="border:1px solid ${cor}33;border-left:4px solid ${cor};background:${cor}0D;border-radius:10px;padding:9px 10px 2px;margin-bottom:10px;"><div style="font-size:11px;font-weight:800;color:${cor};margin-bottom:8px;">${pat.icone || ''} ${pat.nome} <span style="font-weight:600;opacity:.7;">· ${grupos[pid].length}</span></div>${grupos[pid].map(linha).join('')}</div>`;
 }).join('');
 }
 function renderPaginaLis() {
@@ -2497,7 +2505,6 @@ ${prazo ? `<div style="font-size:10px;color:var(--muted);margin-top:7px;">Transf
 }
 function _renderPaginaTabelaBase() {
 renderProgressoJovens();
-document.getElementById('resumoContainer').innerHTML = construirResumoBlocos();
 const el = document.getElementById('blocosPorEixoContainer');
 el.innerHTML = EIXOS.map(eixo => {
 const aberto = eixosAbertosTabela[eixo.id] ?? true;
