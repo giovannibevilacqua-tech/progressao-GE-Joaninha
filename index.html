@@ -969,6 +969,7 @@ if (!senhaOk) {
 limparSessao();
 return { erro: true, mensagem: 'Senha incorreta.' };
 }
+if (souAdmin && (tropaDoChefeLogado || tropa2DoChefeLogado)) { visaoPropria = true; try { localStorage.setItem('visaoPropriaAdmin', '1'); } catch (e) {} } // admin entra na própria função
 agendarRenovacaoToken();
 return { erro: false };
 }
