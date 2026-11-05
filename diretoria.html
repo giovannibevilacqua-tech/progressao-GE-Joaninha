@@ -89,7 +89,7 @@ async function iniciarSecao() {
 </script>
 <script>
 V2_ALMOX.montar({ secao:'diretoria', nomeTropa:'Diretoria', outraTropa:'', verTudo:true, subTitulo:'Visão geral do material de todas as seções. A Diretoria pode editar qualquer item; cada seção edita só os seus.', container:'almox-box', padX:14 });
-const ROTULOS = { admin:'⭐ Administrador', escoteira:'🏕️ Tropa Escoteira', senior:'🎓 Tropa Sênior', alcateia:'🐺 Alcateia', cla:'🔥 Clã Pioneiro', diretoria:'🏛️ Diretoria' };
+const ROTULOS = { admin:'⭐ Administrador', escoteira:'🏕️ Tropa Escoteira', senior:'🎓 Tropa Sênior', alcateia:'🐺 Alcateia', cla:'🔥 Clã Pioneiro', diretoria:'🏛️ Diretoria', sem:'❔ Seção não definida (defina em Gerenciar Chefes)' };
 function escH(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 async function aoAbrirAba(id) {
   if (id !== 'chefes') return;
@@ -99,8 +99,8 @@ async function aoAbrirAba(id) {
     const d = await r.json();
     if (!d || d.error) { box.innerHTML = '<div class="vazio">Não foi possível carregar a lista de chefes.</div>'; return; }
     const grupos = {};
-    Object.keys(d).forEach(uid => { const u = d[uid]; if (!u) return; if (!u.tropa && u.admin) return; const k = u.tropa || 'escoteira'; (grupos[k] = grupos[k] || []).push(u); if (u.tropa2 && u.tropa2 !== k) (grupos[u.tropa2] = grupos[u.tropa2] || []).push(Object.assign({}, u, { funcao: u.funcao2, tropa: u.tropa2, _seg: true })); });
-    const ordem = ['diretoria','alcateia','escoteira','senior','cla'];
+    Object.keys(d).forEach(uid => { const u = d[uid]; if (!u) return; const k = u.tropa || (u.admin ? 'sem' : 'escoteira'); (grupos[k] = grupos[k] || []).push(u); if (u.tropa2 && u.tropa2 !== k) (grupos[u.tropa2] = grupos[u.tropa2] || []).push(Object.assign({}, u, { funcao: u.funcao2, tropa: u.tropa2, _seg: true })); });
+    const ordem = ['diretoria','alcateia','escoteira','senior','cla','sem'];
     const tag = u => '<span class="tag-fn ' + (u.funcao === 'assistente' ? 'ass' : 'chefe') + '">' + (u.funcao === 'assistente' ? 'Assistente' : 'Chefe de seção') + '</span>' + (u._seg ? ' <span class="tag-fn" style="background:#8882">2ª função</span>' : '');
     box.innerHTML = ordem.filter(k => grupos[k]).map(k => '<div class="grupo-ttl">' + ROTULOS[k] + ' (' + grupos[k].length + ')</div><div class="card">' +
       grupos[k].sort((a, b) => ((a.funcao === 'assistente') - (b.funcao === 'assistente')) || (a.nome || a.registro || '').localeCompare(b.nome || b.registro || '', 'pt')).map(u => '<div class="pessoa"><b>' + escH(u.nome || ('Registro ' + u.registro)) + '</b> ' + tag(u) + (u.nome ? '<small>Registro ' + escH(u.registro) + '</small>' : '') + '</div>').join('') + '</div>').join('') || '<div class="vazio">Nenhum chefe cadastrado.</div>';
