@@ -689,8 +689,8 @@ mark.hl-esc{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 <nav class="tabs-linha" id="tabsLinha">
 <button class="tab-btn-linha active" id="tabTabela" onclick="mudarPagina('tabela')">⚡ Progressão</button>
 <button class="tab-btn-linha" id="tabCalendario" onclick="mudarPagina('calendario')">📅 Calendário</button>
-<button class="tab-btn-linha" id="tabJovens" onclick="mudarPagina('jovens')">🏕️ Jovens</button>
 <button class="tab-btn-linha" id="tabCiclo" onclick="mudarPagina('ciclo')">🔄 Ciclo</button>
+<button class="tab-btn-linha" id="tabJovens" onclick="mudarPagina('jovens')">👥 Escoteiros</button>
 <button class="tab-btn-linha" id="tabLis" onclick="mudarPagina('lis')">🏅 Lis de Ouro</button>
 <button class="tab-btn-linha" id="tabAlmoxarifado" onclick="mudarPagina('almoxarifado')">📦 Almoxarifado</button>
 </nav>
@@ -716,7 +716,7 @@ Toque em ▶ para abrir um bloco. Marque cada ação feita por jovem; o bloco se
 <div class="busca-results-esc" id="buscaResultsEsc"></div>
 <div id="topoTabela">
 <details class="progress-section" id="detProgJovens" open ontoggle="try{localStorage.setItem('escoteira_progJovensAberto',this.open?'1':'0')}catch(e){}">
-<summary class="section-label" style="cursor:pointer;margin-bottom:0;list-style:none;display:flex;justify-content:space-between;align-items:center;">Progresso por jovem <span style="font-size:11px;">▾</span></summary>
+<summary class="section-label" style="cursor:pointer;margin-bottom:0;list-style:none;display:flex;justify-content:space-between;align-items:center;">Progresso por escoteiro <span style="font-size:11px;">▾</span></summary>
 <div id="pbars" style="margin-top:11px;"></div>
 <div class="prog-hint">Pistas: 0–3 blocos &nbsp;|&nbsp; Trilha: 4–7 &nbsp;|&nbsp; Rumo: 8–12 &nbsp;|&nbsp; Travessia: 13–17 &nbsp;|&nbsp; 18 blocos concluídos = Lis de Ouro. Toque em um jovem para abrir a ficha.</div>
 </details>
@@ -757,7 +757,7 @@ Toque num jovem para abrir a ficha dele. A barra de cor mostra o tempo até a tr
 <div id="rosterBody" style="padding:0 14px 14px;">
 <div id="roster"></div>
 <div class="add-jovem-wrap" id="addJovemWrap">
-<button class="btn-add-jovem" id="btnAbrirAddJovem" onclick="toggleAddJovemForm()">+ Adicionar jovem</button>
+<button class="btn-add-jovem" id="btnAbrirAddJovem" onclick="toggleAddJovemForm()">+ Adicionar Escoteiro</button>
 <div class="add-jovem-row" id="addJovemForm" style="display:none;">
 <div>
 <label class="campo-label">Nome</label>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ciclo de Programa 2S2026/1S2027 — GE Joaninha</title>
+<title>Tropa Sênior — GE Joaninha</title>
 <style>
 :root{
   --vinho:#6D1026;--vinho2:#9C1B3A;--azul:#1B3B6F;--azul2:#2A5298;
@@ -326,8 +326,8 @@ mark.hl{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 <nav class="tabs">
   <button class="tab-btn active" data-tab="prog" onclick="showTab('prog',this)">⚡ Progressão</button>
   <button class="tab-btn" data-tab="cal" onclick="showTab('cal',this)">📅 Calendário</button>
-  <button class="tab-btn" data-tab="sem" onclick="showTab('sem',this)">🗓 Semestres</button>
-  <button class="tab-btn" data-tab="jovens" onclick="showTab('jovens',this)">👥 Jovens</button>
+  <button class="tab-btn" data-tab="sem" onclick="showTab('sem',this)">🔄 Ciclo</button>
+  <button class="tab-btn" data-tab="jovens" onclick="showTab('jovens',this)">👥 Seniores</button>
   <button class="tab-btn" data-tab="ep" onclick="showTab('ep',this);renderEP();">🏆 Ed. Pátria</button>
   <button class="tab-btn" data-tab="alm" onclick="showTab('alm',this);abrirAlmoSr();">📦 Almoxarifado</button>
 </nav>
@@ -338,7 +338,6 @@ mark.hl{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
     Toque em ▶ para expandir um bloco e ver os sub-itens. Toque no ✓ para marcar ou desmarcar cada ação por jovem. Salvo automaticamente.
   </div>
 
-  <button type="button" class="btn-ic" id="btnRelatorioTropaSr" style="display:block;width:calc(100% - 24px);margin:0 12px 12px;padding:12px;font-weight:700;" onclick="relatorioTropaSr()">📄 Relatório da tropa</button>
 
   <!-- Barra de busca de ações -->
   <div class="busca-wrap">
@@ -352,12 +351,13 @@ mark.hl{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
   </div>
   <div class="busca-results" id="buscaResultsSr"></div>
 
-  <div class="progress-section">
-    <div class="section-label">Progresso por Jovem</div>
-    <div id="pbars"></div>
+  <details class="progress-section" id="detProgJovens" open ontoggle="try{localStorage.setItem('senior_progJovensAberto',this.open?'1':'0')}catch(e){}">
+<summary class="section-label" style="cursor:pointer;margin-bottom:0;list-style:none;display:flex;justify-content:space-between;align-items:center;">Progresso por sênior <span style="font-size:11px;">▾</span></summary>
+<div style="margin-top:11px;"></div><div id="pbars"></div>
     <div class="prog-hint">
       Escalada: 0–5 ✓ &nbsp;|&nbsp; Conquista: 6–11 ✓ &nbsp;|&nbsp; Azimute: 12–17 ✓ &nbsp;|&nbsp; Reconhecimento Escoteiro da Pátria: 18 ✓
     </div>
+  <button type="button" class="btn-ic" id="btnRelatorioTropaSr" style="display:block;width:calc(100% - 24px);margin:12px 12px 0;padding:12px;font-weight:700;" onclick="relatorioTropaSr()">📄 Relatório da tropa</button>
   </div>
 
   <div class="eixo-hdr" id="hdr-hv" style="background:var(--hv);border-color:var(--hv-b);color:var(--hv-t);cursor:pointer;" onclick="toggleEixoSr('hv')">
@@ -403,7 +403,7 @@ mark.hl{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
           <span style="color:rgba(255,255,255,.7);font-size:10px;">3 faltas = inscrição reavaliada</span>
           <span id="chevResumoPresencasSr" style="color:#fff;font-size:11px;transition:transform .2s;transform:rotate(0deg);">▾</span>
         </div>
-      </div>
+</details>
       <div id="presenca-summary" style="padding:8px 13px 10px;display:none;"></div>
     </div>
 
@@ -510,7 +510,7 @@ mark.hl{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
   <div id="patrulhasContainerSr" style="margin:6px 12px 0;"></div>
   <div id="semPatrulhaContainerSr" style="margin:0 12px 0;"></div>
 
-  <div style="margin:16px 12px 0;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">👤 Todos os jovens</div>
+  <div style="margin:16px 12px 0;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">👤 Todos os seniores</div>
   <div id="jovens-cards" style="padding:12px;display:flex;flex-direction:column;gap:10px;"></div>
 </div>
 
@@ -605,6 +605,7 @@ let firebaseAuthToken = null;
 let firebaseRefreshToken = null;
 let firebaseUid = null;
 let registroLogado = null;
+let nomeLogado = (function(){ try { return (JSON.parse(localStorage.getItem('chefeSessao') || 'null') || {}).nome || ''; } catch (e) { return ''; } })();
 
 function lerSessaoSalva() {
   try {
@@ -614,9 +615,10 @@ function lerSessaoSalva() {
 }
 function salvarSessao() {
   try {
-    localStorage.setItem('chefeSessao', JSON.stringify({
+    const atual = lerSessaoSalva() || {};
+    localStorage.setItem('chefeSessao', JSON.stringify(Object.assign({}, atual, {
       registro: registroLogado, uid: firebaseUid, idToken: firebaseAuthToken, refreshToken: firebaseRefreshToken, expiraEm: Date.now() + 55 * 60 * 1000
-    }));
+    })));
   } catch (e) {}
 }
 function agendarRenovacaoTokenSr() {
@@ -679,7 +681,7 @@ async function autenticarComSessaoCompartilhada() {
 let __store = null;
 function sincronizadoOffline(res, recarregar) {
   if (res && res.n) {
-    V2.registrarHistorico('senior', registroLogado, '', 'Enviou ' + res.n + ' alteração(ões) feitas sem internet' + (res.conflitos ? ' (' + res.conflitos + ' em conflito com mudanças de outras pessoas: valeu a versão feita offline)' : ''), res.n);
+    V2.registrarHistorico('senior', registroLogado, nomeLogado, 'Enviou ' + res.n + ' alteração(ões) feitas sem internet' + (res.conflitos ? ' (' + res.conflitos + ' em conflito com mudanças de outras pessoas: valeu a versão feita offline)' : ''), res.n);
     alert('✓ ' + res.n + ' alteração(ões) feitas sem internet foram enviadas.' + (res.conflitos ? '\n\n' + res.conflitos + ' delas mexiam em algo que outra pessoa também mudou nesse meio tempo; ficou a versão feita offline. Confira em 📜 Histórico se precisar.' : ''));
   }
   if (recarregar) location.reload();
@@ -2590,7 +2592,7 @@ function showModal(yid){
     document.getElementById('inp-role').value=y.role||'';
     document.getElementById('inp-obs').value=y.observacoes||'';
   }else{
-    document.getElementById('modal-ttl').textContent='Adicionar Jovem';
+    document.getElementById('modal-ttl').textContent='Adicionar Sênior';
     document.getElementById('inp-name').value='';
     document.getElementById('inp-born').value='';
     document.getElementById('inp-role').value='';
@@ -2981,7 +2983,7 @@ function renderJovens(){
   // Botão adicionar
   const addBtn=document.createElement('button');
   addBtn.style.cssText='width:100%;margin-top:4px;padding:14px;background:var(--card);border:2px dashed var(--border);border-radius:var(--r);font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;';
-  addBtn.textContent='+ Adicionar Jovem';
+  addBtn.textContent='+ Adicionar Sênior';
   addBtn.onclick=()=>showModal(null);
   container.appendChild(addBtn);
   // Arquivados
@@ -3233,7 +3235,7 @@ document.addEventListener('DOMContentLoaded',function(){ V2_ALMOX.montar({ secao
 
 <div class="modal-ov" id="youth-modal" onclick="if(event.target===this)hideModal()">
   <div class="modal-box">
-    <div class="modal-ttl" id="modal-ttl">Adicionar Jovem</div>
+    <div class="modal-ttl" id="modal-ttl">Adicionar Sênior</div>
     <input type="hidden" id="edit-id">
     <div class="f-field">
       <label class="f-label">Nome completo *</label>

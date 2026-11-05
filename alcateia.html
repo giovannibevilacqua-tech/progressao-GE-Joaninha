@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Alcateia Lobinho — GE Joaninha</title>
+<title>Alcateia — GE Joaninha</title>
 <style>
 :root{
   --vinho:#B26A00;--vinho2:#D98A00;--azul:#1B3B6F;--azul2:#2A5298;
@@ -378,7 +378,7 @@ mark.hl{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 <nav class="tabs" id="tabsCla">
   <button class="tab-btn active" data-tab="prog" onclick="showTab('prog',this)">⚡ Progressão</button>
   <button class="tab-btn" data-tab="cal" onclick="showTab('cal',this)">📅 Calendário</button>
-  <button class="tab-btn" data-tab="jovens" onclick="showTab('jovens',this)">🐺 Lobinhos</button>
+  <button class="tab-btn" data-tab="jovens" onclick="showTab('jovens',this)">👥 Lobinhos</button>
   <button class="tab-btn" data-tab="bp" onclick="showTab('bp',this)">🌟 Cruzeiro do Sul</button>
   <button class="tab-btn" data-tab="alm" onclick="showTab('alm',this);V2_ALMOX.abrir();">📦 Almoxarifado</button>
 </nav>
@@ -396,12 +396,12 @@ mark.hl{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
   </div>
   <div class="busca-results" id="buscaResults"></div>
 
-  <div class="progress-section">
-    <div class="section-label">Progresso por lobinho</div>
-    <div id="pbars"></div>
+  <details class="progress-section" id="detProgJovens" open ontoggle="try{localStorage.setItem('alcateia_progJovensAberto',this.open?'1':'0')}catch(e){}">
+<summary class="section-label" style="cursor:pointer;margin-bottom:0;list-style:none;display:flex;justify-content:space-between;align-items:center;">Progresso por lobinho <span style="font-size:11px;">▾</span></summary>
+<div style="margin-top:11px;"></div><div id="pbars"></div>
     <div class="prog-hint">Pata Tenra: 4 blocos &nbsp;|&nbsp; Saltador: +4 (8) &nbsp;|&nbsp; Rastreador: +5 (13) &nbsp;|&nbsp; Caçador: +5 (18) &nbsp;|&nbsp; 18 blocos + Caminho do Caçador = Cruzeiro do Sul</div>
-  </div>
-  <button type="button" class="btn-ic" style="display:block;width:calc(100% - 24px);margin:12px 12px 0;padding:12px;font-weight:700;" onclick="relatorioTropaSecao()">📄 Relatório da seção</button>
+</details>
+  <button type="button" class="btn-ic" style="display:block;width:calc(100% - 24px);margin:12px 12px 0;padding:12px;font-weight:700;" onclick="relatorioTropaSecao()">📄 Relatório da alcateia</button>
 
   <div id="vista-eixo">
     <div class="eixo-hdr" id="hdr-hv" style="background:var(--hv);border-color:var(--hv-b);color:var(--hv-t);cursor:pointer;" onclick="toggleEixo('hv')">
@@ -1918,7 +1918,7 @@ async function loadState(){
   const logado = await autenticarComSessaoCompartilhada();
   if (!logado) {
     document.body.innerHTML = '<div style="padding:40px 20px;text-align:center;font-family:sans-serif;color:#666;"><div style="font-size:34px;margin-bottom:10px;">⚜</div><div style="font-weight:700;margin-bottom:6px;">Sem acesso a esta seção</div><div style="font-size:13px;">Entre pela página inicial do sistema com uma conta que tenha acesso.</div></div>';
-    throw new Error('Sem sessão de login — o Alcateia Lobinho precisa ser aberto a partir da tela principal.');
+    throw new Error('Sem sessão de login — o Alcateia precisa ser aberto a partir da tela principal.');
   }
   V2.configurarAuth({ getToken: () => firebaseAuthToken, renovar: renovarSessaoV2 });
   __store = V2.criarStore({
@@ -1930,12 +1930,12 @@ async function loadState(){
     onSincronizado: (res, recarregar) => sincronizadoOffline(res, recarregar),
     onSalvo: (d) => {
       const nomeDe = (id) => { const y = YOUTH_DATA.find(v => v.id === id); return y ? y.name : null; };
-      V2.registrarHistorico(V2_NODE, registroLogado, '', V2.resumirDiff(d, nomeDe), Object.keys(d.sets).length + Object.keys(d.dels).length);
+      V2.registrarHistorico(V2_NODE, registroLogado, nomeLogado, V2.resumirDiff(d, nomeDe), Object.keys(d.sets).length + Object.keys(d.dels).length);
     },
     temPendente: () => { const a = document.activeElement; return !!(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)); },
     onErroCarga: (e) => {
-      console.error('Alcateia Lobinho: falha ao carregar dados:', e);
-      alert('⚠️ Não consegui carregar os dados do Alcateia Lobinho.\n\nO app abriu vazio e o SALVAMENTO FICOU BLOQUEADO para não apagar nada. Recarregue a página.');
+      console.error('Alcateia: falha ao carregar dados:', e);
+      alert('⚠️ Não consegui carregar os dados do Alcateia.\n\nO app abriu vazio e o SALVAMENTO FICOU BLOQUEADO para não apagar nada. Recarregue a página.');
     },
     onDados: (dados, primeira) => {
       try { aplicarDados(dados); syncJovens(); } catch (e) { console.error(e); }
@@ -1950,7 +1950,7 @@ async function saveState(){
   if (el) el.textContent = '● Salvando…';
   try { await __store.salvar(montarDados()); onDataSaved(); }
   catch (e) {
-    console.error('Não foi possível salvar dados do Alcateia Lobinho:', e);
+    console.error('Não foi possível salvar dados do Alcateia:', e);
     if (el) el.innerHTML = '<span style="color:#E74C3C;cursor:pointer;" onclick="saveState()">⚠️ Não salvou — toque para tentar de novo</span>';
   }
 }
@@ -2633,7 +2633,7 @@ async function saveAll(){
 }
 async function exportData(){
   await saveAll();
-  const data = { version:'lobo-1.0', exportedAt:new Date().toISOString(), exportedBy:'GE Joaninha — Alcateia Lobinho', ...montarDados() };
+  const data = { version:'lobo-1.0', exportedAt:new Date().toISOString(), exportedBy:'GE Joaninha — Alcateia', ...montarDados() };
   const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], {type:'application/json'}));
   const a = document.createElement('a'); a.href = url; a.download = 'backup_alcateia_lobinho_' + new Date().toISOString().slice(0,10) + '.json';
   document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
@@ -2645,7 +2645,7 @@ async function desfazerSnapshot(){
   let lista; try { lista = await V2.listarSnapshots(V2_NODE); } catch (e) { alert('Não consegui ler os snapshots. Confira a conexão.'); return; }
   if (!lista.length) { alert('Ainda não há snapshots.\n\nEles são criados automaticamente antes de excluir lobinho, restaurar dados iniciais ou importar backup.'); return; }
   const fmt = s => new Date(s.em).toLocaleString('pt-BR', {dateStyle:'short', timeStyle:'short'});
-  const r = prompt('Voltar o Alcateia Lobinho para o estado de ANTES de:\n\n' + lista.map((s,i) => (i+1) + ') ' + fmt(s) + ' — ' + s.motivo).join('\n') + '\n\nDigite o número:');
+  const r = prompt('Voltar o Alcateia para o estado de ANTES de:\n\n' + lista.map((s,i) => (i+1) + ') ' + fmt(s) + ' — ' + s.motivo).join('\n') + '\n\nDigite o número:');
   if (r === null || r === '') return;
   const sel = lista[parseInt(r,10) - 1]; if (!sel) { alert('Número inválido.'); return; }
   if (!confirm('Restaurar o estado de ' + fmt(sel) + '?\n\nO estado atual também fica guardado como snapshot.')) return;
@@ -2668,7 +2668,7 @@ function importData(event){
       V2.registrarHistorico(V2_NODE, registroLogado, '', 'Importou um backup', 0);
       aplicarDados(d); syncJovens(); await saveState();
       alert('✓ Dados importados com sucesso!\nA página será recarregada.'); location.reload();
-    } catch (err) { alert('Arquivo inválido.\nUtilize apenas backups exportados pelo Alcateia Lobinho deste sistema.'); }
+    } catch (err) { alert('Arquivo inválido.\nUtilize apenas backups exportados pelo Alcateia deste sistema.'); }
   };
   reader.readAsText(file);
 }
@@ -2690,7 +2690,7 @@ function restaurarUltimaAba(){
 async function iniciarApp(){
   await loadState();
   syncJovens();
-  V2_ALMOX.montar({ secao:'alcateia', nomeTropa:'Alcateia Lobinho', outraTropa:'as outras seções', rotuloComp:'Compartilhado com as outras seções', subComp:'Aparece no almoxarifado de todas as seções', subTitulo:'Materiais do Alcateia Lobinho. Itens compartilhados aparecem também nas outras seções.', container:'alm', padX:12 });
+  V2_ALMOX.montar({ secao:'alcateia', nomeTropa:'Alcateia', outraTropa:'as outras seções', rotuloComp:'Compartilhado com as outras seções', subComp:'Aparece no almoxarifado de todas as seções', subTitulo:'Materiais do Alcateia. Itens compartilhados aparecem também nas outras seções.', container:'alm', padX:12 });
   renderAll(); renderCal(); renderJovens();
   Object.keys(EIXOS).forEach(aplicarEstadoEixo);
   mudarVista(restaurar('vista', 'eixo'));
