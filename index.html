@@ -1542,6 +1542,7 @@ aplicarVisibilidadeSecoes();
 function aplicarVisibilidadeSecoes() {
 const btnVolta = document.getElementById('btnAdminVolta');
 if (btnVolta) btnVolta.style.display = (souAdmin && !verTudo()) ? '' : 'none';
+const btnSug = document.getElementById('btnSugestao'); if (btnSug) btnSug.style.display = (souAdmin && verTudo()) ? 'none' : '';
 const btnVP = document.getElementById('btnVisaoPropriaTopo'); if (btnVP) btnVP.style.display = (souAdmin && verTudo()) ? '' : 'none';
 document.body.classList.toggle('eh-admin', verTudo());
 aplicarBarraBackup();
