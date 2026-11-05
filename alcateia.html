@@ -1874,7 +1874,7 @@ async function autenticarComSessaoCompartilhada() {
   souAdmin = salva.admin === true; nomeLogado = salva.nome || ''; tropaDoChefeLogado = salva.tropa || null; window._tropa2 = salva.tropa2 || null;
   document.body.classList.toggle('eh-admin', souAdmin);
   salvarSessao();
-  const permitido = souAdmin || tropaDoChefeLogado === SECAO || window._tropa2 === SECAO || (!tropaDoChefeLogado && SECAO !== 'diretoria');
+  const permitido = souAdmin || tropaDoChefeLogado === SECAO || window._tropa2 === SECAO;
   if (!permitido) return false;
   setTimeout(renovarAgendado, 50 * 60 * 1000);
   return true;

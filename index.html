@@ -1107,8 +1107,8 @@ return `<div class="chefe-row" style="flex-wrap:wrap;gap:6px;">
 <span class="chefe-row-registro" style="flex:1;min-width:120px;">${c.nome ? c.nome : c.registro || uid}${c.nome ? `<br><span style="font-size:10px;font-weight:500;color:var(--muted);">Registro ${c.registro || uid}</span>` : ''}
 <br><span class="chefe-tag ${ehAss ? 'ass' : 'chefe'}">${ehAss ? 'Assistente' : 'Chefe de seção'}</span>${c.tropa2 ? ` <span class="chefe-tag ${c.funcao2 === 'assistente' ? 'ass' : 'chefe'}">${c.funcao2 === 'assistente' ? 'Assistente' : 'Chefe'} · ${(rotSecao[c.tropa2] || c.tropa2).replace(/^\S+\s/, '')}</span>` : ''}${c.admin ? ' <span class="chefe-tag adm">⭐ Admin</span>' : ''}</span>
 <select class="campo-input" style="font-size:11px;padding:4px 6px;flex:0 0 auto;" onchange="alterarRoleChefeUI('${uid}', this.value)" title="Seção">
-${c.admin ? `<option value="" ${secao===''?'selected':''}>Sem seção (vê tudo)</option>` : ''}
-${Object.keys(rotSecao).map(k => `<option value="${k}" ${(secao||(c.admin?'':'escoteira'))===k?'selected':''}>${rotSecao[k]}</option>`).join('')}
+<option value="" ${secao===''?'selected':''}>Sem seção</option>
+${Object.keys(rotSecao).map(k => `<option value="${k}" ${secao===k?'selected':''}>${rotSecao[k]}</option>`).join('')}
 </select>
 <select class="campo-input" style="font-size:11px;padding:4px 6px;flex:0 0 auto;" onchange="alterarFuncaoChefeUI('${uid}', this.value)" title="Função">
 <option value="chefe" ${ehAss?'':'selected'}>Chefe de seção</option>
@@ -1117,7 +1117,7 @@ ${Object.keys(rotSecao).map(k => `<option value="${k}" ${(secao||(c.admin?'':'es
 <div style="flex-basis:100%;display:flex;gap:6px;align-items:center;flex-wrap:wrap;"><span style="font-size:10px;font-weight:700;color:var(--muted);">2ª função:</span>
 <select class="campo-input" style="font-size:11px;padding:4px 6px;flex:0 0 auto;" onchange="alterarVinculo2UI('${uid}','tropa',this.value)" title="Segunda seção">
 <option value="">Nenhuma</option>
-${Object.keys(rotSecao).filter(k => k !== (secao || (c.admin ? '' : 'escoteira'))).map(k => `<option value="${k}" ${c.tropa2===k?'selected':''}>${rotSecao[k]}</option>`).join('')}
+${Object.keys(rotSecao).filter(k => k !== secao).map(k => `<option value="${k}" ${c.tropa2===k?'selected':''}>${rotSecao[k]}</option>`).join('')}
 </select>
 ${c.tropa2 ? `<select class="campo-input" style="font-size:11px;padding:4px 6px;flex:0 0 auto;" onchange="alterarVinculo2UI('${uid}','funcao',this.value)" title="Função na segunda seção">
 <option value="chefe" ${c.funcao2==='assistente'?'':'selected'}>Chefe de seção</option>
@@ -1215,7 +1215,7 @@ const SECOES = { alcateia:   { pagina: 'alcateia', frame: 'iframeAlcateia', box:
                  cla:        { pagina: 'cla-pioneiro', frame: 'iframeCla', box: 'pagina-cla', btn: 'ramoBtnCla' },
                  diretoria:  { pagina: 'diretoria', frame: 'iframeDiretoria', box: 'pagina-diretoria', btn: 'ramoBtnDiretoria' } };
 // quem pode abrir cada seção: admin vê tudo; chefe de uma seção vê só a dela; sem seção definida (contas antigas) vê tudo menos a Diretoria
-function ramoPermitido(r) { return !!souAdmin || tropaDoChefeLogado === r || tropa2DoChefeLogado === r || (!tropaDoChefeLogado && r !== 'diretoria'); }
+function ramoPermitido(r) { return !!souAdmin || tropaDoChefeLogado === r || tropa2DoChefeLogado === r; }
 let ramoAtual = null;
 const compactoPorRamo = {};
 
@@ -1299,7 +1299,12 @@ else { const lb = document.getElementById('lembreteBackup'); if (lb) lb.remove()
 
 // Restrição de acesso por seção
 const ramoSwitch = document.getElementById('ramoSwitch');
-const vePrimeiraSecao = !!souAdmin || !tropaDoChefeLogado;
+const vePrimeiraSecao = !!souAdmin;
+const semAcessoSecao = !souAdmin && !tropaDoChefeLogado && !tropa2DoChefeLogado;
+let msgSem = document.getElementById('semSecaoMsg');
+if (!msgSem) { msgSem = document.createElement('div'); msgSem.id = 'semSecaoMsg'; msgSem.style.cssText = 'display:none;margin:40px 18px;padding:22px;text-align:center;background:var(--card);border-radius:14px;box-shadow:var(--shadow);font-size:14px;line-height:1.6;'; msgSem.innerHTML = '<div style="font-size:32px;margin-bottom:6px;">🔒</div><b>Você ainda não tem uma seção definida.</b><br>Peça a um administrador para liberar o seu acesso.'; const sw = document.getElementById('ramoSwitch'); sw.parentNode.insertBefore(msgSem, sw.nextSibling); }
+msgSem.style.display = semAcessoSecao ? '' : 'none';
+if (semAcessoSecao) { Object.keys(SECOES).forEach(k => { const bx = document.getElementById(SECOES[k].box); if (bx) bx.style.display = 'none'; }); if (ramoSwitch) ramoSwitch.style.display = 'none'; return; }
 const temDuas = !souAdmin && !!tropaDoChefeLogado && !!tropa2DoChefeLogado && tropa2DoChefeLogado !== tropaDoChefeLogado;
 if (temDuas) Object.keys(SECOES).forEach(k => { const b = document.getElementById(SECOES[k].btn); if (b) b.style.display = ramoPermitido(k) ? '' : 'none'; });
 const btnDir = document.getElementById('ramoBtnDiretoria'); if (btnDir) btnDir.style.display = (souAdmin || tropaDoChefeLogado === 'diretoria' || tropa2DoChefeLogado === 'diretoria') ? '' : 'none';
