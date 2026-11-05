@@ -240,11 +240,17 @@ function htmlFicha() {
     });
     h += '</div></div>';
   });
+  const PROC = ['Processo criado no PAXTU pelo assessorado', 'Processo preenchido pelo assessorado', 'Processo preenchido pelo APF', 'Processo enviado à UEL', 'Processo enviado à Região'];
+  h += `<div class="panel" id="proc"><h3>Conclusão do nível · ${esc(CAT[rk].n)} · ${NV[ni]}</h3><p id="procMsg" style="margin-bottom:8px;font-size:12px;color:var(--muted)"></p>${PROC.map((t, i) => `<label class="item"><input type="checkbox" data-proc="1" data-k="proc-${rk}-${ni}-${i}"><span>${esc(t)}</span></label>`).join('')}</div>`;
   return h + '</div>';
 }
 function atualizar() {
   const cn = contar(), edit = podeMarcar();
   document.querySelectorAll('#ficha input[data-k]').forEach(el => { const on = !!E.done[el.getAttribute('data-k')]; if (el.checked !== on) el.checked = on; el.disabled = !edit; });
+  const completo = cn[E.ramo][E.nivel] >= TOT[E.ramo][E.nivel];
+  document.querySelectorAll('#ficha input[data-proc]').forEach(el => { el.disabled = !edit || !completo; });
+  const pm = document.getElementById('procMsg'); if (pm) pm.textContent = completo ? 'Todas as competências deste nível foram cumpridas. Marque as etapas do processo conforme forem concluídas.' : 'Etapas liberadas quando todas as competências deste nível estiverem cumpridas (' + cn[E.ramo][E.nivel] + '/' + TOT[E.ramo][E.nivel] + ').';
+  const pn = document.getElementById('proc'); if (pn) pn.style.opacity = completo ? '1' : '.55';
   document.querySelectorAll('#ficha .cp').forEach(cp => {
     const bx = cp.querySelectorAll('input[data-k]:not([data-p])'); let c = 0; bx.forEach(b => { if (b.checked) c++; });
     cp.querySelector('.n').textContent = c + '/' + bx.length; cp.classList.toggle('full', bx.length > 0 && c === bx.length);
