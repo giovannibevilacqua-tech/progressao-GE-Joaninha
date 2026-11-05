@@ -200,7 +200,7 @@ async function salvarPerfil() {
     await pedir('/formacao/' + encodeURIComponent(E.uid) + '/perfil', 'PUT', Object.assign({}, novo, { atualizadoEm: new Date().toISOString() }));
     if (antigo && antigo !== novo.apfUid) await pedir('/apfIdx/' + encodeURIComponent(antigo) + '/' + encodeURIComponent(E.uid), 'DELETE');
     if (novo.apfUid && novo.apfUid !== antigo) await pedir('/apfIdx/' + encodeURIComponent(novo.apfUid) + '/' + encodeURIComponent(E.uid), 'PUT', true);
-    E.perfil = Object.assign({}, novo);
+    E.perfil = Object.assign({}, novo, { atualizadoEm: new Date().toISOString() });
     if (ramo) E.ramo = ramo; if (nv !== '') E.nivel = +nv;
     msg.textContent = 'Perfil salvo.'; desenhar();
   } catch (e) { msg.className = 'msg erro'; msg.textContent = 'Não foi possível salvar. Tente de novo.'; $('#pf-ok').disabled = false; }
@@ -255,7 +255,13 @@ function titulo() {
   const pe = E.equipe[E.uid] || {};
   return `<div class="quem"><h2>${esc(souDono() ? (nomeLogado || pe.nome || 'Minha formação') : nomeDe(E.uid))}</h2><div class="sub">Registro ${esc(pe.registro || '')} · APF: <b>${esc(apf)}</b>${podeMarcar() ? '' : ' · somente leitura'}</div></div>`;
 }
+// Primeiro acesso: a própria pessoa ainda não indicou ramo, nível e APF -> mostra só o perfil antes da ficha.
+const primeiroAcesso = () => souDono() && !(E.perfil && E.perfil.atualizadoEm);
 function desenhar() {
+  if (primeiroAcesso()) {
+    $('#corpo').innerHTML = '<div class="quem"><h2>Bem-vindo à sua formação</h2><div class="sub">Antes de abrir a ficha, indique seu ramo de formação, seu nível e quem é o seu APF. Você pode mudar depois.</div></div>' + htmlPerfil().replace('Salvar perfil', 'Salvar e abrir minha ficha');
+    return;
+  }
   $('#corpo').innerHTML = titulo() + htmlPerfil() + '<div id="ficha">' + htmlFicha() + '</div>';
   atualizar();
 }
