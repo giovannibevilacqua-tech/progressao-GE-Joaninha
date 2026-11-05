@@ -54,7 +54,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-11-05a"
+  VERSAO: "2026-11-05b"
 };
 
 /* ============================================================
@@ -1403,6 +1403,22 @@ window.V2_ALMOX = (function () {
 
   function esc(x) { return String(x == null ? '' : x).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
   function $(id) { return document.getElementById(id); }
+  var SEC_ALMOX = [['alcateia','🐺','Alcateia'],['escoteira','🏕️','Escoteira'],['senior','🎓','Sênior'],['cla','🔥','Clã Pioneiro']];
+  function donoDe(it) { return (it && it.tropa) || cfg.secao; }
+  // seções (além da dona) que enxergam o item. compartilhado===true sem lista = formato antigo: todas.
+  function compartilhadoCom(it) {
+    var dono = donoDe(it);
+    if (Array.isArray(it.compartilhadoCom)) return it.compartilhadoCom.filter(function (s) { return s !== dono; });
+    return it.compartilhado === true ? SEC_ALMOX.map(function (s) { return s[0]; }).filter(function (s) { return s !== dono; }) : [];
+  }
+  function chipsCompartilhar(dono, marcadas, idGrupo) {
+    return '<div class="almo-opt-grupo" id="' + idGrupo + '">' + SEC_ALMOX.filter(function (s) { return s[0] !== dono; }).map(function (s) {
+      return '<button type="button" class="almo-opt' + (marcadas.indexOf(s[0]) >= 0 ? ' ativo' : '') + '" data-sec="' + s[0] + '" onclick="this.classList.toggle(\'ativo\')">' + s[1] + ' ' + s[2] + '</button>';
+    }).join('') + '</div>';
+  }
+  function lerChips(idGrupo) {
+    return Array.prototype.map.call(document.querySelectorAll('#' + idGrupo + ' .almo-opt.ativo'), function (b) { return b.dataset.sec; });
+  }
   function rotuloComp() { return cfg.rotuloComp ? esc(cfg.rotuloComp) : 'Compartilhado com ' + esc(cfg.outraTropa); }
   function subComp() { return cfg.subComp ? esc(cfg.subComp) : 'Aparece nos dois painéis'; }
   function soLeitura() { return !!(cfg && cfg.somenteLeitura && cfg.somenteLeitura()); }
@@ -1515,8 +1531,8 @@ window.V2_ALMOX = (function () {
             '<label class="almo-campo-label" id="almoQtdLbl">Qtd.</label>' +
             '<input type="number" id="almoQtd" class="almo-input" value="1" min="0" style="text-align:center;">' +
           '</div></div>' +
-          '<div class="almo-toggle-row" id="almoToggleRow"><div class="almo-toggle-lbl-wrap"><span class="almo-toggle-lbl">' + rotuloComp() + '</span><span class="almo-toggle-sub">' + subComp() + '</span></div>' +
-          '<label class="almo-toggle"><input type="checkbox" id="almoComp"><span class="almo-toggle-slider"></span></label></div>' +
+          '<div id="almoToggleRow" style="margin:10px 0;"><span class="almo-campo-label">Compartilhar com</span>' + chipsCompartilhar(cfg.secao, [], 'almoCompChips') +
+          '<div class="almo-toggle-sub" style="margin-top:4px;">Nenhuma marcada = só ' + esc(cfg.nomeTropa) + '. A Diretoria sempre vê tudo.</div></div>' +
           '<button class="almo-btn-add" id="almoBtnAdd" onclick="V2_ALMOX.h.adicionar()">+ Adicionar item</button>' +
         '</div>' +
       '</div></div>' +
@@ -1531,7 +1547,7 @@ window.V2_ALMOX = (function () {
   function visiveis(desejo) {
     return Object.keys(itens).filter(function (k) {
       var v = itens[k];
-      return v && (cfg.verTudo || v.compartilhado === true || v.tropa === cfg.secao) && (v.desejo === true) === !!desejo;
+      return v && (cfg.verTudo || donoDe(v) === cfg.secao || compartilhadoCom(v).indexOf(cfg.secao) >= 0) && (v.desejo === true) === !!desejo;
     }).sort(function (a, b) { return (itens[a].nome || '').localeCompare(itens[b].nome || '', 'pt'); }).map(function (k) { return [k, itens[k]]; });
   }
 
@@ -1588,7 +1604,12 @@ window.V2_ALMOX = (function () {
     el.innerHTML = lista.map(function (p) {
       var id = p[0], v = p[1];
       var t = TIPOS[v.tipo] || { label: 'Sem categoria', emoji: '📦', color: '#888888' };
-      var comp = v.compartilhado ? '<span class="almo-badge almo-badge-comp">🔗 Compartilhado</span>' : '<span class="almo-badge almo-badge-ind">🔒 Só ' + esc(cfg.verTudo ? (NOMES[v.tropa] || v.tropa || '—') : cfg.nomeTropa) + '</span>';
+      var dono = donoDe(v), cm = compartilhadoCom(v), nomeDe = function (s) { return NOMES[s] || s; };
+      var todas = cm.length === SEC_ALMOX.length - 1;
+      var comp = '';
+      if (cfg.verTudo || dono !== cfg.secao) comp += '<span class="almo-badge almo-badge-ind">📍 ' + esc(nomeDe(dono)) + '</span>';
+      if (cm.length && (cfg.verTudo || dono === cfg.secao)) comp += '<span class="almo-badge almo-badge-comp">🔗 ' + (todas ? 'Todas as seções' : esc(cm.map(nomeDe).join(', '))) + '</span>';
+      else if (!cm.length) comp += '<span class="almo-badge almo-badge-ind">🔒 Só ' + esc(nomeDe(dono)) + '</span>';
       var qtd = ro ? '<div class="almo-qtd-val" style="margin:0 8px">' + (v.quantidade || 0) + '</div>'
         : '<div class="almo-qtd-row"><button class="almo-qtd-btn" onclick="V2_ALMOX.h.atualizarQtd(\'' + esc(id) + '\',-1)">−</button><div class="almo-qtd-val">' + (v.quantidade || 0) + '</div><button class="almo-qtd-btn" onclick="V2_ALMOX.h.atualizarQtd(\'' + esc(id) + '\',1)">+</button></div>';
       var btns = ro ? '' : (des ? '<button class="almo-del-btn" style="opacity:1" onclick="V2_ALMOX.h.marcarComprado(\'' + esc(id) + '\')" title="Marcar como comprado (vai para o estoque)">✅</button>' : '') +
@@ -1683,16 +1704,16 @@ window.V2_ALMOX = (function () {
       var nome = ($('almoNome').value || '').trim();
       var tipo = $('almoTipo').value;
       var qtd = Math.max(0, parseInt($('almoQtd').value) || 0);
-      var comp = $('almoComp').checked;
+      var comp = lerChips('almoCompChips');
       if (!nome) { $('almoNome').focus(); return; }
-      var item = { nome: nome, quantidade: qtd, tipo: tipo, compartilhado: comp, tropa: cfg.secao, criadoEm: new Date().toISOString() };
+      var item = { nome: nome, quantidade: qtd, tipo: tipo, compartilhado: comp.length > 0, compartilhadoCom: comp, tropa: cfg.secao, criadoEm: new Date().toISOString() };
       if (modo === 'desejos') item.desejo = true;
       try {
         var r = await fetch(url(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item) });
         var res = await r.json();
         if (!res || !res.name) { alert('Erro ao salvar no Firebase: ' + (res && res.error ? res.error : 'permissão negada. Verifique as regras do banco de dados.')); return; }
         itens[res.name] = item;
-        $('almoNome').value = ''; $('almoQtd').value = '1'; $('almoComp').checked = false;
+        $('almoNome').value = ''; $('almoQtd').value = '1'; Array.prototype.forEach.call(document.querySelectorAll('#almoCompChips .almo-opt'), function (b) { b.classList.remove('ativo'); });
         render();
       } catch (e) { alert('Erro ao salvar. Verifique a conexão.'); }
     },
@@ -1731,8 +1752,7 @@ window.V2_ALMOX = (function () {
         '<div class="almo-opt-grupo" id="almoEditTipo">' + Object.keys(TIPOS).map(function (k) { return '<button type="button" class="almo-opt ' + (k === tipoAtual ? 'ativo' : '') + '" data-valor="' + k + '">' + esc(TIPOS[k].emoji) + ' ' + esc(TIPOS[k].label) + '</button>'; }).join('') + '</div>' +
         '<label class="almo-campo-label" style="margin-top:10px;">' + (des ? 'Qtd. desejada' : 'Qtd.') + '</label>' +
         '<input type="number" class="almo-input" id="almoEditQtd" min="0" value="' + (Number(it.quantidade) || 0) + '" style="max-width:110px;text-align:center;">' +
-        '<div class="almo-toggle-row"><div class="almo-toggle-lbl-wrap"><span class="almo-toggle-lbl">' + rotuloComp() + '</span><span class="almo-toggle-sub">' + subComp() + '</span></div>' +
-        '<label class="almo-toggle"><input type="checkbox" id="almoEditComp" ' + (it.compartilhado === true ? 'checked' : '') + '><span class="almo-toggle-slider"></span></label></div>' +
+        '<div style="margin:10px 0;"><span class="almo-campo-label">Compartilhar com</span>' + chipsCompartilhar(donoDe(it), compartilhadoCom(it), 'almoEditChips') + '<div class="almo-toggle-sub" style="margin-top:4px;">Nenhuma marcada = só ' + esc(NOMES[donoDe(it)] || donoDe(it)) + '. A Diretoria sempre vê tudo.</div></div>' +
         '<div class="almo-cat-acoes"><button type="button" id="almoEditCancelar">Cancelar</button><button type="button" class="principal" id="almoEditSalvar">Salvar</button></div></div>';
       document.body.appendChild(ov);
       var grupo = ov.querySelector('#almoEditTipo');
@@ -1746,12 +1766,12 @@ window.V2_ALMOX = (function () {
         var ativo = grupo.querySelector('.almo-opt.ativo');
         var tipo = ativo ? ativo.dataset.valor : (it.tipo || Object.keys(TIPOS)[0]);
         var quantidade = Math.max(0, parseInt(ov.querySelector('#almoEditQtd').value) || 0);
-        var compartilhado = ov.querySelector('#almoEditComp').checked;
-        var antes = { nome: it.nome, tipo: it.tipo, quantidade: it.quantidade, compartilhado: it.compartilhado };
-        Object.assign(it, { nome: nome, tipo: tipo, quantidade: quantidade, compartilhado: compartilhado });
+        var comp = lerChips('almoEditChips');
+        var antes = { nome: it.nome, tipo: it.tipo, quantidade: it.quantidade, compartilhado: it.compartilhado, compartilhadoCom: it.compartilhadoCom };
+        Object.assign(it, { nome: nome, tipo: tipo, quantidade: quantidade, compartilhado: comp.length > 0, compartilhadoCom: comp });
         render(); fechar();
         try {
-          var r = await fetch(url('/' + id), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nome: nome, tipo: tipo, quantidade: quantidade, compartilhado: compartilhado }) });
+          var r = await fetch(url('/' + id), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nome: nome, tipo: tipo, quantidade: quantidade, compartilhado: comp.length > 0, compartilhadoCom: comp }) });
           var res = await r.json();
           if (!r.ok || (res && res.error)) throw new Error('falhou');
         } catch (e) { Object.assign(it, antes); render(); alert('Não consegui salvar a edição. Verifique a conexão e tente de novo.'); }
