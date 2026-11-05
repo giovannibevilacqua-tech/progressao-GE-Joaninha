@@ -708,6 +708,7 @@ cursor: pointer; color: #fff;
 mark.hl-esc{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 
 .chefe-det{flex-basis:100%;border:1px solid var(--border,#444);border-radius:10px;padding:0 10px;margin:2px 0}.chefe-det>summary{cursor:pointer;font-size:12px;font-weight:700;color:var(--muted);padding:7px 0;list-style:none}.chefe-det>summary::-webkit-details-marker{display:none}.chefe-det>summary::before{content:"▸ "}.chefe-det[open]>summary::before{content:"▾ "}.chefe-det[data-k="novo"]{border:1px solid #3fa66a;background:rgba(63,166,106,.12)}.chefe-det[data-k="novo"]>summary{color:#7fe0a6;font-size:13px;padding:10px 0}.chefe-det-corpo{display:flex;flex-direction:column;gap:6px;padding-bottom:10px}
+.func-lista{display:flex;flex-direction:column;gap:6px}.func-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:4px;border-radius:8px;border:1px dashed transparent}.func-row.arrastando{opacity:.5}.func-row.alvo{border-color:var(--vinho,#9b2c43);background:rgba(155,44,67,.12)}.func-h{cursor:grab;font-size:18px;line-height:1;padding:2px 6px;color:var(--muted);touch-action:none;user-select:none}.func-h.off{opacity:.25;cursor:not-allowed}.func-n{font-size:10px;font-weight:700;color:var(--muted);min-width:56px}
 </style>
 <script src="Apoio/v2.js"></script>
 </head>
@@ -1125,6 +1126,8 @@ return `<div class="chefe-row" style="flex-wrap:wrap;gap:6px;">
 <span class="chefe-row-registro" style="flex:1;min-width:120px;">${c.nome ? c.nome : c.registro || uid}${c.nome ? `<br><span style="font-size:10px;font-weight:500;color:var(--muted);">Registro ${c.registro || uid}</span>` : ''}
 <br><span class="chefe-tag ${ehAss ? 'ass' : 'chefe'}">${ehAss ? 'Assistente' : 'Chefe'} · ${secao ? (rotSecao[secao] || secao).replace(/^\S+\s/, '') : 'Sem seção'}</span>${c.tropa2 ? ` <span class="chefe-tag ${c.funcao2 === 'assistente' ? 'ass' : 'chefe'}">${c.funcao2 === 'assistente' ? 'Assistente' : 'Chefe'} · ${(rotSecao[c.tropa2] || c.tropa2).replace(/^\S+\s/, '')}</span>` : ''}${c.admin ? ' <span class="chefe-tag adm">⭐ Admin</span>' : ''}</span>
 <details class="chefe-det" data-k="${uid}:f" ${chefeAbertos.has(uid+":f")?"open":""} ontoggle="chefeToggle(this)"><summary>Seção e função</summary><div class="chefe-det-corpo">
+<div class="func-lista" data-uid="${uid}">
+<div class="func-row" data-i="0"><span class="func-h" title="Arraste para trocar a ordem das funções">⠿</span><span class="func-n">1ª função</span>
 <select class="campo-input" style="font-size:11px;padding:4px 6px;flex:0 0 auto;" onchange="alterarRoleChefeUI('${uid}', this.value)" title="Seção">
 <option value="" ${secao===''?'selected':''}>Sem seção</option>
 ${Object.keys(rotSecao).map(k => `<option value="${k}" ${secao===k?'selected':''}>${rotSecao[k]}</option>`).join('')}
@@ -1132,8 +1135,8 @@ ${Object.keys(rotSecao).map(k => `<option value="${k}" ${secao===k?'selected':''
 <select class="campo-input" style="font-size:11px;padding:4px 6px;flex:0 0 auto;" onchange="alterarFuncaoChefeUI('${uid}', this.value)" title="Função">
 <option value="chefe" ${ehAss?'':'selected'}>Chefe de seção</option>
 <option value="assistente" ${ehAss?'selected':''}>Assistente</option>
-</select>
-<div style="flex-basis:100%;display:flex;gap:6px;align-items:center;flex-wrap:wrap;"><span style="font-size:10px;font-weight:700;color:var(--muted);">2ª função:</span>
+</select></div>
+<div class="func-row" data-i="1"><span class="func-h ${c.tropa2 ? '' : 'off'}" title="Arraste para trocar a ordem das funções">⠿</span><span class="func-n">2ª função</span>
 <select class="campo-input" style="font-size:11px;padding:4px 6px;flex:0 0 auto;" onchange="alterarVinculo2UI('${uid}','tropa',this.value)" title="Segunda seção">
 <option value="">Nenhuma</option>
 ${Object.keys(rotSecao).filter(k => k !== secao).map(k => `<option value="${k}" ${c.tropa2===k?'selected':''}>${rotSecao[k]}</option>`).join('')}
@@ -1142,6 +1145,7 @@ ${c.tropa2 ? `<select class="campo-input" style="font-size:11px;padding:4px 6px;
 <option value="chefe" ${c.funcao2==='assistente'?'':'selected'}>Chefe de seção</option>
 <option value="assistente" ${c.funcao2==='assistente'?'selected':''}>Assistente</option>
 </select>` : ''}</div>
+</div>
 </div></details>
 <details class="chefe-det" data-k="${uid}:g" ${chefeAbertos.has(uid+":g")?"open":""} ontoggle="chefeToggle(this)"><summary>🎓 Formação</summary><div class="chefe-det-corpo">
 ${(() => { const pf = (formacaoCache[uid] && formacaoCache[uid].perfil) || {}; const ext = pf.apfExterno; const modo = pf.apfUid || (ext && ext.nome ? '_ext' : '');
@@ -1189,6 +1193,33 @@ await alterarRoleChefe(uid, novaSecao);
 if (uid === firebaseUid) { await checarSeSouAdmin(); fecharGerenciarChefes(); aplicarEstadoContaLogada(); return; }
 await renderChefesModalBody();
 }
+async function trocarFuncoesUI(uid) {
+const c = chefesCache[uid]; if (!c || !c.tropa2) return;
+const corpo = { tropa: c.tropa2, funcao: c.funcao2 === 'assistente' ? 'assistente' : 'chefe', tropa2: c.tropa || null, funcao2: c.tropa ? (c.funcao === 'assistente' ? 'assistente' : 'chefe') : null };
+await fetch(urlComAuthFirebase(DB_URL + '/usuarios/' + uid + '.json'), { method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(corpo) });
+if (uid === firebaseUid) { await checarSeSouAdmin(); aplicarEstadoContaLogada(); }
+await renderChefesModalBody();
+}
+// arrastar a linha de função para trocar a 1ª com a 2ª (mouse e toque)
+(function () {
+let arr = null;
+document.addEventListener('pointerdown', e => {
+const h = e.target.closest && e.target.closest('.func-h'); if (!h || h.classList.contains('off')) return;
+const row = h.closest('.func-row'); arr = { row, lista: row.parentNode, id: e.pointerId };
+row.classList.add('arrastando'); try { h.setPointerCapture(e.pointerId); } catch (x) {} e.preventDefault();
+});
+document.addEventListener('pointermove', e => {
+if (!arr) return;
+arr.lista.querySelectorAll('.func-row').forEach(r => { if (r === arr.row) return; const b = r.getBoundingClientRect(); r.classList.toggle('alvo', e.clientY >= b.top - 10 && e.clientY <= b.bottom + 10); });
+});
+function fim(e) {
+if (!arr) return;
+const a = arr; arr = null; a.row.classList.remove('arrastando');
+const alvo = a.lista.querySelector('.func-row.alvo'); a.lista.querySelectorAll('.func-row').forEach(r => r.classList.remove('alvo'));
+if (alvo && e.type === 'pointerup') trocarFuncoesUI(a.lista.getAttribute('data-uid'));
+}
+document.addEventListener('pointerup', fim); document.addEventListener('pointercancel', fim);
+})();
 async function alterarVinculo2UI(uid, campo, valor) {
 const corpo = campo === 'tropa' ? (valor ? { tropa2: valor, funcao2: (chefesCache[uid] && chefesCache[uid].funcao2) || 'chefe' } : { tropa2: null, funcao2: null }) : { funcao2: valor === 'assistente' ? 'assistente' : 'chefe' };
 await fetch(urlComAuthFirebase(DB_URL + '/usuarios/' + uid + '.json'), { method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(corpo) });
