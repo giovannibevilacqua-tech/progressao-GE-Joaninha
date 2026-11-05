@@ -2130,6 +2130,12 @@ function toggleFixa(j, b, i) { S[j][b].fixas[i] = S[j][b].fixas[i] ? 0 : 1; temA
 function toggleVar(j, b, i) { S[j][b].variaveis[i] = S[j][b].variaveis[i] ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); preservarScrollFicha(() => { renderRoster(); renderDetail(j); }); }
 function toggleEsp(j, b) { S[j][b].especialidade = S[j][b].especialidade ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); preservarScrollFicha(() => { renderRoster(); renderDetail(j); }); }
 
+function cicloAtualResumoEsc() {
+  const hoje = new Date(), ano = String(hoje.getFullYear()), sm = hoje.getMonth() < 6 ? '1' : '2';
+  const sem = CICLO.find(c => String(c.ano) === ano && String(c.semestre) === sm) || CICLO.find(c => (c.blocos || []).filter(Boolean).length);
+  if (!sem) return null;
+  return { titulo: sem.ano ? sem.semestre + 'º Semestre ' + sem.ano : 'Ciclo atual', periodo: '', blocos: (sem.blocos || []).filter(b => b && BLOCOS[b]).map(b => { const ex = EIXOS.find(e => e.blocos.indexOf(b) >= 0); return { nome: BLOCOS[b].nome, cor: ex ? ex.cor : '#666', feitos: JOVENS.filter(j => S[j] && blocoConcluido(j, b)).length, total: JOVENS.filter(j => S[j]).length }; }) };
+}
 function dadosRelatorioTropa() {
   const hoje = new Date().toISOString().slice(0, 10);
   const chamadas = EVENTOS.filter(e => e.data && e.data <= hoje && (e.presentes || []).length > 0);
@@ -2144,7 +2150,7 @@ function dadosRelatorioTropa() {
   });
   const cont = {}; linhas.forEach(l => { cont[l.etapa] = (cont[l.etapa] || 0) + 1; });
   return ({
-    tropa: 'Tropa Escoteira',
+    tropa: 'Tropa Escoteira', ciclo: cicloAtualResumoEsc(),
     resumo: { jovens: linhas.length, media: linhas.length ? (linhas.reduce((s, l) => s + l.n, 0) / linhas.length).toFixed(1).replace('.', ',') : '0', total: BLOCO_IDS.length },
     etapas: Object.keys(cont).map(k => [k, cont[k]]),
     colunas: EIXOS.map(e => ({ nome: e.nome, cor: e.cor, total: e.blocos.length })),

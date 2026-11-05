@@ -2629,6 +2629,13 @@ function saveYouth(){
     alert('Jovem adicionado com sucesso!\nEle aparece agora em Progressão, Calendário e Escoteiro da Pátria.');
   }
 }
+function cicloAtualResumoSr() {
+  const hoje = new Date(), key = (hoje.getMonth() >= 6 ? '2s' : '1s') + String(hoje.getFullYear()).slice(2);
+  const sem = SEMESTRES_SR.find(x => x.key === key) || SEMESTRES_SR.find(x => (CICLO_BLOCOS_SR[x.key] || []).filter(Boolean).length) || SEMESTRES_SR[0];
+  if (!sem) return null;
+  const cores = { hv: '#E0355F', ma: '#5CB85C', pd: '#1B3B6F', sb: '#DB9270' };
+  return { titulo: sem.titulo, periodo: sem.periodo || '', blocos: (CICLO_BLOCOS_SR[sem.key] || []).filter(Boolean).map(id => { const b = BLOCKS.find(x => x.id === id); return b ? { nome: b.name, cor: cores[b.eixo] || '#666', feitos: actJ().filter(it => isBlockConcluded(id, it.i)).length, total: actJ().length } : null; }).filter(Boolean) };
+}
 function dadosRelatorioTropa(){
   const cores = { hv: '#E0355F', ma: '#5CB85C', pd: '#1B3B6F', sb: '#DB9270' };
   const feito = (bl, yid) => bl && bl.concluded && bl.concluded[yid] === 1;
@@ -2647,7 +2654,7 @@ function dadosRelatorioTropa(){
   }).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
   const cont = {}; linhas.forEach(l => { cont[l.etapa] = (cont[l.etapa] || 0) + 1; });
   return ({
-    tropa: 'Tropa Sênior',
+    tropa: 'Tropa Sênior', ciclo: cicloAtualResumoSr(),
     resumo: { jovens: linhas.length, media: linhas.length ? (linhas.reduce((s, l) => s + l.n, 0) / linhas.length).toFixed(1).replace('.', ',') : '0', total: BLOCKS.length },
     etapas: Object.keys(cont).map(k => [k, cont[k]]),
     colunas: chaves.map(k => ({ nome: EIXOS[k].label, cor: cores[k] || '#6D1026', total: EIXOS[k].blockIds.length })),

@@ -1686,10 +1686,12 @@ let eventoEditandoId = null, eventoMenuAbertoId = null, itensSelecionados = [];
 const MESES = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
 function eventosOrdenados(){ return Object.values(eventos).filter(Boolean).sort((a,b) => String(a.dataISO).localeCompare(String(b.dataISO)) || String(a.nome).localeCompare(String(b.nome))); }
 /* ---------- Ciclo de programa (semestres com blocos-foco, metas e previsão) ---------- */
+const CICLO_QTD = 3; // blocos sugeridos por semestre (podem ser trocados)
+const cicloSementes = k => BLOCKS.slice(k * CICLO_QTD, (k + 1) * CICLO_QTD).map(b => b.id);
 function cicloPadrao() {
   return [
-    { key: '2s26', titulo: '2º Semestre 2026', ini: '2026-08-01', fim: '2026-11-28', cor1: '#6D1026', cor2: '#9C1B3A', origem: true, blocos: [], metas: [] },
-    { key: '1s27', titulo: '1º Semestre 2027', ini: '2027-02-01', fim: '2027-06-30', cor1: '#1B3B6F', cor2: '#2A5298', origem: true, blocos: [], metas: [] }
+    { key: '2s26', titulo: '2º Semestre 2026', ini: '2026-08-01', fim: '2026-11-28', cor1: '#6D1026', cor2: '#9C1B3A', origem: true, semeado: true, blocos: cicloSementes(0), metas: [] },
+    { key: '1s27', titulo: '1º Semestre 2027', ini: '2027-02-01', fim: '2027-06-30', cor1: '#1B3B6F', cor2: '#2A5298', origem: true, semeado: true, blocos: cicloSementes(1), metas: [] }
   ];
 }
 let CICLO_SEM = cicloPadrao();
@@ -1698,7 +1700,11 @@ let cicloEditando = null;
 function normalizarCiclo(v) {
   const lista = Array.isArray(v) ? v : Object.values(v || {});
   if (!lista.length) return cicloPadrao();
-  return lista.filter(Boolean).map(s => Object.assign({}, s, { blocos: Object.values(s.blocos || {}), metas: Object.values(s.metas || {}).filter(Boolean) }));
+  return lista.filter(Boolean).map(s => {
+    const o = Object.assign({}, s, { blocos: Object.values(s.blocos || {}), metas: Object.values(s.metas || {}).filter(Boolean) });
+    if (!o.semeado) { o.semeado = true; const k = ['2s26', '1s27'].indexOf(o.key); if (k >= 0 && !o.blocos.filter(Boolean).length) o.blocos = cicloSementes(k); }
+    return o;
+  });
 }
 const fmtPeriodoCiclo = s => (s.ini ? new Date(s.ini + 'T12:00:00').toLocaleDateString('pt-BR') : '?') + ' → ' + (s.fim ? new Date(s.fim + 'T12:00:00').toLocaleDateString('pt-BR') : '?');
 function cicloSem(key) { return CICLO_SEM.find(s => s.key === key); }
@@ -1706,7 +1712,7 @@ function cicloSelectBloco(sem, j) {
   const atual = sem.blocos[j] || '';
   const ops = Object.keys(EIXOS).map(k => '<optgroup label="' + esc(EIXOS[k].label) + '">' + BLOCKS.filter(b => b.eixo === k).map(b => '<option value="' + b.id + '"' + (b.id === atual ? ' selected' : '') + '>' + esc(b.name) + '</option>').join('') + '</optgroup>').join('');
   const cor = atual ? (EIXOS[(BLOCKS.find(b => b.id === atual) || {}).eixo] || {}).cor : '';
-  return '<div style="display:flex;gap:6px;margin-bottom:6px;align-items:center;"><select class="f-input" style="flex:1;' + (cor ? 'border-left:5px solid ' + cor + ';' : '') + '" onchange="cicloTrocarBloco(\'' + sem.key + '\',' + j + ',this.value)"><option value="">Selecionar bloco…</option>' + ops + '</select><button class="btn-ic" style="color:#E74C3C;" onclick="cicloRemoverBloco(\'' + sem.key + '\',' + j + ')" title="Remover">✕</button></div>';
+  return '<div style="display:flex;gap:6px;margin-bottom:' + (atual ? '2' : '6') + 'px;align-items:center;"><select class="f-input" style="flex:1;' + (cor ? 'border-left:5px solid ' + cor + ';' : '') + '" onchange="cicloTrocarBloco(\'' + sem.key + '\',' + j + ',this.value)"><option value="">Selecionar bloco…</option>' + ops + '</select><button class="btn-ic" style="color:#E74C3C;" onclick="cicloRemoverBloco(\'' + sem.key + '\',' + j + ')" title="Remover">✕</button></div>' + (atual ? '<div style="font-size:10px;color:var(--muted);margin:0 0 8px 6px;">' + JOVENS.filter(y => isConcluido(atual, y)).length + ' de ' + JOVENS.length + ' concluíram</div>' : '');
 }
 function cicloTrocarBloco(k, j, v) { cicloSem(k).blocos[j] = v; saveState(); renderCiclo(); }
 function cicloAddBloco(k) { cicloSem(k).blocos.push(''); saveState(); renderCiclo(); }
@@ -1736,6 +1742,12 @@ function cicloRemover(k) {
   if (!confirm('Remover este semestre? Os blocos-foco e metas dele também serão apagados.')) return;
   CICLO_SEM = CICLO_SEM.filter(s => s.key !== k); delete cicloAbertos[k]; saveState(); renderCiclo();
 }
+function cicloAtualResumo() {
+  const hoje = new Date().toISOString().slice(0, 10);
+  const s = CICLO_SEM.find(x => x.ini && x.fim && hoje >= x.ini && hoje <= x.fim) || CICLO_SEM.find(x => x.blocos.filter(Boolean).length) || CICLO_SEM[0];
+  if (!s) return null;
+  return { titulo: s.titulo, periodo: fmtPeriodoCiclo(s), blocos: s.blocos.filter(Boolean).map(id => { const b = BLOCKS.find(x => x.id === id); return b ? { nome: b.name, cor: (EIXOS[b.eixo] || {}).cor || '#666', feitos: JOVENS.filter(y => isConcluido(id, y)).length, total: JOVENS.length } : null; }).filter(Boolean) };
+}
 function cicloCard(s) {
   const aberto = !!cicloAbertos[s.key], ed = cicloEditando === s.key;
   const grad = 'background:linear-gradient(135deg,' + s.cor1 + ',' + s.cor2 + ');';
@@ -1762,7 +1774,7 @@ function cicloCard(s) {
       (ext.length ? ext.map(e => '<div class="sem-special-item"><span class="sem-special-icon">📍</span><div><strong>' + new Date(e.dataISO + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) + ':</strong> ' + esc(e.nome) + '</div></div>').join('') : '<div style="font-size:11px;color:var(--muted);">Nenhuma atividade externa marcada neste período.</div>') + '</div>' +
       '<div class="milestone-box"><div class="section-label" style="margin-bottom:7px;">Metas — ' + esc(s.titulo) + '</div>' +
       s.metas.map((m, i) => '<div class="milestone-item"><span class="milestone-star">' + esc(m.icone) + '</span><div style="flex:1;">' + esc(m.texto) + '</div><button class="btn-ic" style="color:#E74C3C;" onclick="cicloRemoverMeta(\'' + s.key + '\',' + i + ')">🗑️</button></div>').join('') +
-      '<div style="display:flex;gap:6px;margin-top:6px;"><select class="f-input" id="cicloMetaIc_' + s.key + '" style="width:64px;"><option>⭐</option><option>🏆</option><option>🎯</option><option>📌</option></select><input type="text" class="f-input" id="cicloMetaTxt_' + s.key + '" placeholder="Nova meta…" style="flex:1;"><button class="btn-prim" style="padding:8px 12px;font-size:12px;" onclick="cicloAddMeta(\'' + s.key + '\')">+</button></div></div>' +
+      '<div style="display:flex;gap:6px;margin-top:6px;"><select class="f-input" id="cicloMetaIc_' + s.key + '" style="width:64px;"><option>⭐</option><option>🏆</option><option>🎯</option><option>📌</option></select><input type="text" class="f-input" id="cicloMetaTxt_' + s.key + '" placeholder="Nova meta…" style="flex:1;"><button class="btn-prim" style="width:auto;flex:0 0 auto;padding:8px 14px;font-size:12px;" onclick="cicloAddMeta(\'' + s.key + '\')">+</button></div></div>' +
       '<div class="prog-overview"><div class="prog-overview-title">Previsão de blocos ao final de ' + esc(s.titulo) + '</div>' +
       actJ().map(({ yid, i }) => {
         const n = statsJovem(yid).n, ganho = ids.filter(b => !isConcluido(b, yid)).length, exp = Math.min(TOTAL_BLOCOS, n + ganho), et = etapaAtual(exp);
@@ -2193,7 +2205,7 @@ function dadosRelatorioTropa() {
   }).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
   const cont = {}; linhas.forEach(l => { cont[l.etapa] = (cont[l.etapa] || 0) + 1; });
   return ({
-    tropa: 'Clã Pioneiro',
+    tropa: 'Clã Pioneiro', ciclo: cicloAtualResumo(),
     resumo: { jovens: linhas.length, media: linhas.length ? (linhas.reduce((s, l) => s + l.n, 0) / linhas.length).toFixed(1).replace('.', ',') : '0', total: BLOCKS.length },
     etapas: Object.keys(cont).map(k => [k, cont[k]]),
     colunas: chaves.map(k => ({ nome: EIXOS[k].label, cor: EIXOS[k].cor, total: EIXOS[k].blockIds.length })),
@@ -2302,7 +2314,7 @@ async function iniciarApp(){
   await loadState();
   syncJovens();
   V2_ALMOX.montar({ secao:'cla', nomeTropa:'Clã Pioneiro', outraTropa:'as outras seções', rotuloComp:'Compartilhado com as outras seções', subComp:'Aparece no almoxarifado de todas as seções', subTitulo:'Materiais do Clã Pioneiro. Itens compartilhados aparecem também nas outras seções.', container:'alm', padX:12 });
-  renderAll(); renderCal(); renderJovens();
+  renderAll(); renderCal(); renderCiclo(); renderJovens();
   Object.keys(EIXOS).forEach(aplicarEstadoEixo);
   mudarVista(restaurar('vista', 'eixo'));
   restaurarUltimaAba();
