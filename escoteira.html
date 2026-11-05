@@ -693,6 +693,7 @@ mark.hl-esc{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 <button class="tab-btn-linha" id="tabJovens" onclick="mudarPagina('jovens')">👥 Escoteiros</button>
 <button class="tab-btn-linha" id="tabLis" onclick="mudarPagina('lis')">🏅 Lis de Ouro</button>
 <button class="tab-btn-linha" id="tabAlmoxarifado" onclick="mudarPagina('almoxarifado')">📦 Almoxarifado</button>
+<button class="tab-btn-linha" id="tabFinanceiro" onclick="mudarPagina('financeiro')">💰 Financeiro</button>
 </nav>
 </div>
 
@@ -878,6 +879,7 @@ Toque num jovem para abrir a ficha dele. A barra de cor mostra o tempo até a tr
 </div>
 
 <div id="pagina-almoxarifado" style="display:none;padding-bottom:32px;"></div>
+<div id="pagina-financeiro" style="display:none;padding-bottom:32px;"></div>
 
 <button class="reset-btn somente-admin" id="btnLimparMarcacoes" onclick="confirmReset()">↺ LIMPAR MARCAÇÕES</button>
 
@@ -2281,7 +2283,7 @@ if (card) card.classList.toggle('open');
 // ===== PÁGINA 2: TABELA POR BLOCO =====
 let paginaAtiva = 'tabela';
 
-const PAGINAS_ESC = { tabela: ['pagina-tabela', 'tabTabela'], calendario: ['pagina-calendario', 'tabCalendario'], jovens: ['pagina-jovens', 'tabJovens'], ciclo: ['pagina-ciclo', 'tabCiclo'], lis: ['pagina-lis', 'tabLis'], almoxarifado: ['pagina-almoxarifado', 'tabAlmoxarifado'] };
+const PAGINAS_ESC = { tabela: ['pagina-tabela', 'tabTabela'], calendario: ['pagina-calendario', 'tabCalendario'], jovens: ['pagina-jovens', 'tabJovens'], ciclo: ['pagina-ciclo', 'tabCiclo'], lis: ['pagina-lis', 'tabLis'], almoxarifado: ['pagina-almoxarifado', 'tabAlmoxarifado'], financeiro: ['pagina-financeiro', 'tabFinanceiro'] };
 function mudarPagina(p) {
 if (!PAGINAS_ESC[p]) p = 'tabela';
 paginaAtiva = p;
@@ -2297,6 +2299,7 @@ if (p === 'jovens') renderRoster();
 if (p === 'ciclo') renderPaginaCiclo();
 if (p === 'lis') renderPaginaLis();
 if (p === 'almoxarifado') V2_ALMOX.abrir();
+if (p === 'financeiro') V2_FIN.abrir();
 }
 
 let blocosAbertosTabela = {};
@@ -3731,6 +3734,7 @@ if (isNaN(y)) return;
 window.addEventListener('online', () => { if (temAlteracaoLocalPendente && !(__store && __store.offline)) saveState(); });
 
 // ===== ALMOXARIFADO — módulo compartilhado (v2.js) =====
+V2_FIN.montar({ secao:'escoteira', container:'pagina-financeiro' });
 V2_ALMOX.montar({ secao:'escoteira', nomeTropa:'Escoteira', outraTropa:'Sênior', subTitulo:'Materiais da Tropa Escoteira. Você escolhe com quais seções cada item é compartilhado.', container:'pagina-almoxarifado', padX:14 });
 
 // ===== BUSCA DE AÇÕES (index.html) =====

@@ -744,9 +744,11 @@ REGISTRO ESCOTEIRO
 <div class="conta-barra">
 <span class="conta-barra-registro">👤 <strong id="contaRegistroTxt"></strong></span>
 <button class="conta-barra-btn" id="btnMinhaFormacao" onclick="location.href=V2.pagina('formacao')">🎓 Minha formação</button>
+<button class="conta-barra-btn" id="btnSugestao" onclick="abrirSugestao()">💡 Sugestão</button>
 <button class="conta-barra-btn" id="btnVisaoPropriaTopo" style="display:none;" onclick="alternarVisaoPropria()">👁 Minha função</button>
 <button class="conta-barra-btn" id="btnAdminVolta" style="display:none;" onclick="pedirSenhaModoAdmin()">🔑 Admin</button>
 <button class="conta-barra-btn somente-admin" id="btnGerChefesTopo" onclick="abrirGerenciarChefes()">⚙️ Gerenciar Chefes</button>
+<button class="conta-barra-btn somente-admin" id="btnSugestoesAdmin" onclick="abrirSugestoesAdmin()">📬 Sugestões</button>
 <button class="conta-barra-btn somente-admin" id="btnHistorico" onclick="abrirHistorico()">📜 Histórico</button>
 <button class="conta-barra-btn somente-admin" id="btnImportarPaxtu" onclick="ImportarPaxtu.abrir()">📥 Importar PAXTU</button>
 <button class="conta-barra-btn" onclick="if(confirm('Sair da sua conta neste navegador?'))fazerLogout()">🚪 Sair</button>
@@ -1396,6 +1398,63 @@ function trocarSenhaModoAdmin() {
     } catch (e) { btn.disabled = false; erro('Não foi possível salvar. Tente de novo.'); }
   };
   setTimeout(() => document.getElementById('tsaAtual').focus(), 50);
+}
+
+// ═══ SUGESTÕES: qualquer usuário envia; o admin lê em "Sugestões" ═══
+function modalSimples(id, html) {
+  let m = document.getElementById(id); if (m) m.remove();
+  m = document.createElement('div'); m.id = id;
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:16px;';
+  m.innerHTML = '<div style="background:#fff;color:#1a1a1a;border-radius:14px;padding:18px;width:100%;max-width:420px;max-height:88vh;overflow:auto;box-shadow:0 10px 40px rgba(0,0,0,.35);">' + html + '</div>';
+  document.body.appendChild(m); m.addEventListener('click', e => { if (e.target === m) m.remove(); });
+  return m;
+}
+const SUG_TIPOS = { melhoria: '✨ Melhoria', correcao: '🛠️ Correção', ajuste: '🔧 Ajuste' };
+const SUG_SECOES = { geral: 'Geral / sistema todo', alcateia: '🐺 Alcateia', escoteira: '⚜️ Escoteira', senior: '🧭 Sênior', cla: '🦉 Clã Pioneiro', diretoria: '🪢 Diretoria' };
+function abrirSugestao() {
+  const campo = 'width:100%;box-sizing:border-box;padding:10px;border:1px solid #bbb;border-radius:8px;font-size:15px;margin-bottom:8px;background:#fff;color:#1a1a1a;font-family:inherit;';
+  const m = modalSimples('modalSugestao', '<div style="font-size:16px;font-weight:800;margin-bottom:4px;">💡 Enviar sugestão</div><div style="font-size:12.5px;color:#555;margin-bottom:12px;line-height:1.5;">Conte o que pode melhorar, o que está errado ou o que precisa de ajuste.</div>'
+    + '<div id="sugTipo" style="display:flex;gap:6px;margin-bottom:8px;">' + Object.keys(SUG_TIPOS).map((k, i) => '<button type="button" data-k="' + k + '" style="flex:1;padding:9px 4px;border-radius:8px;border:1px solid #bbb;font-weight:700;font-size:12.5px;cursor:pointer;' + (i === 0 ? 'background:#1b6e3a;color:#fff;border-color:#1b6e3a;' : 'background:#f3f3f3;color:#1a1a1a;') + '">' + SUG_TIPOS[k] + '</button>').join('') + '</div>'
+    + '<select id="sugSecao" style="' + campo + '">' + Object.keys(SUG_SECOES).map(k => '<option value="' + k + '">' + SUG_SECOES[k] + '</option>').join('') + '</select>'
+    + '<textarea id="sugTexto" rows="5" maxlength="1500" placeholder="Descreva aqui…" style="' + campo + 'resize:vertical;"></textarea>'
+    + '<div id="sugErro" style="display:none;color:#b3261e;font-size:12.5px;margin-bottom:8px;"></div><div style="display:flex;gap:8px;"><button type="button" id="sugCancela" style="flex:1;padding:10px;border-radius:8px;border:1px solid #bbb;background:#f3f3f3;color:#1a1a1a;font-weight:700;">Cancelar</button><button type="button" id="sugOk" style="flex:1;padding:10px;border-radius:8px;border:0;background:#1b6e3a;color:#fff;font-weight:700;">Enviar</button></div>');
+  let tipo = 'melhoria';
+  m.querySelectorAll('#sugTipo button').forEach(b => b.onclick = () => { tipo = b.dataset.k; m.querySelectorAll('#sugTipo button').forEach(x => { const on = x === b; x.style.background = on ? '#1b6e3a' : '#f3f3f3'; x.style.color = on ? '#fff' : '#1a1a1a'; x.style.borderColor = on ? '#1b6e3a' : '#bbb'; }); });
+  document.getElementById('sugCancela').onclick = () => m.remove();
+  document.getElementById('sugOk').onclick = async () => {
+    const txt = document.getElementById('sugTexto').value.trim(), er = document.getElementById('sugErro'), btn = document.getElementById('sugOk');
+    if (txt.length < 5) { er.textContent = 'Escreva a sua sugestão.'; er.style.display = 'block'; return; }
+    btn.disabled = true; er.style.display = 'none';
+    try {
+      const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      const r = await fetch(urlComAuthFirebase(DB_URL + '/sugestoes/' + id + '.json'), { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ tipo, secao: document.getElementById('sugSecao').value, texto: txt, autor: nomeLogado || registroLogado || '', registro: registroLogado || '', uid: firebaseUid || '', em: new Date().toISOString(), status: 'nova' }) });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      m.remove(); alert('Sugestão enviada. Obrigado!');
+    } catch (e) { btn.disabled = false; er.textContent = 'Não foi possível enviar. Verifique a conexão e tente de novo.'; er.style.display = 'block'; }
+  };
+  setTimeout(() => document.getElementById('sugTexto').focus(), 50);
+}
+async function abrirSugestoesAdmin() {
+  if (!souAdmin) return;
+  const m = modalSimples('modalSugestoesAdmin', '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><div style="font-size:16px;font-weight:800;">📬 Sugestões</div><button type="button" id="sugFecha" style="border:0;background:none;font-size:22px;cursor:pointer;color:#1a1a1a;">✕</button></div><div id="sugLista" style="font-size:13px;color:#555;">Carregando…</div>');
+  document.getElementById('sugFecha').onclick = () => m.remove();
+  let dados = {};
+  const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+  const desenhar = () => {
+    const ids = Object.keys(dados).sort((a, b) => (dados[b].em || '').localeCompare(dados[a].em || ''));
+    document.getElementById('sugLista').innerHTML = ids.length ? ids.map(id => { const s = dados[id], feita = s.status === 'feita';
+      return '<div style="border:1px solid #ddd;border-radius:10px;padding:10px;margin-bottom:8px;' + (feita ? 'opacity:.6;' : '') + '"><div style="font-size:11.5px;color:#555;margin-bottom:4px;"><b>' + (SUG_TIPOS[s.tipo] || s.tipo) + '</b> · ' + esc(SUG_SECOES[s.secao] || s.secao) + '<br>' + esc(s.autor || s.registro) + ' · ' + new Date(s.em).toLocaleString('pt-BR') + (feita ? ' · ✓ resolvida' : '') + '</div><div style="font-size:14px;color:#1a1a1a;white-space:pre-wrap;margin-bottom:8px;">' + esc(s.texto) + '</div><div style="display:flex;gap:6px;"><button type="button" data-a="feita" data-id="' + id + '" style="padding:6px 10px;border-radius:8px;border:1px solid #bbb;background:#f3f3f3;color:#1a1a1a;font-weight:700;font-size:12px;">' + (feita ? '↩ Reabrir' : '✓ Marcar resolvida') + '</button><button type="button" data-a="del" data-id="' + id + '" style="padding:6px 10px;border-radius:8px;border:1px solid #e0b4b0;background:#fff;color:#b3261e;font-weight:700;font-size:12px;">Excluir</button></div></div>'; }).join('') : 'Nenhuma sugestão por enquanto.';
+    document.querySelectorAll('#sugLista button[data-a]').forEach(b => b.onclick = async () => {
+      const id = b.dataset.id;
+      try {
+        if (b.dataset.a === 'del') { if (!confirm('Excluir esta sugestão?')) return; const r = await fetch(urlComAuthFirebase(DB_URL + '/sugestoes/' + id + '.json'), { method: 'DELETE' }); if (!r.ok) throw 0; delete dados[id]; }
+        else { const novo = dados[id].status === 'feita' ? 'nova' : 'feita'; const r = await fetch(urlComAuthFirebase(DB_URL + '/sugestoes/' + id + '/status.json'), { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(novo) }); if (!r.ok) throw 0; dados[id].status = novo; }
+        desenhar();
+      } catch (e) { alert('Não foi possível atualizar.'); }
+    });
+  };
+  try { const r = await fetch(urlComAuthFirebase(DB_URL + '/sugestoes.json')); if (!r.ok) throw 0; dados = (await r.json()) || {}; desenhar(); }
+  catch (e) { document.getElementById('sugLista').textContent = 'Não foi possível carregar. Confira se as regras do banco já foram atualizadas.'; }
 }
 function ramoPermitido(r) { return verTudo() || tropaDoChefeLogado === r || tropa2DoChefeLogado === r; }
 let ramoAtual = null;

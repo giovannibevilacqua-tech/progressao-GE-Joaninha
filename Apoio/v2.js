@@ -174,7 +174,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-11-07g"
+  VERSAO: "2026-11-07h"
 };
 
 /* ============================================================
@@ -2277,4 +2277,211 @@ window.V2_ALMOX = (function () {
   };
   root.ImportarPaxtu = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+/* ============================================================
+   Financeiro — fluxo de caixa básico por seção + caixa do grupo (Diretoria).
+   Dados em /financeiro/<secao>: config {saldoInicial}, lanc/<id> (entrada|saida; fixa|variavel), fixas/<id> (modelo mensal), prev/<id> (gasto previsto).
+   Uso: V2_FIN.montar({ secao:'escoteira', container:'pagina-financeiro' }); V2_FIN.abrir();
+        V2_FIN.montarDiretoria({ container:'fin-box' }); V2_FIN.abrirDiretoria();
+   ============================================================ */
+(function (root) {
+  if (typeof window === 'undefined') return;
+  var NOMES = { alcateia: '🐺 Alcateia', escoteira: '⚜️ Escoteira', senior: '🧭 Sênior', cla: '🦉 Clã Pioneiro', grupo: '🏕️ Caixa do grupo' };
+  var cfg = null, dir = null, mes = null, dados = {}, formAberto = null;
+  var CORES = { ent: '#1b6e3a', sai: '#b3261e', prev: '#a86a00', neutro: '#1B3B6F' };
+
+  function esc(x) { return String(x == null ? '' : x).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
+  function $(id) { return document.getElementById(id); }
+  function url(sub) { return urlComAuthFirebase(window.V2_CONFIG.DB_URL + '/financeiro' + (sub || '') + '.json'); }
+  function brl(v) { return (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+  function num(t) { t = String(t == null ? '' : t).trim().replace(/[R$\s]/g, ''); if (t.indexOf(',') >= 0) t = t.replace(/\./g, '').replace(',', '.'); var n = parseFloat(t); return isFinite(n) ? Math.round(n * 100) / 100 : NaN; }
+  function hoje() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function mesDe(d) { return String(d || '').slice(0, 7); }
+  function nomeMes(m) { var p = m.split('-'), n = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'][+p[1] - 1]; return n.charAt(0).toUpperCase() + n.slice(1) + ' de ' + p[0]; }
+  function somaMes(m, n) { var p = m.split('-'), d = new Date(+p[0], +p[1] - 1 + n, 1); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2); }
+  function dataBR(d) { var p = String(d || '').split('-'); return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : ''; }
+  function lista(o) { return Object.keys(o || {}).map(function (k) { var x = o[k]; x.id = k; return x; }); }
+  function novoId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+  // ---- cálculo de um caixa ----
+  function resumo(c, m) {
+    var lanc = lista(c && c.lanc), r = { saldoIni: Number(c && c.config && c.config.saldoInicial) || 0, ent: 0, sai: 0, fixas: 0, vars: 0, saldo: 0, prevPend: 0, mesLanc: [] };
+    var tot = r.saldoIni;
+    lanc.forEach(function (l) {
+      var v = Number(l.valor) || 0; tot += l.tipo === 'entrada' ? v : -v;
+      if (mesDe(l.data) === m) {
+        r.mesLanc.push(l);
+        if (l.tipo === 'entrada') r.ent += v; else { r.sai += v; if (l.natureza === 'fixa') r.fixas += v; else r.vars += v; }
+      }
+    });
+    r.saldo = tot;
+    lista(c && c.prev).forEach(function (p) { if (!p.pago) r.prevPend += Number(p.valor) || 0; });
+    r.projetado = r.saldo - r.prevPend;
+    r.mesLanc.sort(function (a, b) { return String(b.data).localeCompare(String(a.data)); });
+    return r;
+  }
+
+  function injetarCss() {
+    if ($('v2FinCss')) return;
+    var st = document.createElement('style'); st.id = 'v2FinCss';
+    st.textContent = '.fin{padding:12px 14px 80px}.fin-mes{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px}.fin-mes b{min-width:150px;text-align:center;font-size:15px}'
+      + '.fin-btn{border:1px solid var(--border,#ddd);background:var(--card,#fff);color:inherit;border-radius:10px;padding:8px 12px;font-weight:700;font-size:13px;cursor:pointer}.fin-btn.p{background:#1b6e3a;color:#fff;border-color:#1b6e3a}.fin-btn.r{color:#b3261e}.fin-btn.s{padding:4px 8px;font-size:12px}'
+      + '.fin-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:12px}.fin-card{background:var(--card,#fff);border:1px solid var(--border,#ddd);border-radius:12px;padding:10px 12px;box-shadow:var(--shadow,none)}.fin-card small{display:block;font-size:11px;color:var(--muted,#666);font-weight:700;text-transform:uppercase;letter-spacing:.3px}.fin-card b{font-size:18px}'
+      + '.fin-box{background:var(--card,#fff);border:1px solid var(--border,#ddd);border-radius:12px;padding:12px;margin-bottom:12px}.fin-box h3{margin:0 0 8px;font-size:14px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}'
+      + '.fin-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--border,#eee);flex-wrap:wrap}.fin-row:first-of-type{border-top:0}.fin-row .d{flex:1;min-width:140px}.fin-row .d small{display:block;color:var(--muted,#666);font-size:11px}.fin-row .v{font-weight:800;white-space:nowrap}'
+      + '.fin-vazio{color:var(--muted,#666);font-size:13px;padding:6px 0}.fin-tag{font-size:10px;font-weight:800;border-radius:8px;padding:1px 6px;background:rgba(27,59,111,.12);margin-left:4px}'
+      + '.fin-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100002;display:flex;align-items:center;justify-content:center;padding:16px}.fin-md{background:#fff;color:#1a1a1a;border-radius:14px;padding:18px;width:100%;max-width:360px;box-shadow:0 10px 40px rgba(0,0,0,.35)}.fin-md h4{margin:0 0 10px;font-size:16px}.fin-md input{width:100%;box-sizing:border-box;padding:10px;border:1px solid #bbb;border-radius:8px;font-size:15px;margin-bottom:8px;background:#fff;color:#1a1a1a}.fin-md .ch{display:flex;gap:6px;margin-bottom:8px}.fin-md .ch button{flex:1;padding:9px;border-radius:8px;border:1px solid #bbb;background:#f3f3f3;color:#1a1a1a;font-weight:700;cursor:pointer}.fin-md .ch button.on{background:#1b6e3a;color:#fff;border-color:#1b6e3a}.fin-md .er{color:#b3261e;font-size:12.5px;margin-bottom:8px;display:none}'
+      + '.fin-sec summary{cursor:pointer;font-weight:800;list-style:none}.fin-grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:6px;margin-top:8px}';
+    document.head.appendChild(st);
+  }
+  function podeEditar(sec) { return !(cfg && cfg.somenteLeitura && cfg.somenteLeitura()) && !(sec !== (cfg && cfg.secao) && !(dir && sec === 'grupo')); }
+
+  // ---- desenho de um caixa ----
+  function cartoes(r) {
+    function c(t, v, cor) { return '<div class="fin-card"><small>' + t + '</small><b style="color:' + cor + '">' + brl(v) + '</b></div>'; }
+    return '<div class="fin-cards">' + c('Saldo atual', r.saldo, r.saldo < 0 ? CORES.sai : CORES.neutro) + c('Entradas do mês', r.ent, CORES.ent) + c('Saídas do mês', r.sai, CORES.sai)
+      + c('Contas fixas (mês)', r.fixas, CORES.sai) + c('Contas variáveis (mês)', r.vars, CORES.sai) + c('Gastos previstos', r.prevPend, CORES.prev) + c('Saldo projetado', r.projetado, r.projetado < 0 ? CORES.sai : CORES.neutro) + '</div>';
+  }
+  function desenharCaixa(sec, c, edit, ctx) {
+    var r = resumo(c, mes), h = cartoes(r), a = "V2_FIN._a('" + sec + "',";
+    h += '<div class="fin-box"><h3>Lançamentos de ' + esc(nomeMes(mes)) + (edit ? '<span><button class="fin-btn p s" onclick="' + a + "'entrada')\">➕ Entrada</button> <button class=\"fin-btn s\" onclick=\"" + a + "'saida')\">➖ Saída</button></span>" : '') + '</h3>';
+    h += r.mesLanc.length ? r.mesLanc.map(function (l) {
+      var ent = l.tipo === 'entrada';
+      return '<div class="fin-row"><div class="d">' + esc(l.desc) + (ent ? '' : '<span class="fin-tag">' + (l.natureza === 'fixa' ? 'fixa' : 'variável') + '</span>') + '<small>' + dataBR(l.data) + '</small></div><span class="v" style="color:' + (ent ? CORES.ent : CORES.sai) + '">' + (ent ? '+' : '−') + ' ' + brl(l.valor) + '</span>'
+        + (edit ? '<button class="fin-btn s" onclick="' + a + "'" + l.tipo + "','" + l.id + '\')">✏️</button><button class="fin-btn s r" onclick="' + a + "'del','" + l.id + '\')">🗑</button>' : '') + '</div>';
+    }).join('') : '<div class="fin-vazio">Nenhum lançamento neste mês.</div>';
+    h += '</div>';
+    var fx = lista(c && c.fixas);
+    h += '<div class="fin-box"><h3>Contas fixas (todo mês)' + (edit ? '<span><button class="fin-btn s" onclick="' + a + "'lancarfixas')\">📥 Lançar no mês</button> <button class=\"fin-btn p s\" onclick=\"" + a + "'fixa')\">➕ Nova</button></span>" : '') + '</h3>';
+    h += fx.length ? fx.map(function (f) {
+      var lancada = !!(c.lanc && c.lanc['fx_' + f.id + '_' + mes]);
+      return '<div class="fin-row"><div class="d">' + esc(f.desc) + '<small>' + (f.dia ? 'vence dia ' + f.dia + ' · ' : '') + (lancada ? '✓ lançada neste mês' : 'ainda não lançada') + '</small></div><span class="v">' + brl(f.valor) + '</span>'
+        + (edit ? '<button class="fin-btn s" onclick="' + a + "'fixa','" + f.id + '\')">✏️</button><button class="fin-btn s r" onclick="' + a + "'delfixa','" + f.id + '\')">🗑</button>' : '') + '</div>';
+    }).join('') : '<div class="fin-vazio">Nenhuma conta fixa cadastrada (mensalidade, aluguel, taxa…).</div>';
+    h += '</div>';
+    var pv = lista(c && c.prev).sort(function (x, y) { return String(x.data).localeCompare(String(y.data)); });
+    h += '<div class="fin-box"><h3>Gastos previstos' + (edit ? '<button class="fin-btn p s" onclick="' + a + "'prev')\">➕ Novo</button>" : '') + '</h3>';
+    h += pv.length ? pv.map(function (p) {
+      return '<div class="fin-row" style="' + (p.pago ? 'opacity:.55' : '') + '"><div class="d">' + esc(p.desc) + '<small>' + (p.data ? 'previsto para ' + dataBR(p.data) : 'sem data') + (p.pago ? ' · ✓ pago' : '') + '</small></div><span class="v" style="color:' + CORES.prev + '">' + brl(p.valor) + '</span>'
+        + (edit ? (p.pago ? '' : '<button class="fin-btn s" onclick="' + a + "'pagar','" + p.id + '\')">✓ Pago</button>') + '<button class="fin-btn s" onclick="' + a + "'prev','" + p.id + '\')">✏️</button><button class="fin-btn s r" onclick="' + a + "'delprev','" + p.id + '\')">🗑</button>' : '') + '</div>';
+    }).join('') : '<div class="fin-vazio">Nenhum gasto previsto.</div>';
+    h += '</div>';
+    if (edit) h += '<div style="text-align:center"><button class="fin-btn s" onclick="' + a + "'saldo')\">Saldo inicial: " + brl(r.saldoIni) + ' — alterar</button></div>';
+    return h;
+  }
+  function seletorMes() {
+    return '<div class="fin-mes"><button class="fin-btn" onclick="V2_FIN._m(-1)">‹</button><b>' + esc(nomeMes(mes)) + '</b><button class="fin-btn" onclick="V2_FIN._m(1)">›</button></div>';
+  }
+
+  // ---- seção ----
+  function desenhar() {
+    var box = $(cfg.container); if (!box) return;
+    box.innerHTML = '<div class="fin">' + seletorMes() + desenharCaixa(cfg.secao, dados[cfg.secao] || {}, podeEditar(cfg.secao)) + '</div>';
+  }
+  async function carregar(secs) {
+    try {
+      await Promise.all(secs.map(async function (s) {
+        var r = await fetch(url('/' + s)); if (!r.ok) throw new Error('HTTP ' + r.status); dados[s] = (await r.json()) || {};
+      }));
+      return true;
+    } catch (e) { return false; }
+  }
+  function erroBox(id) { var b = $(id); if (b) b.innerHTML = '<div class="fin"><div class="fin-box fin-vazio">Não foi possível carregar o financeiro. Confira a conexão e se as regras do banco já foram atualizadas.</div></div>'; }
+
+  // ---- diretoria ----
+  var TODAS = ['alcateia', 'escoteira', 'senior', 'cla'];
+  function desenharDir() {
+    var box = $(dir.container); if (!box) return;
+    var totSaldo = 0, totEnt = 0, totSai = 0, totPrev = 0, totProj = 0;
+    var ls = TODAS.concat(['grupo']).map(function (s) {
+      var r = resumo(dados[s] || {}, mes); totSaldo += r.saldo; totEnt += r.ent; totSai += r.sai; totPrev += r.prevPend; totProj += r.projetado; return { s: s, r: r };
+    });
+    var h = '<div class="fin">' + seletorMes() + '<div class="fin-box"><h3>🏕️ Grupo como um todo <small style="font-weight:600;color:var(--muted,#666)">(seções + caixa do grupo)</small></h3>'
+      + '<div class="fin-cards" style="margin:0"><div class="fin-card"><small>Saldo total</small><b style="color:' + (totSaldo < 0 ? CORES.sai : CORES.neutro) + '">' + brl(totSaldo) + '</b></div><div class="fin-card"><small>Entradas do mês</small><b style="color:' + CORES.ent + '">' + brl(totEnt) + '</b></div><div class="fin-card"><small>Saídas do mês</small><b style="color:' + CORES.sai + '">' + brl(totSai) + '</b></div><div class="fin-card"><small>Gastos previstos</small><b style="color:' + CORES.prev + '">' + brl(totPrev) + '</b></div><div class="fin-card"><small>Saldo projetado</small><b style="color:' + (totProj < 0 ? CORES.sai : CORES.neutro) + '">' + brl(totProj) + '</b></div></div></div>';
+    h += '<div class="fin-box"><h3>Por seção</h3>' + ls.map(function (x) {
+      return '<div class="fin-row"><div class="d"><b>' + NOMES[x.s] + '</b><small>entradas ' + brl(x.r.ent) + ' · saídas ' + brl(x.r.sai) + ' · previstos ' + brl(x.r.prevPend) + '</small></div><span class="v" style="color:' + (x.r.saldo < 0 ? CORES.sai : CORES.neutro) + '">' + brl(x.r.saldo) + '</span></div>';
+    }).join('') + '</div>';
+    h += '<div class="fin-box fin-sec"><details open><summary>' + NOMES.grupo + ' — controle do grupo</summary><div style="margin-top:10px">' + desenharCaixa('grupo', dados.grupo || {}, true) + '</div></details></div>';
+    h += TODAS.map(function (s) { return '<div class="fin-box fin-sec"><details data-s="' + s + '"><summary>' + NOMES[s] + ' — detalhes (somente leitura)</summary><div style="margin-top:10px">' + desenharCaixa(s, dados[s] || {}, false) + '</div></details></div>'; }).join('');
+    box.innerHTML = h + '</div>';
+  }
+
+  // ---- formulário ----
+  function abrirForm(tipo, o) {
+    var f = $('finOv'); if (f) f.remove();
+    var tit = { entrada: 'Entrada', saida: 'Saída', fixa: 'Conta fixa', prev: 'Gasto previsto', saldo: 'Saldo inicial' }[tipo];
+    var ov = document.createElement('div'); ov.id = 'finOv'; ov.className = 'fin-ov';
+    var h = '<div class="fin-md"><h4>' + (o ? 'Editar ' : 'Nova ') + tit.toLowerCase() + '</h4>';
+    if (tipo !== 'saldo') h += '<input id="finDesc" placeholder="Descrição" value="' + esc(o && o.desc) + '">';
+    h += '<input id="finVal" inputmode="decimal" placeholder="Valor (R$)" value="' + (o ? String(tipo === 'saldo' ? o.valor : o.valor).replace('.', ',') : '') + '">';
+    if (tipo === 'entrada' || tipo === 'saida' || tipo === 'prev') h += '<input id="finData" type="date" value="' + esc((o && o.data) || hoje()) + '">';
+    if (tipo === 'fixa') h += '<input id="finDia" inputmode="numeric" placeholder="Dia do vencimento (opcional)" value="' + esc(o && o.dia) + '">';
+    if (tipo === 'saida') h += '<div class="ch"><button type="button" data-n="variavel" class="' + (!o || o.natureza !== 'fixa' ? 'on' : '') + '">Conta variável</button><button type="button" data-n="fixa" class="' + (o && o.natureza === 'fixa' ? 'on' : '') + '">Conta fixa</button></div>';
+    h += '<div class="er" id="finEr"></div><div style="display:flex;gap:8px"><button class="fin-btn" style="flex:1" id="finNao">Cancelar</button><button class="fin-btn p" style="flex:1" id="finOk">Salvar</button></div></div>';
+    ov.innerHTML = h; document.body.appendChild(ov);
+    ov.addEventListener('click', function (e) { if (e.target === ov) ov.remove(); });
+    $('finNao').onclick = function () { ov.remove(); };
+    Array.prototype.forEach.call(ov.querySelectorAll('.ch button'), function (b) { b.onclick = function () { Array.prototype.forEach.call(ov.querySelectorAll('.ch button'), function (x) { x.classList.toggle('on', x === b); }); }; });
+    setTimeout(function () { var i = $('finDesc') || $('finVal'); if (i) i.focus(); }, 50);
+    return ov;
+  }
+  function erro(t) { var e = $('finEr'); if (e) { e.textContent = t; e.style.display = 'block'; } }
+  async function gravar(sec, caminho, valor) {
+    var r = await fetch(url('/' + sec + caminho), { method: valor === null ? 'DELETE' : 'PUT', headers: { 'Content-Type': 'application/json' }, body: valor === null ? undefined : JSON.stringify(valor) });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    var p = caminho.split('/').filter(Boolean), c = (dados[sec] = dados[sec] || {});
+    for (var i = 0; i < p.length - 1; i++) c = (c[p[i]] = c[p[i]] || {});
+    if (valor === null) delete c[p[p.length - 1]]; else c[p[p.length - 1]] = valor;
+  }
+  function redesenhar() { if (dir) { var abertos = Array.prototype.map.call(document.querySelectorAll('#' + dir.container + ' details[data-s][open]'), function (d) { return d.dataset.s; }); desenharDir(); abertos.forEach(function (s) { var d = document.querySelector('#' + dir.container + ' details[data-s="' + s + '"]'); if (d) d.open = true; }); } else desenhar(); }
+
+  async function acao(sec, tipo, id) {
+    var c = dados[sec] || {}, sec_ = sec;
+    try {
+      if (tipo === 'del') { if (!confirm('Excluir este lançamento?')) return; await gravar(sec, '/lanc/' + id, null); return redesenhar(); }
+      if (tipo === 'delfixa') { if (!confirm('Excluir esta conta fixa? Os lançamentos já feitos continuam.')) return; await gravar(sec, '/fixas/' + id, null); return redesenhar(); }
+      if (tipo === 'delprev') { if (!confirm('Excluir este gasto previsto?')) return; await gravar(sec, '/prev/' + id, null); return redesenhar(); }
+      if (tipo === 'pagar') {
+        var p = c.prev[id]; if (!confirm('Marcar como pago e lançar ' + brl(p.valor) + ' como saída?')) return;
+        var nid = novoId(); await gravar(sec, '/lanc/' + nid, { tipo: 'saida', natureza: 'variavel', desc: p.desc, valor: p.valor, data: hoje(), deprev: id });
+        p.pago = true; await gravar(sec, '/prev/' + id, { desc: p.desc, valor: p.valor, data: p.data || '', pago: true }); return redesenhar();
+      }
+      if (tipo === 'lancarfixas') {
+        var fx = lista(c.fixas).filter(function (f) { return !(c.lanc && c.lanc['fx_' + f.id + '_' + mes]); });
+        if (!fx.length) return alert('Todas as contas fixas já foram lançadas neste mês (ou não há contas fixas).');
+        if (!confirm('Lançar ' + fx.length + ' conta(s) fixa(s) em ' + nomeMes(mes) + '?')) return;
+        for (var i = 0; i < fx.length; i++) { var f = fx[i], dia = ('0' + Math.min(28, parseInt(f.dia, 10) || 1)).slice(-2); await gravar(sec, '/lanc/fx_' + f.id + '_' + mes, { tipo: 'saida', natureza: 'fixa', desc: f.desc, valor: f.valor, data: mes + '-' + dia }); }
+        return redesenhar();
+      }
+      var item = id ? (tipo === 'fixa' ? (c.fixas || {})[id] : tipo === 'prev' ? (c.prev || {})[id] : (c.lanc || {})[id]) : null;
+      if (tipo === 'saldo') item = { valor: Number(c.config && c.config.saldoInicial) || 0 };
+      var ov = abrirForm(tipo, item);
+      $('finOk').onclick = async function () {
+        var desc = $('finDesc') ? $('finDesc').value.trim() : '', val = num($('finVal').value);
+        if (tipo !== 'saldo' && !desc) return erro('Escreva uma descrição.');
+        if (isNaN(val) || (tipo !== 'saldo' && val <= 0)) return erro('Informe um valor válido.');
+        var btn = $('finOk'); btn.disabled = true;
+        try {
+          if (tipo === 'saldo') await gravar(sec, '/config/saldoInicial', val);
+          else if (tipo === 'fixa') { var dia = parseInt($('finDia').value, 10); await gravar(sec, '/fixas/' + (id || novoId()), { desc: desc, valor: val, dia: dia > 0 && dia <= 31 ? dia : '' }); }
+          else if (tipo === 'prev') await gravar(sec, '/prev/' + (id || novoId()), { desc: desc, valor: val, data: $('finData').value || '', pago: !!(item && item.pago) });
+          else {
+            var nat = tipo === 'saida' ? (ov.querySelector('.ch button.on') || {}).dataset.n || 'variavel' : null, o = { tipo: tipo, desc: desc, valor: val, data: $('finData').value || hoje() };
+            if (nat) o.natureza = nat; await gravar(sec, '/lanc/' + (id || novoId()), o);
+          }
+          ov.remove(); redesenhar();
+        } catch (e) { btn.disabled = false; erro('Não foi possível salvar (sem permissão ou sem conexão).'); }
+      };
+    } catch (e) { alert('Não foi possível concluir. Verifique a conexão e as permissões.'); }
+  }
+
+  root.V2_FIN = {
+    montar: function (o) { cfg = o; dir = null; injetarCss(); mes = mes || mesDe(hoje()); },
+    abrir: async function () { if (!cfg) return; var b = $(cfg.container); if (b && !b.innerHTML) b.innerHTML = '<div class="fin"><div class="fin-vazio">Carregando…</div></div>'; if (await carregar([cfg.secao])) desenhar(); else erroBox(cfg.container); },
+    montarDiretoria: function (o) { dir = o; cfg = null; injetarCss(); mes = mes || mesDe(hoje()); },
+    abrirDiretoria: async function () { if (!dir) return; var b = $(dir.container); if (b && !b.innerHTML) b.innerHTML = '<div class="fin"><div class="fin-vazio">Carregando…</div></div>'; if (await carregar(TODAS.concat(['grupo']))) desenharDir(); else erroBox(dir.container); },
+    _m: function (n) { mes = somaMes(mes, n); redesenhar(); },
+    _a: function (sec, tipo, id) { acao(sec, tipo, id); }
+  };
 })(typeof window !== 'undefined' ? window : globalThis);

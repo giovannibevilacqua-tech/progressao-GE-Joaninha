@@ -330,6 +330,7 @@ mark.hl{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
   <button class="tab-btn" data-tab="jovens" onclick="showTab('jovens',this)">👥 Seniores</button>
   <button class="tab-btn" data-tab="ep" onclick="showTab('ep',this);renderEP();">🏆 Ed. Pátria</button>
   <button class="tab-btn" data-tab="alm" onclick="showTab('alm',this);abrirAlmoSr();">📦 Almoxarifado</button>
+  <button class="tab-btn" data-tab="fin" onclick="showTab('fin',this);V2_FIN.abrir();">💰 Financeiro</button>
 </nav>
 
 <!-- ═══ TAB: PROGRESSÃO ═══════════════════════════════ -->
@@ -3095,7 +3096,7 @@ async function iniciarApp(){
 }
 
 function aplicarModoVisualizacaoSr() {
-document.querySelectorAll('.tab-btn[data-tab="prog"], .tab-btn[data-tab="jovens"], .tab-btn[data-tab="ep"], .tab-btn[data-tab="alm"]').forEach(el => el.style.display = 'none');
+document.querySelectorAll('.tab-btn[data-tab="prog"], .tab-btn[data-tab="jovens"], .tab-btn[data-tab="ep"], .tab-btn[data-tab="alm"], .tab-btn[data-tab="fin"]').forEach(el => el.style.display = 'none');
 const resumoPresenca = document.getElementById('presenca-summary'); if (resumoPresenca) { resumoPresenca.parentElement.style.display = 'none'; }
 document.querySelectorAll('#cabecalhoAddEventoSr').forEach(el => { el.style.display = 'none'; const body = el.nextElementSibling; if (body) body.style.display = 'none'; });
 const saveBar = document.getElementById('saveBarSr');
@@ -3227,7 +3228,7 @@ function irParaBlocoSr(bid){
 
 // ═══ ALMOXARIFADO — módulo compartilhado (v2.js) ═══
 function abrirAlmoSr(){ V2_ALMOX.abrir(); }
-document.addEventListener('DOMContentLoaded',function(){ V2_ALMOX.montar({ secao:'senior', nomeTropa:'Sênior', outraTropa:'Escoteira', subTitulo:'Materiais da Tropa Sênior. Você escolhe com quais seções cada item é compartilhado.', container:'alm', padX:12, somenteLeitura:function(){ return !!MODO_VISUALIZACAO_SR; } }); });
+document.addEventListener('DOMContentLoaded',function(){ V2_FIN.montar({ secao:'senior', container:'fin' }); V2_ALMOX.montar({ secao:'senior', nomeTropa:'Sênior', outraTropa:'Escoteira', subTitulo:'Materiais da Tropa Sênior. Você escolhe com quais seções cada item é compartilhado.', container:'alm', padX:12, somenteLeitura:function(){ return !!MODO_VISUALIZACAO_SR; } }); });
 </script>
 
 <div class="modal-ov" id="youth-modal" onclick="if(event.target===this)hideModal()">
@@ -3267,6 +3268,7 @@ document.addEventListener('DOMContentLoaded',function(){ V2_ALMOX.montar({ secao
 </div>
 <!-- ═══ TAB: ALMOXARIFADO ════════════════════════════ -->
 <div id="alm" class="tab-content" style="padding-bottom:80px;"></div>
+<div id="fin" class="tab-content" style="padding-bottom:80px;"></div>
 
 
 <div class="save-bar" id="saveBarSr">

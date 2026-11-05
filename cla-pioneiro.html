@@ -382,6 +382,7 @@ body.modo-view{padding-bottom:12px;}
   <button class="tab-btn" data-tab="jovens" onclick="showTab('jovens',this)">👥 Pioneiros</button>
   <button class="tab-btn" data-tab="bp" onclick="showTab('bp',this)">🏅 Insígnia de B-P</button>
   <button class="tab-btn" data-tab="alm" onclick="showTab('alm',this);V2_ALMOX.abrir();">📦 Almoxarifado</button>
+  <button class="tab-btn" data-tab="fin" onclick="showTab('fin',this);V2_FIN.abrir();">💰 Financeiro</button>
 </nav>
 
 <!-- ═══ TAB: PROGRESSÃO ═══════════════════════════════ -->
@@ -534,6 +535,7 @@ body.modo-view{padding-bottom:12px;}
 
 <!-- ═══ TAB: ALMOXARIFADO ════════════════════════════ -->
 <div id="alm" class="tab-content" style="padding-bottom:80px;"></div>
+<div id="fin" class="tab-content" style="padding-bottom:80px;"></div>
 
 <script>
 // ╔═══════════════════════════════════════════════════╗
@@ -2374,11 +2376,13 @@ function restaurarUltimaAba(){
   const btn = document.querySelector('.tab-btn[data-tab="' + id + '"]') || document.querySelector('.tab-btn');
   showTab(btn.dataset.tab, btn);
   if (btn.dataset.tab === 'alm') V2_ALMOX.abrir();
+  if (btn.dataset.tab === 'fin') V2_FIN.abrir();
 }
 async function iniciarApp(){
   if (MODO_VIEW) return iniciarVisualizacao();
   await loadState();
   syncJovens();
+  V2_FIN.montar({ secao:'cla', container:'fin' });
   V2_ALMOX.montar({ secao:'cla', nomeTropa:'Clã Pioneiro', outraTropa:'as outras seções', rotuloComp:'Compartilhado com as outras seções', subComp:'Aparece no almoxarifado de todas as seções', subTitulo:'Materiais do Clã Pioneiro. Itens compartilhados aparecem também nas outras seções.', container:'alm', padX:12 });
   renderAll(); renderCal(); renderCiclo(); renderJovens();
   Object.keys(EIXOS).forEach(aplicarEstadoEixo);
