@@ -8,13 +8,11 @@
 <script src="Apoio/v2.js"></script>
 </head>
 <body>
-<div class="cabecalho-fixo"><nav class="tabs-linha"><button class="tab-btn-linha" data-aba="almox" onclick="mostrarAba('almox',this)">📦 Almoxarifado geral</button><button class="tab-btn-linha" data-aba="secoes" onclick="mostrarAba('secoes',this)">🗂️ Seções</button><button class="tab-btn-linha" data-aba="chefes" onclick="mostrarAba('chefes',this)">👥 Chefes e assistentes</button><button class="tab-btn-linha" data-aba="forms" onclick="mostrarAba('forms',this)">🎓 Formação dos chefes</button><button class="tab-btn-linha" data-aba="docs" onclick="mostrarAba('docs',this)">📄 Documentação</button></nav></div>
+<div class="cabecalho-fixo"><nav class="tabs-linha"><button class="tab-btn-linha" data-aba="almox" onclick="mostrarAba('almox',this)">📦 Almoxarifado geral</button><button class="tab-btn-linha" data-aba="secoes" onclick="mostrarAba('secoes',this)">🗂️ Seções</button><button class="tab-btn-linha" data-aba="forms" onclick="mostrarAba('forms',this)">🎓 Formação dos chefes</button><button class="tab-btn-linha" data-aba="docs" onclick="mostrarAba('docs',this)">📄 Documentação</button></nav></div>
 <div class="pagina" id="pg-almox"><div id="almox-box"></div></div>
 <div class="pagina" id="pg-secoes"><div class="pagina-ttl">Seções</div><div class="pagina-sub">Resumo de progressão de cada seção. Toque no nome para abrir os detalhes.</div>
 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"><button type="button" class="btn-ic" id="btnRelGrupo" style="font-weight:700;padding:10px 14px" disabled onclick="relatorioGrupo()">📄 Relatório do grupo inteiro</button><button type="button" class="btn-ic" style="padding:10px 14px" onclick="carregarSecoes(true)">↻ Atualizar</button></div>
 <div id="secoes-lista"></div><div id="secoes-frames" style="position:absolute;width:0;height:0;overflow:hidden;visibility:hidden"></div></div>
-<div class="pagina" id="pg-chefes"><div class="pagina-ttl">Chefes e assistentes</div><div class="pagina-sub">Quem tem acesso a cada seção do sistema.</div><div id="chefes-lista"><div class="vazio">Carregando…</div></div>
-</div>
 <div class="pagina" id="pg-forms"><div class="pagina-ttl">Formação dos chefes</div><div class="pagina-sub">Ramo de formação, nível, APF e atividades marcadas por chefe. Toque em Abrir ficha para ver o detalhe.</div><div id="forms-lista"><div class="vazio">Carregando…</div></div></div>
 <div class="pagina" id="pg-docs"><div class="pagina-ttl">Documentação</div><div class="pagina-sub">Documentos de gestão do Grupo Escoteiro.</div>
 <div class="card"><div class="card-ttl">📝 Atas de reunião <span class="em-breve">em construção</span></div><div class="card-txt">Registro das reuniões da diretoria e dos chefes.</div></div>
@@ -108,8 +106,8 @@ async function abrirFormacao() {
     const rotSecao = { alcateia: '🐺 Alcateia', escoteira: '🏕️ Escoteira', senior: '🎓 Sênior', cla: '🔥 Clã Pioneiro', diretoria: '🏛️ Diretoria' };
     const uids = Object.keys(eq).sort((a, b) => nomeDe(a).localeCompare(nomeDe(b), 'pt-BR'));
     let totalMarcadas = 0;
-    box.innerHTML = '<div class="card">' + uids.map(uid => {
-      const p = eq[uid], d = fichas[uid] || {}, pf = d.perfil || {}, cn = F.contar(d.done);
+    const linhaPessoa = uid => {
+      const p = eq[uid] || {}, d = fichas[uid] || {}, pf = d.perfil || {}, cn = F.contar(d.done);
       const r = F.RK.indexOf(pf.ramo) >= 0 ? pf.ramo : null;
       const r2 = F.RK.indexOf(pf.ramo2) >= 0 ? pf.ramo2 : null;
       const lin = [[r, pf.nivel], [r2, pf.nivel2]].filter(l => l[0]);
@@ -121,7 +119,13 @@ async function abrirFormacao() {
         '<div style="flex:1;min-width:150px;font-size:11px;">APF: <b>' + escH(apf) + '</b><br><span style="color:var(--muted)">' + (lin.length ? lin.map(l => escH(F.CAT[l[0]].n) + (l[1] != null ? ' · ' + F.NV[l[1]] : '')).join(' + ') : 'ramo de formação não informado') + '</span></div>' +
         '<div style="min-width:110px;font-size:11px;">' + (lin.length ? lin.map(resumo).join('<br>') + '<br><span style="color:var(--muted)">atividades marcadas</span>' : '<span style="color:var(--muted)">—</span>') + (outros.length ? '<br><span style="color:var(--muted)">+ ' + outros.map(x => escH(F.CAT[x[0]].n) + ' ' + x[1]).join(', ') + '</span>' : '') + '</div>' +
         '<a href="formacao.html#c-' + encodeURIComponent(uid) + '" target="_top" class="btn-ic" style="text-decoration:none;font-size:11px;border:1px solid var(--border);border-radius:7px;padding:4px 8px;color:var(--vinho);font-weight:700;">Abrir ficha</a></div>';
-    }).join('') + '</div>';
+    };
+    const grupos = agruparEquipe(eq);
+    const ordem = GRUPOS_ORDEM.filter(k => grupos[k]);
+    box.innerHTML = ordem.map(k => {
+      const gente = grupos[k]; const marcadas = gente.reduce((t, u) => t + Object.keys(((fichas[u._uid] || {}).done) || {}).length, 0);
+      return '<details class="card sec-det"><summary style="cursor:pointer;list-style:none"><b>' + ROTULOS[k] + '</b><br><span class="card-txt">' + gente.length + (gente.length === 1 ? ' pessoa' : ' pessoas') + ' · ' + marcadas + ' atividades marcadas</span></summary><div style="margin-top:8px">' + gente.map(u => linhaPessoa(u._uid)).join('') + '</div></details>';
+    }).join('') || '<div class="vazio">Nenhum chefe cadastrado.</div>';
   } catch (e) { box.innerHTML = '<div class="vazio">Não foi possível carregar a formação dos chefes.</div>'; }
 }
 
@@ -134,14 +138,40 @@ const SECOES_DIR = [
 ];
 const SEC_DADOS = {};
 let secoesIniciadas = false;
+let EQUIPE = null;
+const GRUPOS_ORDEM = ['diretoria', 'alcateia', 'escoteira', 'senior', 'cla', 'sem'];
+function agruparEquipe(d) {
+  const grupos = {};
+  Object.keys(d || {}).forEach(uid => {
+    const u = d[uid]; if (!u) return;
+    const k = u.tropa || (u.admin ? 'sem' : 'escoteira');
+    (grupos[k] = grupos[k] || []).push(Object.assign({ _uid: uid }, u));
+    if (u.tropa2 && u.tropa2 !== k) (grupos[u.tropa2] = grupos[u.tropa2] || []).push(Object.assign({ _uid: uid }, u, { funcao: u.funcao2, tropa: u.tropa2, _seg: true }));
+  });
+  Object.keys(grupos).forEach(k => grupos[k].sort((a, b) => ((a.funcao === 'assistente') - (b.funcao === 'assistente')) || (a.nome || a.registro || '').localeCompare(b.nome || b.registro || '', 'pt')));
+  return grupos;
+}
+const tagFuncao = u => '<span class="tag-fn ' + (u.funcao === 'assistente' ? 'ass' : 'chefe') + '">' + (u.funcao === 'assistente' ? 'Assistente' : 'Chefe de seção') + '</span>' + (u._seg ? ' <span class="tag-fn" style="background:#8882">2ª função</span>' : '');
+function listaChefes(gente) {
+  if (!gente || !gente.length) return '<div class="card-txt" style="margin-top:8px">Nenhum chefe ou assistente cadastrado.</div>';
+  return '<div style="margin-top:8px">' + gente.map(u => '<div class="pessoa"><b>' + escH(u.nome || ('Registro ' + u.registro)) + '</b> ' + tagFuncao(u) + (u.nome ? '<small>Registro ' + escH(u.registro) + '</small>' : '') + '</div>').join('') + '</div>';
+}
 function secoesQuadro() {
-  document.getElementById('secoes-lista').innerHTML = SECOES_DIR.map(s => {
-    const r = SEC_DADOS[s.id];
-    if (!r) return '<div class="card"><div class="card-ttl">' + s.ico + ' ' + escH(s.id) + '</div><div class="card-txt">Carregando…</div></div>';
+  const grupos = EQUIPE ? agruparEquipe(EQUIPE) : {};
+  const ordem = SECOES_DIR.map(s => s.id).concat(['diretoria']).concat(grupos.sem ? ['sem'] : []);
+  const ico = { alcateia: '🐺', escoteira: '🏕️', senior: '🎓', cla: '🔥', diretoria: '🏛️', sem: '❔' };
+  document.getElementById('secoes-lista').innerHTML = ordem.map(id => {
+    const g = grupos[id] || [], nChefes = EQUIPE ? g.length + (g.length === 1 ? ' pessoa' : ' pessoas') : '';
+    if (id === 'diretoria' || id === 'sem') {
+      return '<details class="card sec-det"><summary style="cursor:pointer;list-style:none"><b>' + ROTULOS[id] + '</b><br><span class="card-txt">' + nChefes + '</span></summary>' + listaChefes(g) + '</details>';
+    }
+    const r = SEC_DADOS[id];
+    if (!r) return '<div class="card"><div class="card-ttl">' + ico[id] + ' ' + escH(ROTULOS[id].replace(/^\S+\s/, '')) + '</div><div class="card-txt">Carregando…</div></div>';
     const linhas = (r.linhas || []).map(l => '<tr><td>' + escH(l.nome) + '</td><td style="text-align:right;white-space:nowrap">' + l.n + '/' + l.total + '</td><td>' + escH(l.etapa) + '</td></tr>').join('');
-    return '<details class="card sec-det"><summary style="cursor:pointer;list-style:none;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="flex:1;min-width:150px"><b>' + s.ico + ' ' + escH(r.tropa) + '</b><br><span class="card-txt">' + r.resumo.jovens + ' jovens · média de ' + escH(r.resumo.media) + ' blocos (de ' + r.resumo.total + ')</span></span>' +
-      '<button type="button" class="btn-ic" style="font-size:12px;padding:6px 10px" onclick="event.preventDefault();event.stopPropagation();relatorioSecaoDir(\'' + s.id + '\')">📄 Relatório</button></summary>' +
-      '<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">' + (r.etapas || []).map(e => '<span class="tag-fn chefe">' + escH(e[0]) + ': ' + e[1] + '</span>').join('') + '</div>' +
+    return '<details class="card sec-det"><summary style="cursor:pointer;list-style:none;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="flex:1;min-width:150px"><b>' + ico[id] + ' ' + escH(r.tropa) + '</b><br><span class="card-txt">' + r.resumo.jovens + ' jovens · média de ' + escH(r.resumo.media) + ' blocos (de ' + r.resumo.total + ')' + (nChefes ? ' · ' + nChefes : '') + '</span></span>' +
+      '<button type="button" class="btn-ic" style="font-size:12px;padding:6px 10px" onclick="event.preventDefault();event.stopPropagation();relatorioSecaoDir(\'' + id + '\')">📄 Relatório</button></summary>' +
+      '<div class="grupo-ttl" style="margin-top:12px">Chefes e assistentes</div>' + listaChefes(g) +
+      '<div class="grupo-ttl" style="margin-top:12px">Jovens</div><div style="display:flex;gap:6px;flex-wrap:wrap">' + (r.etapas || []).map(e => '<span class="tag-fn chefe">' + escH(e[0]) + ': ' + e[1] + '</span>').join('') + '</div>' +
       '<div style="overflow-x:auto;margin-top:8px"><table style="width:100%;border-collapse:collapse;font-size:12px"><tbody>' + (linhas || '<tr><td class="card-txt">Nenhum jovem cadastrado.</td></tr>') + '</tbody></table></div></details>';
   }).join('');
   document.getElementById('btnRelGrupo').disabled = !SECOES_DIR.every(s => SEC_DADOS[s.id]);
@@ -162,6 +192,7 @@ function carregarSecoes(forcar) {
   secoesIniciadas = true;
   Object.keys(SEC_DADOS).forEach(k => delete SEC_DADOS[k]);
   secoesQuadro();
+  fetch(urlComAuthFirebase(DB_URL + '/equipe.json')).then(r => r.json()).then(d => { EQUIPE = d && !d.error ? d : null; secoesQuadro(); }).catch(() => {});
   const box = document.getElementById('secoes-frames'); box.innerHTML = '';
   SECOES_DIR.forEach(s => {
     const fr = document.createElement('iframe'); fr.src = s.pagina + '?resumo=1'; fr.setAttribute('aria-hidden', 'true'); fr.tabIndex = -1;
@@ -174,20 +205,6 @@ function relatorioGrupo() { if (SECOES_DIR.every(s => SEC_DADOS[s.id])) V2.abrir
 async function aoAbrirAba(id) {
   if (id === 'secoes') return carregarSecoes();
   if (id === 'forms') return abrirFormacao();
-  if (id !== 'chefes') return;
-  const box = document.getElementById('chefes-lista');
-  try {
-    const r = await fetch(urlComAuthFirebase(DB_URL + '/equipe.json'));
-    const d = await r.json();
-    if (d === null) { box.innerHTML = '<div class="vazio">A lista aparece depois que um administrador abrir o sistema.</div>'; return; }
-    if (!d || d.error) { box.innerHTML = '<div class="vazio">Não foi possível carregar a lista de chefes.</div>'; return; }
-    const grupos = {};
-    Object.keys(d).forEach(uid => { const u = d[uid]; if (!u) return; const k = u.tropa || (u.admin ? 'sem' : 'escoteira'); (grupos[k] = grupos[k] || []).push(u); if (u.tropa2 && u.tropa2 !== k) (grupos[u.tropa2] = grupos[u.tropa2] || []).push(Object.assign({}, u, { funcao: u.funcao2, tropa: u.tropa2, _seg: true })); });
-    const ordem = ['diretoria','alcateia','escoteira','senior','cla','sem'];
-    const tag = u => '<span class="tag-fn ' + (u.funcao === 'assistente' ? 'ass' : 'chefe') + '">' + (u.funcao === 'assistente' ? 'Assistente' : 'Chefe de seção') + '</span>' + (u._seg ? ' <span class="tag-fn" style="background:#8882">2ª função</span>' : '');
-    box.innerHTML = ordem.filter(k => grupos[k]).map(k => '<div class="grupo-ttl">' + ROTULOS[k] + ' (' + grupos[k].length + ')</div><div class="card">' +
-      grupos[k].sort((a, b) => ((a.funcao === 'assistente') - (b.funcao === 'assistente')) || (a.nome || a.registro || '').localeCompare(b.nome || b.registro || '', 'pt')).map(u => '<div class="pessoa"><b>' + escH(u.nome || ('Registro ' + u.registro)) + '</b> ' + tag(u) + (u.nome ? '<small>Registro ' + escH(u.registro) + '</small>' : '') + '</div>').join('') + '</div>').join('') || '<div class="vazio">Nenhum chefe cadastrado.</div>';
-  } catch (e) { box.innerHTML = '<div class="vazio">Sem conexão para carregar a lista.</div>'; }
 }
 iniciarSecao();
 </script>
