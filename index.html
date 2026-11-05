@@ -1284,10 +1284,6 @@ await alterarNomeChefe(uid, novoNome.trim());
 if (uid === firebaseUid) { nomeLogado = novoNome.trim(); aplicarEstadoContaLogada(); }
 await renderChefesModalBody();
 }
-async function alterarAdminChefeUI(uid, novoValor) {
-await alterarAdminChefe(uid, novoValor);
-await renderChefesModalBody();
-}
 async function removerAcessoChefeUI(uid, registro) {
 if (!confirm(`Remover o acesso de ${registro || 'este chefe'}?`)) return;
 await removerAcessoChefe(uid);
@@ -1320,7 +1316,6 @@ function alternarVisaoPropria() {
   aplicarVisibilidadeSecoes();
 }
 // Faixa de backup (embaixo de cada seção): só para admin trabalhando como admin
-function estadoAdminParaSecoes() { return { admin: !!souAdmin, propria: !!(tropaDoChefeLogado || tropa2DoChefeLogado) }; }
 function aplicarBarraBackup() {
   const ok = verTudo();
   Object.keys(SECOES).forEach(k => {

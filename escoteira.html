@@ -2533,43 +2533,6 @@ renderPaginaTabela();
 }
 
 
-function construirResumoBlocos() {
-let h = `<div class="roster-section" style="padding:0;overflow:hidden;">
-<div class="bloco-head cabecalho-secao${resumoAberto?' aberto':''}" style="padding:14px;" onclick="toggleResumo()">
-<span class="bloco-name" style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">Resumo — quantos jovens já concluíram cada bloco</span>
-<span class="chev" style="transform:rotate(${resumoAberto?180:0}deg);">▾</span>
-</div>`;
-
-if (resumoAberto) {
-h += `<div class="eixo-blocos-hint" style="text-align:left;padding:0 14px 6px;">
-Dentro de cada eixo, do bloco com menos jovens concluídos (topo, prioridade pra programar) para o com mais (base). Toque num bloco pra abrir a checklist dele.
-</div>`;
-EIXOS.forEach(eixo => {
-const aberto = resumoEixosAbertos[eixo.id] ?? false;
-h += `<div class="bloco-head" style="padding:20px 16px;margin:8px 10px 0;border-radius:14px;background:${eixo.cor};min-height:56px;" onclick="toggleResumoEixo('${eixo.id}')">
-<span class="bloco-name" style="font-size:14px;font-weight:800;color:#fff;">${eixo.nome}</span>
-<span class="chev" style="font-size:14px;color:#fff;transform:rotate(${aberto?180:0}deg);">▾</span>
-</div>`;
-if (aberto) {
-const blocosEixo = eixo.blocos.map(b => ({ b, concluidos: JOVENS.filter(j => blocoConcluido(j, b)).length }));
-blocosEixo.sort((a, b2) => a.concluidos - b2.concluidos);
-blocosEixo.forEach(({b, concluidos}) => {
-const pct = Math.round(concluidos / JOVENS.length * 100);
-h += `<div class="resumo-row" onclick="abrirBlocoResumo('${eixo.id}','${b}');">
-<div class="resumo-meta">
-<span class="resumo-nome">${BLOCOS[b].nome}</span>
-<span class="resumo-count">${concluidos}/${JOVENS.length}</span>
-</div>
-<div class="resumo-track"><div class="resumo-bar" style="width:${pct}%;background:${eixo.cor}"></div></div>
-</div>`;
-});
-}
-});
-}
-h += `</div>`;
-return h;
-}
-
 function atualizarTabelaBloco() {
 if (paginaAtiva !== 'tabela') return;
 renderPaginaTabela();

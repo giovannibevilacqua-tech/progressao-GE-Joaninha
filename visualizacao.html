@@ -246,15 +246,6 @@ try { localStorage.setItem('visualizacao_scrollY', window.scrollY); } catch (e) 
 }, 200);
 }, { passive: true });
 
-function restaurarScrollSalvoView(chave) {
-let scrollSalvo = null;
-try { scrollSalvo = localStorage.getItem(chave); } catch (e) {}
-if (scrollSalvo === null) return;
-const y = parseInt(scrollSalvo, 10);
-if (isNaN(y)) return;
-[50, 150, 300, 600, 1000].forEach(delay => setTimeout(() => window.scrollTo(0, y), delay));
-}
-
 function ajustarAlturaIframeSeniorView() {
 const iframe = document.getElementById('iframeSecaoView');
 if (!iframe || iframe.offsetParent === null) return;

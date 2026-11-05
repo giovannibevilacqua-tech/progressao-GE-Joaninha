@@ -936,14 +936,6 @@ function toggle(blockId,type,actionId,jovemIdx){
   saveState();
   preservarScrollSr(renderAll);
 }
-function toggleConcluded(blockId,jovemIdx){
-  const k=idDoJovem(jovemIdx);
-  const bl=garantirBlocoSr(blockId);
-  bl.concluded[k] = bl.concluded[k]===1 ? 0 : 1;
-  saveState();
-  preservarScrollSr(renderAll);
-}
-
 function renderProgressBars(){
   const c=document.getElementById('pbars');
   c.innerHTML='';
@@ -2575,9 +2567,6 @@ function checkAutoComplete(blockId,jovemIdx){
 // ╚═══════════════════════════════════════════════════╝
 // ─── GESTÃO DE JOVENS ───────────────────────────────────
 let YOUTH_DATA = [];
-function loadYouthData(){
-  syncJovens();
-}
 function saveYouthData(){
   saveState();
 }
