@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Formação de adultos — GE Joaninha</title>
+<link rel="stylesheet" href="secao.css">
+<script src="v2.js"></script>
+<script src="competencias.js"></script>
+<style>
+:root{--lob-a:#d9a400;--lob-i:#7a5a00;--lob-s:#fbf1cc;--lob-o:#1b1500;--esc-a:#2f7d4f;--esc-i:#256a42;--esc-s:#e0f1e8;--esc-o:#fff;--sen-a:#7b1a33;--sen-i:#7b1a33;--sen-s:#f6e1e7;--sen-o:#fff;--pio-a:#b3262e;--pio-i:#a02029;--pio-s:#fae1e3;--pio-o:#fff;--dir-a:#0b4a66;--dir-i:#0b4a66;--dir-s:#e1f1f6;--dir-o:#fff;}
+.t-lob{--accent:var(--lob-a);--ink:var(--lob-i);--soft:var(--lob-s);--on:var(--lob-o)}
+.t-esc{--accent:var(--esc-a);--ink:var(--esc-i);--soft:var(--esc-s);--on:var(--esc-o)}
+.t-sen{--accent:var(--sen-a);--ink:var(--sen-i);--soft:var(--sen-s);--on:var(--sen-o)}
+.t-pio{--accent:var(--pio-a);--ink:var(--pio-i);--soft:var(--pio-s);--on:var(--pio-o)}
+.t-dir{--accent:var(--dir-a);--ink:var(--dir-i);--soft:var(--dir-s);--on:var(--dir-o)}
+.topo{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--card);border-bottom:2px solid var(--border);position:sticky;top:0;z-index:20}
+.topo a,.topo button.volta{font-size:12px;font-weight:700;color:var(--vinho);text-decoration:none;border:1px solid var(--border);background:var(--card);border-radius:8px;padding:6px 10px;cursor:pointer}
+.topo .ttl{font-size:14px;font-weight:800;flex:1}
+.abas{display:flex;gap:6px;padding:10px 14px 0}
+.abas button{border:1.5px solid var(--border);background:var(--card);border-radius:99px;padding:7px 14px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer}
+.abas button.on{background:var(--vinho);border-color:var(--vinho);color:#fff}
+.corpo{padding:14px;max-width:1000px;margin:0 auto}
+.quem h2{font-size:18px;font-weight:800;margin:0}
+.quem .sub{font-size:12px;color:var(--muted);margin-top:2px}
+.panel{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:14px;margin:12px 0}
+.panel h3{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:10px}
+.perfil{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;align-items:end}
+.f-field{display:flex;flex-direction:column;gap:3px;min-width:0}
+.f-field label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+.f-field select,.f-field input{font:inherit;font-size:13px;padding:8px 9px;border:1.5px solid var(--border);border-radius:8px;background:#fff;color:var(--text);width:100%}
+.f-field select:disabled,.f-field input:disabled{background:#f4f1ec;color:#777}
+.btn-v{border:0;background:var(--vinho);color:#fff;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:800;cursor:pointer}
+.btn-v:disabled{opacity:.5;cursor:not-allowed}
+.msg{font-size:12px;margin-top:8px;min-height:16px}
+.msg.erro{color:#C0392B;font-weight:700}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:12px 0}
+.tile{background:var(--card);border:2px solid var(--border);border-radius:12px;padding:11px 13px;text-align:left;cursor:pointer;opacity:.78;display:flex;flex-direction:column;gap:6px}
+.tile[aria-pressed=true]{opacity:1;border-color:var(--accent);background:var(--soft)}
+.tile .lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--ink)}
+.tile .big{font-size:22px;font-weight:800;line-height:1}
+.tile .big small{font-size:11px;font-weight:500;color:var(--muted)}
+.bar{height:7px;border-radius:99px;background:var(--border);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .25s}
+.lv{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 12px}
+.lv button{border:2px solid var(--accent);background:var(--card);border-radius:99px;padding:6px 14px;font-size:12px;font-weight:800;cursor:pointer;color:var(--text)}
+.lv button[aria-pressed=true]{background:var(--accent);color:var(--on)}
+.lv small{font-weight:500;opacity:.85;margin-left:4px}
+.grupo h3{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin:18px 0 8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr));gap:10px}
+.cp{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 12px 8px;min-width:0}
+.cp.full{border-color:var(--accent)}
+.cp-top{display:flex;gap:8px;align-items:flex-start;width:100%;background:none;border:0;text-align:left;cursor:pointer;font:inherit;color:inherit}
+.cp-top h4{flex:1;font-size:13px;font-weight:700;line-height:1.3;margin:0}
+.cp-top .n{font-size:11px;font-weight:800;color:var(--muted);background:var(--bg);border-radius:99px;padding:2px 8px;white-space:nowrap}
+.cp.full .n{background:var(--accent);color:var(--on)}
+.chev{flex:none;width:7px;height:7px;margin:6px 3px 0 1px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .15s}
+.cp.fechado .chev{transform:rotate(-45deg)}
+.cp-body{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.cp.fechado .cp-body{display:none}
+.lead{font-size:12.5px;font-weight:600;margin:0}
+.lbl2{font-size:10px;letter-spacing:.7px;text-transform:uppercase;font-weight:800;color:var(--ink);margin-top:4px}
+.item{display:flex;gap:9px;align-items:flex-start;padding:6px 4px;border-radius:8px;cursor:pointer;font-size:12.5px;line-height:1.4}
+.item:hover{background:var(--bg)}
+.item input{appearance:none;-webkit-appearance:none;flex:none;margin:2px 0 0;width:17px;height:17px;border:1.5px solid #8ea3ab;border-radius:4px;background:transparent;display:grid;place-content:center;cursor:pointer}
+.item input::after{content:"";width:9px;height:9px;background:var(--on);clip-path:polygon(14% 52%,0 66%,38% 100%,100% 22%,86% 8%,38% 72%);transform:scale(0);transition:transform .12s}
+.item input:checked{background:var(--accent);border-color:var(--accent)}
+.item input:checked::after{transform:scale(1)}
+.item input:checked+span{color:var(--muted)}
+.item input:disabled{cursor:not-allowed;opacity:.6}
+.res{padding-left:18px;font-size:12px;color:var(--muted)}
+.res.plain{color:var(--text)}
+.foldbar{display:flex;gap:6px;justify-content:flex-end;margin-bottom:4px}
+.foldbar button{font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;border:1px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer}
+.ass-card{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ass-card .nm{flex:1;min-width:140px;font-size:13px;font-weight:800}
+.ass-card .nm small{display:block;font-size:10px;font-weight:500;color:var(--muted)}
+.chip{font-size:10px;font-weight:800;padding:2px 8px;border-radius:4px;background:var(--soft);color:var(--ink)}
+#status{font-size:11px;color:var(--muted);text-align:center;margin:16px 0}
+.fonte{font-size:10px;color:var(--muted);text-align:center;margin-top:4px}
+</style>
+</head>
+<body>
+<div class="topo"><a href="index.html" id="volta">← Sistema</a><div class="ttl">🎓 Formação de adultos</div></div>
+<div class="abas" id="abas" style="display:none"><button id="aba-meu" onclick="location.hash='#meu'">Minha formação</button><button id="aba-ass" onclick="location.hash='#assessorados'">Meus assessorados</button></div>
+<div class="corpo" id="corpo"><div class="vazio">Carregando…</div></div>
+<div id="status"></div>
+<div class="fonte">Fonte: Competências e Rotas de Aprendizagem dos ramos Lobinho, Escoteiro, Sênior e Pioneiro e da Linha Dirigente, Escoteiros do Brasil.</div>
+
+<script>
+const DB_URL = "https://joaninha-progressao-default-rtdb.firebaseio.com";
+let firebaseAuthToken = null, firebaseRefreshToken = null, firebaseUid = null, registroLogado = null;
+let souAdmin = false, nomeLogado = '', tropaDoChefeLogado = null, tropa2 = null;
+function lerSessaoSalva() { try { const v = localStorage.getItem('chefeSessao'); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
+function salvarSessao() {
+  try {
+    const atual = lerSessaoSalva() || {};
+    localStorage.setItem('chefeSessao', JSON.stringify(Object.assign({}, atual, { registro: registroLogado, uid: firebaseUid, idToken: firebaseAuthToken, refreshToken: firebaseRefreshToken, expiraEm: Date.now() + 55 * 60 * 1000 })));
+  } catch (e) {}
+}
+async function renovarAgendado() {
+  if (!firebaseRefreshToken) return;
+  const r = await renovarTokenSessao(firebaseRefreshToken);
+  if (r) { firebaseAuthToken = r.idToken; firebaseRefreshToken = r.refreshToken; salvarSessao(); setTimeout(renovarAgendado, 50 * 60 * 1000); }
+  else setTimeout(renovarAgendado, 2 * 60 * 1000);
+}
+async function autenticar() {
+  const salva = lerSessaoSalva();
+  if (!salva || !salva.uid) return false;
+  if (Date.now() < salva.expiraEm && salva.idToken) { firebaseAuthToken = salva.idToken; firebaseRefreshToken = salva.refreshToken; }
+  else {
+    let r = await renovarTokenSessao(salva.refreshToken);
+    if (!r) { await new Promise(x => setTimeout(x, 1500)); r = await renovarTokenSessao(salva.refreshToken); }
+    if (!r) return false;
+    firebaseAuthToken = r.idToken; firebaseRefreshToken = r.refreshToken;
+  }
+  registroLogado = salva.registro; firebaseUid = salva.uid; souAdmin = salva.admin === true; nomeLogado = salva.nome || '';
+  tropaDoChefeLogado = salva.tropa || null; tropa2 = salva.tropa2 || null;
+  salvarSessao(); setTimeout(renovarAgendado, 50 * 60 * 1000);
+  return true;
+}
+
+/* ---------- dados ---------- */
+const F = window.FORMACAO, CAT = F.CAT, RK = F.RK, NV = F.NV, TOT = F.TOT, totR = F.totR;
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const ehDiretoria = () => tropaDoChefeLogado === 'diretoria' || tropa2 === 'diretoria';
+const E = { equipe: {}, uid: null, perfil: {}, done: {}, ramo: 'esc', nivel: 0, ass: [], carregado: false, fechados: {}, pend: {}, timer: null, voando: false };
+const j = async (caminho, opc) => {
+  const r = await fetch(urlComAuthFirebase(DB_URL + caminho + '.json'), opc);
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return opc && opc.method && opc.method !== 'GET' ? null : r.json();
+};
+const pedir = (caminho, metodo, corpo) => j(caminho, { method: metodo, headers: { 'Content-Type': 'application/json' }, body: corpo === undefined ? undefined : JSON.stringify(corpo) });
+function setStatus(t) { $('#status').textContent = t || ''; }
+function nomeDe(uid) { const p = E.equipe[uid]; return p ? (p.nome || ('Registro ' + p.registro)) : uid; }
+
+const souDono = () => E.uid === firebaseUid;
+const souApf = () => !!E.perfil && E.perfil.apfUid === firebaseUid;
+const podeMarcar = () => souDono() || souApf() || souAdmin;
+const podePerfil = () => souDono() || souAdmin;
+
+async function carregarEquipe() { try { E.equipe = (await j('/equipe')) || {}; } catch (e) { E.equipe = {}; } if (!E.equipe[firebaseUid]) E.equipe[firebaseUid] = { nome: nomeLogado, registro: registroLogado }; }
+async function carregarFicha(uid) {
+  E.uid = uid; E.carregado = false;
+  const d = await j('/formacao/' + encodeURIComponent(uid));
+  E.perfil = (d && d.perfil) || {}; E.done = (d && d.done) || {};
+  if (RK.indexOf(E.perfil.ramo) >= 0) E.ramo = E.perfil.ramo; else E.ramo = 'esc';
+  E.nivel = [0, 1, 2].indexOf(E.perfil.nivel) >= 0 ? E.perfil.nivel : 0;
+  E.pend = {}; E.carregado = true;
+}
+function contar() { return F.contar(Object.assign({}, E.done)); }
+
+/* ---------- gravar marcações ---------- */
+function marcar(chave, on) {
+  if (!podeMarcar()) return;
+  if (on) E.done[chave] = true; else delete E.done[chave];
+  E.pend[chave] = on ? true : null;
+  setStatus('Salvando…'); clearTimeout(E.timer); E.timer = setTimeout(enviar, 400);
+  atualizar();
+}
+async function enviar() {
+  if (E.voando) return;
+  const lote = E.pend; if (!Object.keys(lote).length) return;
+  E.pend = {}; E.voando = true;
+  try { await pedir('/formacao/' + encodeURIComponent(E.uid) + '/done', 'PATCH', lote); setStatus('Tudo salvo.'); }
+  catch (e) { Object.keys(lote).forEach(k => { if (!(k in E.pend)) E.pend[k] = lote[k]; }); setStatus('Não foi possível salvar. A próxima marcação tenta de novo.'); }
+  E.voando = false;
+  if (Object.keys(E.pend).length) enviar();
+}
+
+/* ---------- perfil ---------- */
+function htmlPerfil() {
+  const p = E.perfil || {}, ed = podePerfil();
+  const cands = Object.keys(E.equipe).filter(u => u !== E.uid).sort((a, b) => nomeDe(a).localeCompare(nomeDe(b), 'pt-BR'));
+  const ext = p.apfExterno || {};
+  const modo = p.apfUid ? p.apfUid : (ext.nome ? '_ext' : '');
+  return `<div class="panel"><h3>Perfil de formação</h3><div class="perfil">
+<div class="f-field"><label for="pf-ramo">Ramo de formação</label><select id="pf-ramo" ${ed ? '' : 'disabled'}><option value="">Não informado</option>${RK.map(r => `<option value="${r}" ${p.ramo === r ? 'selected' : ''}>${esc(CAT[r].n)}</option>`).join('')}</select></div>
+<div class="f-field"><label for="pf-nivel">Nível</label><select id="pf-nivel" ${ed ? '' : 'disabled'}><option value="">Não informado</option>${NV.map((n, i) => `<option value="${i}" ${p.nivel === i ? 'selected' : ''}>${n}</option>`).join('')}</select></div>
+<div class="f-field"><label for="pf-apf">APF (Assessor Pessoal de Formação)</label><select id="pf-apf" ${ed ? '' : 'disabled'} onchange="trocaApf()"><option value="">Sem APF</option>${cands.map(u => `<option value="${esc(u)}" ${modo === u ? 'selected' : ''}>${esc(nomeDe(u))} · ${esc((E.equipe[u] || {}).registro || '')}</option>`).join('')}<option value="_ext" ${modo === '_ext' ? 'selected' : ''}>Outro (fora do grupo)</option></select></div>
+<div class="f-field" id="pf-ext1" style="display:${modo === '_ext' ? '' : 'none'}"><label for="pf-extnome">Nome do APF</label><input id="pf-extnome" type="text" maxlength="120" value="${esc(ext.nome || '')}" ${ed ? '' : 'disabled'}></div>
+<div class="f-field" id="pf-ext2" style="display:${modo === '_ext' ? '' : 'none'}"><label for="pf-extreg">Registro do APF</label><input id="pf-extreg" type="text" maxlength="40" value="${esc(ext.registro || '')}" ${ed ? '' : 'disabled'}></div>
+${ed ? '<div><button class="btn-v" id="pf-ok" onclick="salvarPerfil()">Salvar perfil</button></div>' : ''}
+</div><div class="msg" id="pf-msg"></div></div>`;
+}
+function trocaApf() { const v = $('#pf-apf').value; $('#pf-ext1').style.display = v === '_ext' ? '' : 'none'; $('#pf-ext2').style.display = v === '_ext' ? '' : 'none'; }
+async function salvarPerfil() {
+  const msg = $('#pf-msg'); msg.className = 'msg'; msg.textContent = '';
+  const ramo = $('#pf-ramo').value, nv = $('#pf-nivel').value, apf = $('#pf-apf').value;
+  const antigo = (E.perfil && E.perfil.apfUid) || null;
+  const novo = { ramo: ramo || null, nivel: nv === '' ? null : +nv, apfUid: null, apfExterno: null };
+  if (apf === '_ext') {
+    const nome = $('#pf-extnome').value.trim(), reg = $('#pf-extreg').value.trim();
+    if (!nome) { msg.className = 'msg erro'; msg.textContent = 'Informe o nome do APF.'; return; }
+    novo.apfExterno = { nome, registro: reg };
+  } else if (apf) novo.apfUid = apf;
+  $('#pf-ok').disabled = true;
+  try {
+    await pedir('/formacao/' + encodeURIComponent(E.uid) + '/perfil', 'PUT', Object.assign({}, novo, { atualizadoEm: new Date().toISOString() }));
+    if (antigo && antigo !== novo.apfUid) await pedir('/apfIdx/' + encodeURIComponent(antigo) + '/' + encodeURIComponent(E.uid), 'DELETE');
+    if (novo.apfUid && novo.apfUid !== antigo) await pedir('/apfIdx/' + encodeURIComponent(novo.apfUid) + '/' + encodeURIComponent(E.uid), 'PUT', true);
+    E.perfil = Object.assign({}, novo);
+    if (ramo) E.ramo = ramo; if (nv !== '') E.nivel = +nv;
+    msg.textContent = 'Perfil salvo.'; desenhar();
+  } catch (e) { msg.className = 'msg erro'; msg.textContent = 'Não foi possível salvar. Tente de novo.'; $('#pf-ok').disabled = false; }
+}
+
+/* ---------- ficha (checklist) ---------- */
+function htmlFicha() {
+  const rk = E.ramo, ni = E.nivel;
+  const tiles = RK.map(r => `<button type="button" class="tile t-${r}" data-ramo="${r}" aria-pressed="false"><span class="lbl">${esc(CAT[r].n)}</span><div class="big"><span class="sum">0</span> <small>de ${totR(r)}</small></div><div class="bar"><i></i></div></button>`).join('');
+  const lvs = NV.map((n, i) => `<button type="button" data-nivel="${i}" aria-pressed="false">${n}<small></small></button>`).join('');
+  let h = `<div class="tiles">${tiles}</div><div class="t-${rk}"><div class="lv">${lvs}</div><div class="foldbar"><button data-foldall="close">Recolher tudo</button><button data-foldall="open">Expandir tudo</button></div>`;
+  CAT[rk].g.forEach(g => {
+    h += `<div class="grupo"><h3>${esc(g.t)}</h3><div class="grid">`;
+    g.c.forEach(c => {
+      const l = c.l[ni], base = rk + '-' + ni + '-' + c.x; let k = 0;
+      h += `<div class="cp${E.fechados[base] ? ' fechado' : ''}" data-cp="${base}"><button type="button" class="cp-top" data-fold="${base}"><span class="chev"></span><h4>${esc(c.n)}</h4><span class="n">0/0</span></button><div class="cp-body">`;
+      if (l.d) h += `<p class="lead">${esc(l.d)}</p>`;
+      l.g.filter(gr => gr[0] === F.ATIV).forEach(gr => {
+        h += `<div class="lbl2">${esc(gr[0])}</div><div>`;
+        gr[1].forEach(t => { h += `<label class="item"><input type="checkbox" data-k="${base}-${k}"><span>${esc(t)}</span></label>`; k++; });
+        h += '</div>';
+      });
+      l.g.filter(gr => gr[0] !== F.ATIV).forEach(gr => {
+        if (gr[0] === F.PPF) { let pk = 0; h += `<div class="lbl2">${esc(gr[0])}</div><div>`; gr[1].forEach(t => { h += `<label class="item"><input type="checkbox" data-p="1" data-k="${base}-p-${pk}"><span>${esc(t)}</span></label>`; pk++; }); h += '</div>'; }
+        else h += `<div class="lbl2">${esc(gr[0])}</div><ul class="res plain">${gr[1].map(t => '<li>' + esc(t) + '</li>').join('')}</ul>`;
+      });
+      if (l.r && l.r.length) h += `<div class="lbl2">Resultados esperados</div><ul class="res">${l.r.map(t => '<li>' + esc(t) + '</li>').join('')}</ul>`;
+      h += '</div></div>';
+    });
+    h += '</div></div>';
+  });
+  return h + '</div>';
+}
+function atualizar() {
+  const cn = contar(), edit = podeMarcar();
+  document.querySelectorAll('#ficha input[data-k]').forEach(el => { const on = !!E.done[el.getAttribute('data-k')]; if (el.checked !== on) el.checked = on; el.disabled = !edit; });
+  document.querySelectorAll('#ficha .cp').forEach(cp => {
+    const bx = cp.querySelectorAll('input[data-k]:not([data-p])'); let c = 0; bx.forEach(b => { if (b.checked) c++; });
+    cp.querySelector('.n').textContent = c + '/' + bx.length; cp.classList.toggle('full', bx.length > 0 && c === bx.length);
+  });
+  document.querySelectorAll('#ficha .tile').forEach(t => {
+    const r = t.getAttribute('data-ramo'), n = cn[r][0] + cn[r][1] + cn[r][2], tt = totR(r);
+    t.setAttribute('aria-pressed', r === E.ramo ? 'true' : 'false'); t.querySelector('.sum').textContent = n; t.querySelector('.bar i').style.width = (tt ? 100 * n / tt : 0) + '%';
+  });
+  document.querySelectorAll('#ficha .lv button').forEach(b => { const i = +b.getAttribute('data-nivel'); b.setAttribute('aria-pressed', i === E.nivel ? 'true' : 'false'); b.querySelector('small').textContent = cn[E.ramo][i] + '/' + TOT[E.ramo][i]; });
+}
+
+/* ---------- telas ---------- */
+function titulo() {
+  const p = E.perfil || {}, ext = p.apfExterno;
+  const apf = p.apfUid ? nomeDe(p.apfUid) : (ext && ext.nome ? ext.nome + (ext.registro ? ' · registro ' + ext.registro : '') + ' (fora do grupo)' : 'sem APF');
+  const pe = E.equipe[E.uid] || {};
+  return `<div class="quem"><h2>${esc(souDono() ? (nomeLogado || pe.nome || 'Minha formação') : nomeDe(E.uid))}</h2><div class="sub">Registro ${esc(pe.registro || '')} · APF: <b>${esc(apf)}</b>${podeMarcar() ? '' : ' · somente leitura'}</div></div>`;
+}
+function desenhar() {
+  $('#corpo').innerHTML = titulo() + htmlPerfil() + '<div id="ficha">' + htmlFicha() + '</div>';
+  atualizar();
+}
+async function telaFicha(uid) {
+  $('#corpo').innerHTML = '<div class="vazio">Carregando…</div>';
+  try { await carregarFicha(uid); desenhar(); setStatus(''); }
+  catch (e) { $('#corpo').innerHTML = '<div class="vazio">Não foi possível abrir esta ficha. Você precisa ser o próprio chefe, o APF dele ou da Diretoria.</div>'; }
+}
+async function telaAssessorados() {
+  $('#corpo').innerHTML = '<div class="vazio">Carregando…</div>';
+  let ids = [];
+  try { ids = Object.keys((await j('/apfIdx/' + encodeURIComponent(firebaseUid))) || {}); } catch (e) {}
+  if (!ids.length) { $('#corpo').innerHTML = '<div class="quem"><h2>Meus assessorados</h2></div><div class="vazio"><span class="ico">👥</span>Ninguém escolheu você como APF ainda.</div>'; return; }
+  const fichas = await Promise.all(ids.map(async u => { try { return [u, (await j('/formacao/' + encodeURIComponent(u))) || {}]; } catch (e) { return [u, {}]; } }));
+  fichas.sort((a, b) => nomeDe(a[0]).localeCompare(nomeDe(b[0]), 'pt-BR'));
+  $('#corpo').innerHTML = '<div class="quem"><h2>Meus assessorados</h2><div class="sub">Abra a ficha para marcar as atividades que o chefe já cumpriu.</div></div>' + fichas.map(([u, d]) => {
+    const p = d.perfil || {}, cn = F.contar(d.done), r = RK.indexOf(p.ramo) >= 0 ? p.ramo : null;
+    const n = r ? cn[r][0] + cn[r][1] + cn[r][2] : 0;
+    return `<div class="panel ass-card"><div class="nm">${esc(nomeDe(u))}<small>Registro ${esc((E.equipe[u] || {}).registro || '')} · ${r ? esc(CAT[r].n) : 'ramo não informado'}${p.nivel != null ? ' · ' + NV[p.nivel] : ''}</small></div>${r ? `<span class="chip t-${r}">${n}/${totR(r)} atividades</span>` : ''}<a class="btn-v" style="text-decoration:none" href="#c-${esc(u)}">Abrir ficha</a></div>`;
+  }).join('');
+}
+let temAss = false;
+async function rotear() {
+  const h = (location.hash || '').replace('#', '');
+  clearTimeout(E.timer); if (Object.keys(E.pend).length) await enviar();
+  $('#abas').style.display = temAss ? 'flex' : 'none';
+  $('#aba-meu').classList.toggle('on', h !== 'assessorados' && !/^c-/.test(h)); $('#aba-ass').classList.toggle('on', h === 'assessorados' || /^c-/.test(h));
+  $('#volta').textContent = /^c-/.test(h) && temAss ? '← Assessorados' : '← Sistema';
+  $('#volta').setAttribute('href', /^c-/.test(h) && temAss ? '#assessorados' : 'index.html');
+  if (h === 'assessorados') return telaAssessorados();
+  const m = /^c-(.+)$/.exec(h);
+  return telaFicha(m ? decodeURIComponent(m[1]) : firebaseUid);
+}
+document.addEventListener('click', e => {
+  const fo = e.target.closest('[data-fold]');
+  if (fo) { const k = fo.getAttribute('data-fold'), cl = fo.parentNode.classList.toggle('fechado'); E.fechados[k] = cl; return; }
+  const fa = e.target.closest('[data-foldall]');
+  if (fa) { const ab = fa.getAttribute('data-foldall') === 'open'; document.querySelectorAll('#ficha .cp').forEach(cp => { cp.classList.toggle('fechado', !ab); E.fechados[cp.getAttribute('data-cp')] = !ab; }); return; }
+  const t = e.target.closest('[data-ramo],[data-nivel]');
+  if (!t) return;
+  if (t.hasAttribute('data-ramo')) E.ramo = t.getAttribute('data-ramo'); else E.nivel = +t.getAttribute('data-nivel');
+  $('#ficha').innerHTML = htmlFicha(); atualizar();
+});
+document.addEventListener('change', e => { const el = e.target; if (el && el.getAttribute && el.getAttribute('data-k')) marcar(el.getAttribute('data-k'), el.checked); });
+window.addEventListener('hashchange', rotear);
+window.addEventListener('pagehide', () => { if (Object.keys(E.pend).length) enviar(); });
+
+(async function () {
+  if (!(await autenticar())) { document.body.innerHTML = '<div style="padding:40px 20px;text-align:center;font-family:sans-serif;color:#666;"><div style="font-size:34px;margin-bottom:10px;">⚜</div><div style="font-weight:700;margin-bottom:6px;">Entre no sistema primeiro</div><a href="index.html" style="color:#1A6B3C;font-weight:700;">Ir para o login</a></div>'; return; }
+  await carregarEquipe();
+  try { temAss = Object.keys((await j('/apfIdx/' + encodeURIComponent(firebaseUid))) || {}).length > 0; } catch (e) { temAss = false; }
+  rotear();
+})();
+</script>
+</body>
+</html>

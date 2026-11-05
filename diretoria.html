@@ -8,10 +8,11 @@
 <script src="v2.js"></script>
 </head>
 <body>
-<div class="cabecalho-fixo"><nav class="tabs-linha"><button class="tab-btn-linha" data-aba="almox" onclick="mostrarAba('almox',this)">📦 Almoxarifado geral</button><button class="tab-btn-linha" data-aba="chefes" onclick="mostrarAba('chefes',this)">👥 Chefes e assistentes</button><button class="tab-btn-linha" data-aba="docs" onclick="mostrarAba('docs',this)">📄 Documentação</button></nav></div>
+<div class="cabecalho-fixo"><nav class="tabs-linha"><button class="tab-btn-linha" data-aba="almox" onclick="mostrarAba('almox',this)">📦 Almoxarifado geral</button><button class="tab-btn-linha" data-aba="chefes" onclick="mostrarAba('chefes',this)">👥 Chefes e assistentes</button><button class="tab-btn-linha" data-aba="forms" onclick="mostrarAba('forms',this)">🎓 Formação dos chefes</button><button class="tab-btn-linha" data-aba="docs" onclick="mostrarAba('docs',this)">📄 Documentação</button></nav></div>
 <div class="pagina" id="pg-almox"><div id="almox-box"></div></div>
 <div class="pagina" id="pg-chefes"><div class="pagina-ttl">Chefes e assistentes</div><div class="pagina-sub">Quem tem acesso a cada seção do sistema.</div><div id="chefes-lista"><div class="vazio">Carregando…</div></div>
 </div>
+<div class="pagina" id="pg-forms"><div class="pagina-ttl">Formação dos chefes</div><div class="pagina-sub">Ramo de formação, nível, APF e atividades marcadas por chefe. Toque em Abrir ficha para ver o detalhe.</div><div id="forms-lista"><div class="vazio">Carregando…</div></div></div>
 <div class="pagina" id="pg-docs"><div class="pagina-ttl">Documentação</div><div class="pagina-sub">Documentos de gestão do Grupo Escoteiro.</div>
 <div class="card"><div class="card-ttl">📝 Atas de reunião <span class="em-breve">em construção</span></div><div class="card-txt">Registro das reuniões da diretoria e dos chefes.</div></div>
 <div class="card"><div class="card-ttl">📁 Documentos do grupo <span class="em-breve">em construção</span></div><div class="card-txt">Estatuto, registros, certificados e arquivos de consulta.</div></div>
@@ -91,7 +92,35 @@ async function iniciarSecao() {
 V2_ALMOX.montar({ secao:'diretoria', nomeTropa:'Diretoria', outraTropa:'', verTudo:true, subTitulo:'Visão geral do material de todas as seções. A Diretoria pode editar qualquer item; cada seção edita só os seus.', container:'almox-box', padX:14 });
 const ROTULOS = { admin:'⭐ Administrador', escoteira:'🏕️ Tropa Escoteira', senior:'🎓 Tropa Sênior', alcateia:'🐺 Alcateia', cla:'🔥 Clã Pioneiro', diretoria:'🏛️ Diretoria', sem:'❔ Seção não definida (defina em Gerenciar Chefes)' };
 function escH(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function carregarScript(src) { return new Promise((ok, falha) => { if (window.FORMACAO) return ok(); const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = falha; document.head.appendChild(s); }); }
+async function abrirFormacao() {
+  const box = document.getElementById('forms-lista');
+  try {
+    await carregarScript('competencias.js');
+    const F = window.FORMACAO;
+    const [eq, fm] = await Promise.all([fetch(urlComAuthFirebase(DB_URL + '/equipe.json')).then(r => r.json()), fetch(urlComAuthFirebase(DB_URL + '/formacao.json')).then(r => { if (!r.ok) throw new Error('permissao'); return r.json(); })]);
+    if (!eq) { box.innerHTML = '<div class="vazio">A lista aparece depois que um administrador abrir o sistema.</div>'; return; }
+    const fichas = fm || {};
+    const nomeDe = uid => { const p = eq[uid]; return p ? (p.nome || ('Registro ' + p.registro)) : uid; };
+    const rotSecao = { alcateia: '🐺 Alcateia', escoteira: '🏕️ Escoteira', senior: '🎓 Sênior', cla: '🔥 Clã Pioneiro', diretoria: '🏛️ Diretoria' };
+    const uids = Object.keys(eq).sort((a, b) => nomeDe(a).localeCompare(nomeDe(b), 'pt-BR'));
+    let totalMarcadas = 0;
+    box.innerHTML = '<div class="card">' + uids.map(uid => {
+      const p = eq[uid], d = fichas[uid] || {}, pf = d.perfil || {}, cn = F.contar(d.done);
+      const r = F.RK.indexOf(pf.ramo) >= 0 ? pf.ramo : null;
+      const n = r ? cn[r][0] + cn[r][1] + cn[r][2] : 0;
+      const outros = F.RK.filter(k => k !== r).map(k => [k, cn[k][0] + cn[k][1] + cn[k][2]]).filter(x => x[1]);
+      const ext = pf.apfExterno;
+      const apf = pf.apfUid ? nomeDe(pf.apfUid) : (ext && ext.nome ? ext.nome + ' (fora do grupo)' : 'sem APF');
+      return '<div class="pessoa" style="flex-wrap:wrap;gap:6px 10px;"><div style="flex:1;min-width:160px;"><b>' + escH(nomeDe(uid)) + '</b><small style="display:block">' + escH(rotSecao[p.tropa] || 'Sem seção') + ' · Registro ' + escH(p.registro) + '</small></div>' +
+        '<div style="flex:1;min-width:150px;font-size:11px;">APF: <b>' + escH(apf) + '</b><br><span style="color:var(--muted)">' + (r ? escH(F.CAT[r].n) + (pf.nivel != null ? ' · ' + F.NV[pf.nivel] : '') : 'ramo de formação não informado') + '</span></div>' +
+        '<div style="min-width:110px;font-size:11px;">' + (r ? '<b>' + n + '/' + F.totR(r) + '</b> atividades' : '<span style="color:var(--muted)">—</span>') + (outros.length ? '<br><span style="color:var(--muted)">+ ' + outros.map(x => escH(F.CAT[x[0]].n) + ' ' + x[1]).join(', ') + '</span>' : '') + '</div>' +
+        '<a href="formacao.html#c-' + encodeURIComponent(uid) + '" target="_top" class="btn-ic" style="text-decoration:none;font-size:11px;border:1px solid var(--border);border-radius:7px;padding:4px 8px;color:var(--vinho);font-weight:700;">Abrir ficha</a></div>';
+    }).join('') + '</div>';
+  } catch (e) { box.innerHTML = '<div class="vazio">Não foi possível carregar a formação dos chefes.</div>'; }
+}
 async function aoAbrirAba(id) {
+  if (id === 'forms') return abrirFormacao();
   if (id !== 'chefes') return;
   const box = document.getElementById('chefes-lista');
   try {

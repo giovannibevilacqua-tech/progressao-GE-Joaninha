@@ -86,6 +86,26 @@
           ".read": true
         }
       }
+    },
+    "formacao": {
+      ".read": "root.child('usuarios').child(auth.uid).child('admin').val() === true || (root.child('usuarios').child(auth.uid).child('tropa').val() === 'diretoria' || root.child('usuarios').child(auth.uid).child('tropa2').val() === 'diretoria')",
+      "$uid": {
+        ".read": "auth.uid === $uid || root.child('formacao').child($uid).child('perfil').child('apfUid').val() === auth.uid",
+        "perfil": {
+          ".write": "root.child('usuarios').child(auth.uid).exists() && (auth.uid === $uid || root.child('usuarios').child(auth.uid).child('admin').val() === true)"
+        },
+        "done": {
+          ".write": "root.child('usuarios').child(auth.uid).exists() && (auth.uid === $uid || root.child('usuarios').child(auth.uid).child('admin').val() === true || root.child('formacao').child($uid).child('perfil').child('apfUid').val() === auth.uid)"
+        }
+      }
+    },
+    "apfIdx": {
+      "$apf": {
+        ".read": "auth.uid === $apf || root.child('usuarios').child(auth.uid).child('admin').val() === true || (root.child('usuarios').child(auth.uid).child('tropa').val() === 'diretoria' || root.child('usuarios').child(auth.uid).child('tropa2').val() === 'diretoria')",
+        "$uid": {
+          ".write": "root.child('usuarios').child(auth.uid).exists() && (auth.uid === $uid || root.child('usuarios').child(auth.uid).child('admin').val() === true)"
+        }
+      }
     }
   }
 }
