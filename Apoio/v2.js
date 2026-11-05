@@ -46,6 +46,28 @@ try {
   }
 } catch (e) {}
 
+/* ---------- ícones dos ramos (SVG na cor do ramo; icoTxt = versão em texto para listas de seleção) ---------- */
+(function () {
+  var COR = { escoteira: '#2E8B57', senior: '#7B1E3A', cla: '#D32F2F', diretoria: '#1F5FBF' };
+  var SVG = {
+    escoteira: '<path d="M12 1.2c2.3 2.7 3.1 5.2 2.5 7.6-.4 1.6-1.4 2.8-2.5 3.8-1.1-1-2.1-2.2-2.5-3.8C8.9 6.4 9.7 3.9 12 1.2z"/><path d="M8.2 6.9C5.4 6.6 3 8.3 2.8 10.8c-.2 2.3 1.4 4 3.5 4.1 1.4.1 2.6-.5 3.4-1.5-1.7-.2-3-1-3.5-2.3-.5-1.4 0-2.7 1.4-3.5-.4-.4-.9-.7-1.4-.7z"/><path d="M15.8 6.9c2.8-.3 5.2 1.4 5.4 3.9.2 2.3-1.4 4-3.5 4.1-1.4.1-2.6-.5-3.4-1.5 1.7-.2 3-1 3.5-2.3.5-1.4 0-2.7-1.4-3.5.4-.4.9-.7 1.4-.7z"/><rect x="6.5" y="15.2" width="11" height="2.1" rx="1"/><path d="M9.3 17.6h5.4l1.3 5-4-2-4 2z"/>',
+    senior: '<path d="M12 .8l2.2 9 8.8 2.2-8.8 2.2-2.2 9-2.2-9L1 12l8.8-2.2z"/><path transform="rotate(45 12 12) translate(12 12) scale(.6) translate(-12 -12)" opacity=".7" d="M12 .8l2.2 9 8.8 2.2-8.8 2.2-2.2 9-2.2-9L1 12l8.8-2.2z"/><circle cx="12" cy="12" r="2.2" fill="#fff" opacity=".85"/>',
+    cla: '<g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 2.5v6.2a6.5 6.5 0 0 0 13 0V2.5"/><path d="M12 2.5v19"/></g>',
+    diretoria: '<g fill="none"><g stroke="currentColor" stroke-width="3.4"><ellipse cx="12" cy="12" rx="9.4" ry="4.6"/><ellipse cx="12" cy="12" rx="9.4" ry="4.6" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="9.4" ry="4.6" transform="rotate(-60 12 12)"/></g><g stroke="#fff" stroke-width="1" opacity=".75"><ellipse cx="12" cy="12" rx="9.4" ry="4.6"/><ellipse cx="12" cy="12" rx="9.4" ry="4.6" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="9.4" ry="4.6" transform="rotate(-60 12 12)"/></g></g>'
+  };
+  window.icoRamo = function (id, px, cor) {
+    if (!SVG[id]) return id === 'alcateia' ? '🐺' : '';
+    var t = (px || 1.15) + 'em';
+    return '<svg class="ico-ramo" viewBox="0 0 24 24" width="' + t + '" height="' + t + '" fill="currentColor" aria-hidden="true" style="display:inline-block;vertical-align:-.2em;color:' + (cor || COR[id]) + '">' + SVG[id] + '</svg>';
+  };
+  window.icoTxt = { alcateia: '🐺', escoteira: '\u269C\uFE0E', senior: '\u2735', cla: '\u03A8', diretoria: '\uD83E\uDEA2' };
+  window.icoCor = COR;
+  if (typeof document !== 'undefined') {
+    var preencher = function () { Array.prototype.forEach.call(document.querySelectorAll('[data-ico]'), function (e) { if (!e.firstChild) e.innerHTML = window.icoRamo(e.getAttribute('data-ico')); }); };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', preencher); else preencher();
+  }
+})();
+
 /* ============================================================
    v2-config.js — configuração única da migração (Firebase v2)
    Edite SÓ este arquivo quando o tutorial pedir.
@@ -73,7 +95,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-11-06j"
+  VERSAO: "2026-11-06k"
 };
 
 /* ============================================================
@@ -1438,7 +1460,7 @@ window.V2_ALMOX = (function () {
 
   function esc(x) { return String(x == null ? '' : x).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
   function $(id) { return document.getElementById(id); }
-  var SEC_ALMOX = [['alcateia','🐺','Alcateia'],['escoteira','🏕️','Escoteira'],['senior','🎓','Sênior'],['cla','🔥','Clã Pioneiro']];
+  var SEC_ALMOX = [['alcateia','🐺','Alcateia'],['escoteira',window.icoRamo('escoteira'),'Escoteira'],['senior',window.icoRamo('senior'),'Sênior'],['cla',window.icoRamo('cla'),'Clã Pioneiro']];
   function donoDe(it) { return (it && it.tropa) || cfg.secao; }
   // seções (além da dona) que enxergam o item. compartilhado===true sem lista = formato antigo: todas.
   function compartilhadoCom(it) {
@@ -1900,10 +1922,10 @@ window.V2_ALMOX = (function () {
   var RAMOS = [
     { id: 'filhotes', nome: 'Filhotes', icone: '🐣' },
     { id: 'lobinho', nome: 'Lobinho', icone: '🐺', ativo: true, ficha: 'lobinho', frame: 'iframeAlcateia', secao: 'alcateia' },
-    { id: 'escoteira', nome: 'Escoteiro', icone: '🏕️', ativo: true, ficha: 'escoteiro', frame: 'iframeEscoteira', secao: 'escoteira' },
-    { id: 'senior', nome: 'Sênior', icone: '🎓', ativo: true, ficha: 'senior', frame: 'iframeSenior', secao: 'senior' },
-    { id: 'pioneiro', nome: 'Pioneiro', icone: '🔥', ativo: true, ficha: 'pioneiro', frame: 'iframeCla', secao: 'cla' },
-    { id: 'dirigente', nome: 'Dirigente', icone: '🏛️' }
+    { id: 'escoteira', nome: 'Escoteiro', icone: window.icoRamo('escoteira'), ativo: true, ficha: 'escoteiro', frame: 'iframeEscoteira', secao: 'escoteira' },
+    { id: 'senior', nome: 'Sênior', icone: window.icoRamo('senior'), ativo: true, ficha: 'senior', frame: 'iframeSenior', secao: 'senior' },
+    { id: 'pioneiro', nome: 'Pioneiro', icone: window.icoRamo('cla'), ativo: true, ficha: 'pioneiro', frame: 'iframeCla', secao: 'cla' },
+    { id: 'dirigente', nome: 'Dirigente', icone: window.icoRamo('diretoria') }
   ];
   var BLOCOS = ['Conquistas', 'Especialidades', 'Progressão', 'Condecorações', 'Cursos de formação', 'Atividades', 'Sanções'];
   var RX_FICHA = /^Ficha Individual \(\d+ \/ \d+\)$/;

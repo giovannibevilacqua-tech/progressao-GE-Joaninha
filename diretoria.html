@@ -96,7 +96,7 @@ async function iniciarSecao() {
 </script>
 <script>
 V2_ALMOX.montar({ secao:'diretoria', nomeTropa:'Diretoria', outraTropa:'', verTudo:true, subTitulo:'Visão geral do material de todas as seções. A Diretoria pode editar qualquer item; cada seção edita só os seus.', container:'almox-box', padX:14 });
-const ROTULOS = { admin:'⭐ Administrador', escoteira:'🏕️ Tropa Escoteira', senior:'🎓 Tropa Sênior', alcateia:'🐺 Alcateia', cla:'🔥 Clã Pioneiro', diretoria:'🏛️ Diretoria', sem:'❔ Seção não definida (defina em Gerenciar Chefes)' };
+const ROTULOS = { admin:'⭐ Administrador', escoteira: icoRamo('escoteira') + ' Tropa Escoteira', senior: icoRamo('senior') + ' Tropa Sênior', alcateia:'🐺 Alcateia', cla: icoRamo('cla') + ' Clã Pioneiro', diretoria: icoRamo('diretoria') + ' Diretoria', sem:'❔ Seção não definida (defina em Gerenciar Chefes)' };
 function escH(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function carregarScript(src) { return new Promise((ok, falha) => { if (window.FORMACAO) return ok(); const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = falha; document.head.appendChild(s); }); }
 async function abrirFormacao() {
@@ -108,7 +108,7 @@ async function abrirFormacao() {
     if (!eq) { box.innerHTML = '<div class="vazio">A lista aparece depois que um administrador abrir o sistema.</div>'; return; }
     const fichas = fm || {};
     const nomeDe = uid => { const p = eq[uid]; return p ? (p.nome || ('Registro ' + p.registro)) : uid; };
-    const rotSecao = { alcateia: '🐺 Alcateia', escoteira: '🏕️ Escoteira', senior: '🎓 Sênior', cla: '🔥 Clã Pioneiro', diretoria: '🏛️ Diretoria' };
+    const rotSecao = { alcateia: '🐺 Alcateia', escoteira: icoRamo('escoteira') + ' Escoteira', senior: icoRamo('senior') + ' Sênior', cla: icoRamo('cla') + ' Clã Pioneiro', diretoria: icoRamo('diretoria') + ' Diretoria' };
     const uids = Object.keys(eq).sort((a, b) => nomeDe(a).localeCompare(nomeDe(b), 'pt-BR'));
     let totalMarcadas = 0;
     const linhaPessoa = uid => {
@@ -136,10 +136,10 @@ async function abrirFormacao() {
 
 /* ---------- aba Seções: lê o resumo de cada seção abrindo-a escondida (?resumo=1) ---------- */
 const SECOES_DIR = [
-  { id: 'alcateia', ico: '🐺', pagina: 'alcateia.html' },
-  { id: 'escoteira', ico: '🏕️', pagina: 'escoteira.html' },
-  { id: 'senior', ico: '🎓', pagina: 'tropa-senior.html' },
-  { id: 'cla', ico: '🔥', pagina: 'cla-pioneiro.html' }
+  { id: 'alcateia', pagina: 'alcateia.html' },
+  { id: 'escoteira', pagina: 'escoteira.html' },
+  { id: 'senior', pagina: 'tropa-senior.html' },
+  { id: 'cla', pagina: 'cla-pioneiro.html' }
 ];
 const SEC_DADOS = {};
 let secoesIniciadas = false;
@@ -164,14 +164,15 @@ function listaChefes(gente) {
 function secoesQuadro() {
   const grupos = EQUIPE ? agruparEquipe(EQUIPE) : {};
   const ordem = SECOES_DIR.map(s => s.id).concat(['diretoria']).concat(grupos.sem ? ['sem'] : []);
-  const ico = { alcateia: '🐺', escoteira: '🏕️', senior: '🎓', cla: '🔥', diretoria: '🏛️', sem: '❔' };
+  const ico = { alcateia: '🐺', escoteira: icoRamo('escoteira'), senior: icoRamo('senior'), cla: icoRamo('cla'), diretoria: icoRamo('diretoria'), sem: '❔' };
+  const NOMES = { alcateia: 'Alcateia', escoteira: 'Tropa Escoteira', senior: 'Tropa Sênior', cla: 'Clã Pioneiro' };
   document.getElementById('secoes-lista').innerHTML = ordem.map(id => {
     const g = grupos[id] || [], nChefes = EQUIPE ? g.length + (g.length === 1 ? ' pessoa' : ' pessoas') : '';
     if (id === 'diretoria' || id === 'sem') {
       return '<details class="card sec-det"><summary style="cursor:pointer;list-style:none"><b>' + ROTULOS[id] + '</b><br><span class="card-txt">' + nChefes + '</span></summary><div class="sec-box" style="margin-top:12px"><h4>Chefia</h4>' + listaChefes(g) + '</div></details>';
     }
     const r = SEC_DADOS[id];
-    if (!r) return '<div class="card"><div class="card-ttl">' + ico[id] + ' ' + escH(ROTULOS[id].replace(/^\S+\s/, '')) + '</div><div class="card-txt">Carregando…</div></div>';
+    if (!r) return '<div class="card"><div class="card-ttl">' + ico[id] + ' ' + escH(NOMES[id] || id) + '</div><div class="card-txt">Carregando…</div></div>';
     const linhas = (r.linhas || []).map(l => '<tr><td><b>' + escH(l.nome) + '</b></td><td style="min-width:110px">' + l.n + '/' + l.total + '<span class="mini"><i style="width:' + (l.total ? Math.round(l.n / l.total * 100) : 0) + '%"></i></span></td><td>' + escH(l.etapa) + '</td></tr>').join('');
     return '<details class="card sec-det"><summary style="cursor:pointer;list-style:none;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="flex:1;min-width:150px"><b>' + ico[id] + ' ' + escH(r.tropa) + '</b><br><span class="card-txt">' + r.resumo.jovens + ' jovens · média de ' + escH(r.resumo.media) + ' blocos (de ' + r.resumo.total + ')' + (nChefes ? ' · ' + nChefes : '') + '</span></span>' +
       '<button type="button" class="btn-ic" style="font-size:12px;padding:6px 10px" onclick="event.preventDefault();event.stopPropagation();relatorioSecaoDir(\'' + id + '\')">📄 Relatório</button></summary>' +

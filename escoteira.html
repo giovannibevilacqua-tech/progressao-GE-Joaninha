@@ -1829,7 +1829,7 @@ const nome = JNOMES[id];
 if (!confirm(`Transferir ${nome} para a Tropa Sênior?\n\nIsso remove ele(a) da Tropa Escoteira e cria um registro novo (zerado) de progressão na Tropa Sênior. Essa ação não pode ser desfeita automaticamente.`)) { renderRoster(); return; }
 
 const iframe = document.getElementById('iframeSenior');
-if (!iframe || !iframe.contentWindow) { alert('A página da Tropa Sênior ainda não carregou. Abra a aba "🎓 Tropa Sênior" pelo menos uma vez e tente de novo.'); renderRoster(); return; }
+if (!iframe || !iframe.contentWindow) { alert('A página da Tropa Sênior ainda não carregou. Abra a aba "Tropa Sênior" pelo menos uma vez e tente de novo.'); renderRoster(); return; }
 
 iframe.contentWindow.postMessage({ tipo: 'transferirJovem', nome: nome, nascimento: DATAS_NASC[id] || '' }, '*');
 
@@ -1846,7 +1846,7 @@ temAlteracaoLocalPendente = true;
 saveState();
 renderRoster();
 
-alert(`${nome} foi transferido(a) para a Tropa Sênior! Confira na aba "🎓 Tropa Sênior".`);
+alert(`${nome} foi transferido(a) para a Tropa Sênior! Confira na aba "Tropa Sênior".`);
 }
 
 function abrirNovaPatrulha() { patrulhaEditandoId = 'nova'; renderRoster(); }
@@ -2017,7 +2017,7 @@ ${menuAberto ? `<div class="roster-dropdown" onclick="event.stopPropagation()">
 <button onclick="verObservacao('${j}')">📋 Observação</button>
 <button onclick="toggleConversar('${j}')">${marcadoConversar ? '✅ Já conversei' : '💬 Marcar pra conversar'}</button>
 <button onclick="abrirLisOuro('${j}')">🏅 Reconhecimento de Ramo</button>
-${info && info.mesesFaltantes <= 0 ? `<button style="color:var(--vinho);" onclick="transferirParaSenior('${j}')">🎓 Transferir p/ Sênior</button>` : ''}
+${info && info.mesesFaltantes <= 0 ? `<button style="color:var(--vinho);" onclick="transferirParaSenior('${j}')">${icoRamo('senior')} Transferir p/ Sênior</button>` : ''}
 <button onclick="arquivarJovem('${j}')">📦 Arquivar</button>
 <button class="remover somente-admin" onclick="excluirJovem('${j}')">🗑️ Excluir</button>
 </div>` : ''}

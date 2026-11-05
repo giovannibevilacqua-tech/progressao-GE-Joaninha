@@ -1950,7 +1950,7 @@ function cardPioneiro(e, today){
   if (caminho) badge = '<span style="background:#E67E22;color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;">🛤 CAMINHO</span>';
   else if (passou) badge = '<span style="background:#95A5A6;color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;">✓ PASSOU DOS 22</span>';
   else if (partida) badge = '<span style="background:#6A1B9A;color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;">🌅 PARTIDA PRÓXIMA</span>';
-  else badge = `<span style="background:${c.fg};color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;">🔥 NO CLÃ</span>`;
+  else badge = `<span style="background:${c.fg};color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;">${icoRamo('cla', 1, '#fff')} NO CLÃ</span>`;
   const pct = passou ? 0 : Math.min(100, Math.max(2, (e.days / maxDays) * 100));
   const card = document.createElement('div');
   card.style.cssText = `background:${c.bg};border-left:5px solid ${c.border};border-radius:10px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.09);`;
