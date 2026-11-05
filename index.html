@@ -706,6 +706,7 @@ cursor: pointer; color: #fff;
 .busca-nada-esc{text-align:center;padding:24px 12px;color:var(--muted);font-size:12px;}
 mark.hl-esc{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 
+.chefe-det{flex-basis:100%;border:1px solid var(--border,#444);border-radius:10px;padding:0 10px;margin:2px 0}.chefe-det>summary{cursor:pointer;font-size:12px;font-weight:700;color:var(--muted);padding:7px 0;list-style:none}.chefe-det>summary::-webkit-details-marker{display:none}.chefe-det>summary::before{content:"▸ "}.chefe-det[open]>summary::before{content:"▾ "}.chefe-det-corpo{display:flex;flex-direction:column;gap:6px;padding-bottom:10px}
 </style>
 <script src="v2.js"></script>
 <script src="importar-paxtu.js"></script>
@@ -1084,11 +1085,14 @@ document.getElementById('chefesModalOv').classList.remove('open');
 }
 let formacaoCache = {};
 const RAMOS_FORM = { lob: 'Lobinho', esc: 'Escoteiro', sen: 'Sênior', pio: 'Pioneiro', dir: 'Dirigente' };
+const chefeAbertos = new Set();
+function chefeToggle(el) { const k = el.getAttribute("data-k"); if (el.open) chefeAbertos.add(k); else chefeAbertos.delete(k); }
 async function renderChefesModalBody() {
 const chefes = await carregarListaChefes();
 try { const rf = await fetch(urlComAuthFirebase(DB_URL + '/formacao.json')); formacaoCache = (rf.ok && await rf.json()) || {}; } catch (e) { formacaoCache = {}; }
 const uids = Object.keys(chefes);
 let html = `
+<details class="chefe-det" data-k="novo" ${chefeAbertos.has("novo")?"open":""} ontoggle="chefeToggle(this)"><summary>➕ Adicionar novo usuário</summary>
 <div class="chefe-add-row" style="flex-wrap:wrap;gap:6px;">
 <input type="text" class="campo-input" id="novoChefeNomeInput" autocomplete="off" placeholder="Nome (opcional)" style="flex:1;min-width:120px;">
 <input type="text" class="campo-input" id="novoChefeRegistroInput" inputmode="numeric" autocomplete="off" placeholder="Registro" style="flex:1;min-width:100px;" onkeydown="if(event.key==='Enter')criarNovoChefeUI()">
@@ -1107,6 +1111,7 @@ let html = `
 <button class="chefe-add-btn" onclick="criarNovoChefeUI()">+ Criar</button>
 </div>
 <div id="novoChefeErro" class="login-erro-msg" style="display:none;margin-bottom:12px;"></div>
+</details>
 `;
 if (!uids.length) {
 html += '<div style="padding:14px;text-align:center;color:var(--muted);font-size:12px;">Nenhum chefe cadastrado ainda.</div>';
@@ -1119,6 +1124,7 @@ const rotSecao = { senior: '🎓 Sênior', alcateia: '🐺 Alcateia', cla: '🔥
 return `<div class="chefe-row" style="flex-wrap:wrap;gap:6px;">
 <span class="chefe-row-registro" style="flex:1;min-width:120px;">${c.nome ? c.nome : c.registro || uid}${c.nome ? `<br><span style="font-size:10px;font-weight:500;color:var(--muted);">Registro ${c.registro || uid}</span>` : ''}
 <br><span class="chefe-tag ${ehAss ? 'ass' : 'chefe'}">${ehAss ? 'Assistente' : 'Chefe de seção'}</span>${c.tropa2 ? ` <span class="chefe-tag ${c.funcao2 === 'assistente' ? 'ass' : 'chefe'}">${c.funcao2 === 'assistente' ? 'Assistente' : 'Chefe'} · ${(rotSecao[c.tropa2] || c.tropa2).replace(/^\S+\s/, '')}</span>` : ''}${c.admin ? ' <span class="chefe-tag adm">⭐ Admin</span>' : ''}</span>
+<details class="chefe-det" data-k="${uid}:f" ${chefeAbertos.has(uid+":f")?"open":""} ontoggle="chefeToggle(this)"><summary>Seção e função</summary><div class="chefe-det-corpo">
 <select class="campo-input" style="font-size:11px;padding:4px 6px;flex:0 0 auto;" onchange="alterarRoleChefeUI('${uid}', this.value)" title="Seção">
 <option value="" ${secao===''?'selected':''}>Sem seção</option>
 ${Object.keys(rotSecao).map(k => `<option value="${k}" ${secao===k?'selected':''}>${rotSecao[k]}</option>`).join('')}
@@ -1136,6 +1142,8 @@ ${c.tropa2 ? `<select class="campo-input" style="font-size:11px;padding:4px 6px;
 <option value="chefe" ${c.funcao2==='assistente'?'':'selected'}>Chefe de seção</option>
 <option value="assistente" ${c.funcao2==='assistente'?'selected':''}>Assistente</option>
 </select>` : ''}</div>
+</div></details>
+<details class="chefe-det" data-k="${uid}:g" ${chefeAbertos.has(uid+":g")?"open":""} ontoggle="chefeToggle(this)"><summary>🎓 Formação</summary><div class="chefe-det-corpo">
 ${(() => { const pf = (formacaoCache[uid] && formacaoCache[uid].perfil) || {}; const ext = pf.apfExterno; const modo = pf.apfUid || (ext && ext.nome ? '_ext' : '');
 const outros = Object.keys(chefes).filter(u => u !== uid).sort((a, b) => (chefes[a].nome || chefes[a].registro || '').localeCompare(chefes[b].nome || chefes[b].registro || '', 'pt-BR'));
 return `<div style="flex-basis:100%;display:flex;gap:6px;align-items:center;flex-wrap:wrap;"><span style="font-size:10px;font-weight:700;color:var(--muted);">🎓 Formação:</span>
@@ -1146,6 +1154,7 @@ return `<div style="flex-basis:100%;display:flex;gap:6px;align-items:center;flex
 <div style="flex-basis:100%;display:flex;gap:6px;align-items:center;flex-wrap:wrap;"><span style="font-size:10px;font-weight:700;color:var(--muted);">🎓 2ª linha:</span>
 <select class="campo-input" style="font-size:11px;padding:4px 6px;flex:0 0 auto;" onchange="alterarFormacaoUI('${uid}','ramo2',this.value)" title="Ramo da 2ª linha"><option value="">Nenhuma</option>${Object.keys(RAMOS_FORM).map(r => `<option value="${r}" ${pf.ramo2===r?'selected':''}>${RAMOS_FORM[r]}</option>`).join('')}</select>
 ${pf.ramo2 ? `<select class="campo-input" style="font-size:11px;padding:4px 6px;flex:0 0 auto;" onchange="alterarFormacaoUI('${uid}','nivel2',this.value)" title="Nível da 2ª linha"><option value="">Nível —</option>${['Preliminar','Intermediário','Avançado'].map((n, i) => `<option value="${i}" ${pf.nivel2===i?'selected':''}>${n}</option>`).join('')}</select>` : ''}</div>`; })()}
+</div></details>
 <label class="sw-lbl" title="Administrador"><span class="sw"><input type="checkbox" ${c.admin?'checked':''} onchange="alternarAdminUI('${uid}', this.checked, this)"><i></i></span> ⭐ Admin</label>
 <button class="chefe-row-btn" onclick="editarNomeChefeUI('${uid}')" title="Editar nome">✏️</button>
 <button class="chefe-row-btn" onclick="redefinirSenhaAdmin('${uid}','${c.registro || uid}')" title="Redefinir senha">🔑</button>
