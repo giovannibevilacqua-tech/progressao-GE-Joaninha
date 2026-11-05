@@ -56,7 +56,7 @@ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica N
 background: var(--bg);
 color: var(--text);
 min-height: 100vh;
-padding-bottom: 40px;
+padding-bottom: 50px;
 }
 .header {
 background: linear-gradient(160deg, #C1121F 0%, #9A0D18 60%, #E63946 100%);
@@ -437,15 +437,14 @@ body:not(.eh-admin) .somente-admin { display: none !important; }
 .reset-btn { display: block; margin: 16px auto 32px; background: none; border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; font-size: 11px; color: var(--muted); cursor: pointer; }
 .reset-btn:hover { border-color: #E74C3C; color: #E74C3C; }
 
-.backup-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--vinho); color: #fff; z-index: 600; box-shadow: 0 -2px 10px rgba(0,0,0,.25); }
-.backup-bar-handle { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 14px; cursor: pointer; font-size: 11px; font-weight: 700; }
-#chevBackupBar { transition: transform .2s; }
-.backup-bar-body { display: flex; gap: 8px; padding: 0 14px 10px; }
-.sbar-btn {
-flex: 1; text-align: center; background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.25); color: #fff;
-border-radius: 16px; padding: 7px 11px; font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap;
-}
+.save-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--azul); color: #fff; padding: 9px 14px; display: flex; align-items: center; gap: 8px; z-index: 600; box-shadow: 0 -2px 10px rgba(0,0,0,.25); }
+.save-bar-status { flex: 1; font-size: 11px; font-weight: 600; opacity: .9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.save-bar-status.erro { color: #FFD6D2; cursor: pointer; text-decoration: underline; }
+.sbar-btn { background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.25); color: #fff; border-radius: 16px; padding: 5px 11px; font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap; }
 .sbar-btn:hover { background: rgba(255,255,255,.25); }
+.sbar-btn.prim { background: rgba(255,255,255,.92); color: var(--azul); }
+.sbar-btn.prim:hover { background: #fff; }
+.tabs-linha.compacto .tab-btn-linha { padding: 9px 6px; }
 
 .campo-label { font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; display: block; margin-bottom: 4px; }
 .campo-input {
@@ -670,7 +669,7 @@ mark.hl-esc{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 <body>
 <div class="cabecalho-fixo" id="cabecalhoFixo">
 <nav class="tabs-linha" id="tabsLinha">
-<button class="tab-btn-linha active" id="tabTabela" onclick="mudarPagina('tabela')">📊 Progressão</button>
+<button class="tab-btn-linha active" id="tabTabela" onclick="mudarPagina('tabela')">⚡ Progressão</button>
 <button class="tab-btn-linha" id="tabCalendario" onclick="mudarPagina('calendario')">📅 Calendário</button>
 <button class="tab-btn-linha" id="tabCiclo" onclick="mudarPagina('ciclo')">🔄 Ciclo</button>
 <button class="tab-btn-linha" id="tabAlmoxarifado" onclick="mudarPagina('almoxarifado')">📦 Almoxarifado</button>
@@ -686,7 +685,18 @@ Toque num jovem para abrir a ficha dele. Dentro de cada bloco, marque as ações
 e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco fecha ✓ sozinho quando as duas metas forem batidas.
 </div>
 
-<button type="button" class="btn-secundario" id="btnRelatorioTropa" style="width:100%;margin:0 0 10px;padding:12px;font-weight:700;" onclick="relatorioTropa()">📄 Relatório da tropa</button>
+<div class="busca-wrap-esc">
+  <span class="busca-icon-esc">🔍</span>
+  <input type="search" class="busca-input-esc" id="buscaAcoesEsc"
+    placeholder="Buscar ação nos blocos..."
+    autocomplete="off"
+    oninput="filtrarAcoesEsc(this.value)"
+    onsearch="filtrarAcoesEsc(this.value)">
+  <button class="busca-clear-esc" id="buscaAcoesClearEsc" onclick="limparBuscaEsc()" aria-label="Limpar busca">✕</button>
+</div>
+<div class="busca-results-esc" id="buscaResultsEsc"></div>
+<div id="topoTabela">
+<button type="button" class="btn-secundario" id="btnRelatorioTropa" style="width:calc(100% - 28px);margin:10px 14px;padding:12px;font-weight:700;" onclick="relatorioTropa()">📄 Relatório da tropa</button>
 
 <div class="roster-section" style="padding:0;overflow:hidden;">
 <div class="bloco-head aberto cabecalho-secao" id="cabecalhoPatrulhas" style="padding:14px;" onclick="togglePatrulhasSecao()">
@@ -737,16 +747,7 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 <div id="chipsJovemPB" class="chips-jovem-pb"></div>
 <div id="indicadorDestaquePB" class="indicador-destaque-pb" style="display:none;"></div>
 </div>
-<div class="busca-wrap-esc">
-  <span class="busca-icon-esc">🔍</span>
-  <input type="search" class="busca-input-esc" id="buscaAcoesEsc"
-    placeholder="Buscar ação nos blocos..."
-    autocomplete="off"
-    oninput="filtrarAcoesEsc(this.value)"
-    onsearch="filtrarAcoesEsc(this.value)">
-  <button class="busca-clear-esc" id="buscaAcoesClearEsc" onclick="limparBuscaEsc()" aria-label="Limpar busca">✕</button>
 </div>
-<div class="busca-results-esc" id="buscaResultsEsc"></div>
 <div id="blocosPorEixoContainer"></div>
 </div>
 
@@ -842,19 +843,12 @@ e as variáveis (só é preciso atingir a quantidade mínima do bloco). O bloco 
 
 <button class="reset-btn somente-admin" id="btnLimparMarcacoes" onclick="confirmReset()">↺ LIMPAR MARCAÇÕES</button>
 
-<div class="backup-bar" id="backupBar">
-<div class="backup-bar-handle" onclick="toggleBackupBar()">
-<span>💾 Backup</span>
-<span id="chevBackupBar">▾</span>
-</div>
-<div class="backup-bar-body" id="backupBarBody" style="display:none;">
-<button class="sbar-btn" onclick="exportarBackupEscoteira()">📤 Exportar backup</button>
-<button class="sbar-btn somente-admin" onclick="desfazerSnapshotEscoteira()">↩ Desfazer (snapshots)</button>
-<label class="sbar-btn somente-admin">
-📥 Importar backup
-<input type="file" accept=".json" onchange="importarBackupEscoteira(event)" style="display:none;">
-</label>
-</div>
+<div class="save-bar" id="saveBarEsc">
+  <span id="save-status" class="save-bar-status">✓ Sistema carregado</span>
+  <button class="sbar-btn somente-admin" onclick="desfazerSnapshotEscoteira()" title="Voltar a um snapshot automático">↩</button>
+  <label class="sbar-btn somente-admin" title="Importar backup">📥<input type="file" accept=".json" onchange="importarBackupEscoteira(event)" style="display:none;"></label>
+  <button class="sbar-btn" onclick="exportarBackupEscoteira()" title="Baixar backup em JSON">📤 Exportar</button>
+  <button class="sbar-btn prim" id="save-main-btn" onclick="saveAll()">💾 Salvar</button>
 </div>
 
 </div>
@@ -1184,22 +1178,21 @@ function mostrarModoLeitura(motivo) {
 window.addEventListener('online', () => { if (typeof __store !== 'undefined' && __store && __store.offline) __store.sincronizar(); });
 
 function mostrarStatusSalvando(texto, erro) {
-  let el = document.getElementById('statusSalvar');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'statusSalvar';
-    el.style.cssText = 'position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:999;font-size:11px;font-weight:700;padding:6px 14px;border-radius:20px;box-shadow:var(--shadow);cursor:default;';
-    document.body.appendChild(el);
-  }
-  if (!texto) { el.style.display = 'none'; return; }
-  el.style.display = 'block';
+  const el = document.getElementById('save-status');
+  if (!el) return;
+  el.classList.toggle('erro', !!erro);
+  el.onclick = erro ? () => saveState() : null;
+  if (!texto) { el.textContent = '✓ Dados salvos às ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }); return; }
   el.textContent = texto;
-  if (erro) {
-    el.style.background = '#FDEBEA'; el.style.color = '#C0392B'; el.style.cursor = 'pointer';
-    el.onclick = () => saveState();
-  } else {
-    el.style.background = '#EEEBE7'; el.style.color = 'var(--muted)'; el.style.cursor = 'default';
-    el.onclick = null;
+}
+async function saveAll() {
+  clearTimeout(__saveTimer);
+  await saveState();
+  const btn = document.getElementById('save-main-btn');
+  if (btn && !document.getElementById('save-status').classList.contains('erro')) {
+    const orig = btn.textContent;
+    btn.textContent = '✓ Salvo!'; btn.style.background = '#27AE60'; btn.style.color = '#fff';
+    setTimeout(() => { btn.textContent = orig; btn.style.background = ''; btn.style.color = ''; }, 2000);
   }
 }
 function slugify(nome) {
@@ -1265,13 +1258,6 @@ renderRoster();
 document.getElementById('detail').innerHTML = '';
 if (paginaAtiva === 'tabela') renderPaginaTabela();
 alert('Marcações limpas com sucesso.');
-}
-
-function toggleBackupBar() {
-const body = document.getElementById('backupBarBody');
-const aberto = body.style.display !== 'none';
-body.style.display = aberto ? 'none' : 'flex';
-document.getElementById('chevBackupBar').style.transform = aberto ? 'rotate(0deg)' : 'rotate(180deg)';
 }
 
 function exportarBackupEscoteira() {
@@ -3654,7 +3640,7 @@ function iniciarObservadorHeaderCompacto() {
     let novo = compacto;
     if (!compacto && y > FECHA_APOS) novo = true;
     else if (compacto && y < ABRE_ATE) novo = false;
-    if (novo !== compacto) { compacto = novo; try { window.parent.postMessage({ tipo: 'headerCompacto', compacto: compacto }, '*'); } catch (err) {} }
+    if (novo !== compacto) { compacto = novo; const tl = document.getElementById('tabsLinha'); if (tl) tl.classList.toggle('compacto', compacto); try { window.parent.postMessage({ tipo: 'headerCompacto', compacto: compacto }, '*'); } catch (err) {} }
   }
   window.addEventListener('scroll', () => { if (!agendado) { agendado = true; requestAnimationFrame(avaliar); } }, { passive: true });
   avaliar();
@@ -3720,9 +3706,11 @@ function filtrarAcoesEsc(q){
   if(!q){
     if(res){ res.style.display='none'; res.innerHTML=''; }
     if(cont) cont.style.display='';
+    const topo2=document.getElementById('topoTabela'); if(topo2) topo2.style.display='';
     return;
   }
   if(cont) cont.style.display='none';
+  const topo=document.getElementById('topoTabela'); if(topo) topo.style.display='none';
   const ql=q.toLowerCase();
   const hits=[];
   EIXOS.forEach(eixo=>{
