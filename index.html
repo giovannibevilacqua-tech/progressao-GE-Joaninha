@@ -1105,9 +1105,9 @@ let html = `
 <input type="text" class="campo-input" id="novoChefeRegistroInput" inputmode="numeric" autocomplete="off" placeholder="Registro" style="flex:1;min-width:100px;" onkeydown="if(event.key==='Enter')criarNovoChefeUI()">
 <select class="campo-input" id="novoChefeRoleSelect" style="flex:1;min-width:130px;">
 <option value="alcateia">🐺 Alcateia</option>
-<option value="escoteira">⚜︎ Tropa Escoteira</option>
-<option value="senior">✵ Tropa Sênior</option>
-<option value="cla">Ψ Clã Pioneiro</option>
+<option value="escoteira">⚜️ Tropa Escoteira</option>
+<option value="senior">🧭 Tropa Sênior</option>
+<option value="cla">🦉 Clã Pioneiro</option>
 <option value="diretoria">🪢 Diretoria</option>
 </select>
 <select class="campo-input" id="novoChefeFuncaoSelect" style="flex:1;min-width:130px;">
@@ -1127,7 +1127,7 @@ html += uids.map(uid => {
 const c = chefes[uid];
 const secao = c.tropa || '';
 const ehAss = c.funcao === 'assistente';
-const rotSecao = { senior: '✵ Sênior', alcateia: '🐺 Alcateia', cla: 'Ψ Clã Pioneiro', diretoria: '🪢 Diretoria', escoteira: '⚜︎ Escoteira' };
+const rotSecao = { senior: '🧭 Sênior', alcateia: '🐺 Alcateia', cla: '🦉 Clã Pioneiro', diretoria: '🪢 Diretoria', escoteira: '⚜️ Escoteira' };
 return `<div class="chefe-row" style="flex-wrap:wrap;gap:6px;">
 <span class="chefe-row-registro" style="flex:1;min-width:120px;">${c.nome ? c.nome : c.registro || uid}${c.nome ? `<br><span style="font-size:10px;font-weight:500;color:var(--muted);">Registro ${c.registro || uid}</span>` : ''}
 <br><span class="chefe-tag r-${secao || 'sem'}">${ehAss ? 'Assistente' : 'Chefe'} · ${secao ? (rotSecao[secao] || secao).replace(/^\S+\s/, '') : 'Sem seção'}</span>${c.tropa2 ? ` <span class="chefe-tag r-${c.tropa2}">${c.funcao2 === 'assistente' ? 'Assistente' : 'Chefe'} · ${(rotSecao[c.tropa2] || c.tropa2).replace(/^\S+\s/, '')}</span>` : ''}${c.admin ? ' <span class="chefe-tag adm">⭐ Admin</span>' : ''}</span>
