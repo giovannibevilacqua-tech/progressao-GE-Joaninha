@@ -8,8 +8,11 @@
 <script src="Apoio/v2.js"></script>
 </head>
 <body>
-<div class="cabecalho-fixo"><nav class="tabs-linha"><button class="tab-btn-linha" data-aba="almox" onclick="mostrarAba('almox',this)">📦 Almoxarifado geral</button><button class="tab-btn-linha" data-aba="chefes" onclick="mostrarAba('chefes',this)">👥 Chefes e assistentes</button><button class="tab-btn-linha" data-aba="forms" onclick="mostrarAba('forms',this)">🎓 Formação dos chefes</button><button class="tab-btn-linha" data-aba="docs" onclick="mostrarAba('docs',this)">📄 Documentação</button></nav></div>
+<div class="cabecalho-fixo"><nav class="tabs-linha"><button class="tab-btn-linha" data-aba="almox" onclick="mostrarAba('almox',this)">📦 Almoxarifado geral</button><button class="tab-btn-linha" data-aba="secoes" onclick="mostrarAba('secoes',this)">🗂️ Seções</button><button class="tab-btn-linha" data-aba="chefes" onclick="mostrarAba('chefes',this)">👥 Chefes e assistentes</button><button class="tab-btn-linha" data-aba="forms" onclick="mostrarAba('forms',this)">🎓 Formação dos chefes</button><button class="tab-btn-linha" data-aba="docs" onclick="mostrarAba('docs',this)">📄 Documentação</button></nav></div>
 <div class="pagina" id="pg-almox"><div id="almox-box"></div></div>
+<div class="pagina" id="pg-secoes"><div class="pagina-ttl">Seções</div><div class="pagina-sub">Resumo de progressão de cada seção. Toque no nome para abrir os detalhes.</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"><button type="button" class="btn-ic" id="btnRelGrupo" style="font-weight:700;padding:10px 14px" disabled onclick="relatorioGrupo()">📄 Relatório do grupo inteiro</button><button type="button" class="btn-ic" style="padding:10px 14px" onclick="carregarSecoes(true)">↻ Atualizar</button></div>
+<div id="secoes-lista"></div><div id="secoes-frames" style="position:absolute;width:0;height:0;overflow:hidden;visibility:hidden"></div></div>
 <div class="pagina" id="pg-chefes"><div class="pagina-ttl">Chefes e assistentes</div><div class="pagina-sub">Quem tem acesso a cada seção do sistema.</div><div id="chefes-lista"><div class="vazio">Carregando…</div></div>
 </div>
 <div class="pagina" id="pg-forms"><div class="pagina-ttl">Formação dos chefes</div><div class="pagina-sub">Ramo de formação, nível, APF e atividades marcadas por chefe. Toque em Abrir ficha para ver o detalhe.</div><div id="forms-lista"><div class="vazio">Carregando…</div></div></div>
@@ -121,7 +124,55 @@ async function abrirFormacao() {
     }).join('') + '</div>';
   } catch (e) { box.innerHTML = '<div class="vazio">Não foi possível carregar a formação dos chefes.</div>'; }
 }
+
+/* ---------- aba Seções: lê o resumo de cada seção abrindo-a escondida (?resumo=1) ---------- */
+const SECOES_DIR = [
+  { id: 'alcateia', ico: '🐺', pagina: 'alcateia.html' },
+  { id: 'escoteira', ico: '🏕️', pagina: 'escoteira.html' },
+  { id: 'senior', ico: '🎓', pagina: 'tropa-senior.html' },
+  { id: 'cla', ico: '🔥', pagina: 'cla-pioneiro.html' }
+];
+const SEC_DADOS = {};
+let secoesIniciadas = false;
+function secoesQuadro() {
+  document.getElementById('secoes-lista').innerHTML = SECOES_DIR.map(s => {
+    const r = SEC_DADOS[s.id];
+    if (!r) return '<div class="card"><div class="card-ttl">' + s.ico + ' ' + escH(s.id) + '</div><div class="card-txt">Carregando…</div></div>';
+    const linhas = (r.linhas || []).map(l => '<tr><td>' + escH(l.nome) + '</td><td style="text-align:right;white-space:nowrap">' + l.n + '/' + l.total + '</td><td>' + escH(l.etapa) + '</td></tr>').join('');
+    return '<details class="card sec-det"><summary style="cursor:pointer;list-style:none;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="flex:1;min-width:150px"><b>' + s.ico + ' ' + escH(r.tropa) + '</b><br><span class="card-txt">' + r.resumo.jovens + ' jovens · média de ' + escH(r.resumo.media) + ' blocos (de ' + r.resumo.total + ')</span></span>' +
+      '<button type="button" class="btn-ic" style="font-size:12px;padding:6px 10px" onclick="event.preventDefault();event.stopPropagation();relatorioSecaoDir(\'' + s.id + '\')">📄 Relatório</button></summary>' +
+      '<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">' + (r.etapas || []).map(e => '<span class="tag-fn chefe">' + escH(e[0]) + ': ' + e[1] + '</span>').join('') + '</div>' +
+      '<div style="overflow-x:auto;margin-top:8px"><table style="width:100%;border-collapse:collapse;font-size:12px"><tbody>' + (linhas || '<tr><td class="card-txt">Nenhum jovem cadastrado.</td></tr>') + '</tbody></table></div></details>';
+  }).join('');
+  document.getElementById('btnRelGrupo').disabled = !SECOES_DIR.every(s => SEC_DADOS[s.id]);
+}
+function lerSecao(s, fr) {
+  const t0 = Date.now();
+  (function tentar() {
+    let r = null;
+    try { if (fr.contentWindow && typeof fr.contentWindow.dadosRelatorioTropa === 'function') r = fr.contentWindow.dadosRelatorioTropa(); } catch (e) { r = null; }
+    const pronto = r && ((r.linhas && r.linhas.length) || Date.now() - t0 > 12000);
+    if (pronto) { SEC_DADOS[s.id] = r; secoesQuadro(); return; }
+    if (Date.now() - t0 > 30000) { SEC_DADOS[s.id] = r || { tropa: s.id, resumo: { jovens: 0, media: '0', total: 0 }, etapas: [], colunas: [], linhas: [] }; secoesQuadro(); return; }
+    setTimeout(tentar, 500);
+  })();
+}
+function carregarSecoes(forcar) {
+  if (secoesIniciadas && !forcar) return;
+  secoesIniciadas = true;
+  Object.keys(SEC_DADOS).forEach(k => delete SEC_DADOS[k]);
+  secoesQuadro();
+  const box = document.getElementById('secoes-frames'); box.innerHTML = '';
+  SECOES_DIR.forEach(s => {
+    const fr = document.createElement('iframe'); fr.src = s.pagina + '?resumo=1'; fr.setAttribute('aria-hidden', 'true'); fr.tabIndex = -1;
+    fr.style.cssText = 'width:900px;height:600px;border:0'; box.appendChild(fr);
+    fr.addEventListener('load', () => lerSecao(s, fr));
+  });
+}
+function relatorioSecaoDir(id) { if (SEC_DADOS[id]) V2.abrirRelatorioTropa(SEC_DADOS[id]); }
+function relatorioGrupo() { if (SECOES_DIR.every(s => SEC_DADOS[s.id])) V2.abrirRelatorioGrupo(SECOES_DIR.map(s => SEC_DADOS[s.id])); }
 async function aoAbrirAba(id) {
+  if (id === 'secoes') return carregarSecoes();
   if (id === 'forms') return abrirFormacao();
   if (id !== 'chefes') return;
   const box = document.getElementById('chefes-lista');

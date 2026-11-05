@@ -225,7 +225,7 @@ function htmlFicha() {
     h += `<div class="grupo"><h3>${esc(g.t)}</h3><div class="grid">`;
     g.c.forEach(c => {
       const l = c.l[ni], base = rk + '-' + ni + '-' + c.x; let k = 0;
-      h += `<div class="cp${E.fechados[base] ? ' fechado' : ''}" data-cp="${base}"><button type="button" class="cp-top" data-fold="${base}"><span class="chev"></span><h4>${esc(c.n)}</h4><span class="n">0/0</span></button><div class="cp-body">`;
+      h += `<div class="cp${E.fechados[base] === false ? '' : ' fechado'}" data-cp="${base}"><button type="button" class="cp-top" data-fold="${base}"><span class="chev"></span><h4>${esc(c.n)}</h4><span class="n">0/0</span></button><div class="cp-body">`;
       if (l.d) h += `<p class="lead">${esc(l.d)}</p>`;
       l.g.filter(gr => gr[0] === F.ATIV).forEach(gr => {
         h += `<div class="lbl2">${esc(gr[0])}</div><div>`;

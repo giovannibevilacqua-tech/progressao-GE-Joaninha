@@ -395,14 +395,13 @@ mark.hl{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
     <button class="busca-clear" id="buscaAcoesClear" onclick="limparBusca()" aria-label="Limpar busca">✕</button>
   </div>
   <div class="busca-results" id="buscaResults"></div>
+  <button type="button" class="btn-ic" style="display:block;width:calc(100% - 24px);margin:10px 12px 0;padding:12px;font-weight:700;" onclick="relatorioTropaSecao()">📄 Relatório da alcateia</button>
 
   <details class="progress-section" id="detProgJovens" open ontoggle="try{localStorage.setItem('alcateia_progJovensAberto',this.open?'1':'0')}catch(e){}">
 <summary class="section-label" style="cursor:pointer;margin-bottom:0;list-style:none;display:flex;justify-content:space-between;align-items:center;">Progresso por lobinho <span style="font-size:11px;">▾</span></summary>
 <div style="margin-top:11px;"></div><div id="pbars"></div>
     <div class="prog-hint">Pata Tenra: 4 blocos &nbsp;|&nbsp; Saltador: +4 (8) &nbsp;|&nbsp; Rastreador: +5 (13) &nbsp;|&nbsp; Caçador: +5 (18) &nbsp;|&nbsp; 18 blocos + Caminho do Caçador = Cruzeiro do Sul</div>
 </details>
-  <button type="button" class="btn-ic" style="display:block;width:calc(100% - 24px);margin:12px 12px 0;padding:12px;font-weight:700;" onclick="relatorioTropaSecao()">📄 Relatório da alcateia</button>
-
   <div id="vista-eixo">
     <div class="eixo-hdr" id="hdr-hv" style="background:var(--hv);border-color:var(--hv-b);color:var(--hv-t);cursor:pointer;" onclick="toggleEixo('hv')">
       <span class="eixo-icon">⚙</span><span>Habilidades para a Vida</span>
@@ -1875,7 +1874,7 @@ async function autenticarComSessaoCompartilhada() {
   souAdmin = salva.admin === true; nomeLogado = salva.nome || ''; tropaDoChefeLogado = salva.tropa || null; window._tropa2 = salva.tropa2 || null;
   document.body.classList.toggle('eh-admin', souAdmin);
   salvarSessao();
-  const permitido = souAdmin || tropaDoChefeLogado === SECAO || window._tropa2 === SECAO;
+  const permitido = souAdmin || tropaDoChefeLogado === SECAO || window._tropa2 === SECAO || (window.parent !== window && /[?&]resumo=1/.test(location.search) && (salva.tropa === 'diretoria' || salva.tropa2 === 'diretoria'));
   if (!permitido) return false;
   setTimeout(renovarAgendado, 50 * 60 * 1000);
   return true;
@@ -2568,7 +2567,7 @@ async function paxtuAplicar(lista) {
 function paxtuAtualizar() { V2.paxtuLimpar(); renderAllTabs(); }
 
 // ===== Relatórios em PDF =====
-function relatorioTropaSecao() {
+function dadosRelatorioTropa() {
   const feito = (bl, yid) => bl && bl.concluded && bl.concluded[yid] === 1;
   const marcadas = Object.values(PRESENCA).filter(ev => ev && typeof ev === 'object' && Object.keys(ev).length > 0);
   const chaves = Object.keys(EIXOS);
@@ -2582,7 +2581,7 @@ function relatorioTropaSecao() {
     };
   }).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
   const cont = {}; linhas.forEach(l => { cont[l.etapa] = (cont[l.etapa] || 0) + 1; });
-  V2.abrirRelatorioTropa({
+  return ({
     tropa: 'Alcateia',
     resumo: { jovens: linhas.length, media: linhas.length ? (linhas.reduce((s, l) => s + l.n, 0) / linhas.length).toFixed(1).replace('.', ',') : '0', total: BLOCKS.length },
     etapas: Object.keys(cont).map(k => [k, cont[k]]),
@@ -2590,6 +2589,7 @@ function relatorioTropaSecao() {
     linhas
   });
 }
+function relatorioTropaSecao() { V2.abrirRelatorioTropa(dadosRelatorioTropa()); }
 function relatorioJovem(yid) {
   const y = YOUTH_DATA.find(v => v.id === yid); if (!y) return;
   const feito = (bl, id) => bl && bl.concluded && bl.concluded[id] === 1;

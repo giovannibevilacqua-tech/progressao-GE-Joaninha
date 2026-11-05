@@ -714,14 +714,13 @@ Toque em ▶ para abrir um bloco. Marque cada ação feita por jovem; o bloco se
   <button class="busca-clear-esc" id="buscaAcoesClearEsc" onclick="limparBuscaEsc()" aria-label="Limpar busca">✕</button>
 </div>
 <div class="busca-results-esc" id="buscaResultsEsc"></div>
+<button type="button" class="btn-secundario" id="btnRelatorioTropa" style="width:calc(100% - 28px);margin:10px 14px 0;padding:12px;font-weight:700;" onclick="relatorioTropa()">📄 Relatório da tropa</button>
 <div id="topoTabela">
 <details class="progress-section" id="detProgJovens" open ontoggle="try{localStorage.setItem('escoteira_progJovensAberto',this.open?'1':'0')}catch(e){}">
 <summary class="section-label" style="cursor:pointer;margin-bottom:0;list-style:none;display:flex;justify-content:space-between;align-items:center;">Progresso por escoteiro <span style="font-size:11px;">▾</span></summary>
 <div id="pbars" style="margin-top:11px;"></div>
 <div class="prog-hint">Pistas: 0–3 blocos &nbsp;|&nbsp; Trilha: 4–7 &nbsp;|&nbsp; Rumo: 8–12 &nbsp;|&nbsp; Travessia: 13–17 &nbsp;|&nbsp; 18 blocos concluídos = Lis de Ouro. Toque em um jovem para abrir a ficha.</div>
 </details>
-<button type="button" class="btn-secundario" id="btnRelatorioTropa" style="width:calc(100% - 28px);margin:10px 14px;padding:12px;font-weight:700;" onclick="relatorioTropa()">📄 Relatório da tropa</button>
-
 <div style="margin:14px 14px 0;position:relative;">
 <label class="campo-label">🔎 Destacar jovens na tabela</label>
 <input type="text" class="campo-input" id="filtroJovemPBInput" placeholder="Digite um nome..." autocomplete="off" oninput="autocompleteJovemPB(this.value)" onfocus="autocompleteJovemPB(this.value)" onkeydown="if(event.key==='Enter')adicionarPrimeiraSugestaoPB()">
@@ -995,7 +994,7 @@ async function autenticarComSessaoCompartilhada() {
   tropaDoChefeLogado = salva.tropa || null;
   const _t2 = salva.tropa2 || null;
   document.body.classList.toggle('eh-admin', souAdmin);
-  if (!souAdmin && tropaDoChefeLogado !== 'escoteira' && _t2 !== 'escoteira') return false; // chefe só da Sênior não entra aqui (a página principal já esconde esta seção)
+  if (!souAdmin && tropaDoChefeLogado !== 'escoteira' && _t2 !== 'escoteira' && !(window.parent !== window && /[?&]resumo=1/.test(location.search) && (salva.tropa === 'diretoria' || salva.tropa2 === 'diretoria'))) return false; // chefe só da Sênior não entra aqui (a página principal já esconde esta seção)
   agendarRenovacaoToken();
   return true;
 }
@@ -2130,7 +2129,7 @@ function toggleFixa(j, b, i) { S[j][b].fixas[i] = S[j][b].fixas[i] ? 0 : 1; temA
 function toggleVar(j, b, i) { S[j][b].variaveis[i] = S[j][b].variaveis[i] ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); preservarScrollFicha(() => { renderRoster(); renderDetail(j); }); }
 function toggleEsp(j, b) { S[j][b].especialidade = S[j][b].especialidade ? 0 : 1; temAlteracaoLocalPendente = true; saveStateDebounced(); preservarScrollFicha(() => { renderRoster(); renderDetail(j); }); }
 
-function relatorioTropa() {
+function dadosRelatorioTropa() {
   const hoje = new Date().toISOString().slice(0, 10);
   const chamadas = EVENTOS.filter(e => e.data && e.data <= hoje && (e.presentes || []).length > 0);
   const linhas = [...JOVENS].sort((a, b) => JNOMES[a].localeCompare(JNOMES[b], 'pt-BR')).filter(j => S[j]).map(j => {
@@ -2143,7 +2142,7 @@ function relatorioTropa() {
     };
   });
   const cont = {}; linhas.forEach(l => { cont[l.etapa] = (cont[l.etapa] || 0) + 1; });
-  V2.abrirRelatorioTropa({
+  return ({
     tropa: 'Tropa Escoteira',
     resumo: { jovens: linhas.length, media: linhas.length ? (linhas.reduce((s, l) => s + l.n, 0) / linhas.length).toFixed(1).replace('.', ',') : '0', total: BLOCO_IDS.length },
     etapas: Object.keys(cont).map(k => [k, cont[k]]),
@@ -2151,6 +2150,7 @@ function relatorioTropa() {
     linhas
   });
 }
+function relatorioTropa() { V2.abrirRelatorioTropa(dadosRelatorioTropa()); }
 
 function relatorioJovem(j) {
   if (!S[j]) return;

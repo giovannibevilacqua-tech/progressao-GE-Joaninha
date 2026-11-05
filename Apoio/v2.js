@@ -26,6 +26,8 @@ if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScop
   });
 
 }
+// Seção aberta escondida dentro da Diretoria (só para ler os números do relatório): nada de pop-ups.
+try { if (typeof document !== 'undefined' && window.parent !== window && /[?&]resumo=1/.test(location.search)) window.alert = function () {}; } catch (e) {}
 
 /* ============================================================
    v2-config.js — configuração única da migração (Firebase v2)
@@ -54,7 +56,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-11-06a"
+  VERSAO: "2026-11-06c"
 };
 
 /* ============================================================
@@ -907,9 +909,10 @@ window.V2_CONFIG = {
   }
 
   // r = { tropa, resumo:{jovens, media, total}, etapas:[[nome,qtd]], colunas:[{nome,cor,total}], linhas:[{nome,patrulha,cargo,n,total,etapa,porEixo:[n],presenca}] }
-  function montarPdfTropa(r) {
-    try {
-      var P = criarPdf(842, 595), M = 30, y = 0, VINHO = '#6D1026', num = 1;
+  function desenharTropa(P, r, nova) {
+    {
+      var M = 30, y = 0, VINHO = '#6D1026', num = 1;
+      if (nova) P.nova();
       function rod(n) { P.texto(M, P.H - 16, 'GE Joaninha · Relatório da ' + r.tropa, { t: 7.5, c: '#888888' }); P.texto(P.W - M - 40, P.H - 16, 'Pág. ' + n, { t: 7.5, c: '#888888' }); }
       y = M;
       P.texto(M, y + 14, r.tropa, { t: 20, b: 1, c: VINHO });
@@ -959,8 +962,16 @@ window.V2_CONFIG = {
       y += 10;
       if (y + 12 < P.H - 30) P.texto(M, y + 8, 'Os dados refletem o que estava registrado no momento da emissão.', { t: 8, c: '#888888' });
       rod(num);
-      return { bytes: P.bytes(), nome: 'relatorio-' + nomeSeguro(r.tropa) + '.pdf' };
-    } catch (e) { console.error(e); throw e; }
+    }
+  }
+  function montarPdfTropa(r) {
+    try { var P = criarPdf(842, 595); desenharTropa(P, r, false); return { bytes: P.bytes(), nome: 'relatorio-' + nomeSeguro(r.tropa) + '.pdf' }; }
+    catch (e) { console.error(e); throw e; }
+  }
+  // Relatório do grupo inteiro: uma lista de relatórios de tropa/seção (mesmo formato do abrirRelatorioTropa), um depois do outro.
+  function montarPdfGrupo(specs) {
+    try { var P = criarPdf(842, 595); specs.forEach(function (r, i) { desenharTropa(P, r, i > 0); }); return { bytes: P.bytes(), nome: 'relatorio-grupo.pdf' }; }
+    catch (e) { console.error(e); throw e; }
   }
 
 
@@ -1061,6 +1072,12 @@ window.V2_CONFIG = {
     setTimeout(function () { URL.revokeObjectURL(url); }, 600000);
   }
   function abrirRelatorio(r) { abrirNovaAba('Relatório — ' + r.nome, htmlJovem(r), function () { return montarPdfJovem(r); }, false); }
+  function abrirRelatorioGrupo(specs) {
+    var corpo = '<header><h1>Grupo Escoteiro Joaninha</h1><div class="sub">Relatório de progressão de todas as seções · ' + escHtml(dataExtenso()) + '</div></header>' +
+      '<div class="cards">' + specs.map(function (r) { return '<div class="card"><b>' + r.resumo.jovens + '</b>' + escHtml(r.tropa) + '</div>'; }).join('') + '</div>' +
+      specs.map(function (r) { return '<div style="break-before:page;margin-top:24px">' + htmlTropa(r) + '</div>'; }).join('');
+    abrirNovaAba('Relatório — Grupo', corpo, function () { return montarPdfGrupo(specs); }, true);
+  }
   function abrirRelatorioTropa(r) { abrirNovaAba('Relatório — ' + r.tropa, htmlTropa(r), function () { return montarPdfTropa(r); }, true); }
 
   /* ---------- lembrete mensal de backup (admins) ---------- */
@@ -1121,7 +1138,7 @@ window.V2_CONFIG = {
   }
 
   root.V2 = {
-    abrirRelatorio: abrirRelatorio, abrirRelatorioTropa: abrirRelatorioTropa,
+    abrirRelatorio: abrirRelatorio, abrirRelatorioTropa: abrirRelatorioTropa, abrirRelatorioGrupo: abrirRelatorioGrupo,
     snapshot: snapshot, listarSnapshots: listarSnapshots, lerSnapshot: lerSnapshot, protegerAntes: protegerAntes,
     resumirDiff: resumirDiff, registrarHistorico: registrarHistorico, lerHistorico: lerHistorico, podarHistorico: podarHistorico, limparCacheLocal: limparCacheLocal, temPendenciaLocal: temPendenciaLocal,
     hashSenha: hashSenha, conferirSenha: conferirSenha, senhaComHash: senhaComHash,
