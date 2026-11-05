@@ -1171,6 +1171,7 @@ ${pf.ramo2 ? `<select class="campo-input" style="font-size:11px;padding:4px 6px;
 <label class="sw-lbl" title="Administrador"><span class="sw"><input type="checkbox" ${c.admin?'checked':''} onchange="alternarAdminUI('${uid}', this.checked, this)"><i></i></span> ⭐ Admin</label>
 <button class="chefe-row-btn" onclick="editarNomeChefeUI('${uid}')" title="Editar nome">✏️</button>
 <button class="chefe-row-btn" onclick="redefinirSenhaAdmin('${uid}','${c.registro || uid}')" title="Redefinir senha">🔑</button>
+${uid === firebaseUid && c.admin ? `<button class="chefe-row-btn" onclick="trocarSenhaModoAdmin()" title="Trocar a senha do modo admin">🔐 Senha do modo admin</button>` : ''}
 ${uid !== firebaseUid ? `<button class="chefe-row-btn remover" onclick="removerAcessoChefeUI('${uid}','${c.registro || ''}')">Remover</button>` : ''}
 </div>`;
 }).join('');
