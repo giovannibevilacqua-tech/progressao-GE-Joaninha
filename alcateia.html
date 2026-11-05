@@ -372,7 +372,8 @@ mark.hl{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 .matilha-cores{display:flex;flex-wrap:wrap;gap:8px;}
 .matilha-cor{width:42px;height:42px;border-radius:10px;border:2px solid transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;}
 .matilha-cor.sel{border-color:var(--text);background:rgba(127,127,127,.15);}
-.matilha-cor.uso{opacity:.25;cursor:not-allowed;}
+.matilha-cor.uso{opacity:.35;cursor:not-allowed;position:relative;}
+.matilha-cor.uso::after{content:'✕';position:absolute;font-size:13px;font-weight:900;color:var(--text);}
 .matilhas-grid{display:flex;flex-direction:column;}
 .matilha-secao{margin:10px 0 0;position:relative;}
 @media(min-width:700px){.matilhas-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:0;}.matilhas-grid .matilha-secao{margin:10px 7px 0;}}
@@ -2454,7 +2455,7 @@ const CORES_MATILHA = [
   { chave: 'marrom', nome: 'Marrom', hex: '#6D4C41', fg: '#fff' },
   { chave: 'amarela', nome: 'Amarela', hex: '#F2C300', fg: '#3a2e00' }
 ];
-const triMatilha = (hex, t) => '<svg width="' + t + '" height="' + t + '" viewBox="0 0 24 24" style="flex-shrink:0;vertical-align:middle;filter:drop-shadow(0 0 1px rgba(0,0,0,.6))"><polygon points="12,2 22,21 2,21" fill="' + hex + '" stroke="rgba(0,0,0,.55)" stroke-width="1.5" stroke-linejoin="round"/></svg>';
+const triMatilha = (hex, t) => '<svg width="' + t + '" height="' + t + '" viewBox="0 0 24 24" style="flex-shrink:0;vertical-align:middle;"><polygon points="12,2 22,21 2,21" fill="' + hex + '" stroke="#9AA0A6" stroke-width="1.6" stroke-linejoin="round"/></svg>';
 let matilhaEditandoId = null, matilhaMenuAbertoId = null, matilhaCorSel = null, lobinhoArrastado = null;
 const corDaMatilha = m => CORES_MATILHA.find(c => c.chave === m.chave) || { hex: m.cor || '#8A94A3', fg: '#fff' };
 function matilhaDe(yid) { const id = MATILHA_DE[yid]; return id ? MATILHAS.find(m => m.id === id) || null : null; }
@@ -2506,7 +2507,7 @@ function secaoMatilha(m, membros) {
   let h = '<div class="matilha-secao">';
   if (m && matilhaEditandoId === m.id) h += formMatilha(m);
   else {
-    h += '<div class="matilha-secao-header" style="background:var(--card);color:var(--text);border:1px solid var(--border);border-left:6px solid ' + c.hex + '"><span style="display:flex;align-items:center;gap:8px;">' + (m ? triMatilha(c.hex, 18).replace('drop-shadow(0 0 1px rgba(0,0,0,.6))','drop-shadow(0 0 1.5px rgba(0,0,0,.9))') : '') + esc(nome) + '</span><span class="matilha-secao-header-direita"><span class="matilha-secao-count">' + membros.length + '</span>' + (m ? '<button class="matilha-menu-btn" onclick="event.stopPropagation();toggleMatilhaMenu(\'' + m.id + '\')">⋮</button>' : '') + '</span></div>';
+    h += '<div class="matilha-secao-header" style="background:var(--card);color:var(--text);border:1px solid var(--border);border-left:6px solid ' + c.hex + '"><span style="display:flex;align-items:center;gap:8px;">' + (m ? triMatilha(c.hex, 18) : '') + esc(nome) + '</span><span class="matilha-secao-header-direita"><span class="matilha-secao-count">' + membros.length + '</span>' + (m ? '<button class="matilha-menu-btn" onclick="event.stopPropagation();toggleMatilhaMenu(\'' + m.id + '\')">⋮</button>' : '') + '</span></div>';
     if (m && matilhaMenuAbertoId === m.id) h += '<div class="matilha-dropdown" onclick="event.stopPropagation()"><button onclick="abrirEdicaoMatilha(\'' + m.id + '\')">✏️ Trocar cor</button><button class="remover" onclick="excluirMatilha(\'' + m.id + '\')">🗑️ Excluir</button></div>';
   }
   h += '<div class="matilha-drop-zone" ondragover="event.preventDefault();this.classList.add(\'drag-over\')" ondragleave="this.classList.remove(\'drag-over\')" ondrop="this.classList.remove(\'drag-over\');dropLobinhoEm(event,\'' + dropId + '\')">' +
