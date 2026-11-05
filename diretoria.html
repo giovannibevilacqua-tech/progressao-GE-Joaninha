@@ -22,6 +22,7 @@
 <div id="secoes-lista"></div><div id="secoes-frames" style="position:absolute;width:0;height:0;overflow:hidden;visibility:hidden"></div></div>
 <div class="pagina" id="pg-forms"><div class="pagina-ttl">Formação dos chefes</div><div class="pagina-sub">Ramo de formação, nível, APF e atividades marcadas por chefe. Toque em Abrir ficha para ver o detalhe.</div><div id="forms-lista"><div class="vazio">Carregando…</div></div></div>
 <div class="pagina" id="pg-docs"><div class="pagina-ttl">Documentação</div><div class="pagina-sub">Documentos de gestão do Grupo Escoteiro.</div>
+<div class="card"><div class="card-ttl">💡 Sugestões sobre o grupo</div><div id="sug-grupo-lista" class="card-txt">Carregando…</div></div>
 <div class="card"><div class="card-ttl">📝 Atas de reunião <span class="em-breve">em construção</span></div><div class="card-txt">Registro das reuniões da diretoria e dos chefes.</div></div>
 <div class="card"><div class="card-ttl">📁 Documentos do grupo <span class="em-breve">em construção</span></div><div class="card-txt">Estatuto, registros, certificados e arquivos de consulta.</div></div>
 <div class="card"><div class="card-ttl">✅ Pendências da gestão <span class="em-breve">em construção</span></div><div class="card-txt">Renovações, prazos e tarefas do grupo.</div></div></div>
@@ -228,6 +229,27 @@ function relatorioGrupo() { if (SECOES_DIR.every(s => SEC_DADOS[s.id])) V2.abrir
 async function aoAbrirAba(id) {
   if (id === 'secoes') return carregarSecoes();
   if (id === 'forms') return abrirFormacao();
+  if (id === 'docs') return carregarSugestoesGrupo();
+}
+async function carregarSugestoesGrupo() {
+  const box = document.getElementById('sug-grupo-lista');
+  const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+  let dados = {};
+  const desenhar = () => {
+    const ids = Object.keys(dados).sort((a, b) => (dados[b].em || '').localeCompare(dados[a].em || ''));
+    box.innerHTML = ids.length ? ids.map(id => { const s = dados[id], feita = s.status === 'feita';
+      return '<div style="border:1px solid var(--border,#ddd);border-radius:10px;padding:10px;margin-top:8px;' + (feita ? 'opacity:.6;' : '') + '"><div style="font-size:11.5px;color:var(--muted,#666);margin-bottom:4px;">' + esc(s.autor || s.registro) + ' · ' + new Date(s.em).toLocaleString('pt-BR') + (feita ? ' · ✓ resolvida' : '') + '</div><div style="font-size:14px;white-space:pre-wrap;margin-bottom:8px;">' + esc(s.texto) + '</div><div style="display:flex;gap:6px;"><button type="button" class="btn-ic" data-a="feita" data-id="' + id + '">' + (feita ? '↩ Reabrir' : '✓ Marcar resolvida') + '</button><button type="button" class="btn-ic" data-a="del" data-id="' + id + '" style="color:#b3261e;">Excluir</button></div></div>'; }).join('') : 'Nenhuma sugestão sobre o grupo por enquanto.';
+    box.querySelectorAll('button[data-a]').forEach(b => b.onclick = async () => {
+      const id = b.dataset.id;
+      try {
+        if (b.dataset.a === 'del') { if (!confirm('Excluir esta sugestão?')) return; const r = await fetch(urlComAuthFirebase(DB_URL + '/sugestoesGrupo/' + id + '.json'), { method: 'DELETE' }); if (!r.ok) throw 0; delete dados[id]; }
+        else { const novo = dados[id].status === 'feita' ? 'nova' : 'feita'; const r = await fetch(urlComAuthFirebase(DB_URL + '/sugestoesGrupo/' + id + '/status.json'), { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(novo) }); if (!r.ok) throw 0; dados[id].status = novo; }
+        desenhar();
+      } catch (e) { alert('Não foi possível atualizar.'); }
+    });
+  };
+  try { const r = await fetch(urlComAuthFirebase(DB_URL + '/sugestoesGrupo.json')); if (!r.ok) throw 0; dados = (await r.json()) || {}; desenhar(); }
+  catch (e) { box.textContent = 'Não foi possível carregar as sugestões.'; }
 }
 iniciarSecao();
 </script>

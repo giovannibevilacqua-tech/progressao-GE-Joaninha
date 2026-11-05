@@ -1413,13 +1413,23 @@ const SUG_TIPOS = { melhoria: '✨ Melhoria', correcao: '🛠️ Correção', aj
 const SUG_SECOES = { geral: 'Geral / sistema todo', alcateia: '🐺 Alcateia', escoteira: '⚜️ Escoteira', senior: '🧭 Sênior', cla: '🦉 Clã Pioneiro', diretoria: '🪢 Diretoria' };
 function abrirSugestao() {
   const campo = 'width:100%;box-sizing:border-box;padding:10px;border:1px solid #bbb;border-radius:8px;font-size:15px;margin-bottom:8px;background:#fff;color:#1a1a1a;font-family:inherit;';
-  const m = modalSimples('modalSugestao', '<div style="font-size:16px;font-weight:800;margin-bottom:4px;">💡 Enviar sugestão</div><div style="font-size:12.5px;color:#555;margin-bottom:12px;line-height:1.5;">Conte o que pode melhorar, o que está errado ou o que precisa de ajuste.</div>'
-    + '<div id="sugTipo" style="display:flex;gap:6px;margin-bottom:8px;">' + Object.keys(SUG_TIPOS).map((k, i) => '<button type="button" data-k="' + k + '" style="flex:1;padding:9px 4px;border-radius:8px;border:1px solid #bbb;font-weight:700;font-size:12.5px;cursor:pointer;' + (i === 0 ? 'background:#1b6e3a;color:#fff;border-color:#1b6e3a;' : 'background:#f3f3f3;color:#1a1a1a;') + '">' + SUG_TIPOS[k] + '</button>').join('') + '</div>'
-    + '<select id="sugSecao" style="' + campo + '">' + Object.keys(SUG_SECOES).map(k => '<option value="' + k + '">' + SUG_SECOES[k] + '</option>').join('') + '</select>'
+  const chip = (on) => 'flex:1;padding:9px 4px;border-radius:8px;border:1px solid ' + (on ? '#1b6e3a' : '#bbb') + ';font-weight:700;font-size:12.5px;cursor:pointer;background:' + (on ? '#1b6e3a' : '#f3f3f3') + ';color:' + (on ? '#fff' : '#1a1a1a') + ';';
+  const m = modalSimples('modalSugestao', '<div style="font-size:16px;font-weight:800;margin-bottom:10px;">💡 Enviar sugestão</div>'
+    + '<div id="sugAssunto" style="display:flex;gap:6px;margin-bottom:12px;"><button type="button" data-k="sistema" style="' + chip(true) + '">💻 Sobre o sistema</button><button type="button" data-k="grupo" style="' + chip(false) + '">🏕️ Sobre o grupo</button></div>'
+    + '<div id="sugBlocoSistema"><div style="font-size:12.5px;color:#555;margin-bottom:8px;line-height:1.5;">Conte o que pode melhorar, o que está errado ou o que precisa de ajuste no sistema.</div>'
+    + '<div id="sugTipo" style="display:flex;gap:6px;margin-bottom:8px;">' + Object.keys(SUG_TIPOS).map((k, i) => '<button type="button" data-k="' + k + '" style="' + chip(i === 0) + '">' + SUG_TIPOS[k] + '</button>').join('') + '</div>'
+    + '<select id="sugSecao" style="' + campo + '">' + Object.keys(SUG_SECOES).map(k => '<option value="' + k + '">' + SUG_SECOES[k] + '</option>').join('') + '</select></div>'
+    + '<div id="sugBlocoGrupo" style="display:none;font-size:12.5px;color:#555;margin-bottom:8px;line-height:1.5;">Sugestões sobre o funcionamento do grupo, atividades, estrutura ou qualquer assunto do dia a dia. A Diretoria recebe e acompanha.</div>'
     + '<textarea id="sugTexto" rows="5" maxlength="1500" placeholder="Descreva aqui…" style="' + campo + 'resize:vertical;"></textarea>'
     + '<div id="sugErro" style="display:none;color:#b3261e;font-size:12.5px;margin-bottom:8px;"></div><div style="display:flex;gap:8px;"><button type="button" id="sugCancela" style="flex:1;padding:10px;border-radius:8px;border:1px solid #bbb;background:#f3f3f3;color:#1a1a1a;font-weight:700;">Cancelar</button><button type="button" id="sugOk" style="flex:1;padding:10px;border-radius:8px;border:0;background:#1b6e3a;color:#fff;font-weight:700;">Enviar</button></div>');
-  let tipo = 'melhoria';
-  m.querySelectorAll('#sugTipo button').forEach(b => b.onclick = () => { tipo = b.dataset.k; m.querySelectorAll('#sugTipo button').forEach(x => { const on = x === b; x.style.background = on ? '#1b6e3a' : '#f3f3f3'; x.style.color = on ? '#fff' : '#1a1a1a'; x.style.borderColor = on ? '#1b6e3a' : '#bbb'; }); });
+  let tipo = 'melhoria', assunto = 'sistema';
+  const marcar = (sel, b) => m.querySelectorAll(sel + ' button').forEach(x => x.style.cssText = chip(x === b));
+  m.querySelectorAll('#sugTipo button').forEach(b => b.onclick = () => { tipo = b.dataset.k; marcar('#sugTipo', b); });
+  m.querySelectorAll('#sugAssunto button').forEach(b => b.onclick = () => {
+    assunto = b.dataset.k; marcar('#sugAssunto', b);
+    document.getElementById('sugBlocoSistema').style.display = assunto === 'sistema' ? '' : 'none';
+    document.getElementById('sugBlocoGrupo').style.display = assunto === 'grupo' ? '' : 'none';
+  });
   document.getElementById('sugCancela').onclick = () => m.remove();
   document.getElementById('sugOk').onclick = async () => {
     const txt = document.getElementById('sugTexto').value.trim(), er = document.getElementById('sugErro'), btn = document.getElementById('sugOk');
@@ -1427,9 +1437,11 @@ function abrirSugestao() {
     btn.disabled = true; er.style.display = 'none';
     try {
       const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-      const r = await fetch(urlComAuthFirebase(DB_URL + '/sugestoes/' + id + '.json'), { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ tipo, secao: document.getElementById('sugSecao').value, texto: txt, autor: nomeLogado || registroLogado || '', registro: registroLogado || '', uid: firebaseUid || '', em: new Date().toISOString(), status: 'nova' }) });
+      const corpo = { texto: txt, autor: nomeLogado || registroLogado || '', registro: registroLogado || '', uid: firebaseUid || '', em: new Date().toISOString(), status: 'nova' };
+      if (assunto === 'sistema') { corpo.tipo = tipo; corpo.secao = document.getElementById('sugSecao').value; }
+      const r = await fetch(urlComAuthFirebase(DB_URL + (assunto === 'grupo' ? '/sugestoesGrupo/' : '/sugestoes/') + id + '.json'), { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(corpo) });
       if (!r.ok) throw new Error('HTTP ' + r.status);
-      m.remove(); alert('Sugestão enviada. Obrigado!');
+      m.remove(); alert(assunto === 'grupo' ? 'Sugestão enviada para a Diretoria. Obrigado!' : 'Sugestão enviada. Obrigado!');
     } catch (e) { btn.disabled = false; er.textContent = 'Não foi possível enviar. Verifique a conexão e tente de novo.'; er.style.display = 'block'; }
   };
   setTimeout(() => document.getElementById('sugTexto').focus(), 50);
