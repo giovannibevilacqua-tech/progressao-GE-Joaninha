@@ -31,6 +31,12 @@ try {
   if (typeof document !== 'undefined' && window.parent !== window && /[?&]resumo=1/.test(location.search)) {
     window.alert = function () {};
     // modo só leitura: esta cópia da seção (escondida na Diretoria) NUNCA grava nada no banco
+    // e não mexe no armazenamento do navegador (cópias locais, pendências, sessão): só o login pode renovar o token
+    try {
+      var _set = Storage.prototype.setItem, _rem = Storage.prototype.removeItem;
+      Storage.prototype.setItem = function (k, val) { if (k === 'chefeSessao') return _set.call(this, k, val); };
+      Storage.prototype.removeItem = function () {};
+    } catch (e) {}
     var _fetchOrig = window.fetch.bind(window);
     window.fetch = function (u, o) {
       var m = ((o && o.method) || (u && u.method) || 'GET').toUpperCase();
@@ -67,7 +73,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-11-06i"
+  VERSAO: "2026-11-06j"
 };
 
 /* ============================================================
