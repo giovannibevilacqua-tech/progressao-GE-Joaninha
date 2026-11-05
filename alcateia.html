@@ -370,15 +370,15 @@ mark.hl{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 .modal-row small{flex-basis:100%;font-size:10px;color:var(--muted);line-height:1.4;}
 .matilha-form{display:flex;flex-direction:column;gap:8px;padding:10px;border:1px dashed var(--border);border-radius:10px;}
 .matilha-cores{display:flex;flex-wrap:wrap;gap:8px;}
-.matilha-cor{width:38px;height:38px;border-radius:50%;border:3px solid transparent;cursor:pointer;box-shadow:0 0 0 1px rgba(0,0,0,.25);}
-.matilha-cor.sel{border-color:var(--text);}
+.matilha-cor{width:42px;height:42px;border-radius:10px;border:2px solid transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.matilha-cor.sel{border-color:var(--text);background:rgba(127,127,127,.15);}
 .matilha-cor.uso{opacity:.25;cursor:not-allowed;}
 .matilhas-grid{display:flex;flex-direction:column;}
 .matilha-secao{margin:10px 0 0;position:relative;}
 @media(min-width:700px){.matilhas-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:0;}.matilhas-grid .matilha-secao{margin:10px 7px 0;}}
 .matilha-secao-header{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-radius:10px 10px 0 0;font-size:13px;font-weight:800;}
 .matilha-secao-header-direita{display:flex;align-items:center;gap:4px;}
-.matilha-secao-count{background:rgba(255,255,255,.28);padding:1px 9px;border-radius:20px;font-size:10px;font-weight:800;}
+.matilha-secao-count{background:rgba(127,127,127,.2);padding:1px 9px;border-radius:20px;font-size:10px;font-weight:800;}
 .matilha-menu-btn{border:none;background:none;color:inherit;font-size:15px;font-weight:900;cursor:pointer;padding:1px 5px;border-radius:6px;}
 .matilha-dropdown{position:absolute;top:38px;right:0;background:var(--card);border:1px solid var(--border);border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.18);z-index:20;min-width:150px;overflow:hidden;}
 .matilha-dropdown button{display:block;width:100%;text-align:left;padding:10px 12px;font-size:12px;font-weight:700;border:none;background:none;cursor:pointer;color:var(--text);}
@@ -2085,7 +2085,7 @@ function renderProgressBars(){
   const ordem = MATILHAS.map(m => m.id).filter(k => grupos[k]); if (grupos._sem) ordem.push('_sem');
   ordem.forEach(k => {
     const m = k === '_sem' ? null : MATILHAS.find(x => x.id === k);
-    if (MATILHAS.length) { const lab = document.createElement('div'); lab.className = 'prog-grupo'; lab.style.borderColor = m ? corDaMatilha(m).hex : '#8A94A3'; lab.textContent = m ? m.nome : 'Sem matilha'; c.appendChild(lab); }
+    if (MATILHAS.length) { const lab = document.createElement('div'); lab.className = 'prog-grupo'; lab.style.borderColor = m ? corDaMatilha(m).hex : '#8A94A3'; lab.innerHTML = (m ? triMatilha(corDaMatilha(m).hex, 14) + ' ' : '') + esc(m ? m.nome : 'Sem matilha'); c.appendChild(lab); }
     grupos[k].forEach(({yid,i}) => {
     const st = statsJovem(yid), et = etapaAtual(st.n), pct = Math.round(st.n / TOTAL_BLOCOS * 100);
     const pills = [1,2,3,4].map(k => `<span class="etapa-pill" style="color:${ETAPAS[k].cor};border-color:${ETAPAS[k].cor};background:${ETAPAS[k].cor}12">${ETAPAS[k].nome} ${st.porEtapa[k]}/${BLOCOS_ETAPA[k]}</span>`).join('');
@@ -2447,17 +2447,14 @@ async function deleteYouth(yid){
 }
 /* ---------- Matilhas (agrupam os lobinhos; cada matilha é uma cor) ---------- */
 const CORES_MATILHA = [
-  { chave: 'amarela', nome: 'Amarela', hex: '#F2C300', fg: '#3a2e00' },
-  { chave: 'azul', nome: 'Azul', hex: '#1565C0', fg: '#fff' },
-  { chave: 'verde', nome: 'Verde', hex: '#2E8B57', fg: '#fff' },
+  { chave: 'branca', nome: 'Branca', hex: '#F5F5F5', fg: '#333' },
+  { chave: 'cinza', nome: 'Cinza', hex: '#8A8F94', fg: '#fff' },
+  { chave: 'preta', nome: 'Preta', hex: '#1E1E1E', fg: '#fff' },
   { chave: 'vermelha', nome: 'Vermelha', hex: '#D32F2F', fg: '#fff' },
-  { chave: 'laranja', nome: 'Laranja', hex: '#E67E22', fg: '#fff' },
-  { chave: 'roxa', nome: 'Roxa', hex: '#7B1FA2', fg: '#fff' },
   { chave: 'marrom', nome: 'Marrom', hex: '#6D4C41', fg: '#fff' },
-  { chave: 'cinza', nome: 'Cinza', hex: '#7F8C8D', fg: '#fff' },
-  { chave: 'preta', nome: 'Preta', hex: '#263238', fg: '#fff' },
-  { chave: 'branca', nome: 'Branca', hex: '#ECEFF1', fg: '#333' }
+  { chave: 'amarela', nome: 'Amarela', hex: '#F2C300', fg: '#3a2e00' }
 ];
+const triMatilha = (hex, t) => '<svg width="' + t + '" height="' + t + '" viewBox="0 0 24 24" style="flex-shrink:0;vertical-align:middle;filter:drop-shadow(0 0 1px rgba(0,0,0,.6))"><polygon points="12,2 22,21 2,21" fill="' + hex + '" stroke="rgba(0,0,0,.55)" stroke-width="1.5" stroke-linejoin="round"/></svg>';
 let matilhaEditandoId = null, matilhaMenuAbertoId = null, matilhaCorSel = null, lobinhoArrastado = null;
 const corDaMatilha = m => CORES_MATILHA.find(c => c.chave === m.chave) || { hex: m.cor || '#8A94A3', fg: '#fff' };
 function matilhaDe(yid) { const id = MATILHA_DE[yid]; return id ? MATILHAS.find(m => m.id === id) || null : null; }
@@ -2469,7 +2466,7 @@ function formMatilha(m) {
   const usadas = MATILHAS.filter(x => !m || x.id !== m.id).map(x => x.chave);
   if (matilhaCorSel === null) matilhaCorSel = m ? m.chave : (CORES_MATILHA.find(c => !usadas.includes(c.chave)) || CORES_MATILHA[0]).chave;
   return '<div class="matilha-form" onclick="event.stopPropagation()"><div style="font-size:12px;font-weight:700;">Escolha a cor da matilha</div><div class="matilha-cores">' +
-    CORES_MATILHA.map(c => { const uso = usadas.includes(c.chave); return '<div class="matilha-cor' + (matilhaCorSel === c.chave ? ' sel' : '') + (uso ? ' uso' : '') + '" style="background:' + c.hex + '" title="' + c.nome + (uso ? ' (já existe)' : '') + '"' + (uso ? '' : ' onclick="escolherCorMatilha(\'' + c.chave + '\')"') + '></div>'; }).join('') + '</div>' +
+    CORES_MATILHA.map(c => { const uso = usadas.includes(c.chave); return '<div class="matilha-cor' + (matilhaCorSel === c.chave ? ' sel' : '') + (uso ? ' uso' : '') + '" title="' + c.nome + (uso ? ' (já existe)' : '') + '"' + (uso ? '' : ' onclick="escolherCorMatilha(\'' + c.chave + '\')"') + '>' + triMatilha(c.hex, 30) + '</div>'; }).join('') + '</div>' +
     '<div style="display:flex;gap:8px;"><button class="btn-prim" style="flex:1;padding:9px;font-size:12px;" onclick="salvarMatilha(\'' + (m ? m.id : 'nova') + '\')">💾 Salvar</button><button class="btn-sec" style="flex:1;padding:9px;font-size:12px;" onclick="cancelarEdicaoMatilha()">Cancelar</button></div></div>';
 }
 function escolherCorMatilha(chave) { matilhaCorSel = chave; renderMatilhas(); }
@@ -2509,7 +2506,7 @@ function secaoMatilha(m, membros) {
   let h = '<div class="matilha-secao">';
   if (m && matilhaEditandoId === m.id) h += formMatilha(m);
   else {
-    h += '<div class="matilha-secao-header" style="background:' + c.hex + ';color:' + c.fg + '"><span>' + esc(nome) + '</span><span class="matilha-secao-header-direita"><span class="matilha-secao-count">' + membros.length + '</span>' + (m ? '<button class="matilha-menu-btn" onclick="event.stopPropagation();toggleMatilhaMenu(\'' + m.id + '\')">⋮</button>' : '') + '</span></div>';
+    h += '<div class="matilha-secao-header" style="background:var(--card);color:var(--text);border:1px solid var(--border);border-left:6px solid ' + c.hex + '"><span style="display:flex;align-items:center;gap:8px;">' + (m ? triMatilha(c.hex, 18).replace('drop-shadow(0 0 1px rgba(0,0,0,.6))','drop-shadow(0 0 1.5px rgba(0,0,0,.9))') : '') + esc(nome) + '</span><span class="matilha-secao-header-direita"><span class="matilha-secao-count">' + membros.length + '</span>' + (m ? '<button class="matilha-menu-btn" onclick="event.stopPropagation();toggleMatilhaMenu(\'' + m.id + '\')">⋮</button>' : '') + '</span></div>';
     if (m && matilhaMenuAbertoId === m.id) h += '<div class="matilha-dropdown" onclick="event.stopPropagation()"><button onclick="abrirEdicaoMatilha(\'' + m.id + '\')">✏️ Trocar cor</button><button class="remover" onclick="excluirMatilha(\'' + m.id + '\')">🗑️ Excluir</button></div>';
   }
   h += '<div class="matilha-drop-zone" ondragover="event.preventDefault();this.classList.add(\'drag-over\')" ondragleave="this.classList.remove(\'drag-over\')" ondrop="this.classList.remove(\'drag-over\');dropLobinhoEm(event,\'' + dropId + '\')">' +
