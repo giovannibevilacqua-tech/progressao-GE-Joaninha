@@ -2553,7 +2553,7 @@ const CORES_MATILHA = [
   { chave: 'marrom', nome: 'Marrom', hex: '#6D4C41', fg: '#fff' },
   { chave: 'amarela', nome: 'Amarela', hex: '#F2C300', fg: '#3a2e00' }
 ];
-const triMatilha = (hex, t) => '<svg width="' + t + '" height="' + t + '" viewBox="0 0 24 24" style="flex-shrink:0;vertical-align:middle;"><polygon points="12,2 22,21 2,21" fill="' + hex + '" stroke="#9AA0A6" stroke-width="1.6" stroke-linejoin="round"/></svg>';
+const triMatilha = (hex, t) => { const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><polygon points="12,2 22,21 2,21" fill="' + hex + '" stroke="#9AA0A6" stroke-width="1.6" stroke-linejoin="round"/></svg>'; return '<img alt="" width="' + t + '" height="' + t + '" style="flex-shrink:0;vertical-align:middle;" src="data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg) + '">'; };
 let matilhaEditandoId = null, matilhaMenuAbertoId = null, matilhaCorSel = null, lobinhoArrastado = null;
 const corDaMatilha = m => CORES_MATILHA.find(c => c.chave === m.chave) || { hex: m.cor || '#8A94A3', fg: '#fff' };
 function matilhaDe(yid) { const id = MATILHA_DE[yid]; return id ? MATILHAS.find(m => m.id === id) || null : null; }
