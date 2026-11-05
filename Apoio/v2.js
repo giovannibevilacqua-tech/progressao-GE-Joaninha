@@ -69,8 +69,7 @@ try {
   if (typeof document !== 'undefined') {
     (function () {
       var st = document.createElement('style');
-      st.textContent = 'select{color-scheme:light;} select option,select optgroup{background:#fff !important;color:#222 !important;}' +
-        '.cs-panel{position:fixed;z-index:100000;background:#fff;color:#222;border:1px solid #bbb;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.28);overflow-y:auto;overflow-x:hidden;padding:4px;box-sizing:border-box;font-family:inherit;}' +
+      st.textContent = '.cs-panel{position:fixed;z-index:100000;background:#fff;color:#222;border:1px solid #bbb;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.28);overflow-y:auto;overflow-x:hidden;padding:4px;box-sizing:border-box;font-family:inherit;}' +
         '.cs-grp{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#666;padding:8px 10px 4px;}' +
         '.cs-opt{display:block;width:100%;text-align:left;padding:9px 10px;border:none;border-radius:7px;background:transparent;color:#222;font:inherit;font-size:13px;line-height:1.3;white-space:normal;word-break:break-word;cursor:pointer;}' +
         '.cs-opt:hover,.cs-opt.cs-foco{background:#E6EEF9;}' +
@@ -175,7 +174,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-11-06w"
+  VERSAO: "2026-11-06x"
 };
 
 /* ============================================================
