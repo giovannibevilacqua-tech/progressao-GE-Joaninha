@@ -174,7 +174,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-11-07u"
+  VERSAO: "2026-11-07w"
 };
 
 /* ============================================================
@@ -2286,7 +2286,7 @@ window.V2_ALMOX = (function () {
         V2_FIN.montarDiretoria({ container:'fin-box' }); V2_FIN.abrirDiretoria();
    ============================================================ */
 (function (root) {
-  if (typeof window === 'undefined') return;
+  if (typeof document === 'undefined') return; // no service worker não há tela
   var NOMES = { alcateia: '🐺 Alcateia', escoteira: '⚜️ Escoteira', senior: '🧭 Sênior', cla: '🦉 Clã Pioneiro', grupo: '🏕️ Caixa do grupo' };
   var cfg = null, dir = null, mes = null, dados = {}, formAberto = null;
   var CORES = { ent: '#1b6e3a', sai: '#b3261e', prev: '#a86a00', neutro: '#1B3B6F' };
@@ -2936,7 +2936,7 @@ function restaurarUltimaAba(){
    Uso: V2_NAVG({ nav:'nav.tabs', embrulhar:true, grupos:[{ rotulo:'👥 Seção', botoes:['seletor1','seletor2'] }, ...] })
    ============================================================ */
 (function (root) {
-  if (typeof window === 'undefined') return;
+  if (typeof document === 'undefined') return; // no service worker não há tela
   function css() {
     if (document.getElementById('v2NavgCss')) return;
     var st = document.createElement('style'); st.id = 'v2NavgCss';
@@ -2998,7 +2998,7 @@ function restaurarUltimaAba(){
 
 /* Ícones dos eixos: o mesmo desenho da Tropa Escoteira em qualquer seção ([data-eixo-ico="hv|ma|pd|sb"]). */
 (function (root) {
-  if (typeof window === 'undefined') return;
+  if (typeof document === 'undefined') return; // no service worker não há tela
   function preencher() {
     if (!root.V2_BLOCOS || !root.V2_BLOCOS.EIXOS) return;
     if (!document.getElementById('v2EixoIcoCss')) { var st = document.createElement('style'); st.id = 'v2EixoIcoCss'; st.textContent = '.eixo-icone-mini{width:24px;height:24px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}.eixo-icone-mini svg{width:62%;height:62%}'; document.head.appendChild(st); }

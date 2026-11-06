@@ -1622,6 +1622,8 @@ document.addEventListener('DOMContentLoaded', () => {
     f.addEventListener('load', () => { try { f.contentWindow.addEventListener('scroll', () => aoRolarSecao(k, f), { passive: true }); } catch (e) {} });
   });
 });
+// reforço: confere a rolagem da seção ativa a cada instante, caso o aviso de rolagem do navegador não chegue (alguns celulares/navegadores perdem o evento dentro do iframe)
+setInterval(() => { if (document.hidden || !MOBILE_MQ.matches || !ramoAtual) return; const f = document.getElementById(SECOES[ramoAtual].frame); if (f && f.offsetParent !== null) aoRolarSecao(ramoAtual, f); }, 200);
 MOBILE_MQ.addEventListener && MOBILE_MQ.addEventListener('change', e => { if (!e.matches) topoMudar(false, true); });
 function ramoPermitido(r) { return verTudo() || tropaDoChefeLogado === r || tropa2DoChefeLogado === r; }
 let ramoAtual = null;
