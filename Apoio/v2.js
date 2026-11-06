@@ -174,7 +174,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-11-07p"
+  VERSAO: "2026-11-07q"
 };
 
 /* ============================================================
@@ -2994,4 +2994,19 @@ function restaurarUltimaAba(){
     gs.forEach(function (g) { g.botoes.forEach(function (b) { mo.observe(b, { attributes: true, attributeFilter: ['class'] }); }); });
     atualizar(); setTimeout(atualizar, 400); setTimeout(atualizar, 1500); window.addEventListener('load', atualizar);
   };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+/* Ícones dos eixos: o mesmo desenho da Tropa Escoteira em qualquer seção ([data-eixo-ico="hv|ma|pd|sb"]). */
+(function (root) {
+  if (typeof window === 'undefined') return;
+  function preencher() {
+    if (!root.V2_BLOCOS || !root.V2_BLOCOS.EIXOS) return;
+    if (!document.getElementById('v2EixoIcoCss')) { var st = document.createElement('style'); st.id = 'v2EixoIcoCss'; st.textContent = '.eixo-icone-mini{width:24px;height:24px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}.eixo-icone-mini svg{width:62%;height:62%}'; document.head.appendChild(st); }
+    Array.prototype.forEach.call(document.querySelectorAll('[data-eixo-ico]'), function (el) {
+      var e = root.V2_BLOCOS.EIXOS.filter(function (x) { return x.id === el.getAttribute('data-eixo-ico'); })[0];
+      if (e && !el.firstChild) { el.style.background = e.cor; el.innerHTML = e.icone; }
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', preencher); else preencher();
+  window.addEventListener('load', preencher);
 })(typeof window !== 'undefined' ? window : globalThis);

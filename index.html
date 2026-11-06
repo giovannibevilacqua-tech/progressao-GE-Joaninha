@@ -1469,6 +1469,78 @@ async function abrirSugestoesAdmin() {
   try { const r = await fetch(urlComAuthFirebase(DB_URL + '/sugestoes.json')); if (!r.ok) throw 0; dados = (await r.json()) || {}; desenhar(); }
   catch (e) { document.getElementById('sugLista').textContent = 'Não foi possível carregar. Confira se as regras do banco já foram atualizadas.'; }
 }
+
+// ═══ BIOMETRIA: digital/rosto do aparelho como tranca do app (só neste aparelho; a senha continua valendo) ═══
+const BIO_KEY = 'bioCred';
+function bioLer() { try { const o = JSON.parse(localStorage.getItem(BIO_KEY) || 'null'); return o && o.id ? o : null; } catch (e) { return null; } }
+function bioAtivoPara(registro) { const o = bioLer(); return !!(o && o.registro === registro); }
+async function bioSuportado() { try { return !!(window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable && await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()); } catch (e) { return false; } }
+const b64u = { de: a => btoa(String.fromCharCode.apply(null, new Uint8Array(a))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''), pa: t => Uint8Array.from(atob(t.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0)) };
+async function bioAtivar(registro) {
+  try {
+    const cred = await navigator.credentials.create({ publicKey: {
+      challenge: crypto.getRandomValues(new Uint8Array(32)), rp: { name: 'GE Joaninha' },
+      user: { id: new TextEncoder().encode('joaninha-' + registro), name: registro, displayName: nomeLogado || registro },
+      pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+      authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'discouraged' }, timeout: 60000 } });
+    if (!cred) return false;
+    localStorage.setItem(BIO_KEY, JSON.stringify({ registro, id: b64u.de(cred.rawId) }));
+    return true;
+  } catch (e) { return false; }
+}
+async function bioVerificar() {
+  const o = bioLer(); if (!o) return true;
+  try {
+    const r = await navigator.credentials.get({ publicKey: { challenge: crypto.getRandomValues(new Uint8Array(32)), userVerification: 'required', timeout: 60000,
+      allowCredentials: [{ type: 'public-key', id: b64u.pa(o.id), transports: ['internal'] }] } });
+    return !!r;
+  } catch (e) { return false; }
+}
+function bioDesativar() { try { localStorage.removeItem(BIO_KEY); } catch (e) {} bioAtualizarRodape(); }
+let bioTravado = false;
+function bioTravar() {
+  if (bioTravado) return; bioTravado = true;
+  const ov = document.createElement('div'); ov.id = 'bioLock';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:300000;background:var(--bg,#f0ede8);display:flex;align-items:center;justify-content:center;padding:20px;';
+  ov.innerHTML = '<div style="background:var(--card,#fff);color:var(--text,#1a1a1a);border-radius:16px;padding:26px 22px;width:100%;max-width:340px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.25);"><div style="font-size:40px;margin-bottom:6px;">🔒</div><div style="font-size:17px;font-weight:800;margin-bottom:4px;">App bloqueado</div><div style="font-size:13px;color:var(--muted,#666);margin-bottom:16px;line-height:1.5;">Use a digital ou o rosto para continuar.</div>'
+    + '<button type="button" id="bioDesbloq" style="width:100%;padding:13px;border-radius:10px;border:0;background:#1b6e3a;color:#fff;font-weight:800;font-size:15px;margin-bottom:10px;">👆 Desbloquear</button>'
+    + '<div id="bioErro" style="display:none;color:#b3261e;font-size:12.5px;margin-bottom:8px;"></div>'
+    + '<button type="button" id="bioSenha" style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--border,#ccc);background:transparent;color:inherit;font-weight:700;font-size:13px;margin-bottom:6px;">Entrar com senha</button>'
+    + '<a href="#" id="bioOff" style="font-size:12px;color:var(--muted,#666);">Desativar biometria neste aparelho</a></div>';
+  document.body.appendChild(ov);
+  const abrir = async () => {
+    const ok = await bioVerificar();
+    if (ok) { ov.remove(); bioTravado = false; }
+    else { const e = document.getElementById('bioErro'); if (e) { e.textContent = 'Não foi possível confirmar. Tente de novo ou entre com a senha.'; e.style.display = 'block'; } }
+  };
+  document.getElementById('bioDesbloq').onclick = abrir;
+  document.getElementById('bioSenha').onclick = () => { limparSessao(); window.location.reload(); };
+  document.getElementById('bioOff').onclick = e => { e.preventDefault(); if (!confirm('Desativar a digital/rosto neste aparelho? O app deixa de pedir biometria.')) return; bioDesativar(); ov.remove(); bioTravado = false; };
+  setTimeout(abrir, 250);
+}
+let bioOcultoEm = 0;
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { bioOcultoEm = Date.now(); return; }
+  if (bioOcultoEm && Date.now() - bioOcultoEm > 3 * 60 * 1000 && registroLogado && bioAtivoPara(registroLogado)) bioTravar();
+  bioOcultoEm = 0;
+});
+async function bioOferecerAposLogin(registro) {
+  if (!(await bioSuportado()) || bioAtivoPara(registro)) return;
+  try { if (localStorage.getItem('bioRecusou_' + registro) === '1') return; } catch (e) {}
+  const m = modalSimples('modalBioOferta', '<div style="font-size:30px;text-align:center;">👆</div><div style="font-size:16px;font-weight:800;margin:6px 0;text-align:center;">Entrar com digital ou rosto?</div><div style="font-size:13px;color:#555;line-height:1.5;margin-bottom:14px;text-align:center;">Neste aparelho, o app passa a pedir a biometria ao abrir. A senha continua valendo como alternativa.</div><div style="display:flex;gap:8px;"><button type="button" id="bioNao" style="flex:1;padding:11px;border-radius:10px;border:1px solid #bbb;background:#f3f3f3;color:#1a1a1a;font-weight:700;">Agora não</button><button type="button" id="bioSim" style="flex:1;padding:11px;border-radius:10px;border:0;background:#1b6e3a;color:#fff;font-weight:700;">Ativar</button></div>');
+  document.getElementById('bioNao').onclick = () => { try { localStorage.setItem('bioRecusou_' + registro, '1'); } catch (e) {} m.remove(); };
+  document.getElementById('bioSim').onclick = async () => { const ok = await bioAtivar(registro); m.remove(); bioAtualizarRodape(); if (!ok) alert('Não foi possível ativar a biometria neste aparelho.'); };
+}
+async function bioAtualizarRodape() {
+  let r = document.getElementById('bioRodape');
+  if (!(await bioSuportado()) || !registroLogado) { if (r) r.style.display = 'none'; return; }
+  if (!r) { r = document.createElement('div'); r.id = 'bioRodape'; r.style.cssText = 'text-align:center;margin:18px 14px 110px;font-size:12px;color:var(--muted,#666);'; document.body.appendChild(r); }
+  const on = bioAtivoPara(registroLogado); r.style.display = '';
+  r.innerHTML = '🔐 Digital/rosto neste aparelho: <a href="#" id="bioToggle" style="color:inherit;font-weight:700;">' + (on ? 'desativar' : 'ativar') + '</a>';
+  document.getElementById('bioToggle').onclick = async e => { e.preventDefault();
+    if (on) { if (confirm('Desativar a digital/rosto neste aparelho?')) bioDesativar(); }
+    else { if (await bioAtivar(registroLogado)) { try { localStorage.removeItem('bioRecusou_' + registroLogado); } catch (x) {} bioAtualizarRodape(); } else alert('Não foi possível ativar a biometria neste aparelho.'); } };
+}
 function ramoPermitido(r) { return verTudo() || tropaDoChefeLogado === r || tropa2DoChefeLogado === r; }
 let ramoAtual = null;
 const compactoPorRamo = {};
@@ -1596,13 +1668,16 @@ return;
 }
 document.getElementById('loginGateOv').style.display = 'none';
 aplicarEstadoContaLogada();
+bioAtualizarRodape(); bioOferecerAposLogin(registroLogado);
 }
 
 async function iniciarComLogin() {
 const restaurou = await tentarRestaurarSessao();
 if (restaurou) {
+if (bioAtivoPara(registroLogado)) bioTravar();
 document.getElementById('loginGateOv').style.display = 'none';
 aplicarEstadoContaLogada();
+bioAtualizarRodape();
 } else {
 document.getElementById('loginRegistroInput').focus();
 }
