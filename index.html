@@ -26,7 +26,7 @@
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-.topo-anima { overflow: hidden; transition: height .35s ease, opacity .28s ease, margin .35s ease, padding .35s ease; }
+.topo-anima { overflow: hidden; will-change: height, opacity; transition: height .55s cubic-bezier(.32,.72,0,1), margin .55s cubic-bezier(.32,.72,0,1), padding .55s cubic-bezier(.32,.72,0,1), opacity .38s ease; }
 .topo-oculto { height: 0 !important; opacity: 0; margin-top: 0 !important; margin-bottom: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; pointer-events: none; }
 .login-gate-ov {
 position: fixed; inset: 0; z-index: 2000; display: flex; align-items: center; justify-content: center;
@@ -1584,8 +1584,10 @@ const MOBILE_MQ = window.matchMedia('(max-width: 760px)');
 let topoOculto = false;
 function topoEls() { return [document.querySelector('.conta-barra'), document.querySelector('.header')].filter(Boolean); }
 function acompanharAltura(ms) { const t0 = performance.now(); (function f() { ajustarAlturaIframes(); if (performance.now() - t0 < ms) requestAnimationFrame(f); })(); }
+let topoTimer = null;
 function topoMudar(ocultar, semAnimar) {
   if (topoOculto === ocultar) return; topoOculto = ocultar;
+  const total = topoEls().reduce((t, el) => { const cs = getComputedStyle(el); return t + el.offsetHeight + (parseFloat(cs.marginTop) || 0) + (parseFloat(cs.marginBottom) || 0); }, 0);
   topoEls().forEach(el => {
     if (semAnimar) { el.classList.toggle('topo-anima', false); el.classList.toggle('topo-oculto', ocultar); el.style.height = ''; return; }
     el.classList.add('topo-anima');
@@ -1598,7 +1600,10 @@ function topoMudar(ocultar, semAnimar) {
       el.addEventListener('transitionend', fim);
     }
   });
-  if (semAnimar) { requestAnimationFrame(ajustarAlturaIframes); } else acompanharAltura(480);
+  if (semAnimar) { topoAnimando = false; clearTimeout(topoTimer); requestAnimationFrame(ajustarAlturaIframes); return; }
+  // sem redimensionar o iframe a cada quadro: ao ocultar ele já ganha a altura final e sobe junto com as faixas; ao mostrar, ajusta no fim
+  if (ocultar) { const f = document.getElementById(SECOES[ramoAtual].frame); if (f) f.style.height = (f.offsetHeight + total) + 'px'; }
+  topoAnimando = true; clearTimeout(topoTimer); topoTimer = setTimeout(() => { topoAnimando = false; ajustarAlturaIframes(); }, 600);
 }
 function aoRolarSecao(k, f) {
   if (!MOBILE_MQ.matches || k !== ramoAtual) return;
@@ -1619,7 +1624,9 @@ let ramoAtual = null;
 const compactoPorRamo = {};
 
 document.addEventListener('DOMContentLoaded', () => { Object.keys(SECOES).forEach(k => { const f = document.getElementById(SECOES[k].frame); if (f) f.addEventListener('load', aplicarBarraBackup); }); });
+let topoAnimando = false;
 function ajustarAlturaIframes() {
+  if (topoAnimando) return;
   Object.keys(SECOES).forEach(k => {
     const f = document.getElementById(SECOES[k].frame);
     if (!f || f.offsetParent === null) return;
