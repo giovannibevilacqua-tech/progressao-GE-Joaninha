@@ -174,7 +174,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-11-07l"
+  VERSAO: "2026-11-07m"
 };
 
 /* ============================================================
@@ -2929,3 +2929,69 @@ function restaurarUltimaAba(){
   if (btn.dataset.tab === 'alm') V2_ALMOX.abrir();
   if (btn.dataset.tab === 'fin') V2_FIN.abrir();
 }
+
+/* ============================================================
+   Navegação em dois níveis das seções: grupos (Seção, Calendário, Gestão) e, abaixo, as abas de cada grupo.
+   Não altera a lógica das abas: só mostra/esconde os botões já existentes e acompanha qual está ativo.
+   Uso: V2_NAVG({ nav:'nav.tabs', embrulhar:true, grupos:[{ rotulo:'👥 Seção', botoes:['seletor1','seletor2'] }, ...] })
+   ============================================================ */
+(function (root) {
+  if (typeof window === 'undefined') return;
+  function css() {
+    if (document.getElementById('v2NavgCss')) return;
+    var st = document.createElement('style'); st.id = 'v2NavgCss';
+    st.textContent = '.grp-wrap{position:sticky;top:0;z-index:200;background:var(--bg,#f0ede8)}.grp-wrap>.tabs{position:static}'
+      + '.grp-bar{display:flex;gap:8px;padding:10px 12px 8px;background:var(--bg,#f0ede8)}'
+      + '.grp-btn{flex:1 1 0;min-width:0;padding:11px 6px;border-radius:12px;border:1.5px solid var(--border,#ddd);background:var(--card,#fff);color:var(--text,#1a1a1a);font-weight:800;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.08);transition:background .2s,color .2s,padding .2s}'
+      + '.grp-btn.on{background:var(--vinho,#1b6e3a);color:#fff;border-color:var(--vinho,#1b6e3a);box-shadow:0 3px 8px rgba(0,0,0,.2)}'
+      + '.grp-oculto{display:none !important}'
+      + '.grp-wrap:has(.compacto) .grp-btn,.cabecalho-fixo:has(.compacto) .grp-btn{padding:6px 6px;font-size:12px}.grp-wrap:has(.compacto) .grp-bar,.cabecalho-fixo:has(.compacto) .grp-bar{padding:6px 12px 4px}';
+    document.head.appendChild(st);
+  }
+  root.V2_NAVG = function (o) {
+    var nav = typeof o.nav === 'string' ? document.querySelector(o.nav) : o.nav;
+    if (!nav || nav.dataset.navg) return;
+    nav.dataset.navg = '1'; css();
+    var gs = o.grupos.map(function (g) {
+      return { rotulo: g.rotulo, botoes: g.botoes.map(function (s) { return typeof s === 'string' ? document.querySelector(s) : s; }).filter(Boolean), ultimo: null, el: null };
+    }).filter(function (g) { return g.botoes.length; });
+    if (gs.length < 2) return;
+    gs.forEach(function (g) { g.botoes.forEach(function (b) { nav.appendChild(b); }); }); // deixa as abas na ordem dos grupos
+    var bar = document.createElement('div'); bar.className = 'grp-bar';
+    gs.forEach(function (g, i) {
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'grp-btn'; b.textContent = g.rotulo; g.el = b;
+      b.onclick = function () {
+        var alvo = g.ultimo && g.botoes.indexOf(g.ultimo) >= 0 ? g.ultimo : null;
+        if (!alvo) { sem(); alvo = g.botoes.filter(visivel)[0]; com(); }
+        if (alvo) alvo.click();
+        atualizar();
+      };
+      bar.appendChild(b);
+    });
+    var pai = nav.parentNode;
+    if (o.embrulhar) { var w = document.createElement('div'); w.className = 'grp-wrap'; pai.insertBefore(w, nav); w.appendChild(bar); w.appendChild(nav); }
+    else pai.insertBefore(bar, nav);
+    function visivel(b) { return getComputedStyle(b).display !== 'none'; }
+    function sem() { gs.forEach(function (g) { g.botoes.forEach(function (b) { b.classList.remove('grp-oculto'); }); }); }
+    var ativoG = null;
+    function com() { gs.forEach(function (g) { g.botoes.forEach(function (b) { b.classList.toggle('grp-oculto', g !== ativoG); }); }); }
+    function atualizar() {
+      sem();
+      var vis = gs.filter(function (g) { return g.botoes.some(visivel); });
+      if (vis.length < 2) { bar.style.display = 'none'; return; }   // ex.: visão dos pais, só calendário e ciclo
+      bar.style.display = '';
+      var ativo = null;
+      gs.forEach(function (g) { g.botoes.forEach(function (b) { if (b.classList.contains('active')) { ativo = g; g.ultimo = b; } }); });
+      ativoG = ativo && vis.indexOf(ativo) >= 0 ? ativo : vis[0];
+      gs.forEach(function (g) { g.el.classList.toggle('on', g === ativoG); g.el.style.display = vis.indexOf(g) >= 0 ? '' : 'none'; });
+      com();
+    }
+    var ult = null;
+    var mo = new MutationObserver(function () {
+      var a = null; gs.forEach(function (g) { g.botoes.forEach(function (b) { if (b.classList.contains('active')) a = b; }); });
+      if (a !== ult) { ult = a; atualizar(); }
+    });
+    gs.forEach(function (g) { g.botoes.forEach(function (b) { mo.observe(b, { attributes: true, attributeFilter: ['class'] }); }); });
+    atualizar(); setTimeout(atualizar, 400); setTimeout(atualizar, 1500); window.addEventListener('load', atualizar);
+  };
+})(typeof window !== 'undefined' ? window : globalThis);
