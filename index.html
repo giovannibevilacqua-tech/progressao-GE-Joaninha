@@ -828,6 +828,7 @@ const DOMINIO_LOGIN = "@joaninha.app";
 const REGISTRO_BOOTSTRAP_ADMIN = "426603"; // primeiro admin — a conta é criada sozinha no primeiro login dele, se ainda não existir
 
 let firebaseAuthToken = null;
+let tokenExpiraEm = 0; // validade real do token (não é renovada só por regravar a sessão)
 let firebaseRefreshToken = null;
 let registroLogado = null;
 let souAdmin = false;
@@ -846,10 +847,11 @@ registro: registroLogado,
 uid: firebaseUid,
 idToken: firebaseAuthToken,
 refreshToken: firebaseRefreshToken,
-expiraEm: Date.now() + 55 * 60 * 1000,
+expiraEm: tokenExpiraEm || (Date.now() + 55 * 60 * 1000),
 admin: souAdmin,
 tropa: tropaDoChefeLogado,
-tropa2: tropa2DoChefeLogado
+tropa2: tropa2DoChefeLogado,
+nome: nomeLogado
 }));
 } catch (e) {}
 }
@@ -869,7 +871,7 @@ async function tentarRestaurarSessao() {
 const salva = lerSessaoSalva();
 if (!salva) return false;
 if (Date.now() < salva.expiraEm && salva.idToken) {
-firebaseAuthToken = salva.idToken;
+firebaseAuthToken = salva.idToken; tokenExpiraEm = salva.expiraEm;
 firebaseRefreshToken = salva.refreshToken;
 registroLogado = salva.registro;
 firebaseUid = salva.uid;
@@ -887,7 +889,7 @@ souAdmin = salva.admin === true; tropaDoChefeLogado = salva.tropa || null; tropa
 return true;
 }
 if (!renovado) { limparSessao(); return false; }
-firebaseAuthToken = renovado.idToken;
+firebaseAuthToken = renovado.idToken; tokenExpiraEm = Date.now() + 55 * 60 * 1000;
 firebaseRefreshToken = renovado.refreshToken;
 registroLogado = salva.registro;
 firebaseUid = salva.uid;
@@ -899,13 +901,13 @@ return true;
 }
 
 function agendarRenovacaoToken() {
-setTimeout(tentarRenovarTokenAgendado, 50 * 60 * 1000);
+setTimeout(tentarRenovarTokenAgendado, Math.max(5000, (tokenExpiraEm || (Date.now() + 55 * 60 * 1000)) - Date.now() - 5 * 60 * 1000));
 }
 async function tentarRenovarTokenAgendado() {
 if (!firebaseRefreshToken) return;
 const renovado = await renovarTokenSessao(firebaseRefreshToken);
 if (renovado) {
-firebaseAuthToken = renovado.idToken;
+firebaseAuthToken = renovado.idToken; tokenExpiraEm = Date.now() + 55 * 60 * 1000;
 firebaseRefreshToken = renovado.refreshToken;
 salvarSessao();
 agendarRenovacaoToken();
@@ -953,7 +955,7 @@ body: JSON.stringify({ email, password: registro, returnSecureToken: true })
 });
 data = await resp.json();
 if (data.error) return { erro: true, mensagem: 'Não foi possível criar o primeiro acesso. Tenta de novo em instantes.' };
-firebaseAuthToken = data.idToken;
+firebaseAuthToken = data.idToken; tokenExpiraEm = Date.now() + 55 * 60 * 1000;
 firebaseRefreshToken = data.refreshToken;
 firebaseUid = data.localId;
 registroLogado = registro;
@@ -968,7 +970,7 @@ return { erro: false };
 }
 return { erro: true, mensagem: mapearErroFirebaseLogin(codigo) };
 }
-firebaseAuthToken = data.idToken;
+firebaseAuthToken = data.idToken; tokenExpiraEm = Date.now() + 55 * 60 * 1000;
 firebaseRefreshToken = data.refreshToken;
 firebaseUid = data.localId;
 registroLogado = registro;
@@ -1503,6 +1505,8 @@ async function bioVerificar() {
   } catch (e) { return false; }
 }
 function bioDesativar() { try { localStorage.removeItem(BIO_KEY); } catch (e) {} bioAtualizarRodape(); }
+function bioMarcarVerificado() { try { sessionStorage.setItem('bioVerifEm', String(Date.now())); } catch (e) {} }
+function bioRecente() { try { return Date.now() - Number(sessionStorage.getItem('bioVerifEm') || 0) < 3 * 60 * 1000; } catch (e) { return false; } }
 let bioTravado = false;
 function bioTravar() {
   if (bioTravado) return; bioTravado = true;
@@ -1516,7 +1520,7 @@ function bioTravar() {
   document.body.appendChild(ov);
   const abrir = async () => {
     const ok = await bioVerificar();
-    if (ok) { ov.remove(); bioTravado = false; }
+    if (ok) { bioMarcarVerificado(); ov.remove(); bioTravado = false; }
     else { const e = document.getElementById('bioErro'); if (e) { e.textContent = 'Não foi possível confirmar. Tente de novo ou entre com a senha.'; e.style.display = 'block'; } }
   };
   document.getElementById('bioDesbloq').onclick = abrir;
@@ -1527,7 +1531,7 @@ function bioTravar() {
 let bioOcultoEm = 0;
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) { bioOcultoEm = Date.now(); return; }
-  if (bioOcultoEm && Date.now() - bioOcultoEm > 3 * 60 * 1000 && registroLogado && bioAtivoPara(registroLogado)) bioTravar();
+  if (bioOcultoEm && Date.now() - bioOcultoEm > 3 * 60 * 1000 && registroLogado && bioAtivoPara(registroLogado)) { try { sessionStorage.removeItem('bioVerifEm'); } catch (e) {} bioTravar(); }
   bioOcultoEm = 0;
 });
 async function bioOferecerAposLogin(registro) {
@@ -1567,7 +1571,7 @@ async function loginComBiometria() {
   const erro = document.getElementById('loginErroMsg');
   const ok = await bioVerificar();
   if (!ok) { erro.textContent = 'Não foi possível confirmar a digital/rosto. Tente de novo ou entre com a senha.'; erro.style.display = 'block'; return; }
-  try { localStorage.setItem('chefeSessao', localStorage.getItem('bioSessao')); sessionStorage.setItem('bioJaVerificado', '1'); } catch (e) {}
+  try { localStorage.setItem('chefeSessao', localStorage.getItem('bioSessao')); } catch (e) {} bioMarcarVerificado();
   const restaurou = await tentarRestaurarSessao();
   if (!restaurou) { try { localStorage.removeItem('chefeSessao'); } catch (e) {} erro.textContent = 'A sessão salva expirou. Entre com a senha uma vez para renovar.'; erro.style.display = 'block'; document.getElementById('loginBioSw').checked = false; loginBioAlternar(); return; }
   document.getElementById('loginGateOv').style.display = 'none';
@@ -1751,6 +1755,7 @@ return;
 }
 document.getElementById('loginGateOv').style.display = 'none';
 aplicarEstadoContaLogada();
+bioMarcarVerificado();
 const querBio = !!(swBio && swBio.checked);
 if (querBio && !bioAtivoPara(registroLogado)) { bioAtivar(registroLogado).then(ok => { bioAtualizarRodape(); if (!ok) alert('Não foi possível ativar a digital/rosto neste aparelho.'); }); }
 else { bioAtualizarRodape(); bioOferecerAposLogin(registroLogado); }
@@ -1759,8 +1764,7 @@ else { bioAtualizarRodape(); bioOferecerAposLogin(registroLogado); }
 async function iniciarComLogin() {
 const restaurou = await tentarRestaurarSessao();
 if (restaurou) {
-let jaVerif = false; try { jaVerif = sessionStorage.getItem('bioJaVerificado') === '1'; sessionStorage.removeItem('bioJaVerificado'); } catch (e) {}
-if (bioAtivoPara(registroLogado) && !jaVerif) bioTravar();
+if (bioAtivoPara(registroLogado) && !bioRecente()) bioTravar();
 document.getElementById('loginGateOv').style.display = 'none';
 aplicarEstadoContaLogada();
 bioAtualizarRodape();
