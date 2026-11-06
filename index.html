@@ -1606,8 +1606,8 @@ function topoMudar(ocultar, semAnimar) {
   });
   if (semAnimar) { topoAnimando = false; clearTimeout(topoTimer); requestAnimationFrame(ajustarAlturaIframes); return; }
   // sem redimensionar o iframe a cada quadro: ao ocultar ele já ganha a altura final e sobe junto com as faixas; ao mostrar, ajusta no fim
-  if (ocultar) { const f = document.getElementById(SECOES[ramoAtual].frame); if (f) f.style.height = (f.offsetHeight + total) + 'px'; }
-  topoAnimando = true; clearTimeout(topoTimer); topoTimer = setTimeout(() => { topoAnimando = false; ajustarAlturaIframes(); }, 600);
+  if (ocultar) { const f = document.getElementById(SECOES[ramoAtual].frame); if (f) { f.style.transition = 'none'; f.style.height = (f.offsetHeight + total) + 'px'; f.offsetHeight; } } // sem a transição própria do iframe, que causava a segunda etapa
+  topoAnimando = true; clearTimeout(topoTimer); topoTimer = setTimeout(() => { topoAnimando = false; const f = document.getElementById(SECOES[ramoAtual].frame); if (f) f.style.transition = 'none'; ajustarAlturaIframes(); if (f) requestAnimationFrame(() => { f.style.transition = ''; }); }, 600);
 }
 let topoTrava = 0;
 function aoRolarSecao(k, f) {
