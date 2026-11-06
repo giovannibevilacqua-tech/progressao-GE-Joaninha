@@ -174,7 +174,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-11-07n"
+  VERSAO: "2026-11-07o"
 };
 
 /* ============================================================
@@ -2941,8 +2941,8 @@ function restaurarUltimaAba(){
     if (document.getElementById('v2NavgCss')) return;
     var st = document.createElement('style'); st.id = 'v2NavgCss';
     st.textContent = '.grp-wrap{position:sticky;top:0;z-index:200;background:var(--bg,#f0ede8)}.grp-wrap>.tabs{position:static}'
-      + '.grp-bar{display:flex;gap:8px;padding:10px 12px 8px;background:var(--bg,#f0ede8)}'
-      + '.grp-btn{flex:1 1 0;min-width:0;padding:11px 6px;border-radius:12px;border:1.5px solid var(--border,#ddd);background:var(--card,#fff);color:var(--text,#1a1a1a);font-weight:800;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.08);transition:background .2s,color .2s,padding .2s}'
+      + '.grp-bar{display:grid;grid-template-columns:repeat(var(--n,3),minmax(0,1fr));gap:8px;padding:10px 12px 8px;background:var(--bg,#f0ede8)}'
+      + '.grp-btn{min-width:0;padding:10px 4px;border-radius:12px;border:1.5px solid var(--border,#ddd);background:var(--card,#fff);color:var(--text,#1a1a1a);font-weight:800;font-size:clamp(11px,3.3vw,13px);line-height:1.15;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;text-align:center;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.08);transition:background .2s,color .2s,padding .2s}'
       + '.grp-btn.on{background:var(--vinho,#1b6e3a);color:#fff;border-color:var(--vinho,#1b6e3a);box-shadow:0 3px 8px rgba(0,0,0,.2)}'
       + '.grp-oculto{display:none !important}'
       + '.grp-wrap:has(.compacto) .grp-btn,.cabecalho-fixo:has(.compacto) .grp-btn{padding:6px 6px;font-size:12px}.grp-wrap:has(.compacto) .grp-bar,.cabecalho-fixo:has(.compacto) .grp-bar{padding:6px 12px 4px}';
@@ -2959,7 +2959,7 @@ function restaurarUltimaAba(){
     gs.forEach(function (g) { g.botoes.forEach(function (b) { nav.appendChild(b); }); }); // deixa as abas na ordem dos grupos
     var bar = document.createElement('div'); bar.className = 'grp-bar';
     gs.forEach(function (g, i) {
-      var b = document.createElement('button'); b.type = 'button'; b.className = 'grp-btn'; b.textContent = g.rotulo; g.el = b;
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'grp-btn'; g.el = b; var pr = g.rotulo.split(' '); b.innerHTML = '<span style="flex:none">' + pr.shift() + '</span><span style="min-width:0;overflow-wrap:anywhere">' + pr.join(' ').replace('/', '/&#8203;') + '</span>';
       b.onclick = function () {
         var alvo = g.ultimo && g.botoes.indexOf(g.ultimo) >= 0 ? g.ultimo : null;
         if (!alvo) { sem(); alvo = g.botoes.filter(visivel)[0]; com(); }
@@ -2979,7 +2979,7 @@ function restaurarUltimaAba(){
       sem();
       var vis = gs.filter(function (g) { return g.botoes.some(visivel); });
       if (vis.length < 2) { bar.style.display = 'none'; return; }   // ex.: visão dos pais, só calendário e ciclo
-      bar.style.display = '';
+      bar.style.display = ''; bar.style.setProperty('--n', vis.length);
       var ativo = null;
       gs.forEach(function (g) { g.botoes.forEach(function (b) { if (b.classList.contains('active')) { ativo = g; g.ultimo = b; } }); });
       ativoG = ativo && vis.indexOf(ativo) >= 0 ? ativo : vis[0];
