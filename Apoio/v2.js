@@ -3,7 +3,7 @@ if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScop
   self.window = self; // o resto do arquivo só define funções; nada aqui usa a tela
   // Guarda uma cópia dos arquivos do app para abrir mesmo sem internet.
   // Sempre tenta a internet primeiro (assim as atualizações chegam); só usa a cópia se estiver offline.
-  const CACHE = 'joaninha-app-v1';
+  const CACHE = 'joaninha-app-v2';
   const BASE = ['./', 'index.html', 'escoteira.html', 'tropa-senior.html', 'alcateia.html', 'cla-pioneiro.html', 'diretoria.html', 'Apoio/secao.css', 'visualizacao.html', 'formacao.html', 'Apoio/competencias.js', 'sw.js', 'Apoio/v2.js', 'Apoio/manifest.webmanifest'];
 
   self.addEventListener('install', (e) => {
@@ -174,7 +174,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-11-08b"
+  VERSAO: "2026-11-08c"
 };
 
 /* ============================================================
