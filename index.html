@@ -26,8 +26,6 @@
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-#loginModo button { flex: 1; padding: 10px 6px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--card); color: var(--text); font-weight: 800; font-size: 13px; cursor: pointer; }
-#loginModo button.on { background: #1b6e3a; color: #fff; border-color: #1b6e3a; }
 .topo-anima { overflow: hidden; transition: height .35s ease, opacity .28s ease, margin .35s ease, padding .35s ease; }
 .topo-oculto { height: 0 !important; opacity: 0; margin-top: 0 !important; margin-bottom: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; pointer-events: none; }
 .login-gate-ov {
@@ -731,8 +729,6 @@ mark.hl-esc{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 <div class="header-flor" style="font-size:34px;margin-bottom:6px;">⚜</div>
 <h1 style="font-size:16px;font-weight:800;letter-spacing:.5px;margin-bottom:4px;">PROGRESSÃO JOVENS<br>GE JOANINHA</h1>
 <div style="font-size:12px;color:var(--muted);margin-bottom:22px;">Acesso restrito aos chefes do grupo</div>
-<div id="loginModo" style="display:none;gap:6px;margin-bottom:16px;"><button type="button" id="loginModoSenha" onclick="loginModo('senha')">🔑 Senha</button><button type="button" id="loginModoBio" onclick="loginModo('bio')">👆 Digital/rosto</button></div>
-<div id="loginBioPainel" style="display:none;margin-bottom:6px;"><div id="loginBioTxt" style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:12px;"></div><button class="btn-primario" id="loginBioBtn" style="width:100%;padding:13px;" onclick="loginComBiometria()">👆 Entrar com digital/rosto</button></div>
 <div id="loginCamposSenha">
 <label class="campo-label" style="display:flex;align-items:center;gap:5px;justify-content:center;">
 REGISTRO ESCOTEIRO
@@ -741,10 +737,11 @@ REGISTRO ESCOTEIRO
 <input type="text" id="loginRegistroInput" class="campo-input" style="text-align:center;font-size:16px;letter-spacing:1px;" inputmode="numeric" autocomplete="off" placeholder="Ex: 123456" onkeydown="if(event.key==='Enter')document.getElementById('loginSenhaInput').focus()">
 <label class="campo-label" style="margin-top:14px;">SENHA</label>
 <input type="password" id="loginSenhaInput" class="campo-input" style="text-align:center;font-size:16px;letter-spacing:1px;" autocomplete="current-password" placeholder="Padrão: número do registro" onkeydown="if(event.key==='Enter')tentarLoginTela()">
-<label id="loginBioAtivarLbl" style="display:none;align-items:center;justify-content:center;gap:8px;margin-top:14px;font-size:12.5px;color:var(--muted);cursor:pointer;"><input type="checkbox" id="loginBioAtivar"> Ativar digital/rosto neste aparelho</label>
 </div>
 <div id="loginErroMsg" class="login-erro-msg" style="display:none;"></div>
 <button class="btn-primario" id="loginEntrarBtn" style="width:100%;margin-top:14px;padding:12px;" onclick="tentarLoginTela()">Entrar</button>
+<label id="loginBioSwLbl" class="sw-lbl" style="display:none;justify-content:center;margin-top:16px;font-size:13px;"><span class="sw"><input type="checkbox" id="loginBioSw" onchange="loginBioAlternar()"><i></i></span> Acessar com digital/facial</label>
+<div id="loginBioDica" style="display:none;font-size:12px;color:var(--muted);text-align:center;margin-top:8px;line-height:1.5;"></div>
 </div>
 </div>
 
@@ -1558,19 +1555,13 @@ const _bioAtivarOrig = bioAtivar;
 bioAtivar = async function (registro) { const ok = await _bioAtivarOrig(registro); if (ok) bioCopiar(); return ok; };
 const _bioDesativarOrig = bioDesativar;
 bioDesativar = function () { _bioDesativarOrig(); try { localStorage.removeItem('bioSessao'); } catch (e) {} };
-function loginModo(m) {
-  const temBio = !!bioLer() && !!localStorage.getItem('bioSessao');
-  document.getElementById('loginModoSenha').classList.toggle('on', m === 'senha');
-  document.getElementById('loginModoBio').classList.toggle('on', m === 'bio');
-  document.getElementById('loginCamposSenha').style.display = m === 'senha' ? '' : 'none';
-  document.getElementById('loginEntrarBtn').style.display = m === 'senha' ? '' : 'none';
-  document.getElementById('loginBioPainel').style.display = m === 'bio' ? '' : 'none';
+function bioTemNoAparelho() { return !!bioLer() && !!localStorage.getItem('bioSessao'); }
+function loginBioAlternar() {
+  const on = document.getElementById('loginBioSw').checked, tem = bioTemNoAparelho(), dica = document.getElementById('loginBioDica');
+  document.getElementById('loginCamposSenha').style.display = on && tem ? 'none' : '';
   document.getElementById('loginErroMsg').style.display = 'none';
-  if (m === 'bio') {
-    document.getElementById('loginBioTxt').textContent = temBio ? 'Use a digital ou o rosto deste aparelho para entrar.' : 'A digital/rosto ainda não está ativada neste aparelho. Entre uma vez com a senha e marque "Ativar digital/rosto neste aparelho".';
-    const btn = document.getElementById('loginBioBtn'); btn.textContent = temBio ? '👆 Entrar com digital/rosto' : '🔑 Entrar com senha e ativar';
-    btn.onclick = temBio ? loginComBiometria : () => { loginModo('senha'); document.getElementById('loginBioAtivar').checked = true; };
-  }
+  dica.style.display = on ? '' : 'none';
+  dica.textContent = tem ? 'Toque em Entrar e confirme com a digital ou o rosto.' : 'Digite o registro e a senha e toque em Entrar: a digital/facial será ativada neste aparelho.';
 }
 async function loginComBiometria() {
   const erro = document.getElementById('loginErroMsg');
@@ -1578,18 +1569,16 @@ async function loginComBiometria() {
   if (!ok) { erro.textContent = 'Não foi possível confirmar a digital/rosto. Tente de novo ou entre com a senha.'; erro.style.display = 'block'; return; }
   try { localStorage.setItem('chefeSessao', localStorage.getItem('bioSessao')); sessionStorage.setItem('bioJaVerificado', '1'); } catch (e) {}
   const restaurou = await tentarRestaurarSessao();
-  if (!restaurou) { try { localStorage.removeItem('chefeSessao'); } catch (e) {} erro.textContent = 'A sessão salva expirou. Entre com a senha uma vez para renovar.'; erro.style.display = 'block'; loginModo('senha'); return; }
+  if (!restaurou) { try { localStorage.removeItem('chefeSessao'); } catch (e) {} erro.textContent = 'A sessão salva expirou. Entre com a senha uma vez para renovar.'; erro.style.display = 'block'; document.getElementById('loginBioSw').checked = false; loginBioAlternar(); return; }
   document.getElementById('loginGateOv').style.display = 'none';
   aplicarEstadoContaLogada(); bioAtualizarRodape();
 }
 async function prepararLoginBio() {
   if (!(await bioSuportado())) return;
-  document.getElementById('loginModo').style.display = 'flex';
-  document.getElementById('loginBioAtivarLbl').style.display = bioLer() ? 'none' : 'flex';
-  const temBio = !!bioLer() && !!localStorage.getItem('bioSessao');
-  loginModo(temBio ? 'bio' : 'senha');
+  document.getElementById('loginBioSwLbl').style.display = 'flex';
+  document.getElementById('loginBioSw').checked = bioTemNoAparelho();
+  loginBioAlternar();
 }
-
 // ═══ Celular: barra superior e banner somem ao rolar 1/3 da tela e voltam ao rolar de volta para cima ═══
 const MOBILE_MQ = window.matchMedia('(max-width: 760px)');
 let topoOculto = false;
@@ -1738,6 +1727,8 @@ const inputSenha = document.getElementById('loginSenhaInput');
 const btn = document.getElementById('loginEntrarBtn');
 const erroDiv = document.getElementById('loginErroMsg');
 erroDiv.style.display = 'none';
+const swBio = document.getElementById('loginBioSw');
+if (swBio && swBio.checked && bioTemNoAparelho()) { btn.disabled = false; return loginComBiometria(); }
 const registro = inputReg.value.trim();
 const senha = inputSenha ? inputSenha.value.trim() : '';
 if (!registro) { erroDiv.textContent = 'Digite o registro escoteiro.'; erroDiv.style.display = 'block'; return; }
@@ -1753,7 +1744,7 @@ return;
 }
 document.getElementById('loginGateOv').style.display = 'none';
 aplicarEstadoContaLogada();
-const querBio = !!(document.getElementById('loginBioAtivar') && document.getElementById('loginBioAtivar').checked);
+const querBio = !!(swBio && swBio.checked);
 if (querBio && !bioAtivoPara(registroLogado)) { bioAtivar(registroLogado).then(ok => { bioAtualizarRodape(); if (!ok) alert('Não foi possível ativar a digital/rosto neste aparelho.'); }); }
 else { bioAtualizarRodape(); bioOferecerAposLogin(registroLogado); }
 }
