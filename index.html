@@ -1609,12 +1609,18 @@ function topoMudar(ocultar, semAnimar) {
   if (ocultar) { const f = document.getElementById(SECOES[ramoAtual].frame); if (f) f.style.height = (f.offsetHeight + total) + 'px'; }
   topoAnimando = true; clearTimeout(topoTimer); topoTimer = setTimeout(() => { topoAnimando = false; ajustarAlturaIframes(); }, 600);
 }
+let topoTrava = 0;
 function aoRolarSecao(k, f) {
   if (!MOBILE_MQ.matches || k !== ramoAtual) return;
-  let y = 0; try { y = f.contentWindow.scrollY || 0; } catch (e) { return; }
+  if (topoAnimando || Date.now() < topoTrava) return; // durante e logo após a animação a rolagem muda sozinha: não reagir
+  let y = 0, sobra = 0;
+  try { const w = f.contentWindow, d = w.document.documentElement; y = w.scrollY || 0; sobra = d.scrollHeight - w.innerHeight; } catch (e) { return; }
   const T = window.innerHeight / 3;
-  if (!topoOculto && y > T) topoMudar(true);
-  else if (topoOculto && y < T - 40) topoMudar(false);
+  if (!topoOculto) {
+    // só recolhe se, depois de recolher (iframe fica maior), ainda houver rolagem suficiente; senão a página voltaria ao topo e as faixas reapareceriam em ciclo
+    const ganho = topoEls().reduce((t, el) => t + el.offsetHeight, 0);
+    if (y > T && sobra - ganho > T + 60) { topoMudar(true); topoTrava = Date.now() + 900; }
+  } else if (y < T - 40) { topoMudar(false); topoTrava = Date.now() + 900; }
 }
 document.addEventListener('DOMContentLoaded', () => {
   Object.keys(SECOES).forEach(k => {
