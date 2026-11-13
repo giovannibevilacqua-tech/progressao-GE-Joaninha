@@ -142,9 +142,9 @@ border: none; background: var(--card); color: var(--text); cursor: pointer;
 }
 .roster-dropdown button:hover { background: #F5F3EF; }
 .roster-dropdown button.remover { color: #E74C3C; }
-.obs-modal-ov { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1000; align-items: flex-end; justify-content: center; }
+.obs-modal-ov { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1000; align-items: center; justify-content: center; }
 .obs-modal-ov.open { display: flex; }
-.obs-modal-box { background: var(--card); border-radius: 16px 16px 0 0; padding: 20px 18px 26px; width: 100%; max-width: 500px; max-height: 80vh; overflow-y: auto; }
+.obs-modal-box { background: var(--card); border-radius: 8px; padding: 20px 18px 26px; width: 100%; max-width: 500px; max-height: 80vh; overflow-y: auto; }
 .obs-modal-titulo { font-size: 15px; font-weight: 800; color: var(--vinho); margin-bottom: 10px; }
 .obs-modal-texto { font-size: 13px; color: var(--text); line-height: 1.6; white-space: pre-line; }
 
@@ -179,9 +179,9 @@ border: none; background: var(--card); color: var(--text); cursor: pointer;
 .paxtu-ok { text-align: center; padding: 16px 8px; font-size: 13px; }
 .paxtu-ok > div { width: 46px; height: 46px; line-height: 46px; margin: 0 auto 10px; border-radius: 50%; background: var(--done); color: #fff; font-size: 23px; font-weight: 900; }
 .paxtu-ok p { font-size: 12px; color: var(--muted); margin: 6px 0 14px; }
-.lis-modal-ov { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1000; align-items: flex-end; justify-content: center; padding: 0 10px; box-sizing: border-box; }
+.lis-modal-ov { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1000; align-items: center; justify-content: center; padding: 0 10px; box-sizing: border-box; }
 .lis-modal-ov.open { display: flex; }
-.lis-modal-box { background: var(--bg); border-radius: 16px 16px 0 0; padding: 0; width: 100%; max-width: 560px; max-height: 92vh; max-height: 92dvh; overflow-y: auto; overflow-x: hidden; box-sizing: border-box; }
+.lis-modal-box { background: var(--bg); border-radius: 8px; padding: 0; width: 100%; max-width: 560px; max-height: 92vh; max-height: 92dvh; overflow-y: auto; overflow-x: hidden; box-sizing: border-box; }
 #eventoModalOv .lis-modal-box {
 border-radius: 16px; margin: 0 auto 14px;
 scrollbar-width: thin; scrollbar-color: rgba(0,0,0,.25) transparent;
@@ -1123,7 +1123,7 @@ function pedirSenhaAcao(titulo) {
   return new Promise(resolve => {
     const m = document.createElement('div');
     m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100020;display:flex;align-items:center;justify-content:center;padding:16px;';
-    m.innerHTML = '<div style="background:#fff;color:#1a1a1a;border-radius:14px;padding:20px 18px;width:100%;max-width:340px;box-shadow:0 10px 40px rgba(0,0,0,.35);"><div style="font-size:16px;font-weight:800;margin-bottom:6px;">🔐 Confirme sua senha</div><div style="font-size:12.5px;color:#555;line-height:1.5;margin-bottom:12px;">' + titulo + '</div><input type="password" id="pwAcaoInp" autocomplete="current-password" placeholder="Sua senha (padrão: número do registro)" style="width:100%;padding:11px;border:1px solid #bbb;border-radius:9px;font-size:15px;box-sizing:border-box;"><div id="pwAcaoErr" style="display:none;color:#b3261e;font-size:12px;margin-top:6px;">Senha incorreta.</div><div style="display:flex;gap:8px;margin-top:14px;"><button type="button" id="pwAcaoNao" style="flex:1;padding:11px;border-radius:10px;border:1px solid #bbb;background:#f3f3f3;color:#1a1a1a;font-weight:700;">Cancelar</button><button type="button" id="pwAcaoSim" style="flex:1;padding:11px;border-radius:10px;border:0;background:#1b6e3a;color:#fff;font-weight:700;">Confirmar</button></div></div>';
+    m.innerHTML = '<div style="background:#fff;color:#1a1a1a;border-radius:8px;padding:20px 18px;width:100%;max-width:340px;box-shadow:0 10px 40px rgba(0,0,0,.35);"><div style="font-size:16px;font-weight:800;margin-bottom:6px;">🔐 Confirme sua senha</div><div style="font-size:12.5px;color:#555;line-height:1.5;margin-bottom:12px;">' + titulo + '</div><input type="password" id="pwAcaoInp" autocomplete="current-password" placeholder="Sua senha (padrão: número do registro)" style="width:100%;padding:11px;border:1px solid #bbb;border-radius:9px;font-size:15px;box-sizing:border-box;"><div id="pwAcaoErr" style="display:none;color:#b3261e;font-size:12px;margin-top:6px;">Senha incorreta.</div><div style="display:flex;gap:8px;margin-top:14px;"><button type="button" id="pwAcaoNao" style="flex:1;padding:11px;border-radius:10px;border:1px solid #bbb;background:#f3f3f3;color:#1a1a1a;font-weight:700;">Cancelar</button><button type="button" id="pwAcaoSim" style="flex:1;padding:11px;border-radius:10px;border:0;background:#1b6e3a;color:#fff;font-weight:700;">Confirmar</button></div></div>';
     document.body.appendChild(m);
     const fim = v => { m.remove(); resolve(v); };
     document.getElementById('pwAcaoNao').onclick = () => fim(false);
@@ -1422,7 +1422,7 @@ function pedirSenhaModoAdmin() {
   if (!m) {
     m = document.createElement('div'); m.id = 'modalSenhaAdmin';
     m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:16px;';
-    m.innerHTML = '<div style="background:#fff;color:#1a1a1a;border-radius:14px;padding:20px 18px;width:100%;max-width:340px;box-shadow:0 10px 40px rgba(0,0,0,.35);"><div style="font-size:16px;font-weight:800;margin-bottom:6px;">Voltar ao modo admin</div><div style="font-size:12px;color:#666;margin-bottom:12px;">Digite a sua senha para continuar (se não trocou, é o número do seu registro).</div><input type="password" id="senhaAdminInput" autocomplete="current-password" style="width:100%;padding:11px 12px;border:2px solid #ddd;border-radius:8px;font-size:14px;box-sizing:border-box;"><div id="senhaAdminErro" style="display:none;color:#C0392B;font-size:12px;margin-top:8px;"></div><div style="display:flex;gap:8px;margin-top:14px;"><button type="button" id="senhaAdminCancela" style="flex:1;padding:11px;border:none;border-radius:8px;background:#E4DFD6;font-weight:700;cursor:pointer;">Cancelar</button><button type="button" id="senhaAdminOk" style="flex:1;padding:11px;border:none;border-radius:8px;background:#8B1A2B;color:#fff;font-weight:700;cursor:pointer;">Entrar</button></div><div style="text-align:center;margin-top:10px;"><a href="#" id="senhaAdminTroca" style="font-size:12px;color:#555;">Trocar a senha do modo admin</a></div></div>';
+    m.innerHTML = '<div style="background:#fff;color:#1a1a1a;border-radius:8px;padding:20px 18px;width:100%;max-width:340px;box-shadow:0 10px 40px rgba(0,0,0,.35);"><div style="font-size:16px;font-weight:800;margin-bottom:6px;">Voltar ao modo admin</div><div style="font-size:12px;color:#666;margin-bottom:12px;">Digite a sua senha para continuar (se não trocou, é o número do seu registro).</div><input type="password" id="senhaAdminInput" autocomplete="current-password" style="width:100%;padding:11px 12px;border:2px solid #ddd;border-radius:8px;font-size:14px;box-sizing:border-box;"><div id="senhaAdminErro" style="display:none;color:#C0392B;font-size:12px;margin-top:8px;"></div><div style="display:flex;gap:8px;margin-top:14px;"><button type="button" id="senhaAdminCancela" style="flex:1;padding:11px;border:none;border-radius:8px;background:#E4DFD6;font-weight:700;cursor:pointer;">Cancelar</button><button type="button" id="senhaAdminOk" style="flex:1;padding:11px;border:none;border-radius:8px;background:#8B1A2B;color:#fff;font-weight:700;cursor:pointer;">Entrar</button></div><div style="text-align:center;margin-top:10px;"><a href="#" id="senhaAdminTroca" style="font-size:12px;color:#555;">Trocar a senha do modo admin</a></div></div>';
     document.body.appendChild(m);
     const fechar = () => { m.style.display = 'none'; };
     document.getElementById('senhaAdminCancela').onclick = fechar;
@@ -1462,7 +1462,7 @@ function trocarSenhaModoAdmin() {
   m = document.createElement('div'); m.id = 'modalTrocaSenhaAdmin';
   m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:16px;';
   const inp = 'width:100%;box-sizing:border-box;padding:10px;border:1px solid #bbb;border-radius:8px;font-size:15px;margin-bottom:8px;background:#fff;color:#1a1a1a;';
-  m.innerHTML = '<div style="background:#fff;color:#1a1a1a;border-radius:14px;padding:20px 18px;width:100%;max-width:340px;box-shadow:0 10px 40px rgba(0,0,0,.35);"><div style="font-size:16px;font-weight:800;margin-bottom:6px;">Senha do modo admin</div><div style="font-size:12.5px;color:#555;margin-bottom:12px;line-height:1.5;">Por padrão vale a mesma senha da sua conta. Aqui você pode definir uma senha só para o modo admin.</div>'
+  m.innerHTML = '<div style="background:#fff;color:#1a1a1a;border-radius:8px;padding:20px 18px;width:100%;max-width:340px;box-shadow:0 10px 40px rgba(0,0,0,.35);"><div style="font-size:16px;font-weight:800;margin-bottom:6px;">Senha do modo admin</div><div style="font-size:12.5px;color:#555;margin-bottom:12px;line-height:1.5;">Por padrão vale a mesma senha da sua conta. Aqui você pode definir uma senha só para o modo admin.</div>'
     + '<input type="password" id="tsaAtual" placeholder="Senha atual do modo admin" style="'+inp+'"><input type="password" id="tsaNova" placeholder="Nova senha (vazio = voltar à senha da conta)" style="'+inp+'"><input type="password" id="tsaNova2" placeholder="Repita a nova senha" style="'+inp+'">'
     + '<div id="tsaErro" style="display:none;color:#b3261e;font-size:12.5px;margin-bottom:8px;"></div><div style="display:flex;gap:8px;"><button type="button" id="tsaCancela" style="flex:1;padding:10px;border-radius:8px;border:1px solid #bbb;background:#f3f3f3;color:#1a1a1a;font-weight:700;">Cancelar</button><button type="button" id="tsaOk" style="flex:1;padding:10px;border-radius:8px;border:0;background:#1b6e3a;color:#fff;font-weight:700;">Salvar</button></div></div>';
   document.body.appendChild(m);
@@ -1492,7 +1492,7 @@ function modalSimples(id, html) {
   let m = document.getElementById(id); if (m) m.remove();
   m = document.createElement('div'); m.id = id;
   m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:16px;';
-  m.innerHTML = '<div style="background:#fff;color:#1a1a1a;border-radius:14px;padding:18px;width:100%;max-width:420px;max-height:88vh;overflow:auto;box-shadow:0 10px 40px rgba(0,0,0,.35);">' + html + '</div>';
+  m.innerHTML = '<div style="background:#fff;color:#1a1a1a;border-radius:8px;padding:18px;width:100%;max-width:420px;max-height:88vh;overflow:auto;box-shadow:0 10px 40px rgba(0,0,0,.35);">' + html + '</div>';
   document.body.appendChild(m); m.addEventListener('click', e => { if (e.target === m) m.remove(); });
   return m;
 }
