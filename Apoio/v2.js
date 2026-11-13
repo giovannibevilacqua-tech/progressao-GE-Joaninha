@@ -3506,7 +3506,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
   if (typeof document === 'undefined') return;
   var NOMES = { alcateia: '🐺 Alcateia', escoteira: '⚜️ Tropa Escoteira', senior: '🧭 Tropa Sênior', cla: '🔥 Clã Pioneiro' };
   var SECS = ['alcateia', 'escoteira', 'senior', 'cla'];
-  var ORIG = { grupo: ['Grupo', '#1b6e3a'], distrito: ['Distrito', '#1565c0'], regiao: ['Região', '#7b1fa2'], nacional: ['Nacional', '#e65100'], secao: ['Calendário da seção', '#00796b'] };
+  var ORIG = { grupo: ['Grupo', '#1b6e3a'], local: ['Local', '#2e7d32'], distrito: ['Distrital', '#1565c0'], regiao: ['Regional', '#7b1fa2'], nacional: ['Nacional', '#e65100'], internacional: ['Internacional', '#c2185b'], secao: ['Calendário da seção', '#00796b'] };
   var MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
   var cfg = null, eventos = {}, marcas = [], mes = null, equipe = {};
   function esc(x) { return String(x == null ? '' : x).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
@@ -3532,7 +3532,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
       + '.v2c-it{display:flex;gap:8px;align-items:flex-start;padding:9px 11px;border:1px solid var(--border,#ddd);border-left:5px solid #888;border-radius:10px;margin-bottom:6px;background:var(--card,#fff);font-size:13px}.v2c-it .q{flex:1;min-width:0}.v2c-it small{opacity:.7;display:block}'
       + '.v2c-jn{margin:8px 0;font-size:12px}.v2c-jb{position:relative;height:20px;background:rgba(0,0,0,.06);border-radius:6px;margin-top:3px;overflow:hidden}.v2c-jb span{position:absolute;top:0;bottom:0;border-radius:6px;opacity:.85;color:#fff;font-size:10px;line-height:20px;padding:0 5px;white-space:nowrap;background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.25) 0 6px,transparent 6px 12px)}'
       + '.v2c-sec{margin:14px 0 6px;font-weight:800;font-size:14px}.v2c-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100040;display:flex;align-items:center;justify-content:center;padding:12px}.v2c-box{background:var(--card,#fff);color:var(--text,#1a1a1a);border-radius:14px;padding:16px;width:100%;max-width:560px;max-height:90vh;overflow:auto;box-sizing:border-box}'
-      + '.v2c-box label{display:block;font-size:11px;font-weight:700;margin:10px 0 3px;opacity:.75;text-transform:uppercase}.v2c-box input[type=text],.v2c-box input[type=date],.v2c-box select{width:100%;box-sizing:border-box;padding:9px;border:1px solid var(--border,#ccc);border-radius:8px;font-size:14px;background:var(--card,#fff);color:inherit}'
+      + '.v2c-box select,.v2c-box option{background:#fff;color:#1a1a1a}.v2c-box select{cursor:pointer}.v2c-box label{display:block;font-size:11px;font-weight:700;margin:10px 0 3px;opacity:.75;text-transform:uppercase}.v2c-box input[type=text],.v2c-box input[type=date],.v2c-box select{width:100%;box-sizing:border-box;padding:9px;border:1px solid var(--border,#ccc);border-radius:8px;font-size:14px;background:var(--card,#fff);color:inherit}'
       + '.v2c-ck{display:flex;gap:6px;align-items:center;font-size:13px;margin:4px 0;text-transform:none!important;font-weight:600!important;opacity:1!important}.v2c-imp{border:1px solid var(--border,#ddd);border-radius:10px;padding:8px;margin-bottom:6px;font-size:12px}.v2c-imp input[type=text],.v2c-imp input[type=date]{padding:6px!important;font-size:12px!important}.v2c-imp .l{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:4px}';
     document.head.appendChild(st);
   }
@@ -3716,8 +3716,8 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
   function importar() {
     var anoAtual = new Date().getFullYear();
     overlay('<h3 style="margin:0 0 6px">📥 Importar calendário</h3><div style="font-size:12px;opacity:.75">Excel, CSV ou PDF do distrito, da região ou nacional. O arquivo é lido aqui e não fica guardado: você confere a lista antes de entrar no sistema.</div>'
-      + '<label>Origem do calendário</label><select id="v2cImpO"><option value="distrito">Distrito</option><option value="regiao">Região</option><option value="nacional">Nacional</option></select>'
-      + '<label>Ano das datas sem ano</label><select id="v2cImpA">' + [anoAtual - 1, anoAtual, anoAtual + 1].map(function (a) { return '<option' + (a === anoAtual ? ' selected' : '') + '>' + a + '</option>'; }).join('') + '</select>'
+      + '<label>Origem do calendário</label><select id="v2cImpO"><option value="local">Local</option><option value="distrito" selected>Distrital</option><option value="regiao">Regional</option><option value="nacional">Nacional</option><option value="internacional">Internacional</option></select>'
+      + '<label>Ano das datas sem ano</label><select id="v2cImpA">' + [anoAtual - 1, anoAtual, anoAtual + 1, anoAtual + 2].map(function (a) { return '<option' + (a === anoAtual ? ' selected' : '') + '>' + a + '</option>'; }).join('') + '</select>'
       + '<label>' + (ehDir() ? 'Seções a que se relacionam' : 'Seção') + '</label>' + checksSecoes([], 'v2cImpS')
       + '<label>Arquivo</label><input type="file" id="v2cImpF" accept=".xlsx,.xls,.csv,application/pdf,.pdf"><div id="v2cImpMsg" style="font-size:12px;margin-top:8px"></div><div id="v2cImpLista"></div><div style="display:flex;gap:8px;margin-top:12px"><button class="v2c-bt p" id="v2cImpGo" style="display:none">Adicionar ao calendário</button><button class="v2c-bt" onclick="V2_CAL._fechar()">Fechar</button></div>');
     $('v2cImpF').onchange = async function () {

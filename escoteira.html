@@ -695,7 +695,7 @@ mark.hl-esc{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 .btn-prim{background:var(--vinho);color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;flex:2;}
 .btn-sec{background:var(--border);color:var(--text);border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;flex:1;}
 .roster-row{display:flex;flex-direction:column;}
-.card-acoes{display:flex;flex-wrap:wrap;gap:4px;margin-top:auto;padding-top:10px;border-top:1px solid rgba(128,128,128,.22);}
+.card-acoes{display:flex;flex-wrap:wrap;gap:4px;margin-top:auto !important;padding-top:7px;margin-top:8px;border-top:1px solid rgba(128,128,128,.22);}
 .card-acoes .btn-ic{padding:4px 7px;font-size:10.5px;font-weight:600;}
 .patrulha-drop-zone{align-items:stretch !important;}
 </style>
@@ -2055,18 +2055,19 @@ const caminho = !!info && info.mesesFaltantes <= 0;
 if (info) { const mf = info.mesesFaltantes; restante = caminho ? 'Já pode transferir' : (mf >= 12 ? Math.floor(mf / 12) + ' ano' + (Math.floor(mf / 12) > 1 ? 's' : '') + (mf % 12 ? ' e ' + (mf % 12) + ' meses' : '') : mf + ' meses'); }
 const cor = info ? info.cor : (JCOR[j] || '#8A94A3');
 const badge = caminho ? '<span style="background:#E67E22;color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;">🛤 CAMINHO</span>' : `<span style="background:${cor};color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;">${icoRamo('escoteira', 1, '#fff')} NA TROPA</span>`;
-const caixa = (t, v) => `<div style="background:rgba(255,255,255,.75);border-radius:8px;padding:8px 10px;"><div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#999;margin-bottom:2px;">${t}</div><div style="font-size:12px;font-weight:700;color:#1A1A1A;">${v}</div></div>`;
-return `<div class="roster-row${ativo === j ? ' active' : ''}${marcadoConversar ? ' marcado-conversar' : ''}" draggable="true" ondragstart="dragJovemStart(event,'${j}')" onclick="selecionarJovem('${j}')" style="background:${cor}14;border-left:5px solid ${cor};padding:14px;">
+const caixa = (t, v) => `<div style="background:rgba(255,255,255,.75);border-radius:7px;padding:5px 8px;"><div style="font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#999;margin-bottom:1px;">${t}</div><div style="font-size:12px;font-weight:700;color:#1A1A1A;">${v}</div></div>`;
+return `<div class="roster-row${ativo === j ? ' active' : ''}${marcadoConversar ? ' marcado-conversar' : ''}" draggable="true" ondragstart="dragJovemStart(event,'${j}')" onclick="selecionarJovem('${j}')" style="background:${cor}14;border-left:5px solid ${cor};padding:10px 12px;position:relative;">
 ${marcadoConversar ? `<div class="faixa-conversar">💬 CONVERSAR NA PRÓXIMA ATIVIDADE</div>` : ''}
-<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-<div style="width:42px;height:42px;border-radius:50%;background:${JCOR[j] || cor};color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;flex-shrink:0;">${initials}</div>
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+<div style="width:36px;height:36px;border-radius:50%;background:${JCOR[j] || cor};color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;flex-shrink:0;">${initials}</div>
 <div style="flex:1;min-width:0;">
 <div style="font-size:13px;font-weight:800;color:var(--text,#1A1A1A);line-height:1.2;word-break:break-word;">${flagAusencia ? `<span class="flag-ausencia" title="3+ faltas seguidas sem justificativa">🚩</span>` : ''}${JNOMES[j]}</div>
 <div style="font-size:10px;color:${cor};font-weight:700;margin-top:2px;">${idadeTxt}${CARGO_DE[j] ? ' · ' + (CARGO_DE[j] === 'monitor' ? 'Monitor' : 'Submonitor') : ''}</div>
 </div>
 <div style="flex-shrink:0;">${badge}</div>
+<button class="btn-ic" style="padding:2px 7px;font-size:14px;line-height:1;" onclick="event.stopPropagation();toggleJovemMenu('${j}')" title="Mais opções">⋮</button>
 </div>
-${info ? `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:7px;margin-bottom:10px;">${caixa('Transferência para a Sênior', dataTransf || '—')}${caixa('Tempo restante', `<span style="color:${cor}">${restante}</span>`)}</div>` : ''}
+${info ? `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:6px;margin-bottom:7px;">${caixa('Transferência para a Sênior', dataTransf || '—')}${caixa('Tempo restante', `<span style="color:${cor}">${restante}</span>`)}</div>` : ''}
 <div class="roster-linha-progresso">
 <div class="roster-track"><div class="roster-bar" style="width:${Math.round(n/18*100)}%;background:${JCOR[j]}"></div></div>
 <div class="roster-etapa" style="background:${et.bg || et.c+'22'};color:${et.c}">${n}/18 &middot; ${et.l}</div>
@@ -2075,12 +2076,13 @@ ${caminho ? `<button class="btn-ic" style="margin-top:10px;width:100%;padding:9p
 <div class="card-acoes" onclick="event.stopPropagation()">
 <button class="btn-ic" onclick="abrirEdicaoJovem('${j}')">✏ Editar</button>
 <button class="btn-ic" onclick="verObservacao('${j}')">📋 Obs.${OBSERVACOES[j] ? ' •' : ''}</button>
-<button class="btn-ic" onclick="relatorioJovem('${j}')">📄 Relatório</button>
-<button class="btn-ic" onclick="toggleConversar('${j}')">${marcadoConversar ? '✅ Já conversei' : '💬 Conversar'}</button>
+<button class="btn-ic" onclick="toggleConversar('${j}')" title="${marcadoConversar ? 'Já conversei' : 'Marcar para conversar na próxima atividade'}">${marcadoConversar ? '✅' : '💬'}</button>
 <button class="btn-ic" onclick="abrirLisOuro('${j}')">🏅 Ramo</button>
-<button class="btn-ic" onclick="arquivarJovem('${j}')">📦 Arquivar</button>
-<button class="btn-ic somente-admin" style="color:#E74C3C" onclick="excluirJovem('${j}')">🗑️</button>
 </div>
+${menuAberto ? `<div class="roster-dropdown" style="top:44px;right:10px;" onclick="event.stopPropagation()">
+<button onclick="arquivarJovem('${j}')">📦 Arquivar</button>
+<button class="remover somente-admin" onclick="excluirJovem('${j}')">🗑️ Excluir</button>
+</div>` : ''}
 </div>`;
 }
 
