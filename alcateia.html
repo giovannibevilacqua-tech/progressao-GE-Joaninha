@@ -2644,7 +2644,7 @@ async function iniciarApp(){
   V2_FIN.montar({ secao:'alcateia', container:'fin' });
   const _showModalOrig = showModal; showModal = function (yid) { _showModalOrig(yid); const y = yid ? YOUTH_DATA.find(x => x.id === yid) : null; V2_PESSOAS.campos('v2pCampos', yid || '', y ? y.name : '', 'inp-name'); };
 const _saveYouthOrig = saveYouth; saveYouth = function () { if (document.getElementById('edit-id').value) V2_PESSOAS.salvarDe(); _saveYouthOrig(); };
-window.calSecaoEventos = () => Object.values(eventos).filter(Boolean).map(e => ({ nome: e.nome, ini: e.dataISO, local: e.local }));
+window.calSecaoEventos = () => Object.values(eventos).filter(Boolean).map(e => ({ id: e.id, nome: e.nome, ini: e.dataISO, local: e.local }));
 V2_PESSOAS.montar({ secao:'alcateia', container:'fichasBox_off', jovens:()=>paxtuEstado().jovens, aplicarNome:(id,n)=>{ const y=YOUTH_DATA.find(x=>x.id===id); if(y){ y.name=n; syncJovens(); saveState(); renderAllTabs(); } } });
   V2_ALMOX.montar({ secao:'alcateia', nomeTropa:'Alcateia', outraTropa:'as outras seções', rotuloComp:'Compartilhado com as outras seções', subComp:'Aparece no almoxarifado de todas as seções', subTitulo:'Materiais do Alcateia. Itens compartilhados aparecem também nas outras seções.', container:'alm', padX:12 });
   renderAll(); renderCal(); renderCiclo(); renderJovens();

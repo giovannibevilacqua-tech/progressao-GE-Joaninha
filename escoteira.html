@@ -3265,7 +3265,7 @@ const mesTxt = MESES_ABREV[parseInt(partes[1], 10) - 1] || '';
 const menuAberto = eventoMenuAbertoId === ev.id;
 const bolhasItens = construirBolhasItens(ev.itens);
 const presentes = ev.presentes || [];
-return `<div class="evento-card">
+return `<div class="evento-card" id="evcard-${ev.id}">
 <div class="evento-strip"><div class="evento-dia">${partes[2]}</div><div class="evento-mes">${mesTxt}</div></div>
 <div class="evento-body">
 <button class="evento-menu-btn" onclick="event.stopPropagation();toggleEventoMenu('${ev.id}')">⋮</button>
@@ -3793,7 +3793,7 @@ window.addEventListener('online', () => { if (temAlteracaoLocalPendente && !(__s
 
 // ===== ALMOXARIFADO — módulo compartilhado (v2.js) =====
 V2_FIN.montar({ secao:'escoteira', container:'pagina-financeiro' });
-window.calSecaoEventos = () => EVENTOS.filter(Boolean).map(e => ({ nome: e.nome, ini: e.data, local: e.local }));
+window.calSecaoEventos = () => EVENTOS.filter(Boolean).map(e => ({ id: e.id, nome: e.nome, ini: e.data, local: e.local }));
 V2_PESSOAS.montar({ secao:'escoteira', container:'fichasBox_off', jovens:()=>paxtuEstado().jovens, aplicarNome:async (id,n)=>{ JNOMES[id]=n; temAlteracaoLocalPendente=true; await saveState(); renderRoster(); } });
 V2_ALMOX.montar({ secao:'escoteira', nomeTropa:'Escoteira', outraTropa:'Sênior', subTitulo:'Materiais da Tropa Escoteira. Você escolhe com quais seções cada item é compartilhado.', container:'pagina-almoxarifado', padX:14 });
 

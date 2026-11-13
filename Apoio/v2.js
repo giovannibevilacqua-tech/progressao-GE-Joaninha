@@ -2843,7 +2843,7 @@ function renderCal(){
     }
     const eid = ev.id, fmt = ev.fmt || 'C';
     const itens = Array.isArray(ev.itens) ? ev.itens : Object.values(ev.itens || {});
-    const card = document.createElement('div'); card.className = 'cal-card'; card.style.flexDirection = 'column'; card.style.margin = '0 12px 8px';
+    const card = document.createElement('div'); card.className = 'cal-card'; card.id = 'evcard-' + eid; card.style.flexDirection = 'column'; card.style.margin = '0 12px 8px';
     const tags = itens.map(b => getBlock(b)).filter(Boolean).map(b => `<span class="bloco-tag">📌 ${esc(b.name)}</span>`).join('');
     const menu = eventoMenuAbertoId === eid;
     const main = document.createElement('div'); main.style.cssText = 'display:flex;';
@@ -3549,7 +3549,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
   function antigos() {
     if (!cfg.secao || typeof root.calSecaoEventos !== 'function') return [];
     var out = [];
-    try { root.calSecaoEventos().forEach(function (e, i) { if (e && e.ini && /^\d{4}-\d{2}-\d{2}/.test(e.ini)) out.push({ id: 'old' + i, nome: e.nome || 'Atividade', ini: e.ini.slice(0, 10), fim: null, local: e.local || null, origem: 'secao', janela: false, _s: [cfg.secao], _old: true }); }); } catch (x) {}
+    try { root.calSecaoEventos().forEach(function (e, i) { if (e && e.ini && /^\d{4}-\d{2}-\d{2}/.test(e.ini)) out.push({ id: 'old' + i, nome: e.nome || 'Atividade', ini: e.ini.slice(0, 10), fim: null, local: e.local || null, origem: 'secao', janela: false, _s: [cfg.secao], _old: true, _eid: e.id }); }); } catch (x) {}
     return out;
   }
   function noDia(e, d) { return e.ini <= d && (e.fim || e.ini) >= d; }
@@ -3609,7 +3609,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
   }
   function item(e) {
     var o = ORIG[e.origem] || ORIG.grupo;
-    return '<div class="v2c-it" style="border-left-color:' + o[1] + '"><div class="q"><b>' + esc(e.nome) + '</b><small>' + dBR(e.ini) + (e.fim && e.fim !== e.ini ? ' a ' + dBR(e.fim) : '') + (e.local ? ' · ' + esc(e.local) : '') + '</small><small>' + o[0] + ' · ' + e._s.map(function (s) { return NOMES[s] || s; }).join(', ') + '</small></div>'
+    return '<div class="v2c-it" style="border-left-color:' + o[1] + (e._old ? ';cursor:pointer" title="Abrir a atividade na lista" onclick="V2_CAL._ir(\'' + String(e._eid || '').replace(/'/g, '') + '\')' : '') + '"><div class="q"><b>' + esc(e.nome) + '</b><small>' + dBR(e.ini) + (e.fim && e.fim !== e.ini ? ' a ' + dBR(e.fim) : '') + (e.local ? ' · ' + esc(e.local) : '') + '</small><small>' + o[0] + ' · ' + e._s.map(function (s) { return NOMES[s] || s; }).join(', ') + '</small></div>'
       + (podeMexer(e) ? '<button class="v2c-bt" onclick="V2_CAL._ed(\'' + e.id + '\')">Editar</button>' : '') + '</div>';
   }
   function fechar() { var o = $('v2cOv'); if (o) o.remove(); }
@@ -3747,6 +3747,13 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
     montar: async function (o) { cfg = o; injetarCss(); var h = new Date(); mes = new Date(h.getFullYear(), h.getMonth(), 1); $(o.container).innerHTML = '<div class="v2c">Carregando calendário…</div>'; await carregar(); desenhar(); },
     atualizar: async function () { if (!cfg) return; await carregar(); desenhar(); },
     _m: function (d) { if (d === 0) { var h = new Date(); mes = new Date(h.getFullYear(), h.getMonth(), 1); } else mes = new Date(mes.getFullYear(), mes.getMonth() + d, 1); desenhar(); },
+    _ir: function (eid) {
+      var el = eid ? document.getElementById('evcard-' + eid) : null;
+      if (!el) return;
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      var o = el.style.outline; el.style.outline = '3px solid #f9a825'; el.style.outlineOffset = '2px';
+      setTimeout(function () { el.style.outline = o; el.style.outlineOffset = ''; }, 2200);
+    },
     _novo: function () { formulario(null); }, _ed: function (id) { var e = eventos[id]; if (e) { e.id = id; visiveis(); formulario(e); } }, _imp: importar, _fechar: fechar,
     _dia: function (di) {
       var evs = visiveis().filter(function (e) { return noDia(e, di); }), marc = (root.V2_PESSOAS ? root.V2_PESSOAS.eventosDoAno(marcas, +di.slice(0, 4)) : []).filter(function (x) { return x.data === di; });
