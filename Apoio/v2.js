@@ -311,10 +311,10 @@ window.V2_CONFIG = {
     return out;
   }
   function diff(base, novo) {
-    var sets = {}, dels = {}, ns = 0, nd = 0;
-    Object.keys(novo).forEach(function (k) { if (!(k in base) || base[k] !== novo[k]) { sets[k] = novo[k]; ns++; } });
-    Object.keys(base).forEach(function (k) { if (!(k in novo)) { dels[k] = null; nd++; } });
-    return { sets: sets, dels: dels, nSets: ns, nDels: nd };
+    var sets = {}, dels = {}, ns = 0, nd = 0, antes = {};
+    Object.keys(novo).forEach(function (k) { if (!(k in base) || base[k] !== novo[k]) { sets[k] = novo[k]; antes[k] = (k in base) ? base[k] : null; ns++; } });
+    Object.keys(base).forEach(function (k) { if (!(k in novo)) { dels[k] = null; antes[k] = base[k]; nd++; } });
+    return { sets: sets, dels: dels, nSets: ns, nDels: nd, antes: antes };
   }
   function iguaisFlat(a, b) {
     var ka = Object.keys(a), kb = Object.keys(b);
@@ -862,27 +862,42 @@ window.V2_CONFIG = {
       return rot + (nomes ? ' (' + nomes + ')' : '') + ': ' + g.n + (g.n === 1 ? ' alteração' : ' alterações');
     }).join(' · ');
   }
-  async function registrarHistorico(tropa, por, nome, resumo, n) {
+  function nomeDaSessao() { try { var o = JSON.parse(localStorage.getItem('chefeSessao') || 'null'); return (o && o.nome) || ''; } catch (e) { return ''; } }
+  async function registrarHistorico(tropa, por, nome, resumo, n, d) {
     if (!resumo) return;
     try {
-      await fetch(urlV2('historico/' + tropa), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ em: new Date().toISOString(), por: String(por || ''), nome: nome || '', resumo: resumo, n: n || 0 }) });
-    } catch (e) {}
+      var e = { em: new Date().toISOString(), por: String(por || ''), nome: nomeDaSessao() || nome || '', resumo: resumo, n: n || 0 };
+      // guarda os valores de antes para poder desfazer (só se a alteração for pequena)
+      if (d && d.antes && Object.keys(d.antes).length && Object.keys(d.antes).length <= 300) { var js = JSON.stringify(d.antes); if (js.length < 60000) e.desf = d.antes; }
+      await fetch(urlV2('historico/' + tropa), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(e) });
+    } catch (x) {}
   }
-  async function lerHistorico(qtd) {
+  var NOS_HIST = ['escoteira', 'senior', 'alcateia', 'cla', 'diretoria'];
+  async function lerHistorico(qtd, nos) {
     var tudo = [];
-    for (var t of ['escoteira', 'senior']) {
+    for (var t of (nos || NOS_HIST)) {
       try {
         var r = await fetch(urlV2('historico/' + t, 'orderBy=%22%24key%22&limitToLast=' + (qtd || 60)));
         var o = (await r.json()) || {};
-        Object.keys(o).forEach(function (k) { var e = o[k]; if (e && e.em) { e.tropa = t; tudo.push(e); } });
+        if (o.error) continue;
+        Object.keys(o).forEach(function (k) { var e = o[k]; if (e && e.em) { e.tropa = t; e.id = k; tudo.push(e); } });
       } catch (e) {}
     }
     tudo.sort(function (a, b) { return a.em < b.em ? 1 : -1; });
     return tudo.slice(0, qtd || 60);
   }
+  // desfaz uma alteração: devolve os valores de antes e registra quem desfez, quando
+  async function desfazerHistorico(e, quemNome, quemReg) {
+    if (!e || !e.desf || e.desfeito) throw new Error('Esta alteração não pode ser desfeita.');
+    var r = await fetch(urlV2(e.tropa), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(e.desf) });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    var quando = new Date().toISOString();
+    await fetch(urlV2('historico/' + e.tropa + '/' + e.id), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ desfeito: { em: quando, nome: quemNome || '', por: String(quemReg || '') } }) });
+    await registrarHistorico(e.tropa, quemReg, quemNome, 'Desfez a alteração: ' + e.resumo, 0);
+  }
   async function podarHistorico(manter) {
     manter = manter || 300;
-    for (var t of ['escoteira', 'senior']) {
+    for (var t of NOS_HIST) {
       try {
         var ks = Object.keys((await (await fetch(urlV2('historico/' + t, 'shallow=true'))).json()) || {}).sort();
         var apagar = ks.slice(0, Math.max(0, ks.length - manter));
@@ -1259,7 +1274,7 @@ window.V2_CONFIG = {
   root.V2 = {
     abrirRelatorio: abrirRelatorio, abrirRelatorioTropa: abrirRelatorioTropa, abrirRelatorioGrupo: abrirRelatorioGrupo,
     snapshot: snapshot, listarSnapshots: listarSnapshots, lerSnapshot: lerSnapshot, protegerAntes: protegerAntes,
-    resumirDiff: resumirDiff, registrarHistorico: registrarHistorico, lerHistorico: lerHistorico, podarHistorico: podarHistorico, limparCacheLocal: limparCacheLocal, temPendenciaLocal: temPendenciaLocal,
+    resumirDiff: resumirDiff, registrarHistorico: registrarHistorico, lerHistorico: lerHistorico, desfazerHistorico: desfazerHistorico, podarHistorico: podarHistorico, limparCacheLocal: limparCacheLocal, temPendenciaLocal: temPendenciaLocal,
     hashSenha: hashSenha, conferirSenha: conferirSenha, senhaComHash: senhaComHash,
     cicloBackup: cicloBackup, lembreteBackup: lembreteBackup, registrarBackup: registrarBackup,
     CFG: CFG, escKey: escKey, unescKey: unescKey, enc: enc, dec: dec, encDados: encDados, decDados: decDados, decCampo: decCampo,

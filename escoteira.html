@@ -1134,7 +1134,7 @@ function iniciarSync() {
       onSincronizado: (res, recarregar) => sincronizadoOffline(res, recarregar),
       onSalvo: (d) => {
         const nomeDe = (id) => (Object.prototype.hasOwnProperty.call(JNOMES, id) ? JNOMES[id] : null);
-        V2.registrarHistorico('escoteira', registroLogado, nomeLogado, V2.resumirDiff(d, nomeDe), Object.keys(d.sets).length + Object.keys(d.dels).length);
+        V2.registrarHistorico('escoteira', registroLogado, nomeLogado, V2.resumirDiff(d, nomeDe), Object.keys(d.sets).length + Object.keys(d.dels).length, d);
       },
       onErroCarga: (e) => {
         alert('⚠️ Não consegui carregar os dados (versão v2).\n\nO app abriu vazio e o SALVAMENTO FICOU BLOQUEADO para não apagar nada. Recarregue a página; se continuar, confira a internet, o login e as regras do banco.\n\nMotivo técnico: ' + String((e && e.message) || e));

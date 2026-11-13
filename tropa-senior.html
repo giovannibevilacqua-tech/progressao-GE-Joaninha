@@ -736,7 +736,7 @@ async function loadState(){
     onSalvo: (d) => {
       if (MODO_VISUALIZACAO_SR) return;
       const nomeDe = (id) => { const y = YOUTH_DATA.find(v => v.id === id); return y ? y.name : null; };
-      V2.registrarHistorico('senior', registroLogado, '', V2.resumirDiff(d, nomeDe), Object.keys(d.sets).length + Object.keys(d.dels).length);
+      V2.registrarHistorico('senior', registroLogado, '', V2.resumirDiff(d, nomeDe), Object.keys(d.sets).length + Object.keys(d.dels).length, d);
     },
     // não troca os dados na tela enquanto alguém está digitando; tenta de novo logo depois
     temPendente: () => { const a = document.activeElement; return !!(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)); },

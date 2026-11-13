@@ -757,7 +757,7 @@ REGISTRO ESCOTEIRO
 <button class="conta-barra-btn" id="btnAdminVolta" style="display:none;" onclick="pedirSenhaModoAdmin()">🔑 Admin</button>
 <button class="conta-barra-btn somente-admin" id="btnGerChefesTopo" onclick="abrirGerenciarChefes()">⚙️ Gerenciar Chefes</button>
 <button class="conta-barra-btn somente-admin" id="btnSugestoesAdmin" onclick="abrirSugestoesAdmin()">📬 Sugestões</button>
-<button class="conta-barra-btn somente-admin" id="btnHistorico" onclick="abrirHistorico()">📜 Histórico</button>
+<button class="conta-barra-btn" id="btnHistorico" onclick="abrirHistorico()">📜 Histórico</button>
 <button class="conta-barra-btn somente-admin" id="btnImportarPaxtu" onclick="ImportarPaxtu.abrir()">📥 Importar PAXTU</button>
 <button class="conta-barra-btn" onclick="if(confirm('Sair da sua conta neste navegador?'))fazerLogout()">🚪 Sair</button>
 </div>
@@ -1080,21 +1080,58 @@ async function removerAcessoChefe(uid) {
 await fetch(urlComAuthFirebase(DB_URL + '/usuarios/' + uid + '.json'), { method: 'DELETE' });
 }
 
+// confirma a senha de quem está logado antes de uma ação sensível (desfazer alteração)
+function pedirSenhaAcao(titulo) {
+  return new Promise(resolve => {
+    const m = document.createElement('div');
+    m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100020;display:flex;align-items:center;justify-content:center;padding:16px;';
+    m.innerHTML = '<div style="background:#fff;color:#1a1a1a;border-radius:14px;padding:20px 18px;width:100%;max-width:340px;box-shadow:0 10px 40px rgba(0,0,0,.35);"><div style="font-size:16px;font-weight:800;margin-bottom:6px;">🔐 Confirme sua senha</div><div style="font-size:12.5px;color:#555;line-height:1.5;margin-bottom:12px;">' + titulo + '</div><input type="password" id="pwAcaoInp" autocomplete="current-password" placeholder="Sua senha (padrão: número do registro)" style="width:100%;padding:11px;border:1px solid #bbb;border-radius:9px;font-size:15px;box-sizing:border-box;"><div id="pwAcaoErr" style="display:none;color:#b3261e;font-size:12px;margin-top:6px;">Senha incorreta.</div><div style="display:flex;gap:8px;margin-top:14px;"><button type="button" id="pwAcaoNao" style="flex:1;padding:11px;border-radius:10px;border:1px solid #bbb;background:#f3f3f3;color:#1a1a1a;font-weight:700;">Cancelar</button><button type="button" id="pwAcaoSim" style="flex:1;padding:11px;border-radius:10px;border:0;background:#1b6e3a;color:#fff;font-weight:700;">Confirmar</button></div></div>';
+    document.body.appendChild(m);
+    const fim = v => { m.remove(); resolve(v); };
+    document.getElementById('pwAcaoNao').onclick = () => fim(false);
+    const ok = async () => {
+      const inp = document.getElementById('pwAcaoInp'), err = document.getElementById('pwAcaoErr'), b = document.getElementById('pwAcaoSim');
+      b.disabled = true; err.style.display = 'none'; let certo = false;
+      try { const r = await fetch(urlComAuthFirebase(DB_URL + '/usuarios/' + firebaseUid + '.json')); const v = await r.json(); certo = !!v && await conferirSenhaModoAdmin(inp.value, v); } catch (e) {}
+      b.disabled = false; if (certo) fim(true); else err.style.display = 'block';
+    };
+    document.getElementById('pwAcaoSim').onclick = ok;
+    document.getElementById('pwAcaoInp').addEventListener('keydown', e => { if (e.key === 'Enter') ok(); });
+    setTimeout(() => document.getElementById('pwAcaoInp').focus(), 50);
+  });
+}
+const NOMES_SECAO = { senior: 'Tropa Sênior', alcateia: 'Alcateia', cla: 'Clã Pioneiro', diretoria: 'Diretoria', escoteira: 'Tropa Escoteira' };
+let histCache = [];
 async function abrirHistorico() {
   document.getElementById('chefesModalTitulo').textContent = '📜 Histórico de alterações';
   document.getElementById('chefesModalOv').classList.add('open');
   const corpo = document.getElementById('chefesModalBody');
   corpo.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">Carregando…</div>';
   const esc = (t) => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  const lista = await V2.lerHistorico(60);
+  const nos = verTudo() ? undefined : [tropaDoChefeLogado, tropa2DoChefeLogado].filter(Boolean);
+  const [lista, eq] = await Promise.all([V2.lerHistorico(80, nos), fetch(urlComAuthFirebase(DB_URL + '/equipe.json')).then(r => r.json()).catch(() => ({}))]);
+  const porReg = {}; Object.values(eq || {}).forEach(u => { if (u && u.registro) porReg[String(u.registro)] = u.nome || ''; });
+  histCache = lista;
   if (!lista.length) { corpo.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">Ainda não há alterações registradas.</div>'; return; }
-  corpo.innerHTML = lista.map(e => {
-    const quando = new Date(e.em).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+  const fmt = d => new Date(d).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+  corpo.innerHTML = lista.map((e, i) => {
+    const quem = porReg[String(e.por)] || e.nome || ('Registro ' + e.por);
+    let acao = '';
+    if (e.desfeito) acao = '<div style="font-size:11px;color:#b3261e;margin-top:3px;">↩ Desfeito por <b>' + esc(e.desfeito.nome || porReg[String(e.desfeito.por)] || ('Registro ' + e.desfeito.por)) + '</b> em ' + esc(fmt(e.desfeito.em)) + '</div>';
+    else if (e.desf) acao = '<button type="button" onclick="desfazerAlteracao(' + i + ')" style="margin-top:4px;padding:4px 10px;border-radius:8px;border:1px solid var(--border,#ccc);background:transparent;color:inherit;font-size:11px;font-weight:700;cursor:pointer;">↩ Desfazer</button>';
     return '<div style="padding:8px 4px;border-bottom:1px solid var(--border);font-size:12px;line-height:1.4;">' +
-      '<div style="color:var(--muted);font-size:10px;">' + esc(quando) + ' · ' + ({ senior: 'Tropa Sênior', alcateia: 'Alcateia', cla: 'Clã Pioneiro', diretoria: 'Diretoria' }[e.tropa] || 'Tropa Escoteira') + ' · ' + esc(e.nome || ('Registro ' + e.por)) + '</div>' +
-      '<div>' + esc(e.resumo) + '</div></div>';
-  }).join('') + '<div style="padding:10px;font-size:10px;color:var(--muted);text-align:center;">Mostrando as 60 mais recentes. O sistema guarda até 300 por tropa.</div>';
+      '<div style="color:var(--muted);font-size:10px;">' + esc(fmt(e.em)) + ' · ' + (NOMES_SECAO[e.tropa] || e.tropa) + ' · <b>' + esc(quem) + '</b></div>' +
+      '<div' + (e.desfeito ? ' style="text-decoration:line-through;opacity:.6;"' : '') + '>' + esc(e.resumo) + '</div>' + acao + '</div>';
+  }).join('') + '<div style="padding:10px;font-size:10px;color:var(--muted);text-align:center;">Mostrando as mais recentes. Desfazer pede a sua senha e fica registrado.</div>';
   V2.podarHistorico(300);
+}
+async function desfazerAlteracao(i) {
+  const e = histCache[i]; if (!e || !e.desf || e.desfeito) return;
+  if (!verTudo() && e.tropa !== tropaDoChefeLogado && e.tropa !== tropa2DoChefeLogado) { alert('Você só pode desfazer alterações da sua seção.'); return; }
+  if (!confirm('Desfazer esta alteração?\n\n' + e.resumo + '\n\nOs valores voltam ao que eram antes. Se algo foi mudado depois dela, essa mudança também é desfeita.')) return;
+  if (!(await pedirSenhaAcao('Para desfazer, confirme a sua senha. Fica registrado quem desfez, a data e a hora.'))) return;
+  try { await V2.desfazerHistorico(e, nomeLogado || '', registroLogado); } catch (x) { alert('Não foi possível desfazer: ' + x.message); return; }
+  alert('Alteração desfeita.'); abrirHistorico();
 }
 async function abrirGerenciarChefes() {
 document.getElementById('chefesModalTitulo').textContent = '⚙️ Gerenciar Chefes';

@@ -1394,7 +1394,7 @@ async function loadState(){
     onSincronizado: (res, recarregar) => sincronizadoOffline(res, recarregar),
     onSalvo: (d) => {
       const nomeDe = (id) => { const y = YOUTH_DATA.find(v => v.id === id); return y ? y.name : null; };
-      V2.registrarHistorico(V2_NODE, registroLogado, nomeLogado, V2.resumirDiff(d, nomeDe), Object.keys(d.sets).length + Object.keys(d.dels).length);
+      V2.registrarHistorico(V2_NODE, registroLogado, nomeLogado, V2.resumirDiff(d, nomeDe), Object.keys(d.sets).length + Object.keys(d.dels).length, d);
     },
     temPendente: () => { const a = document.activeElement; return !!(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)); },
     onErroCarga: (e) => {
