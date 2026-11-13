@@ -683,6 +683,17 @@ mark.hl-esc{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 
 .btn-ic{background:none;border:1px solid var(--border);border-radius:7px;padding:4px 8px;font-size:11px;cursor:pointer;color:var(--muted);white-space:nowrap;}
 .btn-ic:hover{background:var(--bg);}
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:flex-end;justify-content:center;}
+.modal-ov.open{display:flex;}
+.modal-box{background:#fff;border-radius:16px 16px 0 0;padding:20px 16px 28px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;}
+.modal-ttl{font-size:16px;font-weight:800;color:var(--vinho);margin-bottom:16px;}
+.f-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;display:block;}
+.f-input{width:100%;padding:10px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;outline:none;font-family:inherit;color:var(--text);box-sizing:border-box;}
+.f-input:focus{border-color:var(--vinho);}
+.f-field{margin-bottom:12px;}
+.f-row{display:flex;gap:8px;margin-top:14px;}
+.btn-prim{background:var(--vinho);color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;flex:2;}
+.btn-sec{background:var(--border);color:var(--text);border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;flex:1;}
 </style>
 <script src="Apoio/v2.js"></script>
 <script>const { EIXOS, BLOCOS, BLOCO_IDS } = window.V2_BLOCOS;</script>
@@ -924,6 +935,19 @@ Toque num jovem para abrir a ficha dele. A barra de cor mostra o tempo até a tr
 </div>
 <div class="lis-modal-body" id="eventoModalBody"></div>
 </div>
+</div>
+
+<div class="modal-ov" id="youth-modal" onclick="if(event.target===this)hideModal()">
+  <div class="modal-box">
+    <div class="modal-ttl" id="modal-ttl">Editar Jovem</div>
+    <input type="hidden" id="edit-id">
+    <div class="f-field"><label class="f-label">Nome completo *</label><input type="text" class="f-input" id="inp-name" placeholder="Nome do jovem"></div>
+    <div class="f-field"><label class="f-label">Data de nascimento *</label><input type="date" class="f-input" id="inp-born"></div>
+    <div class="f-field"><label class="f-label">Cargo na patrulha</label><select class="f-input" id="inp-role"><option value="">— Nenhum —</option><option value="monitor">Monitor</option><option value="submonitor">Submonitor</option></select></div>
+    <div class="f-field"><label class="f-label">Observações (privado — suporte, restrições, etc.)</label><textarea class="f-input" id="inp-obs" rows="3" style="resize:vertical;" placeholder="Ex: restrição alimentar, necessidade de suporte…"></textarea></div>
+    <div id="v2pCampos"></div>
+    <div class="f-row"><button class="btn-sec" onclick="hideModal()">Cancelar</button><button class="btn-prim" onclick="salvarEdicaoJovem()">Salvar</button></div>
+  </div>
 </div>
 
 <div class="lis-modal-ov" id="fichaModalOv" onclick="if(event.target===this)fecharFichaModal()">
@@ -1512,27 +1536,35 @@ document.removeEventListener('click', fechar);
 
 function abrirEdicaoJovem(id) {
 jovemMenuAbertoId = null;
-jovemEditandoId = id;
+document.getElementById('edit-id').value = id;
+document.getElementById('modal-ttl').textContent = 'Editar Jovem';
+document.getElementById('inp-name').value = JNOMES[id] || '';
+document.getElementById('inp-born').value = DATAS_NASC[id] || '';
+document.getElementById('inp-role').value = CARGO_DE[id] || '';
+document.getElementById('inp-obs').value = OBSERVACOES[id] || '';
+document.getElementById('youth-modal').classList.add('open');
 renderRoster();
+V2_PESSOAS.campos('v2pCampos', id, JNOMES[id], 'inp-name');
 }
-function cancelarEdicaoJovem() {
-jovemEditandoId = null;
-renderRoster();
-}
-function salvarEdicaoJovem(id) {
-const nome = document.getElementById('editNome_' + id).value.trim();
-const nasc = document.getElementById('editNasc_' + id).value;
-const cargo = document.getElementById('editCargo_' + id).value;
-const obs = document.getElementById('editObs_' + id).value.trim();
-if (!nome) { alert('O nome não pode ficar vazio.'); return; }
+function hideModal() { document.getElementById('youth-modal').classList.remove('open'); }
+function cancelarEdicaoJovem() { hideModal(); }
+function salvarEdicaoJovem() {
+const id = document.getElementById('edit-id').value; if (!id) return;
+const nome = document.getElementById('inp-name').value.trim();
+const nasc = document.getElementById('inp-born').value;
+const cargo = document.getElementById('inp-role').value;
+const obs = document.getElementById('inp-obs').value.trim();
+if (!nome || !nasc) { alert('Nome e data de nascimento são obrigatórios.'); return; }
+if (!V2_PESSOAS.temSobrenome(V2_PESSOAS.nomeParaChecar(nome))) { alert('Informe o nome e o sobrenome.'); return; }
+V2_PESSOAS.salvarDe();
 JNOMES[id] = nome;
 DATAS_NASC[id] = nasc;
 if (cargo) CARGO_DE[id] = cargo; else delete CARGO_DE[id];
 if (obs) OBSERVACOES[id] = obs; else delete OBSERVACOES[id];
 JCOR[id] = JCOR[id] || corPara(JOVENS.indexOf(id));
-jovemEditandoId = null;
 temAlteracaoLocalPendente = true;
 saveState();
+hideModal();
 renderRoster();
 if (ativo === id) renderDetail(id);
 }
@@ -2022,21 +2054,21 @@ const badge = caminho ? '<span style="background:#E67E22;color:#fff;font-size:9p
 const caixa = (t, v) => `<div style="background:rgba(255,255,255,.75);border-radius:8px;padding:8px 10px;"><div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#999;margin-bottom:2px;">${t}</div><div style="font-size:12px;font-weight:700;color:#1A1A1A;">${v}</div></div>`;
 return `<div class="roster-row${ativo === j ? ' active' : ''}${marcadoConversar ? ' marcado-conversar' : ''}" draggable="true" ondragstart="dragJovemStart(event,'${j}')" onclick="selecionarJovem('${j}')" style="background:${cor}14;border-left:5px solid ${cor};padding:14px;">
 ${marcadoConversar ? `<div class="faixa-conversar">💬 CONVERSAR NA PRÓXIMA ATIVIDADE</div>` : ''}
-<div style="display:flex;align-items:center;gap:10px;margin-bottom:11px;">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
 <div style="width:42px;height:42px;border-radius:50%;background:${JCOR[j] || cor};color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;flex-shrink:0;">${initials}</div>
 <div style="flex:1;min-width:0;">
-<div style="font-size:13px;font-weight:800;color:#1A1A1A;line-height:1.2;">${flagAusencia ? `<span class="flag-ausencia" title="3+ faltas seguidas sem justificativa">🚩</span>` : ''}${JNOMES[j]}</div>
-<div style="font-size:10px;color:${cor};font-weight:700;margin-top:2px;">${idadeTxt}${CARGO_DE[j] ? ' &nbsp;·&nbsp; ' + (CARGO_DE[j] === 'monitor' ? 'Monitor' : 'Submonitor') : ''}</div>
+<div style="font-size:13px;font-weight:800;color:var(--text,#1A1A1A);line-height:1.2;word-break:break-word;">${flagAusencia ? `<span class="flag-ausencia" title="3+ faltas seguidas sem justificativa">🚩</span>` : ''}${JNOMES[j]}</div>
+<div style="font-size:10px;color:${cor};font-weight:700;margin-top:2px;">${idadeTxt}${CARGO_DE[j] ? ' · ' + (CARGO_DE[j] === 'monitor' ? 'Monitor' : 'Submonitor') : ''}</div>
 </div>
-<div style="flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:5px;">${badge}
-<div style="display:flex;gap:4px;">
+<div style="flex-shrink:0;">${badge}</div>
+</div>
+<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;">
 <button class="btn-ic" onclick="event.stopPropagation();abrirEdicaoJovem('${j}')" title="Editar">✏ Editar</button>
 <button class="btn-ic" onclick="event.stopPropagation();verObservacao('${j}')" title="Observação">📋${OBSERVACOES[j] ? ' •' : ''}</button>
 <button class="btn-ic" onclick="event.stopPropagation();relatorioJovem('${j}')" title="Relatório em PDF">📄</button>
 <button class="btn-ic" onclick="event.stopPropagation();toggleJovemMenu('${j}')" title="Mais opções">⋮</button>
-</div></div>
 </div>
-${info ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px;">${caixa('Transferência para a Sênior', dataTransf || '—')}${caixa('Tempo restante', `<span style="color:${cor}">${restante}</span>`)}</div>` : ''}
+${info ? `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:7px;margin-bottom:10px;">${caixa('Transferência para a Sênior', dataTransf || '—')}${caixa('Tempo restante', `<span style="color:${cor}">${restante}</span>`)}</div>` : ''}
 <div class="roster-linha-progresso">
 <div class="roster-track"><div class="roster-bar" style="width:${Math.round(n/18*100)}%;background:${JCOR[j]}"></div></div>
 <div class="roster-etapa" style="background:${et.bg || et.c+'22'};color:${et.c}">${n}/18 &middot; ${et.l}</div>
@@ -3760,8 +3792,6 @@ window.addEventListener('online', () => { if (temAlteracaoLocalPendente && !(__s
 
 // ===== ALMOXARIFADO — módulo compartilhado (v2.js) =====
 V2_FIN.montar({ secao:'escoteira', container:'pagina-financeiro' });
-const _abrirEdOrig = abrirEdicaoJovem; abrirEdicaoJovem = function (id) { _abrirEdOrig(id); V2_PESSOAS.campos('v2pCampos_' + id, id, JNOMES[id], 'editNome_' + id); };
-const _salvarEdOrig = salvarEdicaoJovem; salvarEdicaoJovem = function (id) { V2_PESSOAS.salvarDe(); _salvarEdOrig(id); };
 window.calSecaoEventos = () => EVENTOS.filter(Boolean).map(e => ({ nome: e.nome, ini: e.data, local: e.local }));
 V2_PESSOAS.montar({ secao:'escoteira', container:'fichasBox_off', jovens:()=>paxtuEstado().jovens, aplicarNome:async (id,n)=>{ JNOMES[id]=n; temAlteracaoLocalPendente=true; await saveState(); renderRoster(); } });
 V2_ALMOX.montar({ secao:'escoteira', nomeTropa:'Escoteira', outraTropa:'Sênior', subTitulo:'Materiais da Tropa Escoteira. Você escolhe com quais seções cada item é compartilhado.', container:'pagina-almoxarifado', padX:14 });
