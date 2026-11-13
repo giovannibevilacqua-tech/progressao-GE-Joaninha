@@ -793,6 +793,7 @@ Toque num jovem para abrir a ficha dele. A barra de cor mostra o tempo até a tr
 </div>
 
 <div id="pagina-calendario" style="display:none;">
+<div id="calGrupoBox"></div>
 
 
 <div style="margin:0 0 12px;background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;">
@@ -2298,7 +2299,7 @@ document.getElementById(PAGINAS_ESC[k][1]).classList.toggle('active', k === p);
 });
 document.getElementById('btnLimparMarcacoes').style.display = p === 'tabela' ? '' : 'none';
 if (p === 'tabela') renderPaginaTabela();
-if (p === 'calendario') renderPaginaCalendario();
+if (p === 'calendario') { renderPaginaCalendario(); V2_CAL.abrirNaSecao('escoteira', 'calGrupoBox'); }
 if (p === 'jovens') renderRoster();
 if (p === 'ciclo') renderPaginaCiclo();
 if (p === 'lis') renderPaginaLis();

@@ -378,7 +378,7 @@ body.modo-view{padding-bottom:12px;}
 
 <nav class="tabs" id="tabsCla">
   <button class="tab-btn active" data-tab="prog" onclick="showTab('prog',this)">⚡ Progressão</button>
-  <button class="tab-btn" data-tab="cal" onclick="showTab('cal',this)">📅 Calendário</button>
+  <button class="tab-btn" data-tab="cal" onclick="showTab('cal',this);V2_CAL.abrirNaSecao('cla','calGrupoBox')">📅 Calendário</button>
   <button class="tab-btn" data-tab="ciclo" onclick="showTab('ciclo',this)">🔄 Ciclo</button>
   <button class="tab-btn" data-tab="jovens" onclick="showTab('jovens',this)">👥 Pioneiros</button>
   <button class="tab-btn" data-tab="bp" onclick="showTab('bp',this)">🏅 Insígnia de B-P</button>
@@ -447,6 +447,7 @@ body.modo-view{padding-bottom:12px;}
 <!-- ═══ TAB: CALENDÁRIO ═══════════════════════════════ -->
 <div id="cal" class="tab-content">
   <div style="margin-top:12px;">
+<div id="calGrupoBox"></div>
 
     <div style="margin:0 12px 12px;background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;">
       <div style="background:var(--azul);padding:10px 13px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="toggleResumoPresencas()">

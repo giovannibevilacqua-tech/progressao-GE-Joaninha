@@ -3367,3 +3367,256 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
     _ef: async function (k) { var it = lote._it[k]; try { await gravarFicha(lote._sec, it.jovem.id, it.jovem.nome, it.f); it.feito = true; } catch (e) { it.erro = e.message; } lote._pintar(); }
   };
 })(typeof window !== 'undefined' ? window : globalThis);
+
+/* ============================================================
+   Calendário do grupo — atividades do grupo, do distrito, da região e nacionais, com janelas de execução (MUTECO, MUTCOM…).
+   Dados em /grupoCal/<id> {nome, ini, fim, local, secoes:[...], origem, janela, criadoTropa, por}.
+   Importação de Excel/CSV/PDF: o arquivo é lido no aparelho, vira uma lista para conferir e NÃO é guardado.
+   ============================================================ */
+(function (root) {
+  if (typeof document === 'undefined') return;
+  var NOMES = { alcateia: '🐺 Alcateia', escoteira: '⚜️ Tropa Escoteira', senior: '🧭 Tropa Sênior', cla: '🔥 Clã Pioneiro' };
+  var SECS = ['alcateia', 'escoteira', 'senior', 'cla'];
+  var ORIG = { grupo: ['Grupo', '#1b6e3a'], distrito: ['Distrito', '#1565c0'], regiao: ['Região', '#7b1fa2'], nacional: ['Nacional', '#e65100'] };
+  var MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+  var cfg = null, eventos = {}, marcas = [], mes = null, equipe = {};
+  function esc(x) { return String(x == null ? '' : x).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
+  function $(id) { return document.getElementById(id); }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function iso(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function dBR(s) { var p = String(s || '').split('-'); return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : ''; }
+  function sessao() { try { return JSON.parse(localStorage.getItem('chefeSessao') || 'null') || {}; } catch (e) { return {}; } }
+  function url(p) { return root.urlComAuthFirebase(root.V2_CONFIG.DB_URL + p + '.json'); }
+  function norm(t) { return String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
+  function ehDir() { return !!(root.ehDiretoriaSessao && root.ehDiretoriaSessao()); }
+  function minhaSecao() { return cfg && cfg.secao; }
+  function injetarCss() {
+    if ($('v2cCss')) return;
+    var st = document.createElement('style'); st.id = 'v2cCss';
+    st.textContent = '.v2c{padding:12px 14px}.v2c-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}.v2c-top h3{flex:1;margin:0;font-size:16px;text-align:center;min-width:130px}'
+      + '.v2c-bt{border:1px solid var(--border,#ddd);background:var(--card,#fff);color:inherit;border-radius:10px;padding:9px 13px;font-weight:700;font-size:13px;cursor:pointer}.v2c-bt.p{background:#1b6e3a;color:#fff;border-color:#1b6e3a}'
+      + '.v2c-g{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}.v2c-h{font-size:10px;font-weight:800;text-align:center;opacity:.6}'
+      + '.v2c-d{min-height:50px;border:1px solid var(--border,#ddd);border-radius:8px;padding:3px;font-size:11px;background:var(--card,#fff);cursor:pointer;overflow:hidden}.v2c-d.fora{opacity:.35}.v2c-d.hoje{outline:2px solid #1b6e3a}.v2c-d.sab{background:rgba(27,110,58,.07)}'
+      + '.v2c-dots{display:flex;flex-wrap:wrap;gap:2px;margin-top:3px}.v2c-dot{width:9px;height:9px;border-radius:50%}.v2c-dot.j{border-radius:2px;opacity:.55}.v2c-em{font-size:11px;line-height:1}'
+      + '.v2c-leg{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;margin:10px 0}.v2c-leg i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:middle}'
+      + '.v2c-it{display:flex;gap:8px;align-items:flex-start;padding:9px 11px;border:1px solid var(--border,#ddd);border-left:5px solid #888;border-radius:10px;margin-bottom:6px;background:var(--card,#fff);font-size:13px}.v2c-it .q{flex:1;min-width:0}.v2c-it small{opacity:.7;display:block}'
+      + '.v2c-jn{margin:8px 0;font-size:12px}.v2c-jb{position:relative;height:20px;background:rgba(0,0,0,.06);border-radius:6px;margin-top:3px;overflow:hidden}.v2c-jb span{position:absolute;top:0;bottom:0;border-radius:6px;opacity:.85;color:#fff;font-size:10px;line-height:20px;padding:0 5px;white-space:nowrap;background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.25) 0 6px,transparent 6px 12px)}'
+      + '.v2c-sec{margin:14px 0 6px;font-weight:800;font-size:14px}.v2c-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100040;display:flex;align-items:center;justify-content:center;padding:12px}.v2c-box{background:var(--card,#fff);color:var(--text,#1a1a1a);border-radius:14px;padding:16px;width:100%;max-width:560px;max-height:90vh;overflow:auto;box-sizing:border-box}'
+      + '.v2c-box label{display:block;font-size:11px;font-weight:700;margin:10px 0 3px;opacity:.75;text-transform:uppercase}.v2c-box input[type=text],.v2c-box input[type=date],.v2c-box select{width:100%;box-sizing:border-box;padding:9px;border:1px solid var(--border,#ccc);border-radius:8px;font-size:14px;background:var(--card,#fff);color:inherit}'
+      + '.v2c-ck{display:flex;gap:6px;align-items:center;font-size:13px;margin:4px 0;text-transform:none!important;font-weight:600!important;opacity:1!important}.v2c-imp{border:1px solid var(--border,#ddd);border-radius:10px;padding:8px;margin-bottom:6px;font-size:12px}.v2c-imp input[type=text],.v2c-imp input[type=date]{padding:6px!important;font-size:12px!important}.v2c-imp .l{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:4px}';
+    document.head.appendChild(st);
+  }
+  function ano() { return mes ? mes.getFullYear() : new Date().getFullYear(); }
+  function visiveis() {
+    return Object.keys(eventos).map(function (k) { var e = eventos[k]; e.id = k; return e; }).filter(function (e) {
+      if (!e || !e.ini) return false;
+      var s = e.secoes ? (Array.isArray(e.secoes) ? e.secoes : Object.keys(e.secoes).map(function (k2) { return e.secoes[k2]; })) : [];
+      e._s = s;
+      return !cfg.secao || s.indexOf(cfg.secao) >= 0;
+    });
+  }
+  function noDia(e, d) { return e.ini <= d && (e.fim || e.ini) >= d; }
+  function cor(e) { return (ORIG[e.origem] || ORIG.grupo)[1]; }
+  function podeMexer(e) {
+    if (ehDir()) return true;
+    return e.criadoTropa && e.criadoTropa === minhaSecao() && e._s.length === 1;
+  }
+  async function carregar() {
+    try { var r = await fetch(url('/grupoCal')); var d = await r.json(); eventos = d && !d.error ? d : {}; } catch (e) { eventos = eventos || {}; }
+    try { var r2 = await fetch(url('/equipe')); var q = await r2.json(); equipe = q && !q.error ? q : {}; } catch (e2) {}
+    marcas = [];
+    try {
+      if (cfg.secao && root.V2_PESSOAS) {
+        var ds = await root.V2_PESSOAS.carregar(cfg.secao);
+        Object.keys(ds || {}).forEach(function (id) { var p = ds[id]; if (p && typeof p === 'object' && (p.nasc || p.promessa)) marcas.push({ nome: p.nomeSocial || p.tela || p.nome || 'Jovem', nasc: p.nasc, promessa: p.promessa }); });
+      } else if (!cfg.secao && root.V2_PESSOAS && ehDir()) {
+        var ch = await root.V2_PESSOAS.carregar('chefes');
+        Object.keys(ch || {}).forEach(function (uid) { var p = ch[uid]; if (p && typeof p === 'object' && (p.nasc || p.promessa)) marcas.push({ nome: p.nomeSocial || (equipe[uid] && equipe[uid].nome) || 'Chefe', nasc: p.nasc, promessa: p.promessa }); });
+      }
+    } catch (e3) {}
+  }
+  function desenhar() {
+    var box = $(cfg.container); if (!box) return;
+    var evs = visiveis(), y = mes.getFullYear(), m = mes.getMonth(), hojeIso = iso(new Date());
+    var prim = new Date(y, m, 1), ult = new Date(y, m + 1, 0), ini = new Date(prim); ini.setDate(1 - prim.getDay());
+    var marc = root.V2_PESSOAS ? root.V2_PESSOAS.eventosDoAno(marcas, y) : [];
+    var h = '<div class="v2c"><div class="v2c-top"><button class="v2c-bt" onclick="V2_CAL._m(-1)">‹</button><h3>' + MESES[m] + ' de ' + y + '</h3><button class="v2c-bt" onclick="V2_CAL._m(1)">›</button></div>';
+    h += '<div class="v2c-top">' + (ehDir() ? '<button class="v2c-bt p" onclick="V2_CAL._novo()">➕ Atividade do grupo</button>' : '') + (cfg.podeImportar !== false ? '<button class="v2c-bt" onclick="V2_CAL._imp()">📥 Importar calendário</button>' : '') + '<button class="v2c-bt" onclick="V2_CAL._m(0)">Hoje</button></div>';
+    h += '<div class="v2c-g">' + ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(function (x) { return '<div class="v2c-h">' + x + '</div>'; }).join('');
+    for (var i = 0; i < 42; i++) {
+      var d = new Date(ini); d.setDate(ini.getDate() + i); var di = iso(d);
+      if (i >= 35 && d.getMonth() !== m) break;
+      var es = evs.filter(function (e) { return noDia(e, di); }), ms = marc.filter(function (x) { return x.data === di; });
+      h += '<div class="v2c-d' + (d.getMonth() !== m ? ' fora' : '') + (di === hojeIso ? ' hoje' : '') + (d.getDay() === 6 ? ' sab' : '') + '" onclick="V2_CAL._dia(\'' + di + '\')"><b>' + d.getDate() + '</b><div class="v2c-dots">'
+        + es.slice(0, 5).map(function (e) { return '<span class="v2c-dot' + (e.janela ? ' j' : '') + '" style="background:' + cor(e) + '"></span>'; }).join('') + (es.length > 5 ? '+' : '')
+        + ms.slice(0, 3).map(function (x) { return '<span class="v2c-em">' + (x.tipo === 'aniv' ? '🎂' : '⭐') + '</span>'; }).join('') + '</div></div>';
+    }
+    h += '</div><div class="v2c-leg">' + Object.keys(ORIG).map(function (k) { return '<span><i style="background:' + ORIG[k][1] + '"></i>' + ORIG[k][0] + '</span>'; }).join('') + '<span>▬ janela de execução</span><span>🎂 aniversário</span><span>⭐ estrela de promessa</span></div>';
+    var p0 = iso(prim), p1 = iso(ult);
+    var jan = evs.filter(function (e) { return e.janela && e.ini <= p1 && (e.fim || e.ini) >= p0; });
+    if (jan.length) {
+      h += '<div class="v2c-sec">Janelas de execução neste mês</div>';
+      var dias = ult.getDate();
+      jan.forEach(function (e) {
+        var a = e.ini < p0 ? 1 : +e.ini.slice(8), b = (e.fim || e.ini) > p1 ? dias : +(e.fim || e.ini).slice(8);
+        h += '<div class="v2c-jn"><b>' + esc(e.nome) + '</b> <small>' + dBR(e.ini) + ' a ' + dBR(e.fim || e.ini) + '</small><div class="v2c-jb"><span style="left:' + ((a - 1) / dias * 100) + '%;width:' + ((b - a + 1) / dias * 100) + '%;background:' + cor(e) + '">' + a + '–' + b + '</span></div></div>';
+      });
+    }
+    var doMes = evs.filter(function (e) { return !e.janela && e.ini <= p1 && (e.fim || e.ini) >= p0; }).sort(function (a, b) { return a.ini < b.ini ? -1 : 1; });
+    h += '<div class="v2c-sec">Atividades do mês</div>' + (doMes.length ? doMes.map(item).join('') : '<div style="opacity:.7;font-size:13px">Nenhuma atividade do grupo neste mês.</div>');
+    var mm = marc.filter(function (x) { return x.data >= p0 && x.data <= p1; }).sort(function (a, b) { return a.data < b.data ? -1 : 1; });
+    if (mm.length) h += '<div class="v2c-sec">Datas de pessoas</div>' + mm.map(function (x) { return '<div class="v2c-it" style="border-left-color:#f9a825"><div class="q">' + esc(x.titulo) + '<small>' + dBR(x.data) + '</small></div></div>'; }).join('');
+    h += '<div id="v2cDia"></div></div>';
+    box.innerHTML = h;
+  }
+  function item(e) {
+    var o = ORIG[e.origem] || ORIG.grupo;
+    return '<div class="v2c-it" style="border-left-color:' + o[1] + '"><div class="q"><b>' + esc(e.nome) + '</b><small>' + dBR(e.ini) + (e.fim && e.fim !== e.ini ? ' a ' + dBR(e.fim) : '') + (e.local ? ' · ' + esc(e.local) : '') + '</small><small>' + o[0] + ' · ' + e._s.map(function (s) { return NOMES[s] || s; }).join(', ') + '</small></div>'
+      + (podeMexer(e) ? '<button class="v2c-bt" onclick="V2_CAL._ed(\'' + e.id + '\')">Editar</button>' : '') + '</div>';
+  }
+  function fechar() { var o = $('v2cOv'); if (o) o.remove(); }
+  function overlay(html) { fechar(); var o = document.createElement('div'); o.className = 'v2c-ov'; o.id = 'v2cOv'; o.innerHTML = '<div class="v2c-box">' + html + '</div>'; o.addEventListener('click', function (e) { if (e.target === o) fechar(); }); document.body.appendChild(o); }
+  function checksSecoes(sel, prefixo) {
+    if (!ehDir()) return '<div style="font-size:13px">Seção: <b>' + (NOMES[minhaSecao()] || '') + '</b></div>';
+    return SECS.map(function (s) { return '<label class="v2c-ck"><input type="checkbox" class="' + prefixo + '" value="' + s + '"' + (sel.indexOf(s) >= 0 ? ' checked' : '') + '> ' + NOMES[s] + '</label>'; }).join('');
+  }
+  function lerChecks(prefixo) {
+    if (!ehDir()) return [minhaSecao()];
+    return Array.prototype.map.call(document.querySelectorAll('.' + prefixo + ':checked'), function (c) { return c.value; });
+  }
+  function formulario(e) {
+    var novo = !e; e = e || { nome: '', ini: '', fim: '', local: '', origem: 'grupo', janela: false, _s: SECS.slice() };
+    overlay('<h3 style="margin:0 0 6px">' + (novo ? 'Nova atividade' : 'Editar atividade') + '</h3><label>Nome</label><input type="text" id="v2cN" value="' + esc(e.nome) + '"><label>Início</label><input type="date" id="v2cI" value="' + esc(e.ini) + '"><label>Fim (se durar mais de um dia)</label><input type="date" id="v2cF" value="' + esc(e.fim || '') + '"><label>Local</label><input type="text" id="v2cL" value="' + esc(e.local || '') + '">'
+      + (ehDir() ? '<label>Origem</label><select id="v2cO">' + Object.keys(ORIG).map(function (k) { return '<option value="' + k + '"' + (k === e.origem ? ' selected' : '') + '>' + ORIG[k][0] + '</option>'; }).join('') + '</select>' : '')
+      + '<label class="v2c-ck"><input type="checkbox" id="v2cJ"' + (e.janela ? ' checked' : '') + '> Janela de execução (a seção escolhe o dia dentro do intervalo, como MUTECO e MUTCOM)</label><label>Seções participantes</label>' + checksSecoes(e._s, 'v2cS')
+      + '<div id="v2cErro" style="color:#c0392b;font-size:12px;margin-top:6px"></div><div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="v2c-bt p" id="v2cOk">Salvar</button><button class="v2c-bt" onclick="V2_CAL._fechar()">Cancelar</button>' + (novo ? '' : '<button class="v2c-bt" style="margin-left:auto;color:#c0392b" id="v2cDel">Excluir</button>') + '</div>');
+    $('v2cOk').onclick = async function () {
+      var n = $('v2cN').value.trim(), i = $('v2cI').value, f = $('v2cF').value, s = lerChecks('v2cS');
+      if (!n || !i) { $('v2cErro').textContent = 'Informe o nome e a data de início.'; return; }
+      if (f && f < i) { $('v2cErro').textContent = 'O fim não pode ser antes do início.'; return; }
+      if (!s.length) { $('v2cErro').textContent = 'Escolha ao menos uma seção.'; return; }
+      var sess = sessao();
+      var obj = { nome: n, ini: i, fim: f || null, local: $('v2cL').value.trim() || null, origem: $('v2cO') ? $('v2cO').value : (e.origem || 'distrito'), janela: $('v2cJ').checked, secoes: s, criadoTropa: e.criadoTropa || (ehDir() ? 'diretoria' : minhaSecao()), por: sess.nome || null };
+      await gravar(novo ? 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5) : e.id, obj);
+    };
+    if (!novo) $('v2cDel').onclick = async function () { if (!confirm('Excluir esta atividade?')) return; await gravar(e.id, null); };
+  }
+  async function gravar(id, obj) {
+    try {
+      var r = await fetch(url('/grupoCal/' + id), { method: obj ? 'PUT' : 'DELETE', headers: { 'Content-Type': 'application/json' }, body: obj ? JSON.stringify(obj) : undefined });
+      if (!r.ok) throw new Error('perm');
+      if (obj) eventos[id] = obj; else delete eventos[id];
+      fechar(); desenhar();
+    } catch (e) { var er = $('v2cErro'); if (er) er.textContent = 'O banco não aceitou. O admin precisa publicar as regras novas do Firebase.'; else alert('O banco não aceitou. O admin precisa publicar as regras novas do Firebase.'); }
+  }
+
+  /* ---------- leitura de datas em texto ---------- */
+  var MESRX = '(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)[a-zç]*\\.?';
+  var MIDX = { jan: 1, fev: 2, mar: 3, abr: 4, mai: 5, jun: 6, jul: 7, ago: 8, set: 9, out: 10, nov: 11, dez: 12 };
+  function mk(a, m, d, padrao) { a = a ? +a : padrao; if (a < 100) a += 2000; if (m < 1 || m > 12 || d < 1 || d > 31) return null; return a + '-' + pad(m) + '-' + pad(d); }
+  function parseDatas(texto, padrao) {
+    var t = norm(texto).replace(/\s+/g, ' '), nome = t, r, ini = null, fim = null;
+    function cortar(rx) { nome = nome.replace(rx, ' '); }
+    // 12 a 14/03[/2026] | 12 e 13 de março
+    var c = new RegExp('(?<![\\d\\/.\\-])(\\d{1,2})\\s*(?:a|e|ao|ate|-|–)\\s*(\\d{1,2})\\s*(?:\\/|de\\s+| )\\s*(\\d{1,2}|' + MESRX + ')(?:\\s*(?:\\/|de\\s+| )\\s*(\\d{2,4}))?'), mc = c.exec(t);
+    if (mc) {
+      var mm = /^\d/.test(mc[3]) ? +mc[3] : MIDX[mc[4]]; ini = mk(mc[6], mm, +mc[1], padrao); fim = mk(mc[6], mm, +mc[2], padrao);
+      if (ini && fim) { cortar(c); return { ini: ini, fim: fim, resto: nome }; }
+    }
+    var toks = [], rxs = [new RegExp('(\\d{1,2})[\\/.\\-](\\d{1,2})(?:[\\/.\\-](\\d{2,4}))?', 'g'), new RegExp('(\\d{1,2})\\s*(?:de\\s+)?' + MESRX + '(?:\\s*(?:de\\s+)?(\\d{4}))?', 'g')];
+    var m1; while ((m1 = rxs[0].exec(t))) toks.push({ i: m1.index, d: mk(m1[3], +m1[2], +m1[1], padrao) });
+    while ((m1 = rxs[1].exec(t))) toks.push({ i: m1.index, d: mk(m1[4], MIDX[m1[2]], +m1[1], padrao) });
+    toks = toks.filter(function (x) { return x.d; }).sort(function (a, b) { return a.i - b.i; });
+    if (!toks.length) return null;
+    ini = toks[0].d; fim = toks.length > 1 ? toks[toks.length - 1].d : null; if (fim && fim < ini) { var tmp = ini; ini = fim; fim = tmp; }
+    nome = nome.replace(rxs[0], ' ').replace(rxs[1], ' ');
+    return { ini: ini, fim: fim === ini ? null : fim, resto: nome };
+  }
+  function limparNome(orig, resto) {
+    // devolve o texto original sem as datas, mantendo maiúsculas
+    var s = String(orig).replace(/\d{1,2}[\/.\-]\d{1,2}(?:[\/.\-]\d{2,4})?/g, ' ').replace(new RegExp('\\d{1,2}\\s*(?:de\\s+)?' + MESRX + '(?:\\s*(?:de\\s+)?\\d{4})?', 'gi'), ' ').replace(/\b\d{1,2}\s*(?:a|e|ao|até|-|–)\s*(?=\s|$)/gi, ' ');
+    s = s.replace(/[|;–\-]+/g, ' ').replace(/\s+/g, ' ').trim();
+    for (var k = 0; k < 3; k++) s = s.replace(/^(a|e|até|ate|ao|de|em)\s+/i, '').replace(/\s+(a|e|até|ate|ao|de|em)$/i, '').trim();
+    return s;
+  }
+  function janelaProvavel(nome, ini, fim) { return /mut(eco|com)|prazo|janela|periodo de|inscric/.test(norm(nome)) || (!!fim && (new Date(fim) - new Date(ini)) / 864e5 >= 14); }
+  function carregarScript(src) { return new Promise(function (ok, no) { var s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = function () { no(new Error('Não consegui carregar o leitor de planilhas. Confira a internet.')); }; document.head.appendChild(s); }); }
+  async function linhasPdf(arq) {
+    if (!root.pdfjsLib) { await carregarScript('Apoio/vendor/pdfjs/pdf.min.js'); root.pdfjsLib.GlobalWorkerOptions.workerSrc = 'Apoio/vendor/pdfjs/pdf.worker.min.js'; }
+    var doc = await root.pdfjsLib.getDocument({ data: await arq.arrayBuffer(), disableFontFace: true }).promise, out = [];
+    for (var n = 1; n <= doc.numPages; n++) {
+      var c = await (await doc.getPage(n)).getTextContent(), por = {};
+      c.items.forEach(function (i) { if (i.str && i.str.trim()) { var y = Math.round(i.transform[5] / 4); (por[y] = por[y] || []).push({ x: i.transform[4], s: i.str }); } });
+      Object.keys(por).map(Number).sort(function (a, b) { return b - a; }).forEach(function (y) { out.push(por[y].sort(function (a, b) { return a.x - b.x; }).map(function (i) { return i.s; }).join(' ').replace(/\s+/g, ' ').trim()); });
+    }
+    await doc.destroy(); return out.filter(Boolean);
+  }
+  async function linhasPlanilha(arq) {
+    if (/\.csv$/i.test(arq.name)) return (await arq.text()).split(/\r?\n/).filter(Boolean);
+    if (!root.XLSX) await carregarScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
+    var wb = root.XLSX.read(await arq.arrayBuffer(), { type: 'array', cellDates: true }), out = [];
+    wb.SheetNames.forEach(function (sn) {
+      root.XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, raw: true, defval: '' }).forEach(function (row) {
+        var cel = row.map(function (v) { if (v instanceof Date) { var d = new Date(v.getTime() + 12 * 3600e3); return pad(d.getUTCDate()) + '/' + pad(d.getUTCMonth() + 1) + '/' + d.getUTCFullYear(); } return String(v == null ? '' : v).trim(); }).filter(Boolean);
+        if (cel.length) out.push(cel.join(' | '));
+      });
+    });
+    return out;
+  }
+  function extrair(linhas, anoPadrao) {
+    var res = [], anterior = '';
+    linhas.forEach(function (ln) {
+      var p = parseDatas(ln, anoPadrao);
+      if (!p) { if (ln.length > 3 && ln.length < 120) anterior = ln; return; }
+      var nome = limparNome(ln, p.resto); if (nome.length < 3) nome = anterior; if (!nome) return;
+      res.push({ nome: nome.slice(0, 120), ini: p.ini, fim: p.fim || '', janela: janelaProvavel(nome, p.ini, p.fim), ok: true });
+      anterior = '';
+    });
+    return res;
+  }
+  var pend = [];
+  function importar() {
+    var anoAtual = new Date().getFullYear();
+    overlay('<h3 style="margin:0 0 6px">📥 Importar calendário</h3><div style="font-size:12px;opacity:.75">Excel, CSV ou PDF do distrito, da região ou nacional. O arquivo é lido aqui e não fica guardado: você confere a lista antes de entrar no sistema.</div>'
+      + '<label>Origem do calendário</label><select id="v2cImpO"><option value="distrito">Distrito</option><option value="regiao">Região</option><option value="nacional">Nacional</option></select>'
+      + '<label>Ano das datas sem ano</label><select id="v2cImpA">' + [anoAtual - 1, anoAtual, anoAtual + 1].map(function (a) { return '<option' + (a === anoAtual ? ' selected' : '') + '>' + a + '</option>'; }).join('') + '</select>'
+      + '<label>' + (ehDir() ? 'Seções a que se relacionam' : 'Seção') + '</label>' + checksSecoes([], 'v2cImpS')
+      + '<label>Arquivo</label><input type="file" id="v2cImpF" accept=".xlsx,.xls,.csv,application/pdf,.pdf"><div id="v2cImpMsg" style="font-size:12px;margin-top:8px"></div><div id="v2cImpLista"></div><div style="display:flex;gap:8px;margin-top:12px"><button class="v2c-bt p" id="v2cImpGo" style="display:none">Adicionar ao calendário</button><button class="v2c-bt" onclick="V2_CAL._fechar()">Fechar</button></div>');
+    $('v2cImpF').onchange = async function () {
+      var f = this.files[0]; if (!f) return; var msg = $('v2cImpMsg'); msg.textContent = 'Lendo o arquivo…';
+      try {
+        var linhas = /\.pdf$/i.test(f.name) || f.type === 'application/pdf' ? await linhasPdf(f) : await linhasPlanilha(f);
+        pend = extrair(linhas, +$('v2cImpA').value);
+        if (!pend.length) { msg.textContent = 'Não encontrei atividades com data neste arquivo. Se for PDF escaneado (imagem), peça a planilha ou cadastre à mão.'; $('v2cImpLista').innerHTML = ''; $('v2cImpGo').style.display = 'none'; return; }
+        msg.textContent = pend.length + ' atividades encontradas. Confira, corrija e desmarque o que não serve.';
+        $('v2cImpLista').innerHTML = pend.map(function (e, i) { return '<div class="v2c-imp"><label class="v2c-ck"><input type="checkbox" data-i="' + i + '" data-c="ok" checked> <input type="text" data-i="' + i + '" data-c="nome" value="' + esc(e.nome) + '"></label><div class="l"><input type="date" data-i="' + i + '" data-c="ini" value="' + e.ini + '"> até <input type="date" data-i="' + i + '" data-c="fim" value="' + e.fim + '"><label class="v2c-ck"><input type="checkbox" data-i="' + i + '" data-c="janela"' + (e.janela ? ' checked' : '') + '> janela de execução</label></div></div>'; }).join('');
+        $('v2cImpGo').style.display = '';
+      } catch (er) { msg.textContent = er.message || 'Não consegui ler o arquivo.'; }
+    };
+    $('v2cImpGo').onclick = async function () {
+      var secs = lerChecks('v2cImpS'); if (!secs.length) { $('v2cImpMsg').textContent = 'Escolha ao menos uma seção.'; return; }
+      document.querySelectorAll('#v2cImpLista [data-i]').forEach(function (el) { var e = pend[+el.dataset.i], c = el.dataset.c; e[c] = el.type === 'checkbox' ? el.checked : el.value; });
+      var lote = {}, sess = sessao(), orig = $('v2cImpO').value, n = 0;
+      pend.forEach(function (e) { if (!e.ok || !e.nome || !e.ini) return; lote['i' + Date.now().toString(36) + (n++) + Math.random().toString(36).slice(2, 4)] = { nome: e.nome, ini: e.ini, fim: e.fim && e.fim > e.ini ? e.fim : null, local: null, origem: orig, janela: !!e.janela, secoes: secs, criadoTropa: ehDir() ? 'diretoria' : minhaSecao(), por: sess.nome || null }; });
+      if (!n) { $('v2cImpMsg').textContent = 'Nada selecionado.'; return; }
+      try { var r = await fetch(url('/grupoCal'), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(lote) }); if (!r.ok) throw 0; Object.assign(eventos, lote); pend = []; fechar(); desenhar(); }
+      catch (e) { $('v2cImpMsg').textContent = 'O banco não aceitou. O admin precisa publicar as regras novas do Firebase.'; }
+    };
+  }
+
+  root.V2_CAL = {
+    // o: { container, secao (null = Diretoria vê todas), podeImportar }
+    montar: async function (o) { cfg = o; injetarCss(); var h = new Date(); mes = new Date(h.getFullYear(), h.getMonth(), 1); $(o.container).innerHTML = '<div class="v2c">Carregando calendário…</div>'; await carregar(); desenhar(); },
+    atualizar: async function () { if (!cfg) return; await carregar(); desenhar(); },
+    _m: function (d) { if (d === 0) { var h = new Date(); mes = new Date(h.getFullYear(), h.getMonth(), 1); } else mes = new Date(mes.getFullYear(), mes.getMonth() + d, 1); desenhar(); },
+    _novo: function () { formulario(null); }, _ed: function (id) { var e = eventos[id]; if (e) { e.id = id; visiveis(); formulario(e); } }, _imp: importar, _fechar: fechar,
+    _dia: function (di) {
+      var evs = visiveis().filter(function (e) { return noDia(e, di); }), marc = (root.V2_PESSOAS ? root.V2_PESSOAS.eventosDoAno(marcas, +di.slice(0, 4)) : []).filter(function (x) { return x.data === di; });
+      var d = $('v2cDia'); if (!d) return;
+      d.innerHTML = '<div class="v2c-sec">' + dBR(di) + '</div>' + (evs.length || marc.length ? evs.map(item).join('') + marc.map(function (x) { return '<div class="v2c-it" style="border-left-color:#f9a825"><div class="q">' + esc(x.titulo) + '</div></div>'; }).join('') : '<div style="opacity:.7;font-size:13px">Nada neste dia.</div>');
+      d.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    },
+    abrirNaSecao: function (secao, container) { try { if (new URLSearchParams(location.search).get('view') === '1') return; } catch (e) {} if (cfg && cfg.container === container && cfg.secao === secao && $(container) && $(container).firstChild) return root.V2_CAL.atualizar(); return root.V2_CAL.montar({ container: container, secao: secao }); },
+    _parse: parseDatas, _extrair: extrair
+  };
+})(typeof window !== 'undefined' ? window : globalThis);

@@ -15,9 +15,10 @@
 .sec-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}</style>
 </head>
 <body>
-<div class="cabecalho-fixo"><nav class="tabs-linha"><button class="tab-btn-linha" data-aba="almox" onclick="mostrarAba('almox',this)">📦 Almoxarifado geral</button><button class="tab-btn-linha" data-aba="fin" onclick="mostrarAba('fin',this)">💰 Financeiro</button><button class="tab-btn-linha" data-aba="fichas" onclick="mostrarAba('fichas',this)">📇 Fichas e datas</button><button class="tab-btn-linha" data-aba="secoes" onclick="mostrarAba('secoes',this)">🗂️ Seções</button><button class="tab-btn-linha" data-aba="forms" onclick="mostrarAba('forms',this)">🎓 Formação dos chefes</button><button class="tab-btn-linha" data-aba="docs" onclick="mostrarAba('docs',this)">📄 Documentação</button></nav></div>
+<div class="cabecalho-fixo"><nav class="tabs-linha"><button class="tab-btn-linha" data-aba="almox" onclick="mostrarAba('almox',this)">📦 Almoxarifado geral</button><button class="tab-btn-linha" data-aba="fin" onclick="mostrarAba('fin',this)">💰 Financeiro</button><button class="tab-btn-linha" data-aba="cal" onclick="mostrarAba('cal',this)">📅 Calendário do grupo</button><button class="tab-btn-linha" data-aba="fichas" onclick="mostrarAba('fichas',this)">📇 Fichas e datas</button><button class="tab-btn-linha" data-aba="secoes" onclick="mostrarAba('secoes',this)">🗂️ Seções</button><button class="tab-btn-linha" data-aba="forms" onclick="mostrarAba('forms',this)">🎓 Formação dos chefes</button><button class="tab-btn-linha" data-aba="docs" onclick="mostrarAba('docs',this)">📄 Documentação</button></nav></div>
 <div class="pagina" id="pg-almox"><div id="almox-box"></div></div>
 <div class="pagina" id="pg-fin"><div id="fin-box"></div></div>
+<div class="pagina" id="pg-cal"><div id="cal-box"></div></div>
 <div class="pagina" id="pg-fichas"><div id="fichas-box"></div></div>
 <div class="pagina" id="pg-secoes"><div class="pagina-ttl">Seções</div><div class="pagina-sub">Resumo de progressão de cada seção. Toque no nome para abrir os detalhes.</div>
 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"><button type="button" class="btn-ic" id="btnRelGrupo" style="font-weight:700;padding:10px 14px" disabled onclick="relatorioGrupo()">📄 Relatório do grupo inteiro</button><button type="button" class="btn-ic" style="padding:10px 14px" onclick="carregarSecoes(true)">↻ Atualizar</button></div>
@@ -267,6 +268,7 @@ async function aoAbrirAba(id) {
   if (id === 'forms') return abrirFormacao();
   if (id === 'docs') return carregarSugestoesGrupo();
   if (id === 'fichas') return V2_PESSOAS.abrirDiretoria();
+  if (id === 'cal') return V2_CAL.abrirNaSecao(null, 'cal-box');
 }
 async function carregarSugestoesGrupo() {
   const box = document.getElementById('sug-grupo-lista');
