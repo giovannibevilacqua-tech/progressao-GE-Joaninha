@@ -165,9 +165,42 @@ function agruparEquipe(d) {
   return grupos;
 }
 const tagFuncao = u => '<span class="tag-fn ' + (u.funcao === 'assistente' ? 'ass' : 'chefe') + '">' + (u.funcao === 'assistente' ? 'Assistente' : 'Chefe de seção') + '</span>' + (u._seg ? ' <span class="tag-fn" style="background:#8882">2ª função</span>' : '');
+const SEC_OPC = [['alcateia', 'Alcateia'], ['escoteira', 'Tropa Escoteira'], ['senior', 'Tropa Sênior'], ['cla', 'Clã Pioneiro']];
+function cargoDe(u) { return u.tropa === 'diretoria' ? 'diretoria' : (u.funcao === 'assistente' ? 'assistente' : 'chefe'); }
+function seletorCargo(u) {
+  if (u.admin || u._seg) return tagFuncao(u) + (u.admin ? ' <span class="tag-fn" style="background:#8882">Admin</span>' : '');
+  const c = cargoDe(u);
+  return '<select class="campo-input" style="padding:4px;font-size:12px" onchange="mudarCargo(\'' + u._uid + '\',this.value)">' + [['chefe', 'Chefe de seção'], ['assistente', 'Assistente'], ['diretoria', 'Diretoria']].map(o => '<option value="' + o[0] + '"' + (o[0] === c ? ' selected' : '') + '>' + o[1] + '</option>').join('') + '</select>'
+    + (c !== 'diretoria' ? ' <select class="campo-input" style="padding:4px;font-size:12px" onchange="mudarSecaoPessoa(\'' + u._uid + '\',this.value)">' + SEC_OPC.map(o => '<option value="' + o[0] + '"' + (o[0] === u.tropa ? ' selected' : '') + '>' + o[1] + '</option>').join('') + '</select>' : '');
+}
+async function gravarCargo(uid, campos) {
+  const a = await fetch(urlComAuthFirebase(DB_URL + '/usuarios/' + uid + '.json'), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(campos) }).catch(() => null);
+  const b = await fetch(urlComAuthFirebase(DB_URL + '/equipe/' + uid + '.json'), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(campos) }).catch(() => null);
+  // quem não é admin não grava em /usuarios: o espelho /equipe basta para a lista; a regra do banco decide quem pode mudar o cargo de verdade
+  if (!(a && a.ok) && !(b && b.ok)) { alert('Não foi possível alterar. Confirme com o admin se as regras do banco já foram atualizadas.'); return false; }
+  if (!(a && a.ok)) { alert('Alterado só na lista da equipe. Para valer no acesso da pessoa, o admin precisa atualizar as regras do banco.'); }
+  Object.assign(EQUIPE[uid] || {}, campos); return true;
+}
+async function mudarCargo(uid, cargo) {
+  const u = EQUIPE && EQUIPE[uid]; if (!u) return;
+  const nome = u.nome || ('Registro ' + u.registro), rot = { chefe: 'Chefe de seção', assistente: 'Assistente', diretoria: 'Diretoria' }[cargo];
+  if (!confirm('Alterar o cargo de ' + nome + ' para "' + rot + '"?')) { secoesQuadro(); return; }
+  let campos;
+  if (cargo === 'diretoria') campos = { tropa: 'diretoria', funcao: 'chefe' };
+  else {
+    let sec = u.tropa && u.tropa !== 'diretoria' ? u.tropa : null;
+    if (!sec) { sec = (prompt('Em qual seção? Digite: alcateia, escoteira, senior ou cla') || '').trim().toLowerCase(); if (!SEC_OPC.some(o => o[0] === sec)) { alert('Seção inválida.'); secoesQuadro(); return; } }
+    campos = { tropa: sec, funcao: cargo };
+  }
+  if (await gravarCargo(uid, campos)) secoesQuadro(); else secoesQuadro();
+}
+async function mudarSecaoPessoa(uid, sec) {
+  const u = EQUIPE && EQUIPE[uid]; if (!u || !confirm('Mudar ' + (u.nome || u.registro) + ' para a seção selecionada?')) { secoesQuadro(); return; }
+  await gravarCargo(uid, { tropa: sec }); secoesQuadro();
+}
 function listaChefes(gente) {
   if (!gente || !gente.length) return '<div class="card-txt">Nenhum chefe ou assistente cadastrado.</div>';
-  return '<table class="tb-sec"><thead><tr><th>Nome</th><th>Função</th><th>Registro</th></tr></thead><tbody>' + gente.map(u => '<tr><td><b>' + escH(u.nome || ('Registro ' + u.registro)) + '</b></td><td>' + tagFuncao(u) + '</td><td>' + escH(u.registro || '') + '</td></tr>').join('') + '</tbody></table>';
+  return '<table class="tb-sec"><thead><tr><th>Nome</th><th>Cargo</th><th>Registro</th></tr></thead><tbody>' + gente.map(u => '<tr><td><b>' + escH(u.nome || ('Registro ' + u.registro)) + '</b></td><td>' + seletorCargo(u) + '</td><td>' + escH(u.registro || '') + '</td></tr>').join('') + '</tbody></table>';
 }
 function secoesQuadro() {
   const grupos = EQUIPE ? agruparEquipe(EQUIPE) : {};

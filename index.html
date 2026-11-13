@@ -199,6 +199,7 @@ scrollbar-width: thin; scrollbar-color: rgba(0,0,0,.25) transparent;
 #fichaModalOv .lis-modal-box::-webkit-scrollbar { width: 6px; }
 #fichaModalOv .lis-modal-box::-webkit-scrollbar-track { background: transparent; margin: 10px 0; }
 #fichaModalOv .lis-modal-box::-webkit-scrollbar-thumb { background: rgba(0,0,0,.25); border-radius: 10px; }
+body:not(.eh-chsec) .chefe-sec{display:none!important}
 #chefesModalOv { align-items: center; }
 #chefesModalOv .lis-modal-box { border-radius: 16px; margin: 20px auto; max-height: 85vh; max-height: 85dvh; overflow: hidden; display: flex; flex-direction: column; }
 #chefesModalOv .lis-modal-body { overflow-y: auto; flex: 1 1 auto; min-height: 0; scrollbar-width: thin; }
@@ -758,6 +759,7 @@ REGISTRO ESCOTEIRO
 <button class="conta-barra-btn" id="btnAdminVolta" style="display:none;" onclick="pedirSenhaModoAdmin()">🔑 Admin</button>
 <button class="conta-barra-btn somente-admin" id="btnGerChefesTopo" onclick="abrirGerenciarChefes()">⚙️ Gerenciar Chefes</button>
 <button class="conta-barra-btn somente-admin" id="btnSugestoesAdmin" onclick="abrirSugestoesAdmin()">📬 Sugestões</button>
+<button class="conta-barra-btn chefe-sec" id="btnMeusAssist" onclick="abrirMeusAssistentes()">👥 Meus assistentes</button>
 <button class="conta-barra-btn" id="btnHistorico" onclick="abrirHistorico()">📜 Histórico</button>
 <button class="conta-barra-btn admin-ou-dir" id="btnImportarPaxtu" onclick="ImportarPaxtu.abrir()">📥 Fichas 120</button>
 <button class="conta-barra-btn" onclick="if(confirm('Sair da sua conta neste navegador?'))fazerLogout()">🚪 Sair</button>
@@ -988,13 +990,14 @@ agendarRenovacaoToken();
 return { erro: false };
 }
 
-let nomeLogado = '';
+let nomeLogado = '', funcaoDoChefeLogado = 'chefe';
 async function checarSeSouAdmin() {
 try {
 const r = await fetch(urlComAuthFirebase(DB_URL + '/usuarios/' + firebaseUid + '.json'));
 const v = await r.json();
 souAdmin = !!(v && v.admin === true);
 nomeLogado = (v && v.nome) || '';
+funcaoDoChefeLogado = (v && v.funcao) || 'chefe';
 tropaDoChefeLogado = (v && v.tropa) || null;
 tropa2DoChefeLogado = (v && v.tropa2) || null;
 salvarSessao(); // persiste tropa e admin na sessão para tropa-senior.html poder ler
@@ -1042,7 +1045,39 @@ await fetch(urlComAuthFirebase(DB_URL + '/usuarios/' + data.localId + '.json'), 
 method: 'PUT', headers: {'Content-Type': 'application/json'},
 body: JSON.stringify({ registro, nome: nomeSocial || nome, nomeCompleto: nomeSocial ? nome : undefined, nomeSocial: nomeSocial || undefined, admin, tropa, funcao: funcao === 'assistente' ? 'assistente' : 'chefe', criadoEm: new Date().toISOString() })
 });
-return { erro: false };
+await fetch(urlComAuthFirebase(DB_URL + '/equipe/' + data.localId + '.json'), { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ registro, nome: nomeSocial || nome, tropa, funcao: funcao === 'assistente' ? 'assistente' : 'chefe', admin }) }).catch(() => {});
+return { erro: false, uid: data.localId };
+}
+
+// ── Meus assistentes (chefe de seção) ──
+const NOME_SEC = { alcateia: 'Alcateia', escoteira: 'Tropa Escoteira', senior: 'Tropa Sênior', cla: 'Clã Pioneiro' };
+async function abrirMeusAssistentes() {
+  document.getElementById('chefesModalTitulo').textContent = '👥 Meus assistentes — ' + (NOME_SEC[tropaDoChefeLogado] || '');
+  document.getElementById('chefesModalOv').classList.add('open');
+  await renderMeusAssistentes();
+}
+async function renderMeusAssistentes() {
+  const corpo = document.getElementById('chefesModalBody');
+  corpo.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">Carregando…</div>';
+  let eq = {}; try { eq = (await (await fetch(urlComAuthFirebase(DB_URL + '/equipe.json'))).json()) || {}; } catch (e) {}
+  const minha = Object.keys(eq).filter(u => eq[u] && eq[u].tropa === tropaDoChefeLogado && !eq[u].admin).sort((a, b) => ((eq[a].funcao === 'assistente') - (eq[b].funcao === 'assistente')) || (eq[a].nome || '').localeCompare(eq[b].nome || '', 'pt'));
+  const lin = minha.map(u => { const p = eq[u], eu = u === firebaseUid; return '<div style="display:flex;gap:8px;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border,#0002)"><span><b>' + escapeHtmlMA(p.nome || ('Registro ' + p.registro)) + '</b><br><small style="color:var(--muted)">Registro ' + escapeHtmlMA(p.registro || '') + '</small></span>' + (eu ? '<small>você</small>' : '<select class="campo-input" style="max-width:150px" onchange="mudarFuncaoAssistente(\'' + u + '\',this.value)"><option value="chefe"' + (p.funcao !== 'assistente' ? ' selected' : '') + '>Chefe de seção</option><option value="assistente"' + (p.funcao === 'assistente' ? ' selected' : '') + '>Assistente</option></select>') + '</div>'; }).join('');
+  corpo.innerHTML = '<div style="padding:12px 16px"><details class="chefe-det"><summary>➕ Adicionar assistente</summary><div style="display:flex;flex-direction:column;gap:6px;margin-top:8px"><input class="campo-input" id="maNome" placeholder="Nome e sobrenome" autocomplete="off"><input class="campo-input" id="maSocial" placeholder="Nome social (opcional)" autocomplete="off"><input class="campo-input" id="maReg" placeholder="Registro" autocomplete="off" inputmode="numeric"><div id="maErro" style="display:none;color:#c0392b;font-size:12px"></div><button class="btn-ic" onclick="adicionarAssistente()">Adicionar</button></div></details><div style="margin-top:10px">' + (lin || '<div style="color:var(--muted);font-size:13px">Ninguém na equipe da seção ainda.</div>') + '</div></div>';
+}
+function escapeHtmlMA(t) { return String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+async function mudarFuncaoAssistente(uid, funcao) {
+  if (!confirm('Alterar o cargo para "' + (funcao === 'assistente' ? 'Assistente' : 'Chefe de seção') + '"?')) { await renderMeusAssistentes(); return; }
+  const c = JSON.stringify({ funcao });
+  const a = await fetch(urlComAuthFirebase(DB_URL + '/usuarios/' + uid + '.json'), { method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: c }).catch(() => null);
+  const b = await fetch(urlComAuthFirebase(DB_URL + '/equipe/' + uid + '.json'), { method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: c }).catch(() => null);
+  if (!(a && a.ok)) alert('O banco não aceitou a alteração. O admin precisa publicar as regras novas do Firebase.');
+  await renderMeusAssistentes();
+}
+async function adicionarAssistente() {
+  const er = document.getElementById('maErro'); er.style.display = 'none';
+  const r = await criarNovoChefe(document.getElementById('maReg').value, tropaDoChefeLogado, document.getElementById('maNome').value, 'assistente', false, document.getElementById('maSocial').value);
+  if (r.erro) { er.textContent = r.mensagem; er.style.display = 'block'; return; }
+  await renderMeusAssistentes();
 }
 async function alterarAdminChefe(uid, novoValor) {
 await fetch(urlComAuthFirebase(DB_URL + '/usuarios/' + uid + '/admin.json'), { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(novoValor) });
@@ -1651,7 +1686,7 @@ async function atualizarLembreteBackup() {
 function aplicarEstadoContaLogada() {
 const txt = document.getElementById('contaRegistroTxt');
 if (txt) txt.textContent = nomeLogado ? nomeLogado : ('Registro ' + (registroLogado || ''));
-document.body.classList.toggle('eh-admin', verTudo()); document.body.classList.toggle('eh-dir', tropaDoChefeLogado === 'diretoria' || tropa2DoChefeLogado === 'diretoria');
+document.body.classList.toggle('eh-admin', verTudo()); document.body.classList.toggle('eh-dir', tropaDoChefeLogado === 'diretoria' || tropa2DoChefeLogado === 'diretoria'); document.body.classList.toggle('eh-chsec', !!tropaDoChefeLogado && tropaDoChefeLogado !== 'diretoria' && funcaoDoChefeLogado === 'chefe');
 if (souAdmin) { migrarSenhasParaHash(); atualizarLembreteBackup(); carregarListaChefes(); }
 else { const lb = document.getElementById('lembreteBackup'); if (lb) lb.remove(); }
 
@@ -1662,7 +1697,7 @@ const btnVolta = document.getElementById('btnAdminVolta');
 if (btnVolta) btnVolta.style.display = (souAdmin && !verTudo()) ? '' : 'none';
 const btnSug = document.getElementById('btnSugestao'); if (btnSug) btnSug.style.display = (souAdmin && verTudo()) ? 'none' : '';
 const btnVP = document.getElementById('btnVisaoPropriaTopo'); if (btnVP) btnVP.style.display = (souAdmin && verTudo()) ? '' : 'none';
-document.body.classList.toggle('eh-admin', verTudo()); document.body.classList.toggle('eh-dir', tropaDoChefeLogado === 'diretoria' || tropa2DoChefeLogado === 'diretoria');
+document.body.classList.toggle('eh-admin', verTudo()); document.body.classList.toggle('eh-dir', tropaDoChefeLogado === 'diretoria' || tropa2DoChefeLogado === 'diretoria'); document.body.classList.toggle('eh-chsec', !!tropaDoChefeLogado && tropaDoChefeLogado !== 'diretoria' && funcaoDoChefeLogado === 'chefe');
 aplicarBarraBackup();
 // Restrição de acesso por seção
 const ramoSwitch = document.getElementById('ramoSwitch');
