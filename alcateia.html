@@ -2402,6 +2402,10 @@ function renderJovens(){
     sec.appendChild(body); container.appendChild(sec);
   }
 }
+function transferirParaTropa(id) {
+  const y = YOUTH_DATA.find(x => x.id === id); if (!y) return;
+  V2_TRANSFER.enviar({ de: 'alcateia', para: 'escoteira', id, nome: y.name, nasc: y.born, aoConcluir: async () => { y.archived = true; y.transferidoPara = 'escoteira'; V2.registrarHistorico(V2_NODE, registroLogado, y.name, 'Transferiu o lobinho para a Tropa Escoteira', 0); syncJovens(); await saveState(); renderAllTabs(); } });
+}
 function cardLobinho(e, today){
   const maxDays = 5 * 365;
   const c = timeColor(e.days, maxDays), passou = e.days <= 0, caminho = !passou && e.days <= 122;
@@ -2424,6 +2428,7 @@ function cardLobinho(e, today){
           <button class="btn-ic" onclick="showModal('${e.id}')">✏ Editar</button>
           <button class="btn-ic" onclick="verObservacao('${e.id}')">📋${e.observacoes ? ' •' : ''}</button>
           <button class="btn-ic" onclick="relatorioJovem('${e.id}')" title="Relatório em PDF">📄</button>
+          ${(caminho || passou) ? `<button class="btn-ic" style="color:#E67E22;" onclick="transferirParaTropa('${e.id}')" title="Transferir para a Tropa Escoteira">🛤 Transferir p/ Tropa</button>` : ''}
           <button class="btn-ic" style="color:#E74C3C;" onclick="archiveYouth('${e.id}')" title="Arquivar">📦</button>
         </div></div>
     </div>
@@ -2445,6 +2450,7 @@ window.addEventListener('message', async function(ev){
   if (!msg || msg.tipo !== 'transferirJovem') return;
   YOUTH_DATA.push({ id:'y_' + Date.now(), name:msg.nome, born:msg.nascimento || '2016-01-01', role:'', archived:false, color:COLOR_PALETTE[YOUTH_DATA.length % COLOR_PALETTE.length] });
   syncJovens(); await saveState(); renderAllTabs();
+  V2_TRANSFER.aoReceber(ev, 'alcateia', YOUTH_DATA[YOUTH_DATA.length - 1].id);
 });
 
 // ╔═══════════════════════════════════════════════════╗

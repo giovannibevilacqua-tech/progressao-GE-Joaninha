@@ -3660,3 +3660,50 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
     _parse: parseDatas, _extrair: extrair
   };
 })(typeof window !== 'undefined' ? window : globalThis);
+
+/* ============================================================
+   Transferência de jovens entre seções (Alcateia → Escoteira → Sênior → Clã).
+   A seção de origem pede; o sistema (index.html) abre a seção de destino, entrega o jovem com a ficha (promessa, emergência, ficha médica)
+   e só depois a origem tira o jovem da própria lista.
+   ============================================================ */
+(function (root) {
+  if (typeof document === 'undefined') return;
+  var NOMES = { alcateia: 'Alcateia', escoteira: 'Tropa Escoteira', senior: 'Tropa Sênior', cla: 'Clã Pioneiro' };
+  var esperando = {};
+  function url(p) { return root.urlComAuthFirebase(root.V2_CONFIG.DB_URL + p + '.json'); }
+  async function ler(p) { try { var r = await fetch(url(p)); return r.ok ? await r.json() : null; } catch (e) { return null; } }
+  root.addEventListener('message', function (ev) {
+    var m = ev.data; if (!m || m.tipo !== 'v2-transferido' || !esperando[m.rid]) return;
+    var w = esperando[m.rid]; delete esperando[m.rid]; w(m);
+  });
+  // origem: de, para, id (do jovem na origem), nome, nasc, aoConcluir (tira da lista)
+  async function enviar(o) {
+    var msg = 'Transferir ' + o.nome + ' para ' + NOMES[o.para] + '?\n\nO jovem sai de ' + NOMES[o.de] + ' e entra em ' + NOMES[o.para] + ' com a progressão zerada. Promessa, contato de emergência e ficha médica vão junto.';
+    if (!confirm(msg)) return false;
+    if (!root.parent || root.parent === root) { alert('Abra o sistema pelo menu principal para transferir.'); return false; }
+    var pessoa = await ler('/pessoas/' + o.de + '/' + encodeURIComponent(o.id)), ficha = await ler('/fichasMed/' + o.de + '/' + encodeURIComponent(o.id));
+    var rid = 'tr' + Date.now() + Math.random().toString(36).slice(2, 6);
+    var resposta = await new Promise(function (ok) {
+      esperando[rid] = ok; setTimeout(function () { if (esperando[rid]) { delete esperando[rid]; ok({ ok: false, erro: 'A seção de destino demorou para responder.' }); } }, 40000);
+      root.parent.postMessage({ tipo: 'v2-transferir', rid: rid, de: o.de, para: o.para, nome: o.nome, nascimento: o.nasc || '', pessoa: pessoa, fichaMed: ficha }, '*');
+    });
+    if (!resposta.ok) { alert('Não foi possível transferir: ' + (resposta.erro || 'tente de novo.') + '\nNada foi alterado em ' + NOMES[o.de] + '.'); return false; }
+    try { await o.aoConcluir(); } catch (e) { console.error(e); }
+    try { await fetch(url('/pessoas/' + o.de + '/' + encodeURIComponent(o.id)), { method: 'DELETE' }); await fetch(url('/fichasMed/' + o.de + '/' + encodeURIComponent(o.id)), { method: 'DELETE' }); } catch (e) {}
+    alert(o.nome + ' foi transferido(a) para ' + NOMES[o.para] + '. Confira na aba da seção.');
+    return true;
+  }
+  // destino: copia a ficha para o novo id e avisa a origem (via shell)
+  async function aoReceber(ev, secaoDestino, novoId) {
+    var m = ev.data;
+    try {
+      if (m.pessoa && typeof m.pessoa === 'object') {
+        var p = Object.assign({}, m.pessoa, { atualizadoEm: new Date().toISOString() });
+        await fetch(url('/pessoas/' + secaoDestino + '/' + encodeURIComponent(novoId)), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p) });
+      }
+      if (m.fichaMed) await fetch(url('/fichasMed/' + secaoDestino + '/' + encodeURIComponent(novoId)), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(m.fichaMed) });
+    } catch (e) {}
+    try { (ev.source || root.parent).postMessage({ tipo: 'v2-recebido', rid: m.rid, ok: true }, '*'); } catch (e) {}
+  }
+  root.V2_TRANSFER = { enviar: enviar, aoReceber: aoReceber, NOMES: NOMES };
+})(typeof window !== 'undefined' ? window : globalThis);

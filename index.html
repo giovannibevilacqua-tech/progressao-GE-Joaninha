@@ -1659,7 +1659,23 @@ window.addEventListener('message', function (ev) {
     setTimeout(ajustarAlturaIframes, 260);
   }
   if (msg.backupFeito || msg.backupFeitoSr) atualizarLembreteBackup();
+  if (msg.tipo === 'v2-transferir') transferirEntreSecoes(ev, msg);
+  if (msg.tipo === 'v2-recebido' && transfPend[msg.rid]) { const p = transfPend[msg.rid]; delete transfPend[msg.rid]; try { p.origem.postMessage({ tipo: 'v2-transferido', rid: msg.rid, ok: !!msg.ok, erro: msg.erro || null }, '*'); } catch (e) {} }
 });
+// Transferência de jovem entre seções: abre a seção de destino (se ainda não abriu), espera ficar pronta e entrega o jovem.
+const transfPend = {};
+async function transferirEntreSecoes(ev, msg) {
+  const falha = erro => { try { ev.source.postMessage({ tipo: 'v2-transferido', rid: msg.rid, ok: false, erro }, '*'); } catch (e) {} };
+  const alvo = SECOES[msg.para]; if (!alvo) return falha('Seção de destino desconhecida.');
+  const fr = document.getElementById(alvo.frame); if (!fr) return falha('Seção de destino indisponível.');
+  if (!fr.getAttribute('src')) fr.src = V2.pagina(alvo.pagina);
+  let pronto = false;
+  for (let i = 0; i < 80 && !pronto; i++) { try { const w = fr.contentWindow; if (w && w.paxtuPronto && w.paxtuPronto()) pronto = true; } catch (e) {} if (!pronto) await new Promise(r => setTimeout(r, 250)); }
+  if (!pronto) return falha('A seção de destino não abriu a tempo.');
+  transfPend[msg.rid] = { origem: ev.source };
+  fr.contentWindow.postMessage(Object.assign({}, msg, { tipo: 'transferirJovem' }), '*');
+  setTimeout(() => { if (transfPend[msg.rid]) { delete transfPend[msg.rid]; falha('A seção de destino não respondeu.'); } }, 30000);
+}
 
 if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); }); }
 

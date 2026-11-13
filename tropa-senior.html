@@ -3012,6 +3012,10 @@ function renderJovens(){
   }
 }
 
+function transferirParaCla(id){
+  const y=YOUTH_DATA.find(x=>x.id===id); if(!y) return;
+  V2_TRANSFER.enviar({ de:'senior', para:'cla', id, nome:y.name, nasc:y.born, aoConcluir: async ()=>{ y.archived=true; y.transferidoPara='cla'; V2.registrarHistorico('senior', registroLogado, '', 'Transferiu '+y.name+' para o Clã Pioneiro', 0); syncJovens(); await saveState(); renderAllTabs(); } });
+}
 function makeYouthCard(e,today,maxDays){
   const c=timeColor(e.days,maxDays);
   const passed=e.days<=0;
@@ -3038,6 +3042,7 @@ function makeYouthCard(e,today,maxDays){
           <button class="btn-ic" onclick="showModal('${e.id}')" title="Editar">✏ Editar</button>
           <button class="btn-ic" onclick="verObservacaoSenior('${e.id}')" title="Observação">📋${e.observacoes?' •':''}</button>
           <button class="btn-ic" onclick="relatorioJovemSr('${e.id}')" title="Relatório em PDF">📄</button>
+          ${(caminho||passed)?`<button class="btn-ic" style="color:#E67E22;" onclick="transferirParaCla('${e.id}')" title="Transferir para o Clã Pioneiro">🛤 Transferir p/ Clã</button>`:''}
           <button class="btn-ic" style="color:#E74C3C;" onclick="archiveYouth('${e.id}')" title="Arquivar">📦</button>
         </div>
       </div>
@@ -3073,6 +3078,7 @@ window.addEventListener('message', async function(ev){
   syncJovens();
   await saveState();
   renderAllTabs();
+  V2_TRANSFER.aoReceber(ev, 'senior', newId);
 });
 
 // ╔═══════════════════════════════════════════════════╗

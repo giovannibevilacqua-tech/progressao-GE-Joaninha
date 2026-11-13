@@ -1798,7 +1798,7 @@ function cardPioneiro(e, today){
   let badge;
   if (caminho) badge = '<span style="background:#E67E22;color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;">🛤 CAMINHO</span>';
   else if (passou) badge = '<span style="background:#95A5A6;color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;">✓ PASSOU DOS 22</span>';
-  else if (partida) badge = '<span style="background:#6A1B9A;color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;">🌅 PARTIDA PRÓXIMA</span>';
+  else if (partida) badge = '<span style="background:#6A1B9A;color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;">👋 DESPEDIDA</span>';
   else badge = `<span style="background:${c.fg};color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;">${icoRamo('cla', 1, '#fff')} NO CLÃ</span>`;
   const pct = passou ? 0 : Math.min(100, Math.max(2, (e.days / maxDays) * 100));
   const card = document.createElement('div');
@@ -1819,7 +1819,7 @@ function cardPioneiro(e, today){
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px;">
       <div style="background:rgba(255,255,255,.75);border-radius:8px;padding:8px 10px;"><div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#999;margin-bottom:2px;">${caminho ? 'Entra no clã aos 18' : 'Limite de permanência (22)'}</div>
         <div style="font-size:12px;font-weight:700;color:#1A1A1A;">${fmtDate(caminho ? dataEm(e.born, 18) : tPartida)}</div></div>
-      <div style="background:rgba(255,255,255,.75);border-radius:8px;padding:8px 10px;"><div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#999;margin-bottom:2px;">${caminho ? 'Falta para o clã' : 'Tempo até a Partida'}</div>
+      <div style="background:rgba(255,255,255,.75);border-radius:8px;padding:8px 10px;"><div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#999;margin-bottom:2px;">${caminho ? 'Falta para o clã' : 'Tempo até a despedida'}</div>
         <div style="font-size:11px;font-weight:800;color:${c.fg};">${timeStr(caminho ? e.dias18 : e.days)}</div></div>
     </div>
     <div style="background:rgba(255,255,255,.75);border-radius:8px;padding:8px 10px;margin-bottom:${passou ? '0' : '10px'};display:flex;align-items:center;gap:8px;">
@@ -1834,6 +1834,7 @@ window.addEventListener('message', async function(ev){
   if (!msg || msg.tipo !== 'transferirJovem') return;
   YOUTH_DATA.push({ id:'y_' + Date.now(), name:msg.nome, born:msg.nascimento || '2008-01-01', role:'', archived:false, color:COLOR_PALETTE[YOUTH_DATA.length % COLOR_PALETTE.length] });
   syncJovens(); await saveState(); renderAllTabs();
+  V2_TRANSFER.aoReceber(ev, 'cla', YOUTH_DATA[YOUTH_DATA.length - 1].id);
 });
 
 // ╔═══════════════════════════════════════════════════╗
