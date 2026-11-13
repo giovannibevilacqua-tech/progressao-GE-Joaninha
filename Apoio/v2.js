@@ -1282,6 +1282,7 @@ window.V2_CONFIG = {
     configurarAuth: configurarAuth, criarStore: criarStore,
     subirAnexo: subirAnexo, garantirAnexos: garantirAnexos, removerAnexo: removerAnexo, baixarAnexo: baixarAnexo,
     ehAnexoInline: ehAnexoInline, gravarAnexo: gravarAnexo, urlAnexoDb: urlAnexoDb, nomeSeguro: nomeSeguro,
+    criarPdf: criarPdf, entregarPdf: entregarPdf,
     lerCamposPublicos: lerCamposPublicos, paxtuLer: paxtuLer, paxtuLimpar: function () { paxtuCache = {}; }, paxtuTestar: paxtuTestar, paxtuGravar: paxtuGravar, paxtuPreencher: paxtuPreencher, comEspera: comEspera, pagina: pagina, sleep: sleep, fetchTimeout: fetchTimeout
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.V2;

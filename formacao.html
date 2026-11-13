@@ -85,7 +85,7 @@
 </head>
 <body>
 <div class="topo"><a href="index.html" id="volta">← Sistema</a><div class="ttl">🎓 Formação de adultos</div></div>
-<div class="abas" id="abas" style="display:none"><button id="aba-meu" onclick="location.hash='#meu'">Minha formação</button><button id="aba-ass" onclick="location.hash='#assessorados'">Meus assessorados</button></div>
+<div class="abas" id="abas" style="display:none"><button id="aba-meu" onclick="location.hash='#meu'">Minha formação</button><button id="aba-ppf" onclick="location.hash='#ppf'">📝 PPF</button><button id="aba-ass" onclick="location.hash='#assessorados'">Meus assessorados</button></div>
 <div class="corpo" id="corpo"><div class="vazio">Carregando…</div></div>
 <div id="status"></div>
 <div class="fonte">Fonte: Competências e Rotas de Aprendizagem dos ramos Lobinho, Escoteiro, Sênior e Pioneiro e da Linha Dirigente, Escoteiros do Brasil.</div>
@@ -301,18 +301,160 @@ async function telaAssessorados() {
     const p = d.perfil || {}, cn = F.contar(d.done), r = RK.indexOf(p.ramo) >= 0 ? p.ramo : null;
     const lin = [[r, p.nivel], [RK.indexOf(p.ramo2) >= 0 ? p.ramo2 : null, p.nivel2]].filter(l => l[0]);
     const chips = lin.map(l => `<span class="chip t-${l[0]}">${esc(CAT[l[0]].n)}${l[1] != null ? ' · ' + NV[l[1]] + ' ' + cn[l[0]][l[1]] + '/' + TOT[l[0]][l[1]] : ' ' + (cn[l[0]][0] + cn[l[0]][1] + cn[l[0]][2]) + '/' + totR(l[0])}</span>`).join(' ');
-    return `<div class="panel ass-card"><div class="nm">${esc(nomeDe(u))}<small>Registro ${esc((E.equipe[u] || {}).registro || '')}${lin.length ? '' : ' · ramo não informado'}</small></div>${chips}<a class="btn-v" style="text-decoration:none" href="#c-${esc(u)}">Abrir ficha</a></div>`;
+    return `<div class="panel ass-card"><div class="nm">${esc(nomeDe(u))}<small>Registro ${esc((E.equipe[u] || {}).registro || '')}${lin.length ? '' : ' · ramo não informado'}</small></div>${chips}<a class="btn-v" style="text-decoration:none;background:#555" href="#ppf-${encodeURIComponent(u)}">📝 PPF${alertaPpf(d.ppf) ? " ⏰" : ""}</a> <a class="btn-v" style="text-decoration:none" href="#c-${esc(u)}">Abrir ficha</a></div>`;
   }).join('');
+}
+
+/* ---------- PPF (plano pessoal de formação) ---------- */
+const ppfDias = iso => { if (!iso) return null; const a = new Date(iso + 'T12:00:00'), h = new Date(); h.setHours(12, 0, 0, 0); return Math.round((a - h) / 864e5); };
+const ppfData = iso => { const p = String(iso || '').split('-'); return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : ''; };
+function alertaPpf(p) {
+  if (!p || !p.revisaoEm) return null;
+  const d = ppfDias(p.revisaoEm);
+  if (d === null || d > 7) return null;
+  return d < 0 ? 'A revisão do PPF estava marcada para ' + ppfData(p.revisaoEm) + ' (atrasada ' + (-d) + (d === -1 ? ' dia' : ' dias') + ').' : (d === 0 ? 'A revisão do PPF é hoje.' : 'A revisão do PPF é em ' + d + (d === 1 ? ' dia' : ' dias') + ' (' + ppfData(p.revisaoEm) + ').');
+}
+async function calcularAlarmes() {
+  E.alarmeProprio = false; E.alarmeAss = false;
+  try { E.alarmeProprio = !!alertaPpf(await j('/formacao/' + encodeURIComponent(firebaseUid) + '/ppf')); } catch (e) {}
+  try {
+    const ids = Object.keys((await j('/apfIdx/' + encodeURIComponent(firebaseUid))) || {});
+    const r = await Promise.all(ids.map(async u => { try { return alertaPpf(await j('/formacao/' + encodeURIComponent(u) + '/ppf')); } catch (e) { return null; } }));
+    E.alarmeAss = r.some(Boolean);
+  } catch (e) {}
+}
+const PPF_ITENS = [['dentro', 'Dentro do Movimento Escoteiro'], ['fora', 'Fora do Movimento Escoteiro']], PPF_TIPOS = [['cursos', 'Cursos'], ['leituras', 'Leituras'], ['praticas', 'Práticas']];
+const podePpf = () => souDono() || souApf() || souAdmin;
+function normPpf(p) {
+  p = p || {}; p.diag = p.diag || {};
+  PPF_ITENS.forEach(([k]) => { p.diag[k] = p.diag[k] || {}; });
+  p.plano = Array.isArray(p.plano) ? p.plano.filter(Boolean) : Object.keys(p.plano || {}).sort((a, b) => a - b).map(k => p.plano[k]);
+  return p;
+}
+function dadosDirigente() {
+  const pe = E.equipe[E.uid] || {}, p = E.perfil || {}, ext = p.apfExterno;
+  const rot = { alcateia: 'Alcateia', escoteira: 'Tropa Escoteira', senior: 'Tropa Sênior', cla: 'Clã Pioneiro', diretoria: 'Diretoria' };
+  const linhas = [p.ramo && CAT[p.ramo] ? CAT[p.ramo].n + (p.nivel != null ? ' · ' + NV[p.nivel] : '') : '', p.ramo2 && CAT[p.ramo2] ? CAT[p.ramo2].n + (p.nivel2 != null ? ' · ' + NV[p.nivel2] : '') : ''].filter(Boolean);
+  return {
+    nome: souDono() ? (nomeLogado || pe.nome || '') : nomeDe(E.uid), registro: pe.registro || '',
+    funcao: (pe.funcao === 'assistente' ? 'Assistente' : 'Chefe') + (pe.tropa ? ' · ' + (rot[pe.tropa] || pe.tropa) : ''),
+    formacao: linhas.join(' / '),
+    assessor: p.apfUid ? nomeDe(p.apfUid) : (ext && ext.nome ? ext.nome : '')
+  };
+}
+function htmlPpf() {
+  const P = E.ppf, dd = dadosDirigente(), ed = podePpf(), dis = ed ? '' : ' disabled';
+  const al = alertaPpf(P);
+  let h = `<div class="quem"><h2>📝 Plano pessoal de formação${souDono() ? '' : ' — ' + esc(dd.nome)}</h2><div class="sub">Elaborado pelo dirigente com o seu assessor. ${ed ? 'As alterações são salvas automaticamente.' : 'Somente leitura.'}</div></div>`;
+  if (al) h += `<div class="panel" style="border:2px solid #e0a800;background:#fff8e1">⏰ <b>${esc(al)}</b> ${ed ? 'Revise o plano com ' + (souDono() ? 'o seu assessor' : 'o assessorado') + ' e registre a revisão abaixo.' : ''}</div>`;
+  if (!P.criadoEm && !ed) h += '<div class="panel">Este PPF ainda não foi iniciado.</div>';
+  h += `<div class="panel"><h3>1. Dados do dirigente</h3><div class="perfil">
+    <div class="f-field"><label>Nome</label><input disabled value="${esc(dd.nome)}"></div>
+    <div class="f-field"><label>Registro</label><input disabled value="${esc(dd.registro)}"></div>
+    <div class="f-field"><label>Função</label><input disabled value="${esc(dd.funcao)}"></div>
+    <div class="f-field"><label>Ramo e nível de formação</label><input disabled value="${esc(dd.formacao)}"></div>
+    <div class="f-field"><label>Assessor pessoal de formação</label><input disabled value="${esc(dd.assessor)}"></div></div></div>`;
+  h += '<div class="panel"><h3>2. Diagnóstico de necessidades de formação</h3>';
+  PPF_ITENS.forEach(([k, t]) => {
+    h += `<div style="font-weight:800;margin:10px 0 6px">${t}</div><div class="perfil">` + PPF_TIPOS.map(([tk, tt]) => `<div class="f-field" style="grid-column:1/-1"><label>${tt}</label><textarea data-ppf="diag.${k}.${tk}" rows="3" style="font:inherit;font-size:13px;padding:8px;border:1.5px solid var(--border);border-radius:8px;width:100%"${dis}>${esc((P.diag[k] || {})[tk] || '')}</textarea></div>`).join('') + '</div>';
+  });
+  h += '</div>';
+  h += '<div class="panel"><h3>3. Plano de atendimento</h3><div id="ppfPlano">' + P.plano.map((a, i) => htmlLinhaPlano(a, i, dis)).join('') + '</div>' + (ed ? '<button class="btn-v" type="button" onclick="ppfAddLinha()">+ Adicionar ação</button>' : '') + '</div>';
+  h += `<div class="panel"><h3>4. Avaliação e novas propostas</h3><div class="perfil"><div class="f-field" style="grid-column:1/-1"><label>Avaliação do período</label><textarea data-ppf="avaliacao" rows="4" style="font:inherit;font-size:13px;padding:8px;border:1.5px solid var(--border);border-radius:8px;width:100%"${dis}>${esc(P.avaliacao || '')}</textarea></div><div class="f-field" style="grid-column:1/-1"><label>Novas propostas</label><textarea data-ppf="propostas" rows="4" style="font:inherit;font-size:13px;padding:8px;border:1.5px solid var(--border);border-radius:8px;width:100%"${dis}>${esc(P.propostas || '')}</textarea></div></div></div>`;
+  const rv = Object.keys(P.revisoes || {}).sort().reverse().map(k => `<li>${esc(ppfData(k.slice(0, 10)))} · ${esc(P.revisoes[k].por || '')}${P.revisoes[k].nota ? ' — ' + esc(P.revisoes[k].nota) : ''}</li>`).join('');
+  h += `<div class="panel"><h3>5. Revisão</h3><div class="perfil"><div class="f-field"><label>Próxima revisão (gera alarme para o dirigente e o assessor)</label><input type="date" data-ppf="revisaoEm" value="${esc(P.revisaoEm || '')}"${dis}></div></div>${ed ? '<button class="btn-v" style="margin-top:10px" type="button" onclick="ppfRevisar()">Registrar revisão feita</button>' : ''}${rv ? '<ul style="margin:10px 0 0 18px;font-size:12px">' + rv + '</ul>' : ''}</div>`;
+  h += `<div class="panel" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="btn-v" type="button" onclick="ppfPdf()">📄 Baixar PDF</button><span id="ppfSt" class="msg" style="margin:0"></span></div>`;
+  return h;
+}
+function htmlLinhaPlano(a, i, dis) {
+  return `<div class="ppf-lin" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px"><input data-ppfp="${i}.acao" placeholder="Ação (curso, leitura, prática…)" value="${esc(a.acao || '')}" style="flex:1 1 220px;font:inherit;font-size:13px;padding:8px;border:1.5px solid var(--border);border-radius:8px"${dis}><input type="date" data-ppfp="${i}.prazo" value="${esc(a.prazo || '')}" style="font:inherit;font-size:13px;padding:7px;border:1.5px solid var(--border);border-radius:8px"${dis}><label style="font-size:12px;display:flex;gap:4px;align-items:center"><input type="checkbox" data-ppfp="${i}.feito"${a.feito ? ' checked' : ''}${dis}> cumprida</label>${dis ? '' : `<button type="button" class="btn-v" style="background:#999" onclick="ppfRemLinha(${i})">✕</button>`}</div>`;
+}
+let ppfTimer = null;
+function ppfSalvarAgora() {
+  clearTimeout(ppfTimer); ppfTimer = null;
+  const P = E.ppf; if (!P || !podePpf()) return Promise.resolve();
+  if (!P.criadoEm) P.criadoEm = new Date().toISOString();
+  P.atualizadoEm = new Date().toISOString(); P.atualizadoPor = nomeLogado || '';
+  const st = document.getElementById('ppfSt'); if (st) st.textContent = 'Salvando…';
+  return pedir('/formacao/' + encodeURIComponent(E.uid) + '/ppf', 'PUT', P).then(() => { const s2 = document.getElementById('ppfSt'); if (s2) s2.textContent = 'Salvo'; }).catch(() => { const s2 = document.getElementById('ppfSt'); if (s2) { s2.textContent = 'Não foi possível salvar. O admin precisa publicar as regras novas do Firebase.'; s2.classList.add('erro'); } });
+}
+function ppfAgendar() { clearTimeout(ppfTimer); const st = document.getElementById('ppfSt'); if (st) { st.textContent = 'Alterado…'; st.classList.remove('erro'); } ppfTimer = setTimeout(ppfSalvarAgora, 900); }
+function ppfSet(caminho, v) {
+  const ks = caminho.split('.'); let o = E.ppf;
+  for (let i = 0; i < ks.length - 1; i++) { o[ks[i]] = o[ks[i]] || {}; o = o[ks[i]]; }
+  o[ks[ks.length - 1]] = v;
+}
+function ppfRedesenhar() { document.getElementById('ppfPlano').innerHTML = E.ppf.plano.map((a, i) => htmlLinhaPlano(a, i, '')).join(''); }
+function ppfAddLinha() { E.ppf.plano.push({ acao: '', prazo: '', feito: false }); ppfRedesenhar(); ppfAgendar(); }
+function ppfRemLinha(i) { E.ppf.plano.splice(i, 1); ppfRedesenhar(); ppfAgendar(); }
+function ppfRevisar() {
+  const nota = prompt('Observação da revisão (opcional):'); if (nota === null) return;
+  const prox = prompt('Data da próxima revisão (dd/mm/aaaa) — deixe em branco para definir depois:') || '';
+  const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(prox.trim());
+  E.ppf.revisoes = E.ppf.revisoes || {}; E.ppf.revisoes[new Date().toISOString()] = { por: nomeLogado || '', nota: nota.trim() || null };
+  if (m) E.ppf.revisaoEm = m[3] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2); else if (prox.trim()) alert('Data não reconhecida. Defina a próxima revisão no campo.');
+  ppfSalvarAgora().then(() => { desenharPpf(); calcularAlarmes().then(() => { $('#aba-ppf').textContent = '📝 PPF' + (E.alarmeProprio ? ' ⏰' : ''); }); });
+}
+function desenharPpf() { $('#corpo').innerHTML = htmlPpf(); }
+async function telaPpf(uid) {
+  $('#corpo').innerHTML = '<div class="vazio">Carregando…</div>';
+  try {
+    await carregarFicha(uid);
+    E.ppf = normPpf(await j('/formacao/' + encodeURIComponent(uid) + '/ppf'));
+    desenharPpf();
+  } catch (e) { $('#corpo').innerHTML = '<div class="vazio">Não foi possível abrir este PPF. Você precisa ser o próprio dirigente, o assessor dele ou da Diretoria.</div>'; }
+}
+document.addEventListener('input', e => {
+  const el = e.target; if (!el || !el.getAttribute || !E.ppf || !podePpf()) return;
+  const k = el.getAttribute('data-ppf'), kp = el.getAttribute('data-ppfp');
+  if (k) { ppfSet(k, el.value || null); ppfAgendar(); }
+  else if (kp) { const [i, c] = kp.split('.'); E.ppf.plano[+i][c] = el.type === 'checkbox' ? el.checked : el.value; ppfAgendar(); }
+});
+window.addEventListener('pagehide', () => { if (ppfTimer) ppfSalvarAgora(); });
+function ppfPdf() {
+  try {
+    const P = E.ppf, dd = dadosDirigente(), W = 595, H = 842, M = 40, VINHO = '#6D1026', pdf = V2.criarPdf(W, H); let y = 0;
+    const largura = W - 2 * M;
+    const garantir = h => { if (y + h > H - 50) { pdf.nova(); y = 50; } };
+    pdf.rect(0, 0, W, 70, VINHO); pdf.texto(M, 32, 'PLANO PESSOAL DE FORMAÇÃO - PPF', { t: 16, b: true, c: '#FFFFFF' }); pdf.texto(M, 52, 'GE Joaninha · Escoteiros do Brasil', { t: 10, c: '#F3DDE3' });
+    y = 92;
+    const titulo = t => { garantir(30); pdf.rect(M, y, largura, 18, '#F6EFEA'); pdf.texto(M + 6, y + 13, t, { t: 11, b: true, c: VINHO }); y += 28; };
+    const par = (rot, val) => { const ls = pdf.quebrar(val || '-', largura - 12, 10); garantir(14 + ls.length * 13); pdf.texto(M + 4, y, rot, { t: 9, b: true, c: '#666666' }); y += 13; ls.forEach(l => { pdf.texto(M + 10, y, l, { t: 10 }); y += 13; }); y += 4; };
+    titulo('1. Dados do dirigente');
+    par('Nome', dd.nome + (dd.registro ? ' (registro ' + dd.registro + ')' : '')); par('Função', dd.funcao); par('Ramo e nível de formação', dd.formacao); par('Assessor pessoal de formação', dd.assessor);
+    titulo('2. Diagnóstico de necessidades de formação');
+    PPF_ITENS.forEach(([k, t]) => { garantir(20); pdf.texto(M + 4, y, t, { t: 10, b: true }); y += 16; PPF_TIPOS.forEach(([tk, tt]) => par(tt, (P.diag[k] || {})[tk])); });
+    titulo('3. Plano de atendimento');
+    garantir(20); pdf.texto(M + 4, y, 'Ação', { t: 9, b: true, c: '#666666' }); pdf.texto(M + largura - 150, y, 'Prazo', { t: 9, b: true, c: '#666666' }); pdf.texto(M + largura - 70, y, 'Situação', { t: 9, b: true, c: '#666666' }); y += 14;
+    if (!P.plano.length) { pdf.texto(M + 10, y, '-', { t: 10 }); y += 16; }
+    P.plano.forEach(a => { const ls = pdf.quebrar(a.acao || '-', largura - 175, 10); garantir(ls.length * 13 + 6); ls.forEach((l, i) => { pdf.texto(M + 10, y + i * 13, l, { t: 10 }); }); pdf.texto(M + largura - 150, y, ppfData(a.prazo) || '-', { t: 10 }); pdf.texto(M + largura - 70, y, a.feito ? 'Cumprida' : 'Em andamento', { t: 9, c: a.feito ? '#1E8449' : '#B26A00' }); y += ls.length * 13 + 6; });
+    y += 6;
+    titulo('4. Avaliação e novas propostas');
+    par('Avaliação do período', P.avaliacao); par('Novas propostas', P.propostas);
+    titulo('5. Revisão');
+    par('Próxima revisão', P.revisaoEm ? ppfData(P.revisaoEm) : ''); 
+    Object.keys(P.revisoes || {}).sort().forEach(k => par('Revisão realizada em ' + ppfData(k.slice(0, 10)) + (P.revisoes[k].por ? ' por ' + P.revisoes[k].por : ''), P.revisoes[k].nota || ''));
+    garantir(90); y += 36;
+    pdf.rect(M, y, 200, 0.8, '#222222'); pdf.rect(M + largura - 200, y, 200, 0.8, '#222222');
+    pdf.texto(M, y + 13, 'Dirigente: ' + dd.nome, { t: 9 }); pdf.texto(M + largura - 200, y + 13, 'Assessor: ' + (dd.assessor || ''), { t: 9 });
+    pdf.texto(M, y + 30, 'Data: ____/____/________', { t: 9 }); pdf.texto(M + largura - 200, y + 30, 'Data: ____/____/________', { t: 9 });
+    pdf.texto(M, H - 24, 'Emitido em ' + new Date().toLocaleDateString('pt-BR') + ' · GE Joaninha', { t: 8, c: '#888888' });
+    V2.entregarPdf(pdf.bytes(), 'ppf-' + V2.nomeSeguro(dd.nome || 'dirigente') + '.pdf');
+  } catch (e) { alert('Não consegui gerar o PDF: ' + e.message); }
 }
 let temAss = false;
 async function rotear() {
   const h = (location.hash || '').replace('#', '');
   clearTimeout(E.timer); if (Object.keys(E.pend).length) await enviar();
-  $('#abas').style.display = temAss ? 'flex' : 'none';
-  $('#aba-meu').classList.toggle('on', h !== 'assessorados' && !/^c-/.test(h)); $('#aba-ass').classList.toggle('on', h === 'assessorados' || /^c-/.test(h));
+  $('#abas').style.display = 'flex'; $('#aba-ass').style.display = temAss ? '' : 'none';
+  const ehPpf = /^ppf/.test(h);
+  $('#aba-ppf').classList.toggle('on', ehPpf); $('#aba-ppf').textContent = '📝 PPF' + (E.alarmeProprio ? ' ⏰' : ''); $('#aba-ass').textContent = 'Meus assessorados' + (E.alarmeAss ? ' ⏰' : '');
+  $('#aba-meu').classList.toggle('on', h !== 'assessorados' && !/^c-/.test(h) && !ehPpf); $('#aba-ass').classList.toggle('on', h === 'assessorados' || /^c-/.test(h));
   $('#volta').textContent = /^c-/.test(h) && temAss ? '← Assessorados' : '← Sistema';
   $('#volta').setAttribute('href', /^c-/.test(h) && temAss ? '#assessorados' : 'index.html');
   if (h === 'assessorados') return telaAssessorados();
+  const mp = /^ppf(?:-(.+))?$/.exec(h);
+  if (mp) return telaPpf(mp[1] ? decodeURIComponent(mp[1]) : firebaseUid);
   const m = /^c-(.+)$/.exec(h);
   return telaFicha(m ? decodeURIComponent(m[1]) : firebaseUid);
 }
@@ -336,6 +478,7 @@ window.addEventListener('pagehide', () => { if (Object.keys(E.pend).length) envi
   if (!(await autenticar())) { document.body.innerHTML = '<div style="padding:40px 20px;text-align:center;font-family:sans-serif;color:#666;"><div style="font-size:34px;margin-bottom:10px;">⚜</div><div style="font-weight:700;margin-bottom:6px;">Entre no sistema primeiro</div><a href="index.html" style="color:#1A6B3C;font-weight:700;">Ir para o login</a></div>'; return; }
   await carregarEquipe();
   try { temAss = Object.keys((await j('/apfIdx/' + encodeURIComponent(firebaseUid))) || {}).length > 0; } catch (e) { temAss = false; }
+  await calcularAlarmes();
   rotear();
 })();
 </script>
