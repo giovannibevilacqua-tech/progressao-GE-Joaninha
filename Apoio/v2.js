@@ -3092,7 +3092,7 @@ function restaurarUltimaAba(){
   function injetarCss() {
     if ($('v2pCss')) return;
     var st = document.createElement('style'); st.id = 'v2pCss';
-    st.textContent = '.v2p{padding:12px 14px 80px}.v2p .mini{font-size:11px;opacity:.7}.v2p-aviso{background:rgba(255,193,7,.15);border:1px solid rgba(255,193,7,.5);border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:13px;line-height:1.6}.v2p-aviso.vazio{background:transparent;border-color:var(--border,#ddd);opacity:.8}'
+    st.textContent = '.v2p-mf{margin-bottom:10px}.v2p-mf label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;opacity:.75;margin-bottom:4px}.v2p-mf input,.v2p-mf textarea{display:block;width:100%;box-sizing:border-box;padding:9px 11px;border:1px solid var(--border,#ccc);border-radius:8px;font:inherit;font-size:14px;background:var(--card,#fff);color:inherit;resize:vertical}.v2p{padding:12px 14px 80px}.v2p .mini{font-size:11px;opacity:.7}.v2p-aviso{background:rgba(255,193,7,.15);border:1px solid rgba(255,193,7,.5);border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:13px;line-height:1.6}.v2p-aviso.vazio{background:transparent;border-color:var(--border,#ddd);opacity:.8}'
       + '.v2p-busca{width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--border,#ddd);border-radius:10px;font-size:14px;margin-bottom:10px;background:var(--card,#fff);color:inherit}'
       + '.v2p-row{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--card,#fff);border:1px solid var(--border,#ddd);border-radius:12px;margin-bottom:6px;cursor:pointer}.v2p-row b{flex:1;min-width:0}.v2p-tag{font-size:11px;border-radius:8px;padding:2px 7px;background:rgba(128,128,128,.18);white-space:nowrap}.v2p-tag.ok{background:rgba(27,110,58,.2)}.v2p-tag.falta{background:rgba(179,38,30,.18)}'
       + '.v2p-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100030;display:flex;align-items:center;justify-content:center;padding:14px}.v2p-box{background:var(--card,#fff);color:var(--text,#1a1a1a);border-radius:14px;padding:18px 16px;width:100%;max-width:460px;max-height:92vh;overflow:auto}'
@@ -3361,7 +3361,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
     host.innerHTML = '<div class="v2p-aviso"><b>Ficha médica preenchida à mão</b><div class="mini">Ao efetivar, esta passa a ser a ficha atual. Você confere as diferenças antes.</div></div>'
       + MED_CAMPOS.map(function (c, i) {
         var val = esc(v[c[0]] || '');
-        return '<label>' + esc(c[0]) + '</label>' + (c[1] === 'area' ? '<textarea data-mc="' + i + '" rows="2">' + val + '</textarea>' : '<input data-mc="' + i + '" value="' + val + '" autocomplete="off">');
+        return '<div class="v2p-mf"><label>' + esc(c[0]) + '</label>' + (c[1] === 'area' ? '<textarea data-mc="' + i + '" rows="2">' + val + '</textarea>' : '<input data-mc="' + i + '" value="' + val + '" autocomplete="off">') + '</div>';
       }).join('')
       + '<div style="display:flex;gap:8px;margin-top:10px"><button type="button" class="v2p-bt" id="v2mCancMao">Cancelar</button><button type="button" class="v2p-bt p" id="v2mOkMao">Revisar</button></div>';
     $('v2mCancMao').onclick = aoCancelar;

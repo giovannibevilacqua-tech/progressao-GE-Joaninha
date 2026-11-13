@@ -691,9 +691,13 @@ mark.hl-esc{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 .f-input{width:100%;padding:10px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;outline:none;font-family:inherit;color:var(--text);box-sizing:border-box;}
 .f-input:focus{border-color:var(--vinho);}
 .f-field{margin-bottom:12px;}
-.f-row{display:flex;gap:8px;margin-top:14px;}
+.f-row{display:flex;gap:8px;margin-top:14px;position:sticky;bottom:-28px;background:inherit;padding:12px 0 16px;margin-bottom:-16px;border-top:1px solid rgba(128,128,128,.25);z-index:2;}
 .btn-prim{background:var(--vinho);color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;flex:2;}
 .btn-sec{background:var(--border);color:var(--text);border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;flex:1;}
+.roster-row{display:flex;flex-direction:column;}
+.card-acoes{display:flex;flex-wrap:wrap;gap:4px;margin-top:auto;padding-top:10px;border-top:1px solid rgba(128,128,128,.22);}
+.card-acoes .btn-ic{padding:4px 7px;font-size:10.5px;font-weight:600;}
+.patrulha-drop-zone{align-items:stretch !important;}
 </style>
 <script src="Apoio/v2.js"></script>
 <script>const { EIXOS, BLOCOS, BLOCO_IDS } = window.V2_BLOCOS;</script>
@@ -2062,24 +2066,21 @@ ${marcadoConversar ? `<div class="faixa-conversar">💬 CONVERSAR NA PRÓXIMA AT
 </div>
 <div style="flex-shrink:0;">${badge}</div>
 </div>
-<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;">
-<button class="btn-ic" onclick="event.stopPropagation();abrirEdicaoJovem('${j}')" title="Editar">✏ Editar</button>
-<button class="btn-ic" onclick="event.stopPropagation();verObservacao('${j}')" title="Observação">📋${OBSERVACOES[j] ? ' •' : ''}</button>
-<button class="btn-ic" onclick="event.stopPropagation();relatorioJovem('${j}')" title="Relatório em PDF">📄</button>
-<button class="btn-ic" onclick="event.stopPropagation();toggleJovemMenu('${j}')" title="Mais opções">⋮</button>
-</div>
 ${info ? `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:7px;margin-bottom:10px;">${caixa('Transferência para a Sênior', dataTransf || '—')}${caixa('Tempo restante', `<span style="color:${cor}">${restante}</span>`)}</div>` : ''}
 <div class="roster-linha-progresso">
 <div class="roster-track"><div class="roster-bar" style="width:${Math.round(n/18*100)}%;background:${JCOR[j]}"></div></div>
 <div class="roster-etapa" style="background:${et.bg || et.c+'22'};color:${et.c}">${n}/18 &middot; ${et.l}</div>
 </div>
 ${caminho ? `<button class="btn-ic" style="margin-top:10px;width:100%;padding:9px;color:#E67E22;border-color:#E67E22;font-weight:800;" onclick="event.stopPropagation();transferirParaSenior('${j}')">🛤 Transferir p/ Sênior</button>` : ''}
-${menuAberto ? `<div class="roster-dropdown" onclick="event.stopPropagation()">
-<button onclick="toggleConversar('${j}')">${marcadoConversar ? '✅ Já conversei' : '💬 Marcar pra conversar'}</button>
-<button onclick="abrirLisOuro('${j}')">🏅 Reconhecimento de Ramo</button>
-<button onclick="arquivarJovem('${j}')">📦 Arquivar</button>
-<button class="remover somente-admin" onclick="excluirJovem('${j}')">🗑️ Excluir</button>
-</div>` : ''}
+<div class="card-acoes" onclick="event.stopPropagation()">
+<button class="btn-ic" onclick="abrirEdicaoJovem('${j}')">✏ Editar</button>
+<button class="btn-ic" onclick="verObservacao('${j}')">📋 Obs.${OBSERVACOES[j] ? ' •' : ''}</button>
+<button class="btn-ic" onclick="relatorioJovem('${j}')">📄 Relatório</button>
+<button class="btn-ic" onclick="toggleConversar('${j}')">${marcadoConversar ? '✅ Já conversei' : '💬 Conversar'}</button>
+<button class="btn-ic" onclick="abrirLisOuro('${j}')">🏅 Ramo</button>
+<button class="btn-ic" onclick="arquivarJovem('${j}')">📦 Arquivar</button>
+<button class="btn-ic somente-admin" style="color:#E74C3C" onclick="excluirJovem('${j}')">🗑️</button>
+</div>
 </div>`;
 }
 
