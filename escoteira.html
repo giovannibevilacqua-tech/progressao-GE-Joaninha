@@ -2738,6 +2738,8 @@ return `<div class="eixo-picker-header" style="background:${eixo.cor}">${eixo.no
 }
 
 function limparFormularioEvento() {
+V2_POPUP.fechar();
+if (eventoEditandoId) { addEventoAberto = false; document.getElementById('addEventoBody').style.display = 'none'; document.getElementById('chevAddEvento').style.transform = 'rotate(0deg)'; }
 ['eventoData','eventoNome','eventoLocal','eventoDescricao','eventoResponsavelOutroInput','eventoLink','eventoResposta'].forEach(fid => { document.getElementById(fid).value = ''; });
 document.getElementById('eventoTipo').value = 'T';
 document.getElementById('eventoExterna').checked = false;
@@ -2837,7 +2839,7 @@ document.getElementById('btnCancelarEdicaoEvento').style.display = '';
 addEventoAberto = true;
 document.getElementById('addEventoBody').style.display = 'flex';
 document.getElementById('chevAddEvento').style.transform = 'rotate(180deg)';
-document.getElementById('cabecalhoAddEvento').scrollIntoView({behavior:'smooth', block:'start'});
+V2_POPUP.abrir('cabecalhoAddEvento', cancelarEdicaoEvento);
 renderPaginaCalendario();
 }
 

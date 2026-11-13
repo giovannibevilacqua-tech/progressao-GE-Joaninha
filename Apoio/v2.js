@@ -2775,6 +2775,7 @@ function renderItensPicker(){
 }
 function toggleItemEvento(bid){ const i = itensSelecionados.indexOf(bid); if (i >= 0) itensSelecionados.splice(i,1); else itensSelecionados.push(bid); renderItensPicker(); }
 function limparFormEvento(){
+  V2_POPUP.fechar();
   ['eventoData','eventoNome','eventoLocal','eventoResp','eventoTxt'].forEach(id => $(id).value = '');
   $('eventoFmt').value = 'C'; $('eventoExterna').checked = false; itensSelecionados = []; eventoEditandoId = null;
   $('btnSalvarEvento').textContent = '+ Adicionar atividade'; $('tituloFormEvento').textContent = '+ Adicionar atividade'; $('btnCancelarEvento').style.display = 'none';
@@ -2796,7 +2797,7 @@ function editarEvento(id){
   $('eventoFmt').value = ev.fmt || 'C'; $('eventoExterna').checked = !!ev.externa; $('eventoResp').value = ev.responsavel || ''; $('eventoTxt').value = ev.txt || '';
   itensSelecionados = Array.isArray(ev.itens) ? ev.itens.slice() : Object.values(ev.itens || {});
   $('btnSalvarEvento').textContent = '💾 Salvar alterações'; $('tituloFormEvento').textContent = '✏️ Editando atividade'; $('btnCancelarEvento').style.display = 'block';
-  toggleAddEvento(true); renderCal(); $('cabecalhoAddEvento').scrollIntoView({behavior:'smooth', block:'start'});
+  toggleAddEvento(true); renderCal(); V2_POPUP.abrir('cabecalhoAddEvento', cancelarEdicaoEvento);
 }
 function cancelarEdicaoEvento(){ limparFormEvento(); toggleAddEvento(false); renderCal(); }
 function removerEvento(id){
@@ -3946,6 +3947,60 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
         });
       }
       desenhar();
+    }
+  };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+/* ---------- formulário de atividade em pop-up (ao editar uma atividade do calendário) ---------- */
+(function (root) {
+  if (typeof document === 'undefined') return;
+  var atual = null;
+  function css() {
+    if (document.getElementById('v2popCss')) return;
+    var st = document.createElement('style'); st.id = 'v2popCss';
+    st.textContent = '#v2PopBk{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100020}.v2-popup{position:fixed!important;top:50%!important;left:50%!important;transform:translate(-50%,-50%)!important;width:min(580px,94vw)!important;max-height:90vh!important;overflow:auto!important;z-index:100030!important;margin:0!important;box-shadow:0 12px 40px rgba(0,0,0,.45)!important}.v2-popup > .cabecalho-secao{display:none!important}.v2-popup-ttl{padding:14px 14px 4px;font-size:15px;font-weight:800}';
+    document.head.appendChild(st);
+  }
+  root.V2_POPUP = {
+    // headerId: id do cabeçalho do formulário "Adicionar atividade"; aoFechar: função que cancela a edição
+    abrir: function (headerId, aoFechar) {
+      css(); this.fechar();
+      var h = document.getElementById(headerId); if (!h || !h.parentElement) return;
+      var box = h.parentElement; atual = box;
+      var bk = document.createElement('div'); bk.id = 'v2PopBk'; bk.onclick = function () { if (aoFechar) aoFechar(); else root.V2_POPUP.fechar(); };
+      document.body.appendChild(bk);
+      var t = document.createElement('div'); t.className = 'v2-popup-ttl'; t.id = 'v2PopTtl'; t.textContent = '✏️ Editar atividade';
+      box.insertBefore(t, box.firstChild); box.classList.add('v2-popup');
+    },
+    fechar: function () {
+      var bk = document.getElementById('v2PopBk'); if (bk) bk.remove();
+      var t = document.getElementById('v2PopTtl'); if (t) t.remove();
+      if (atual) { atual.classList.remove('v2-popup'); atual = null; }
+    }
+  };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+/* ---------- seções recolhíveis (como a Tropa Escoteira): o título vira um botão que recolhe/expande o conteúdo ---------- */
+(function (root) {
+  if (typeof document === 'undefined') return;
+  root.V2_COLAPSO = {
+    // pag: nome da seção (guarda o estado); itens: [{ titulo: id do título, corpos: [ids], chave }]
+    aplicar: function (pag, itens) {
+      itens.forEach(function (it) {
+        var t = document.getElementById(it.titulo); if (!t || t.getAttribute('data-colapso')) return;
+        t.setAttribute('data-colapso', '1');
+        var chave = 'colapso_' + pag + '_' + it.chave, aberto = true;
+        try { aberto = localStorage.getItem(chave) !== '0'; } catch (e) {}
+        var txt = t.textContent;
+        t.innerHTML = '<span>' + txt.replace(/[&<>]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]; }) + '</span><span class="v2col-chev" style="transition:transform .2s">▾</span>';
+        t.style.cssText += ';display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:var(--card,#fff);border-radius:12px;padding:14px;box-shadow:var(--shadow,0 1px 4px rgba(0,0,0,.1));user-select:none';
+        function aplicar() {
+          it.corpos.forEach(function (id) { var e = document.getElementById(id); if (e) e.style.display = aberto ? '' : 'none'; });
+          t.querySelector('.v2col-chev').style.transform = aberto ? 'rotate(180deg)' : 'rotate(0deg)';
+        }
+        t.onclick = function () { aberto = !aberto; try { localStorage.setItem(chave, aberto ? '1' : '0'); } catch (e) {} aplicar(); };
+        aplicar();
+      });
     }
   };
 })(typeof window !== 'undefined' ? window : globalThis);
