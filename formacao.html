@@ -93,33 +93,34 @@
 <script>
 const DB_URL = "https://joaninha-progressao-default-rtdb.firebaseio.com";
 let firebaseAuthToken = null, firebaseRefreshToken = null, firebaseUid = null, registroLogado = null;
+let tokenExpira = 0; // validade REAL do token (antes gravava sempre +55 min e o sistema, ao voltar, usava um token já vencido e deslogava)
 let souAdmin = false, nomeLogado = '', tropaDoChefeLogado = null, tropa2 = null;
 function lerSessaoSalva() { try { const v = localStorage.getItem('chefeSessao'); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
 function salvarSessao() {
   try {
     const atual = lerSessaoSalva() || {};
-    localStorage.setItem('chefeSessao', JSON.stringify(Object.assign({}, atual, { registro: registroLogado, uid: firebaseUid, idToken: firebaseAuthToken, refreshToken: firebaseRefreshToken, expiraEm: Date.now() + 55 * 60 * 1000 })));
+    localStorage.setItem('chefeSessao', JSON.stringify(Object.assign({}, atual, { registro: registroLogado, uid: firebaseUid, idToken: firebaseAuthToken, refreshToken: firebaseRefreshToken, expiraEm: tokenExpira || (Date.now() + 55 * 60 * 1000) })));
   } catch (e) {}
 }
 async function renovarAgendado() {
   if (!firebaseRefreshToken) return;
   const r = await renovarTokenSessao(firebaseRefreshToken);
-  if (r) { firebaseAuthToken = r.idToken; firebaseRefreshToken = r.refreshToken; salvarSessao(); setTimeout(renovarAgendado, 50 * 60 * 1000); }
+  if (r) { firebaseAuthToken = r.idToken; firebaseRefreshToken = r.refreshToken; tokenExpira = Date.now() + 55 * 60 * 1000; salvarSessao(); setTimeout(renovarAgendado, 50 * 60 * 1000); }
   else setTimeout(renovarAgendado, 2 * 60 * 1000);
 }
 async function autenticar() {
   const salva = lerSessaoSalva();
   if (!salva || !salva.uid) return false;
-  if (Date.now() < salva.expiraEm && salva.idToken) { firebaseAuthToken = salva.idToken; firebaseRefreshToken = salva.refreshToken; }
+  if (Date.now() < salva.expiraEm - 120000 && salva.idToken) { firebaseAuthToken = salva.idToken; firebaseRefreshToken = salva.refreshToken; tokenExpira = salva.expiraEm; }
   else {
     let r = await renovarTokenSessao(salva.refreshToken);
     if (!r) { await new Promise(x => setTimeout(x, 1500)); r = await renovarTokenSessao(salva.refreshToken); }
     if (!r) return false;
-    firebaseAuthToken = r.idToken; firebaseRefreshToken = r.refreshToken;
+    firebaseAuthToken = r.idToken; firebaseRefreshToken = r.refreshToken; tokenExpira = Date.now() + 55 * 60 * 1000;
   }
   registroLogado = salva.registro; firebaseUid = salva.uid; souAdmin = salva.admin === true; nomeLogado = salva.nome || '';
   tropaDoChefeLogado = salva.tropa || null; tropa2 = salva.tropa2 || null;
-  salvarSessao(); setTimeout(renovarAgendado, 50 * 60 * 1000);
+  salvarSessao(); setTimeout(renovarAgendado, Math.max(60000, tokenExpira - Date.now() - 5 * 60 * 1000));
   return true;
 }
 
