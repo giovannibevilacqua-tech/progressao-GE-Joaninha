@@ -487,6 +487,7 @@ background: #E8F5E9; color: #1E7A34; border-radius: 8px; font-size: 11px; font-w
 .resumo-track { height: 12px; background: #EEEBE7; border-radius: 20px; overflow: hidden; }
 .resumo-bar { height: 100%; border-radius: 20px; transition: width .4s ease; }
 body:not(.eh-admin) .somente-admin { display: none !important; }
+body:not(.eh-admin):not(.eh-dir) .admin-ou-dir { display: none !important; }
 .reset-btn { display: block; margin: 16px auto 32px; background: none; border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; font-size: 11px; color: var(--muted); cursor: pointer; }
 .reset-btn:hover { border-color: #E74C3C; color: #E74C3C; }
 
@@ -758,7 +759,7 @@ REGISTRO ESCOTEIRO
 <button class="conta-barra-btn somente-admin" id="btnGerChefesTopo" onclick="abrirGerenciarChefes()">⚙️ Gerenciar Chefes</button>
 <button class="conta-barra-btn somente-admin" id="btnSugestoesAdmin" onclick="abrirSugestoesAdmin()">📬 Sugestões</button>
 <button class="conta-barra-btn" id="btnHistorico" onclick="abrirHistorico()">📜 Histórico</button>
-<button class="conta-barra-btn somente-admin" id="btnImportarPaxtu" onclick="ImportarPaxtu.abrir()">📥 Importar PAXTU</button>
+<button class="conta-barra-btn admin-ou-dir" id="btnImportarPaxtu" onclick="ImportarPaxtu.abrir()">📥 Fichas 120</button>
 <button class="conta-barra-btn" onclick="if(confirm('Sair da sua conta neste navegador?'))fazerLogout()">🚪 Sair</button>
 </div>
 
@@ -791,7 +792,7 @@ REGISTRO ESCOTEIRO
 <div class="lis-modal-ov" id="paxtuModalOv" onclick="if(event.target===this)ImportarPaxtu.fechar()">
 <div class="lis-modal-box">
 <div class="lis-modal-header">
-<span class="lis-modal-titulo">📥 Importar PAXTU</span>
+<span class="lis-modal-titulo">📥 Fichas 120</span>
 <button class="lis-modal-fechar" aria-label="Fechar" onclick="ImportarPaxtu.fechar()">✕</button>
 </div>
 <div class="lis-modal-body" id="paxtuModalBody"></div>
@@ -1018,11 +1019,13 @@ Object.keys(usuarios || {}).forEach(uid => { const u = usuarios[uid]; if (!u || 
 await fetch(urlComAuthFirebase(DB_URL + '/equipe.json'), { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(eq) });
 } catch (e) {}
 }
-async function criarNovoChefe(registro, papel, nome, funcao, ehAdmin) {
+async function criarNovoChefe(registro, papel, nome, funcao, ehAdmin, nomeSocial) {
 // papel: seção ('alcateia'|'escoteira'|'senior'|'cla'|'diretoria'); funcao: 'chefe'|'assistente'; admin: boolean
 registro = (registro || '').trim();
 nome = (nome || '').trim();
 if (!registro) return { erro: true, mensagem: 'Digite o registro do novo chefe.' };
+if (nome.split(/\s+/).filter(Boolean).length < 2) return { erro: true, mensagem: 'Informe o nome e o sobrenome.' };
+nomeSocial = (nomeSocial || '').trim();
 const email = emailDoRegistro(registro);
 const resp = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + FIREBASE_WEB_API_KEY, {
 method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -1037,7 +1040,7 @@ const admin = !!ehAdmin;
 const tropa = papel || null;
 await fetch(urlComAuthFirebase(DB_URL + '/usuarios/' + data.localId + '.json'), {
 method: 'PUT', headers: {'Content-Type': 'application/json'},
-body: JSON.stringify({ registro, nome: nome || undefined, admin, tropa, funcao: funcao === 'assistente' ? 'assistente' : 'chefe', criadoEm: new Date().toISOString() })
+body: JSON.stringify({ registro, nome: nomeSocial || nome, nomeCompleto: nomeSocial ? nome : undefined, nomeSocial: nomeSocial || undefined, admin, tropa, funcao: funcao === 'assistente' ? 'assistente' : 'chefe', criadoEm: new Date().toISOString() })
 });
 return { erro: false };
 }
@@ -1153,7 +1156,8 @@ const uids = Object.keys(chefes);
 let html = `
 <details class="chefe-det" data-k="novo" ${chefeAbertos.has("novo")?"open":""} ontoggle="chefeToggle(this)"><summary>➕ Adicionar novo usuário</summary>
 <div class="chefe-add-row" style="flex-wrap:wrap;gap:6px;">
-<input type="text" class="campo-input" id="novoChefeNomeInput" autocomplete="off" placeholder="Nome (opcional)" style="flex:1;min-width:120px;">
+<input type="text" class="campo-input" id="novoChefeNomeInput" autocomplete="off" placeholder="Nome e sobrenome" style="flex:1;min-width:140px;">
+<input type="text" class="campo-input" id="novoChefeSocialInput" autocomplete="off" placeholder="Nome social (opcional)" style="flex:1;min-width:140px;">
 <input type="text" class="campo-input" id="novoChefeRegistroInput" inputmode="numeric" autocomplete="off" placeholder="Registro" style="flex:1;min-width:100px;" onkeydown="if(event.key==='Enter')criarNovoChefeUI()">
 <select class="campo-input" id="novoChefeRoleSelect" style="flex:1;min-width:130px;">
 <option value="alcateia">🐺 Alcateia</option>
@@ -1235,13 +1239,14 @@ const inputRegistro = document.getElementById('novoChefeRegistroInput');
 const roleSelect = document.getElementById('novoChefeRoleSelect');
 const erroDiv = document.getElementById('novoChefeErro');
 erroDiv.style.display = 'none';
-const resultado = await criarNovoChefe(inputRegistro.value, roleSelect.value, inputNome.value, document.getElementById('novoChefeFuncaoSelect').value, document.getElementById('novoChefeAdminChk').checked);
+const resultado = await criarNovoChefe(inputRegistro.value, roleSelect.value, inputNome.value, document.getElementById('novoChefeFuncaoSelect').value, document.getElementById('novoChefeAdminChk').checked, document.getElementById('novoChefeSocialInput').value);
 if (resultado.erro) {
 erroDiv.textContent = resultado.mensagem;
 erroDiv.style.display = 'block';
 return;
 }
 inputNome.value = '';
+document.getElementById('novoChefeSocialInput').value = '';
 inputRegistro.value = '';
 await renderChefesModalBody();
 }
@@ -1646,7 +1651,7 @@ async function atualizarLembreteBackup() {
 function aplicarEstadoContaLogada() {
 const txt = document.getElementById('contaRegistroTxt');
 if (txt) txt.textContent = nomeLogado ? nomeLogado : ('Registro ' + (registroLogado || ''));
-document.body.classList.toggle('eh-admin', verTudo());
+document.body.classList.toggle('eh-admin', verTudo()); document.body.classList.toggle('eh-dir', tropaDoChefeLogado === 'diretoria' || tropa2DoChefeLogado === 'diretoria');
 if (souAdmin) { migrarSenhasParaHash(); atualizarLembreteBackup(); carregarListaChefes(); }
 else { const lb = document.getElementById('lembreteBackup'); if (lb) lb.remove(); }
 
@@ -1657,7 +1662,7 @@ const btnVolta = document.getElementById('btnAdminVolta');
 if (btnVolta) btnVolta.style.display = (souAdmin && !verTudo()) ? '' : 'none';
 const btnSug = document.getElementById('btnSugestao'); if (btnSug) btnSug.style.display = (souAdmin && verTudo()) ? 'none' : '';
 const btnVP = document.getElementById('btnVisaoPropriaTopo'); if (btnVP) btnVP.style.display = (souAdmin && verTudo()) ? '' : 'none';
-document.body.classList.toggle('eh-admin', verTudo());
+document.body.classList.toggle('eh-admin', verTudo()); document.body.classList.toggle('eh-dir', tropaDoChefeLogado === 'diretoria' || tropa2DoChefeLogado === 'diretoria');
 aplicarBarraBackup();
 // Restrição de acesso por seção
 const ramoSwitch = document.getElementById('ramoSwitch');

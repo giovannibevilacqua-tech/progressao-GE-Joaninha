@@ -695,6 +695,7 @@ mark.hl-esc{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 <button class="tab-btn-linha" id="tabLis" onclick="mudarPagina('lis')">🏅 Lis de Ouro</button>
 <button class="tab-btn-linha" id="tabAlmoxarifado" onclick="mudarPagina('almoxarifado')">📦 Almoxarifado</button>
 <button class="tab-btn-linha" id="tabFinanceiro" onclick="mudarPagina('financeiro')">💰 Financeiro</button>
+<button class="tab-btn-linha" id="tabFichas" onclick="mudarPagina('fichas')">📇 Fichas</button>
 </nav>
 </div>
 
@@ -881,6 +882,7 @@ Toque num jovem para abrir a ficha dele. A barra de cor mostra o tempo até a tr
 
 <div id="pagina-almoxarifado" style="display:none;padding-bottom:32px;"></div>
 <div id="pagina-financeiro" style="display:none;padding-bottom:32px;"></div>
+<div id="pagina-fichas" style="display:none;padding-bottom:32px;"></div>
 
 <button class="reset-btn somente-admin" id="btnLimparMarcacoes" onclick="confirmReset()">↺ LIMPAR MARCAÇÕES</button>
 
@@ -1162,7 +1164,7 @@ function paxtuEstado() {
   };
 }
 async function paxtuAplicar(lista) {
-  if (!souAdmin) throw new Error('Esta ação é só para administradores.');
+  if (!souAdmin && !window.ehDiretoriaSessao()) throw new Error('Esta ação é só para administradores ou para a Diretoria.');
   if (!(await V2.protegerAntes('escoteira', montarDadosEscoteira(), 'Antes de importar do Paxtu', registroLogado))) throw new Error('Importação cancelada.');
   const ids = lista.map(item => {
     let id = item.id;
@@ -1263,6 +1265,7 @@ const nascInput = document.getElementById('novoJovemNasc');
 const obsInput = document.getElementById('novoJovemObs');
 const nome = input.value.trim();
 if (!nome) { input.focus(); return; }
+if (!V2_PESSOAS.temSobrenome(nome)) { alert('Informe o nome e o sobrenome.'); input.focus(); return; }
 const nasc = nascInput.value;
 const obs = obsInput.value.trim();
 const id = slugify(nome);
@@ -2284,7 +2287,7 @@ if (card) card.classList.toggle('open');
 // ===== PÁGINA 2: TABELA POR BLOCO =====
 let paginaAtiva = 'tabela';
 
-const PAGINAS_ESC = { tabela: ['pagina-tabela', 'tabTabela'], calendario: ['pagina-calendario', 'tabCalendario'], jovens: ['pagina-jovens', 'tabJovens'], ciclo: ['pagina-ciclo', 'tabCiclo'], lis: ['pagina-lis', 'tabLis'], almoxarifado: ['pagina-almoxarifado', 'tabAlmoxarifado'], financeiro: ['pagina-financeiro', 'tabFinanceiro'] };
+const PAGINAS_ESC = { tabela: ['pagina-tabela', 'tabTabela'], calendario: ['pagina-calendario', 'tabCalendario'], jovens: ['pagina-jovens', 'tabJovens'], ciclo: ['pagina-ciclo', 'tabCiclo'], lis: ['pagina-lis', 'tabLis'], almoxarifado: ['pagina-almoxarifado', 'tabAlmoxarifado'], financeiro: ['pagina-financeiro', 'tabFinanceiro'], fichas: ['pagina-fichas', 'tabFichas'] };
 function mudarPagina(p) {
 if (!PAGINAS_ESC[p]) p = 'tabela';
 paginaAtiva = p;
@@ -2301,6 +2304,7 @@ if (p === 'ciclo') renderPaginaCiclo();
 if (p === 'lis') renderPaginaLis();
 if (p === 'almoxarifado') V2_ALMOX.abrir();
 if (p === 'financeiro') V2_FIN.abrir();
+if (p === 'fichas') V2_PESSOAS.abrir();
 }
 
 let blocosAbertosTabela = {};
@@ -3736,6 +3740,7 @@ window.addEventListener('online', () => { if (temAlteracaoLocalPendente && !(__s
 
 // ===== ALMOXARIFADO — módulo compartilhado (v2.js) =====
 V2_FIN.montar({ secao:'escoteira', container:'pagina-financeiro' });
+V2_PESSOAS.montar({ secao:'escoteira', container:'pagina-fichas', jovens:()=>paxtuEstado().jovens, aplicarNome:async (id,n)=>{ JNOMES[id]=n; temAlteracaoLocalPendente=true; await saveState(); renderRoster(); } });
 V2_ALMOX.montar({ secao:'escoteira', nomeTropa:'Escoteira', outraTropa:'Sênior', subTitulo:'Materiais da Tropa Escoteira. Você escolhe com quais seções cada item é compartilhado.', container:'pagina-almoxarifado', padX:14 });
 
 // ===== BUSCA DE AÇÕES (index.html) =====
@@ -3827,7 +3832,7 @@ function irParaBlocoEsc(eixoId, bid){
 })();
 </script>
 <script>
-V2_NAVG({ nav:'#tabsLinha', embrulhar:false, grupos:[{ rotulo:'👥 Seção', botoes:['#tabTabela','#tabLis','#tabJovens'] }, { rotulo:'📅 Calendário/Ciclo', botoes:['#tabCalendario','#tabCiclo'] }, { rotulo:'🧰 Gestão', botoes:['#tabAlmoxarifado','#tabFinanceiro'] }] });
+V2_NAVG({ nav:'#tabsLinha', embrulhar:false, grupos:[{ rotulo:'👥 Seção', botoes:['#tabTabela','#tabLis','#tabJovens'] }, { rotulo:'📅 Calendário/Ciclo', botoes:['#tabCalendario','#tabCiclo'] }, { rotulo:'🧰 Gestão', botoes:['#tabAlmoxarifado','#tabFinanceiro','#tabFichas'] }] });
 </script>
 </body>
 </html>

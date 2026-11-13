@@ -15,9 +15,10 @@
 .sec-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}</style>
 </head>
 <body>
-<div class="cabecalho-fixo"><nav class="tabs-linha"><button class="tab-btn-linha" data-aba="almox" onclick="mostrarAba('almox',this)">📦 Almoxarifado geral</button><button class="tab-btn-linha" data-aba="fin" onclick="mostrarAba('fin',this)">💰 Financeiro</button><button class="tab-btn-linha" data-aba="secoes" onclick="mostrarAba('secoes',this)">🗂️ Seções</button><button class="tab-btn-linha" data-aba="forms" onclick="mostrarAba('forms',this)">🎓 Formação dos chefes</button><button class="tab-btn-linha" data-aba="docs" onclick="mostrarAba('docs',this)">📄 Documentação</button></nav></div>
+<div class="cabecalho-fixo"><nav class="tabs-linha"><button class="tab-btn-linha" data-aba="almox" onclick="mostrarAba('almox',this)">📦 Almoxarifado geral</button><button class="tab-btn-linha" data-aba="fin" onclick="mostrarAba('fin',this)">💰 Financeiro</button><button class="tab-btn-linha" data-aba="fichas" onclick="mostrarAba('fichas',this)">📇 Fichas e datas</button><button class="tab-btn-linha" data-aba="secoes" onclick="mostrarAba('secoes',this)">🗂️ Seções</button><button class="tab-btn-linha" data-aba="forms" onclick="mostrarAba('forms',this)">🎓 Formação dos chefes</button><button class="tab-btn-linha" data-aba="docs" onclick="mostrarAba('docs',this)">📄 Documentação</button></nav></div>
 <div class="pagina" id="pg-almox"><div id="almox-box"></div></div>
 <div class="pagina" id="pg-fin"><div id="fin-box"></div></div>
+<div class="pagina" id="pg-fichas"><div id="fichas-box"></div></div>
 <div class="pagina" id="pg-secoes"><div class="pagina-ttl">Seções</div><div class="pagina-sub">Resumo de progressão de cada seção. Toque no nome para abrir os detalhes.</div>
 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"><button type="button" class="btn-ic" id="btnRelGrupo" style="font-weight:700;padding:10px 14px" disabled onclick="relatorioGrupo()">📄 Relatório do grupo inteiro</button><button type="button" class="btn-ic" style="padding:10px 14px" onclick="carregarSecoes(true)">↻ Atualizar</button></div>
 <div id="secoes-lista"></div><div id="secoes-frames" style="position:absolute;width:0;height:0;overflow:hidden;visibility:hidden"></div></div>
@@ -101,6 +102,7 @@ async function iniciarSecao() {
 </script>
 <script>
 V2_FIN.montarDiretoria({ container:'fin-box' });
+V2_PESSOAS.montarDiretoria({ container:'fichas-box' });
 V2_ALMOX.montar({ secao:'diretoria', nomeTropa:'Diretoria', outraTropa:'', verTudo:true, subTitulo:'Visão geral do material de todas as seções. A Diretoria pode editar qualquer item; cada seção edita só os seus.', container:'almox-box', padX:14 });
 const ROTULOS = { admin:'⭐ Administrador', escoteira: icoRamo('escoteira') + ' Tropa Escoteira', senior: icoRamo('senior') + ' Tropa Sênior', alcateia:'🐺 Alcateia', cla: icoRamo('cla') + ' Clã Pioneiro', diretoria: icoRamo('diretoria') + ' Diretoria', sem:'❔ Seção não definida (defina em Gerenciar Chefes)' };
 function escH(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -231,6 +233,7 @@ async function aoAbrirAba(id) {
   if (id === 'secoes') return carregarSecoes();
   if (id === 'forms') return abrirFormacao();
   if (id === 'docs') return carregarSugestoesGrupo();
+  if (id === 'fichas') return V2_PESSOAS.abrirDiretoria();
 }
 async function carregarSugestoesGrupo() {
   const box = document.getElementById('sug-grupo-lista');

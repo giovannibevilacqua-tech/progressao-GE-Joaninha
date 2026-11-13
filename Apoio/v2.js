@@ -174,7 +174,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-11-13a"
+  VERSAO: "2026-11-13b"
 };
 
 /* ============================================================
@@ -2140,13 +2140,13 @@ window.V2_ALMOX = (function () {
   }
 
   /* ---------- tela ---------- */
-  var E = { ramo: null, arquivos: [], linhas: [], ignorados: 0, erros: [], estado: null, ocupado: false };
+  var E = { ramo: null, arquivos: [], medicas: [], linhas: [], ignorados: 0, erros: [], estado: null, ocupado: false };
   function esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function $(id) { return document.getElementById(id); }
   function dataBr(iso) { var m = /^(\d{4})-(\d\d)-(\d\d)/.exec(iso || ''); return m ? m[3] + '/' + m[2] + '/' + m[1] : '—'; }
 
   function abrir() {
-    E = { ramo: null, arquivos: [], linhas: [], ignorados: 0, erros: [], estado: null, ocupado: false };
+    E = { ramo: null, arquivos: [], medicas: [], linhas: [], ignorados: 0, erros: [], estado: null, ocupado: false };
     $('paxtuModalOv').classList.add('open');
     telaInicio();
   }
@@ -2161,6 +2161,8 @@ window.V2_ALMOX = (function () {
     h += '</div><div class="campo-label">Fichas em PDF</div>';
     h += '<label class="paxtu-envio"><input type="file" accept="application/pdf,.pdf" multiple onchange="ImportarPaxtu.arquivos(this.files)"><strong>Escolher PDFs</strong><span>Você pode enviar um ou vários arquivos</span></label>';
     if (E.arquivos.length) h += '<ul class="paxtu-arqs">' + E.arquivos.map(function (a) { return '<li>' + esc(a.name) + '</li>'; }).join('') + '</ul>';
+    h += '<div class="campo-label" style="margin-top:14px">Fichas médicas (opcional)</div><label class="paxtu-envio"><input type="file" accept="application/pdf,image/*" multiple onchange="ImportarPaxtu.medicas(this.files)"><strong>Anexar fichas médicas</strong><span>PDF ou foto, uma por jovem. O nome do jovem precisa aparecer no arquivo.</span></label>';
+    if (E.medicas.length) h += '<ul class="paxtu-arqs">' + E.medicas.map(function (a) { return '<li>🩺 ' + esc(a.name) + '</li>'; }).join('') + '</ul>';
     h += '<div id="paxtuMsg"></div><button type="button" class="btn-primario paxtu-acao" ' + (E.ramo && E.arquivos.length ? '' : 'disabled') + ' onclick="ImportarPaxtu.ler()">Ler fichas</button>';
     $('paxtuModalBody').innerHTML = h;
   }
@@ -2277,6 +2279,7 @@ window.V2_ALMOX = (function () {
       E.ocupado = false; E.arquivos = []; E.linhas = [];
       $('paxtuModalBody').innerHTML = '<div class="paxtu-ok"><div>✓</div><strong>' + sel.length + (sel.length === 1 ? ' jovem importado' : ' jovens importados') + ' em ' + esc(ramo.nome) + '</strong><p>A progressão marcada no sistema não foi alterada.</p><button type="button" class="btn-primario" onclick="ImportarPaxtu.fechar()">Concluir</button></div>';
       if (root.mudarRamo) root.mudarRamo(ramo.secao);
+      if (E.medicas.length && root.V2_FICHAMED) { var med = E.medicas; E.medicas = []; var caixa = document.createElement('div'); $('paxtuModalBody').appendChild(caixa); try { root.V2_FICHAMED.lote(med, ramo.secao, (E.janela.paxtuEstado().jovens || []).map(function (j) { return { id: j.id, nome: j.nome }; }), caixa); } catch (e2) { caixa.textContent = 'Não foi possível ler as fichas médicas: ' + e2.message; } }
     } catch (e) {
       console.error(e); E.ocupado = false; if (btn) btn.disabled = false;
       msg(/HTTP (401|403)/.test(String(e.message)) ? 'O banco recusou a gravação. A importação foi cancelada: é preciso liberar a área de dados do Paxtu nas regras do Firebase.' : (e.message || 'Não foi possível gravar.'), true);
@@ -2286,6 +2289,7 @@ window.V2_ALMOX = (function () {
     abrir: abrir, fechar: fechar, ler: ler, gravar: gravar, voltar: function () { E.linhas = []; telaInicio(); },
     escolher: function (r) { E.ramo = r; telaInicio(); },
     arquivos: function (l) { E.arquivos = Array.prototype.slice.call(l || []); telaInicio(); },
+    medicas: function (l) { E.medicas = Array.prototype.slice.call(l || []); telaInicio(); },
     marcar: function (i, v) { E.linhas[i].marcado = v; telaPrevia(); },
     vincular: function (i, v) { E.linhas[i].id = v || null; telaPrevia(); },
     lerFichas: lerFichas, ehJovem: ehJovem, nomeBonito: nomeBonito, acharJovem: acharJovem, RAMOS: RAMOS
@@ -3024,4 +3028,342 @@ function restaurarUltimaAba(){
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', preencher); else preencher();
   window.addEventListener('load', preencher);
+})(typeof window !== 'undefined' ? window : globalThis);
+
+/* ============================================================
+   Fichas de pessoas — nome social, data de promessa, contato de emergência (jovens e chefes) + avisos de aniversário/promessa.
+   Dados em /pessoas/<secao>/<idJovem> e /pessoas/chefes/<uid>. Uso por seção:
+     V2_PESSOAS.montar({ secao:'escoteira', container:'pagina-fichas', jovens:()=>paxtuEstado().jovens, aplicarNome:(id,nome)=>{...} }); V2_PESSOAS.abrir();
+   Diretoria: V2_PESSOAS.montarDiretoria({ container:'fichas-box' }); V2_PESSOAS.abrirDiretoria();
+   ============================================================ */
+(function (root) {
+  if (typeof document === 'undefined') return;
+  var NOMES_SEC = { alcateia: '🐺 Alcateia', escoteira: '⚜️ Tropa Escoteira', senior: '🧭 Tropa Sênior', cla: '🦉 Clã Pioneiro', diretoria: '🏛️ Diretoria' };
+  var SECS = ['alcateia', 'escoteira', 'senior', 'cla'];
+  var cfg = null, dir = null, dados = {}, chefesEq = {}, filtro = '';
+
+  function esc(x) { return String(x == null ? '' : x).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
+  function $(id) { return document.getElementById(id); }
+  function url(sub) { return urlComAuthFirebase(root.V2_CONFIG.DB_URL + '/pessoas' + (sub || '') + '.json'); }
+  function dataBR(d) { var p = String(d || '').split('-'); return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : ''; }
+  function sessao() { try { return JSON.parse(localStorage.getItem('chefeSessao') || 'null') || {}; } catch (e) { return {}; } }
+  function ehDir() { var s = sessao(); return s.admin === true || s.tropa === 'diretoria' || s.tropa2 === 'diretoria'; }
+  function nomeTela(p, nome) { return (p && p.nomeSocial) || nome || ''; }
+  function temSobrenome(n) { return String(n || '').trim().split(/\s+/).filter(Boolean).length >= 2; }
+
+  // ---- datas ----
+  function pad(n) { return ('0' + n).slice(-2); }
+  function iso(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  // a atividade é sempre no sábado: a semana vai de domingo a sábado e o aviso vale até o sábado
+  function semanaAtual(ref) { var r = ref || new Date(), d = new Date(r.getFullYear(), r.getMonth(), r.getDate()), ini = new Date(d); ini.setDate(d.getDate() - d.getDay()); var fim = new Date(ini); fim.setDate(ini.getDate() + 6); return { ini: ini, fim: fim }; }
+  function ocorrencia(dataIso, ano) { var p = String(dataIso || '').split('-'); if (p.length !== 3) return null; var m = +p[1] - 1, dia = +p[2]; if (m === 1 && dia === 29 && !(ano % 4 === 0 && (ano % 100 !== 0 || ano % 400 === 0))) dia = 28; return new Date(ano, m, dia); }
+  function anosEntre(dataIso, ano) { return ano - +String(dataIso).split('-')[0]; }
+  function emSemana(dataIso, sem) {
+    if (!dataIso) return null;
+    var a = sem.ini.getFullYear(), cand = [ocorrencia(dataIso, a), ocorrencia(dataIso, a + 1)];
+    for (var i = 0; i < cand.length; i++) if (cand[i] && cand[i] >= sem.ini && cand[i] <= sem.fim) return cand[i];
+    return null;
+  }
+  function tempoDesde(dataIso) {
+    if (!dataIso) return '';
+    var p = dataIso.split('-'), h = new Date(), m = (h.getFullYear() - +p[0]) * 12 + (h.getMonth() - (+p[1] - 1)) - (h.getDate() < +p[2] ? 1 : 0);
+    if (m < 0) return '';
+    var a = Math.floor(m / 12), mm = m % 12; return (a ? a + (a === 1 ? ' ano' : ' anos') : '') + (a && mm ? ' e ' : '') + (mm || !a ? mm + (mm === 1 ? ' mês' : ' meses') : '');
+  }
+  // lista de avisos da semana para um conjunto de pessoas [{nome, nasc, promessa, tipo}]
+  function avisos(pessoas, ref) {
+    var sem = semanaAtual(ref), out = [];
+    pessoas.forEach(function (p) {
+      var d = emSemana(p.nasc, sem);
+      if (d) out.push({ quando: d, tipo: 'aniv', nome: p.nome, texto: '🎂 ' + p.nome + ' faz ' + anosEntre(p.nasc, d.getFullYear()) + ' anos' });
+      var pr = emSemana(p.promessa, sem);
+      if (pr) { var a = anosEntre(p.promessa, pr.getFullYear()); if (a > 0) out.push({ quando: pr, tipo: 'prom', nome: p.nome, texto: '⭐ ' + p.nome + ': ' + a + (a === 1 ? ' ano' : ' anos') + ' de promessa — entregar a estrela' }); }
+    });
+    out.sort(function (x, y) { return x.quando - y.quando; });
+    return out;
+  }
+  function cardAvisos(lista, tit) {
+    if (!lista.length) return '<div class="v2p-aviso vazio">' + tit + ': nenhum aniversário ou estrela de promessa nesta semana.</div>';
+    var dias = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
+    return '<div class="v2p-aviso"><b>' + tit + '</b> <span class="mini">(avise até sábado)</span>' + lista.map(function (a) { return '<div>' + esc(a.texto) + ' <span class="mini">· ' + dias[a.quando.getDay()] + ' ' + pad(a.quando.getDate()) + '/' + pad(a.quando.getMonth() + 1) + '</span></div>'; }).join('') + '</div>';
+  }
+
+  function injetarCss() {
+    if ($('v2pCss')) return;
+    var st = document.createElement('style'); st.id = 'v2pCss';
+    st.textContent = '.v2p{padding:12px 14px 80px}.v2p .mini{font-size:11px;opacity:.7}.v2p-aviso{background:rgba(255,193,7,.15);border:1px solid rgba(255,193,7,.5);border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:13px;line-height:1.6}.v2p-aviso.vazio{background:transparent;border-color:var(--border,#ddd);opacity:.8}'
+      + '.v2p-busca{width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--border,#ddd);border-radius:10px;font-size:14px;margin-bottom:10px;background:var(--card,#fff);color:inherit}'
+      + '.v2p-row{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--card,#fff);border:1px solid var(--border,#ddd);border-radius:12px;margin-bottom:6px;cursor:pointer}.v2p-row b{flex:1;min-width:0}.v2p-tag{font-size:11px;border-radius:8px;padding:2px 7px;background:rgba(128,128,128,.18);white-space:nowrap}.v2p-tag.ok{background:rgba(27,110,58,.2)}.v2p-tag.falta{background:rgba(179,38,30,.18)}'
+      + '.v2p-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100030;display:flex;align-items:center;justify-content:center;padding:14px}.v2p-box{background:var(--card,#fff);color:var(--text,#1a1a1a);border-radius:14px;padding:18px 16px;width:100%;max-width:460px;max-height:92vh;overflow:auto}'
+      + '.v2p-box label{display:block;font-size:11px;font-weight:700;margin:10px 0 3px;opacity:.75;text-transform:uppercase}.v2p-box input,.v2p-box textarea,.v2p-box select{width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--border,#ccc);border-radius:9px;font-size:15px;background:transparent;color:inherit}'
+      + '.v2p-bt{border:1px solid var(--border,#ddd);background:var(--card,#fff);color:inherit;border-radius:10px;padding:10px 14px;font-weight:700;font-size:13px;cursor:pointer}.v2p-bt.p{background:#1b6e3a;color:#fff;border-color:#1b6e3a}'
+      + '.v2p-sec{margin:14px 0 6px;font-weight:800;font-size:14px}.v2p-tb{width:100%;border-collapse:collapse;font-size:12.5px}.v2p-tb td,.v2p-tb th{padding:6px 4px;border-bottom:1px solid var(--border,#ddd);text-align:left;vertical-align:top}';
+    document.head.appendChild(st);
+  }
+
+  async function carregarSecao(sec) { try { var r = await fetch(url('/' + sec)); var d = await r.json(); dados[sec] = d && !d.error ? d : {}; } catch (e) { dados[sec] = dados[sec] || {}; } return dados[sec]; }
+  async function gravar(sec, id, obj) {
+    var r = await fetch(url('/' + sec + '/' + id), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({}, obj, { atualizadoEm: new Date().toISOString() })) });
+    if (!r.ok) throw new Error(r.status === 401 || r.status === 403 ? 'Sem permissão para gravar. Peça ao admin para atualizar as regras do banco.' : 'Falha ao gravar (' + r.status + ').');
+    dados[sec] = dados[sec] || {}; dados[sec][id] = Object.assign(dados[sec][id] || {}, obj);
+  }
+
+  // ---- formulário (jovem ou chefe) ----
+  function formulario(o) {
+    // o: { sec, id, nome, nasc, p, chefe, podeNasc, aplicarNome, aoSalvar }
+    var p = o.p || {}, ov = document.createElement('div'); ov.className = 'v2p-ov';
+    var med = !o.chefe && root.V2_FICHAMED ? '<div class="v2p-sec">🩺 Ficha médica</div><div id="v2pMed"></div>' : '';
+    ov.innerHTML = '<div class="v2p-box"><div style="font-size:16px;font-weight:800">' + (o.chefe ? '👤 ' : '🧒 ') + esc(nomeTela(p, o.nome)) + '</div>'
+      + (p.nomeSocial ? '<div class="mini" style="font-size:11px;opacity:.7">Nome: ' + esc(p.nomeCompleto || o.nome) + '</div>' : '')
+      + '<label>Nome social (opcional — se preenchido, é o nome que aparece no sistema)</label><input id="v2pSocial" value="' + esc(p.nomeSocial || '') + '" autocomplete="off">'
+      + '<label>Data de nascimento</label><input id="v2pNasc" type="date" value="' + esc(o.nasc || p.nasc || '') + '"' + (o.podeNasc === false ? ' disabled' : '') + '>'
+      + '<label>Data de promessa</label><input id="v2pProm" type="date" value="' + esc(p.promessa || '') + '"><div class="mini" id="v2pTempo">' + (p.promessa ? 'Tempo de promessa: ' + tempoDesde(p.promessa) : '') + '</div>'
+      + '<div class="v2p-sec">🚑 Contato de emergência</div><label>Nome</label><input id="v2pEN" value="' + esc(p.emergNome || '') + '" autocomplete="off"><label>Telefone</label><input id="v2pET" inputmode="tel" value="' + esc(p.emergTel || '') + '"><label>Parentesco</label><input id="v2pER" value="' + esc(p.emergRel || '') + '" autocomplete="off">'
+      + med + '<div id="v2pErro" style="display:none;color:#b3261e;font-size:12.5px;margin-top:8px"></div><div style="display:flex;gap:8px;margin-top:16px"><button type="button" class="v2p-bt" id="v2pNao" style="flex:1">Cancelar</button><button type="button" class="v2p-bt p" id="v2pSim" style="flex:1">Salvar</button></div></div>';
+    document.body.appendChild(ov);
+    $('v2pProm').addEventListener('input', function () { $('v2pTempo').textContent = this.value ? 'Tempo de promessa: ' + tempoDesde(this.value) : ''; });
+    $('v2pNao').onclick = function () { ov.remove(); };
+    if (med && root.V2_FICHAMED) root.V2_FICHAMED.montar($('v2pMed'), { sec: o.sec, id: o.id, nome: o.nome, p: p, recarregar: o.aoSalvar });
+    $('v2pSim').onclick = async function () {
+      var b = this, er = $('v2pErro'); er.style.display = 'none';
+      var social = $('v2pSocial').value.trim(), obj = { nomeSocial: social || null, promessa: $('v2pProm').value || null, emergNome: $('v2pEN').value.trim() || null, emergTel: $('v2pET').value.trim() || null, emergRel: $('v2pER').value.trim() || null };
+      if (o.podeNasc !== false) obj.nasc = $('v2pNasc').value || null;
+      if (social && !p.nomeCompleto) obj.nomeCompleto = o.nome;
+      obj.nome = social ? (p.nomeCompleto || o.nome) : (p.nomeCompleto || o.nome);
+      b.disabled = true;
+      try {
+        await gravar(o.sec, o.id, obj);
+        if (o.aplicarNome) { var novo = social || p.nomeCompleto || o.nome; if (novo !== o.nome) await o.aplicarNome(o.id, novo); }
+        ov.remove(); if (o.aoSalvar) o.aoSalvar();
+      } catch (e) { er.textContent = e.message; er.style.display = 'block'; b.disabled = false; }
+    };
+  }
+
+  // ---- painel da seção ----
+  function listaJovens() { try { return (cfg.jovens() || []).filter(function (j) { return !j.arquivado; }); } catch (e) { return []; } }
+  function desenhar() {
+    var b = $(cfg.container); if (!b) return;
+    var js = listaJovens(), d = dados[cfg.secao] || {};
+    var pess = js.map(function (j) { var p = d[j.id] || {}; return { nome: nomeTela(p, j.nome), nasc: j.nasc || p.nasc, promessa: p.promessa }; });
+    var f = filtro.toLowerCase();
+    var linhas = js.filter(function (j) { return !f || nomeTela(d[j.id], j.nome).toLowerCase().indexOf(f) >= 0; }).sort(function (a, c) { return nomeTela(d[a.id], a.nome).localeCompare(nomeTela(d[c.id], c.nome), 'pt'); }).map(function (j) {
+      var p = d[j.id] || {}, nasc = j.nasc || p.nasc;
+      return '<div class="v2p-row" onclick="V2_PESSOAS._ed(\'' + esc(j.id).replace(/'/g, '') + '\')"><b>' + esc(nomeTela(p, j.nome)) + (p.nomeSocial ? ' <span class="mini">(' + esc(p.nomeCompleto || j.nome) + ')</span>' : '') + '</b>'
+        + (nasc ? '<span class="v2p-tag">🎂 ' + dataBR(nasc).slice(0, 5) + '</span>' : '') + (p.promessa ? '<span class="v2p-tag">⭐ ' + tempoDesde(p.promessa) + '</span>' : '')
+        + '<span class="v2p-tag ' + (p.emergTel ? 'ok' : 'falta') + '">🚑 ' + (p.emergTel ? 'ok' : 'falta') + '</span>' + (root.V2_FICHAMED ? '<span class="v2p-tag ' + (p.med && p.med.em ? 'ok' : '') + '">🩺 ' + (p.med && p.med.em ? 'ok' : '—') + '</span>' : '') + '</div>';
+    }).join('');
+    b.innerHTML = '<div class="v2p">' + cardAvisos(avisos(pess), 'Esta semana') + '<input class="v2p-busca" placeholder="Buscar pelo nome…" value="' + esc(filtro) + '" oninput="V2_PESSOAS._f(this.value)">' + (linhas || '<div class="mini">Nenhum jovem encontrado.</div>') + '</div>';
+  }
+  async function sincronizarNomes() {
+    // mantém nome e nascimento de cada jovem em /pessoas (a Diretoria lê as listas daqui)
+    var d = dados[cfg.secao] || {}, mapa = {}, mudou = false;
+    listaJovens().forEach(function (j) {
+      var p = d[j.id] || {};
+      var nomeReal = p.nomeSocial ? (p.nomeCompleto || j.nome) : j.nome;
+      if (p.nome !== nomeReal || (j.nasc && p.nasc !== j.nasc) || p.tela !== (p.nomeSocial || j.nome)) { mapa[j.id + '/nome'] = nomeReal; mapa[j.id + '/tela'] = p.nomeSocial || j.nome; if (j.nasc) mapa[j.id + '/nasc'] = j.nasc; mudou = true; }
+    });
+    if (!mudou) return;
+    try { await fetch(url('/' + cfg.secao), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(mapa) }); await carregarSecao(cfg.secao); } catch (e) {}
+  }
+
+  // ---- painel da Diretoria ----
+  async function carregarDir() {
+    await Promise.all(SECS.map(carregarSecao));
+    try { var r = await fetch(url('/chefes')); var c = await r.json(); dados.chefes = c && !c.error ? c : {}; } catch (e) { dados.chefes = dados.chefes || {}; }
+    try { var r2 = await fetch(urlComAuthFirebase(root.V2_CONFIG.DB_URL + '/equipe.json')); var e = await r2.json(); chefesEq = e && !e.error ? e : {}; } catch (e2) {}
+  }
+  function desenharDir() {
+    var b = $(dir.container); if (!b) return;
+    var todos = [], chefes = [];
+    SECS.forEach(function (s) { Object.keys(dados[s] || {}).forEach(function (id) { var p = dados[s][id]; if (p && (p.nome || p.tela)) todos.push({ sec: s, id: id, p: p, nome: p.tela || p.nome }); }); });
+    Object.keys(chefesEq).forEach(function (uid) { var u = chefesEq[uid], p = (dados.chefes || {})[uid] || {}; if (u && (u.registro || u.nome)) chefes.push({ uid: uid, u: u, p: p, nome: p.nomeSocial || u.nome || ('Registro ' + u.registro) }); });
+    var sem = avisos(todos.map(function (t) { return { nome: t.nome + ' (' + (NOMES_SEC[t.sec] || t.sec).replace(/^\S+\s/, '') + ')', nasc: t.p.nasc, promessa: t.p.promessa }; }));
+    var semCh = avisos(chefes.map(function (c) { return { nome: c.nome, nasc: c.p.nasc, promessa: c.p.promessa }; }));
+    var h = '<div class="v2p">' + cardAvisos(semCh, 'Chefes — esta semana') + cardAvisos(sem, 'Jovens — esta semana');
+    h += '<div class="v2p-sec">👤 Chefes e assistentes</div><table class="v2p-tb"><tr><th>Nome</th><th>Nasc.</th><th>Promessa</th><th>Emergência</th></tr>' + chefes.sort(function (a, c) { return a.nome.localeCompare(c.nome, 'pt'); }).map(function (c) {
+      return '<tr onclick="V2_PESSOAS._edChefe(\'' + c.uid + '\')" style="cursor:pointer"><td><b>' + esc(c.nome) + '</b><br><span class="mini">' + esc(NOMES_SEC[c.u.tropa] || '') + '</span></td><td>' + esc(dataBR(c.p.nasc)) + '</td><td>' + esc(dataBR(c.p.promessa)) + (c.p.promessa ? '<br><span class="mini">' + tempoDesde(c.p.promessa) + '</span>' : '') + '</td><td>' + (c.p.emergTel ? esc((c.p.emergNome || '') + ' ' + c.p.emergTel) : '<span class="v2p-tag falta">falta</span>') + '</td></tr>';
+    }).join('') + '</table>';
+    SECS.forEach(function (s) {
+      var l = todos.filter(function (t) { return t.sec === s; }).sort(function (a, c) { return a.nome.localeCompare(c.nome, 'pt'); });
+      h += '<div class="v2p-sec">' + NOMES_SEC[s] + ' <span class="mini">(' + l.length + ')</span></div>' + (l.length ? '<table class="v2p-tb"><tr><th>Jovem</th><th>Nasc.</th><th>Promessa</th><th>Emergência</th></tr>' + l.map(function (t) {
+        return '<tr><td><b>' + esc(t.nome) + '</b></td><td>' + esc(dataBR(t.p.nasc)) + '</td><td>' + esc(dataBR(t.p.promessa)) + '</td><td>' + (t.p.emergTel ? esc((t.p.emergNome || '') + (t.p.emergRel ? ' (' + t.p.emergRel + ')' : '') + ' ' + t.p.emergTel) : '<span class="v2p-tag falta">falta</span>') + '</td></tr>';
+      }).join('') + '</table>' : '<div class="mini">Ainda sem dados. A lista é preenchida quando a seção abre a aba Fichas.</div>');
+    });
+    b.innerHTML = h + '</div>';
+  }
+
+  root.V2_PESSOAS = {
+    montar: function (o) { cfg = o; dir = null; injetarCss(); },
+    abrir: async function () { if (!cfg) return; var b = $(cfg.container); if (b && !b.innerHTML) b.innerHTML = '<div class="v2p"><div class="mini">Carregando…</div></div>'; await carregarSecao(cfg.secao); desenhar(); await sincronizarNomes(); desenhar(); },
+    montarDiretoria: function (o) { dir = o; cfg = null; injetarCss(); },
+    abrirDiretoria: async function () { if (!dir) return; var b = $(dir.container); if (b && !b.innerHTML) b.innerHTML = '<div class="v2p"><div class="mini">Carregando…</div></div>'; await carregarDir(); desenharDir(); },
+    _f: function (v) { filtro = v; desenhar(); var i = document.querySelector('.v2p-busca'); if (i) { i.focus(); i.setSelectionRange(v.length, v.length); } },
+    _ed: function (id) {
+      var j = listaJovens().filter(function (x) { return x.id === id; })[0]; if (!j) return;
+      formulario({ sec: cfg.secao, id: id, nome: j.nome, nasc: j.nasc, p: (dados[cfg.secao] || {})[id], aplicarNome: cfg.aplicarNome, aoSalvar: function () { desenhar(); }, podeNasc: !j.nasc });
+    },
+    _edChefe: function (uid) {
+      var u = chefesEq[uid]; if (!u) return;
+      formulario({ sec: 'chefes', id: uid, nome: u.nome || ('Registro ' + u.registro), p: (dados.chefes || {})[uid], chefe: true, aoSalvar: function () { desenharDir(); } });
+    },
+    avisos: avisos, cardAvisos: cardAvisos, tempoDesde: tempoDesde, temSobrenome: temSobrenome, semanaAtual: semanaAtual,
+    // para o calendário: datas do ano de um conjunto de pessoas [{nome,nasc,promessa}]
+    eventosDoAno: function (pessoas, ano) {
+      var out = [];
+      pessoas.forEach(function (p) {
+        var d = ocorrencia(p.nasc, ano); if (d) out.push({ data: iso(d), tipo: 'aniv', titulo: '🎂 ' + p.nome });
+        var pr = ocorrencia(p.promessa, ano); if (pr && anosEntre(p.promessa, ano) > 0) out.push({ data: iso(pr), tipo: 'prom', titulo: '⭐ ' + p.nome + ' (' + anosEntre(p.promessa, ano) + ' a. de promessa)' });
+      });
+      return out;
+    },
+    carregar: carregarSecao, dados: function () { return dados; }, url: url, gravar: gravar
+  };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.getItem('chefeSessao') || 'null') || {}; return o.admin === true || o.tropa === 'diretoria' || o.tropa2 === 'diretoria'; } catch (e) { return false; } };
+
+/* ============================================================
+   Ficha médica — envio (PDF ou foto), leitura do texto, comparação com a versão anterior e download.
+   Texto e dados em /pessoas/<secao>/<id>/med (leve); o arquivo em /fichasMed/<secao>/<id> (regras: chefes da seção + Diretoria + admin).
+   O arquivo fica no próprio banco gratuito (sem Storage pago): fotos são reduzidas e PDFs têm limite de tamanho.
+   ============================================================ */
+(function (root) {
+  if (typeof document === 'undefined') return;
+  var LIM_PDF = 900 * 1024;
+  function esc(x) { return String(x == null ? '' : x).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
+  function $(id) { return document.getElementById(id); }
+  function urlArq(sec, id) { return urlComAuthFirebase(root.V2_CONFIG.DB_URL + '/fichasMed/' + sec + (id ? '/' + id : '') + '.json'); }
+  function sessao() { try { return JSON.parse(localStorage.getItem('chefeSessao') || 'null') || {}; } catch (e) { return {}; } }
+  function norm(t) { return String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim(); }
+  function lerComoDataUrl(f) { return new Promise(function (ok, no) { var r = new FileReader(); r.onload = function () { ok(r.result); }; r.onerror = no; r.readAsDataURL(f); }); }
+  function carregarScript(src) { return new Promise(function (ok, no) { var s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = function () { no(new Error('Não consegui carregar ' + src)); }; document.head.appendChild(s); }); }
+
+  async function textoDoPdf(arq) {
+    if (!root.pdfjsLib) { await carregarScript('Apoio/vendor/pdfjs/pdf.min.js'); root.pdfjsLib.GlobalWorkerOptions.workerSrc = 'Apoio/vendor/pdfjs/pdf.worker.min.js'; }
+    var doc = await root.pdfjsLib.getDocument({ data: await arq.arrayBuffer(), disableFontFace: true }).promise, linhas = [];
+    for (var n = 1; n <= doc.numPages; n++) {
+      var c = await (await doc.getPage(n)).getTextContent(), por = {};
+      c.items.forEach(function (i) { if (i.str && i.str.trim()) { var y = Math.round(i.transform[5] / 3); (por[y] = por[y] || []).push({ x: i.transform[4], s: i.str }); } });
+      Object.keys(por).map(Number).sort(function (a, b) { return b - a; }).forEach(function (y) { linhas.push(por[y].sort(function (a, b) { return a.x - b.x; }).map(function (i) { return i.s; }).join(' ').replace(/\s+/g, ' ').trim()); });
+    }
+    await doc.destroy();
+    return linhas.filter(Boolean).join('\n');
+  }
+  // foto ou PDF escaneado: leitura de imagem (OCR) carregada só quando preciso
+  async function ocr(imgOuUrl, aoProgresso) {
+    if (!root.Tesseract) await carregarScript('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js');
+    var r = await root.Tesseract.recognize(imgOuUrl, 'por', { logger: function (m) { if (aoProgresso && m.status === 'recognizing text') aoProgresso(Math.round(m.progress * 100)); } });
+    return (r.data.text || '').split('\n').map(function (l) { return l.replace(/\s+/g, ' ').trim(); }).filter(Boolean).join('\n');
+  }
+  async function reduzirImagem(arq) {
+    var url = await lerComoDataUrl(arq);
+    return new Promise(function (ok, no) {
+      var im = new Image(); im.onload = function () {
+        var m = 1600, k = Math.min(1, m / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
+        c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); ok(c.toDataURL('image/jpeg', 0.72));
+      }; im.onerror = function () { no(new Error('Imagem inválida.')); }; im.src = url;
+    });
+  }
+  // lê o arquivo: devolve { texto, dataUrl, tipo, nomeArq }
+  async function lerFicha(arq, aoStatus) {
+    var st = aoStatus || function () {}, ehPdf = /pdf/i.test(arq.type) || /\.pdf$/i.test(arq.name);
+    if (ehPdf) {
+      if (arq.size > LIM_PDF) throw new Error('PDF grande demais (' + Math.round(arq.size / 1024) + ' KB). O limite é ' + Math.round(LIM_PDF / 1024) + ' KB: salve o PDF em qualidade menor ou envie uma foto.');
+      st('Lendo o PDF…');
+      var texto = ''; try { texto = await textoDoPdf(arq); } catch (e) { texto = ''; }
+      if (texto.replace(/\s/g, '').length < 40) { st('PDF sem texto (escaneado): o arquivo será guardado sem leitura do texto. Para ler o texto, envie uma foto da ficha.'); texto = ''; }
+      return { texto: texto, dataUrl: await lerComoDataUrl(arq), tipo: 'application/pdf', nomeArq: arq.name, semTexto: !texto };
+    }
+    st('Reduzindo a imagem…'); var du = await reduzirImagem(arq), texto2 = '';
+    try { st('Lendo o texto da imagem (pode levar um minuto)…'); texto2 = await ocr(du, function (p) { st('Lendo o texto da imagem… ' + p + '%'); }); } catch (e) { texto2 = ''; }
+    return { texto: texto2, dataUrl: du, tipo: 'image/jpeg', nomeArq: arq.name, semTexto: !texto2 };
+  }
+  function campos(texto) {
+    var out = [], visto = {}; String(texto || '').split('\n').forEach(function (l) { var m = /^([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ \/()]{2,40}?)\s*[:\-–]\s*(\S.*)$/.exec(l); if (m && !visto[m[1]]) { visto[m[1]] = 1; out.push([m[1].trim(), m[2].trim()]); } });
+    return out;
+  }
+  // diferenças linha a linha entre a ficha anterior e a nova
+  function comparar(antes, depois) {
+    var A = String(antes || '').split('\n').map(function (l) { return l.trim(); }).filter(Boolean), B = String(depois || '').split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
+    var sa = {}, sb = {}; A.forEach(function (l) { sa[norm(l)] = l; }); B.forEach(function (l) { sb[norm(l)] = l; });
+    return { removidas: A.filter(function (l) { return !sb[norm(l)]; }), novas: B.filter(function (l) { return !sa[norm(l)]; }) };
+  }
+  async function gravarFicha(sec, id, nome, f) {
+    var s = sessao(), agora = new Date().toISOString();
+    var r1 = await fetch(urlArq(sec, id), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dataUrl: f.dataUrl, tipo: f.tipo, nomeArq: f.nomeArq, em: agora }) });
+    if (!r1.ok) throw new Error(r1.status === 401 || r1.status === 403 ? 'Sem permissão para gravar a ficha médica. Peça ao admin para atualizar as regras do banco.' : 'Falha ao gravar o arquivo (' + r1.status + ').');
+    var med = { texto: f.texto || '', nomeArq: f.nomeArq, tipo: f.tipo, em: agora, por: String(s.registro || ''), nomePor: s.nome || '', semTexto: !!f.semTexto };
+    await root.V2_PESSOAS.gravar(sec, id, { med: med });
+    return med;
+  }
+  async function baixar(sec, id, nomeBase) {
+    var r = await fetch(urlArq(sec, id)); var d = await r.json();
+    if (!d || !d.dataUrl) { alert('Arquivo não encontrado.'); return; }
+    var a = document.createElement('a'); a.href = d.dataUrl; a.download = d.nomeArq || (nomeBase + (d.tipo === 'application/pdf' ? '.pdf' : '.jpg')); document.body.appendChild(a); a.click(); a.remove();
+  }
+  function htmlDiff(df) {
+    if (!df.novas.length && !df.removidas.length) return '<div class="mini">Nenhuma diferença no texto.</div>';
+    return df.novas.map(function (l) { return '<div style="color:#1b6e3a">+ ' + esc(l) + '</div>'; }).join('') + df.removidas.map(function (l) { return '<div style="color:#b3261e;text-decoration:line-through">− ' + esc(l) + '</div>'; }).join('');
+  }
+
+  // painel dentro da ficha do jovem
+  function montar(host, o) {
+    var med = (o.p && o.p.med) || null, pend = null;
+    function desenhar(msg) {
+      var h = '';
+      if (med) {
+        h += '<div style="font-size:13px;margin-bottom:6px">Ficha de <b>' + new Date(med.em).toLocaleDateString('pt-BR') + '</b> · enviada por ' + esc(med.nomePor || ('Registro ' + med.por)) + '</div>'
+          + '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px"><button type="button" class="v2p-bt" id="v2mBaixar">⬇ Baixar arquivo</button>' + (med.texto ? '<button type="button" class="v2p-bt" id="v2mTexto">📄 Ver texto</button>' : '') + '</div><div id="v2mTxt" style="display:none;max-height:220px;overflow:auto;font-size:12px;white-space:pre-wrap;border:1px solid var(--border,#ddd);border-radius:8px;padding:8px;margin-bottom:6px"></div>';
+        if (med.semTexto) h += '<div class="mini">O texto desta ficha não pôde ser lido automaticamente; o arquivo está guardado.</div>';
+      } else h += '<div class="mini" style="margin-bottom:6px">Nenhuma ficha médica enviada.</div>';
+      if (pend) {
+        var df = comparar(med && med.texto, pend.f.texto);
+        h += '<div class="v2p-aviso"><b>Nova ficha: ' + esc(pend.f.nomeArq) + '</b>' + (med ? '<div style="margin:6px 0">O que mudou em relação à ficha atual:</div>' + htmlDiff(df) : '<div class="mini">Primeira ficha deste jovem.</div>') + (pend.f.semTexto ? '<div class="mini">Não consegui ler o texto; só o arquivo será guardado, sem comparação.</div>' : '')
+          + '<div style="display:flex;gap:8px;margin-top:8px"><button type="button" class="v2p-bt" id="v2mDesc">Descartar</button><button type="button" class="v2p-bt p" id="v2mEf">Efetivar</button></div></div>';
+      } else h += '<label>' + (med ? 'Enviar ficha atualizada' : 'Enviar ficha') + ' (PDF ou foto)</label><input type="file" id="v2mArq" accept="application/pdf,image/*">';
+      h += '<div id="v2mMsg" class="mini" style="margin-top:6px">' + esc(msg || '') + '</div>';
+      host.innerHTML = h;
+      var b = $('v2mBaixar'); if (b) b.onclick = function () { baixar(o.sec, o.id, o.nome); };
+      var t = $('v2mTexto'); if (t) t.onclick = function () { var x = $('v2mTxt'); x.style.display = x.style.display === 'none' ? '' : 'none'; x.textContent = med.texto; };
+      var inp = $('v2mArq'); if (inp) inp.onchange = async function () {
+        if (!inp.files[0]) return;
+        try { var f = await lerFicha(inp.files[0], function (s) { var m = $('v2mMsg'); if (m) m.textContent = s; }); pend = { f: f }; desenhar(); } catch (e) { desenhar(e.message); }
+      };
+      var ef = $('v2mEf'); if (ef) ef.onclick = async function () {
+        ef.disabled = true; try { med = await gravarFicha(o.sec, o.id, o.nome, pend.f); pend = null; if (o.recarregar) o.recarregar(); desenhar('Ficha gravada.'); } catch (e) { ef.disabled = false; $('v2mMsg').textContent = e.message; }
+      };
+      var dc = $('v2mDesc'); if (dc) dc.onclick = function () { pend = null; desenhar(); };
+    }
+    desenhar();
+  }
+
+  // envio em lote (tela "Fichas 120"): cada arquivo é ligado a um jovem pelo nome (no arquivo ou no texto)
+  async function lote(arquivos, sec, jovens, host) {
+    var itens = [];
+    host.innerHTML = '<div class="mini">Lendo as fichas médicas…</div>';
+    var dadosSec = await root.V2_PESSOAS.carregar(sec);
+    for (var i = 0; i < arquivos.length; i++) {
+      var a = arquivos[i], it = { arq: a, nome: a.name, ok: false };
+      try {
+        it.f = await lerFicha(a, function (s) { host.innerHTML = '<div class="mini">' + esc(a.name) + ': ' + esc(s) + '</div>'; });
+        var alvo = norm(a.name + ' ' + it.f.texto.slice(0, 1500)), melhor = null, pts = 0;
+        jovens.forEach(function (j) { var tk = norm(j.nome).split(' ').filter(function (x) { return x.length > 2; }); if (tk.length < 2) return; var c = tk.filter(function (x) { return alvo.indexOf(x) >= 0; }).length; if (c === tk.length && c > pts) { pts = c; melhor = j; } });
+        if (melhor) { it.jovem = melhor; var ant = dadosSec[melhor.id] && dadosSec[melhor.id].med; it.df = ant ? comparar(ant.texto, it.f.texto) : null; it.novo = !ant; it.ok = true; }
+      } catch (e) { it.erro = e.message; }
+      itens.push(it);
+    }
+    function pintar() {
+      host.innerHTML = '<div class="v2p"><div class="v2p-sec">🩺 Fichas médicas lidas</div>' + itens.map(function (it, k) {
+        if (it.feito) return '<div class="v2p-aviso">✓ ' + esc(it.jovem.nome) + ' — ficha gravada.</div>';
+        if (it.erro) return '<div class="v2p-aviso" style="border-color:#b3261e">' + esc(it.nome) + ': ' + esc(it.erro) + '</div>';
+        if (!it.ok) return '<div class="v2p-aviso">' + esc(it.nome) + ': não encontrei o jovem desta ficha (o nome completo precisa aparecer no arquivo ou no texto). Envie esta ficha pela aba Fichas do jovem.</div>';
+        return '<div class="v2p-aviso"><b>' + esc(it.jovem.nome) + '</b> <span class="mini">(' + esc(it.nome) + ')</span>' + (it.novo ? '<div class="mini">Primeira ficha médica.</div>' : htmlDiff(it.df)) + '<button type="button" class="v2p-bt p" style="margin-top:6px" onclick="V2_FICHAMED._ef(' + k + ')">Efetivar</button></div>';
+      }).join('') + '</div>';
+    }
+    lote._it = itens; lote._pintar = pintar; lote._sec = sec; pintar();
+  }
+  root.V2_FICHAMED = {
+    montar: montar, lerFicha: lerFicha, comparar: comparar, campos: campos, lote: lote,
+    _ef: async function (k) { var it = lote._it[k]; try { await gravarFicha(lote._sec, it.jovem.id, it.jovem.nome, it.f); it.feito = true; } catch (e) { it.erro = e.message; } lote._pintar(); }
+  };
 })(typeof window !== 'undefined' ? window : globalThis);
