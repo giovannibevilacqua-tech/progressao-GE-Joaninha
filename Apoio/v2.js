@@ -3225,6 +3225,12 @@ function restaurarUltimaAba(){
   root.V2_PESSOAS = {
     montar: function (o) { cfg = o; dir = null; injetarCss(); },
     campos: camposJovem, salvarDe: salvarCampos, nomeParaChecar: nomeParaChecar,
+    exportarFichas: async function () {
+      if (!cfg || !root.V2_FICHAMED) return;
+      var d = await carregarSecao(cfg.secao);
+      var js = listaJovens().map(function (j) { var p = d[j.id] || {}; return { id: j.id, nome: j.nome, nasc: j.nasc || p.nasc || '', emerg: p.emergNome || p.emergTel ? [p.emergNome, p.emergRel ? '(' + p.emergRel + ')' : '', p.emergTel].filter(Boolean).join(' ') : '', med: p.med || null }; });
+      root.V2_FICHAMED.exportarSecao(cfg.secao, js, NOMES_SEC[cfg.secao] || cfg.secao);
+    },
     abrir: async function () { if (!cfg || !$(cfg.container)) return; var b = $(cfg.container); if (b && !b.innerHTML) b.innerHTML = '<div class="v2p"><div class="mini">Carregando…</div></div>'; await carregarSecao(cfg.secao); desenhar(); await sincronizarNomes(); desenhar(); },
     montarDiretoria: function (o) { dir = o; cfg = null; injetarCss(); },
     abrirDiretoria: async function () { if (!dir) return; var b = $(dir.container); if (b && !b.innerHTML) b.innerHTML = '<div class="v2p"><div class="mini">Carregando…</div></div>'; await carregarDir(); desenharDir(); },
@@ -3321,9 +3327,9 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
   }
   async function gravarFicha(sec, id, nome, f) {
     var s = sessao(), agora = new Date().toISOString();
-    var r1 = await fetch(urlArq(sec, id), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dataUrl: f.dataUrl, tipo: f.tipo, nomeArq: f.nomeArq, em: agora }) });
-    if (!r1.ok) throw new Error(r1.status === 401 || r1.status === 403 ? 'Sem permissão para gravar a ficha médica. Peça ao admin para atualizar as regras do banco.' : 'Falha ao gravar o arquivo (' + r1.status + ').');
-    var med = { texto: f.texto || '', nomeArq: f.nomeArq, tipo: f.tipo, em: agora, por: String(s.registro || ''), nomePor: s.nome || '', semTexto: !!f.semTexto };
+    var r1 = f.dataUrl ? await fetch(urlArq(sec, id), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dataUrl: f.dataUrl, tipo: f.tipo, nomeArq: f.nomeArq, em: agora }) }) : null;
+    if (r1 && !r1.ok) throw new Error(r1.status === 401 || r1.status === 403 ? 'Sem permissão para gravar a ficha médica. Peça ao admin para atualizar as regras do banco.' : 'Falha ao gravar o arquivo (' + r1.status + ').');
+    var med = { texto: f.texto || '', nomeArq: f.nomeArq, tipo: f.tipo, em: agora, por: String(s.registro || ''), nomePor: s.nome || '', semTexto: !!f.semTexto, manual: !f.dataUrl };
     await root.V2_PESSOAS.gravar(sec, id, { med: med });
     return med;
   }
@@ -3337,11 +3343,99 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
     return df.novas.map(function (l) { return '<div style="color:#1b6e3a">+ ' + esc(l) + '</div>'; }).join('') + df.removidas.map(function (l) { return '<div style="color:#b3261e;text-decoration:line-through">− ' + esc(l) + '</div>'; }).join('');
   }
 
+  // ---- ficha preenchida à mão ----
+  var MED_CAMPOS = [['Tipo sanguíneo', 'linha'], ['Alergias', 'area'], ['Medicamentos de uso contínuo', 'area'], ['Condições de saúde e cuidados', 'area'], ['Restrições alimentares', 'area'], ['Plano de saúde / carteirinha', 'linha'], ['Médico ou hospital de referência', 'linha'], ['Vacinação em dia (sim/não)', 'linha'], ['Observações', 'area']];
+  function medParaCampos(texto) {
+    var v = {}, resto = [];
+    String(texto || '').split('\n').forEach(function (l) {
+      var ok = false;
+      MED_CAMPOS.forEach(function (c) { var rot = c[0] + ':'; if (!ok && l.indexOf(rot) === 0) { v[c[0]] = l.slice(rot.length).trim(); ok = true; } });
+      if (!ok && l.trim()) resto.push(l.trim());
+    });
+    if (resto.length) v['Observações'] = ((v['Observações'] ? v['Observações'] + '; ' : '') + resto.join('; ')).slice(0, 1500);
+    return v;
+  }
+  function camposParaMed(v) { return MED_CAMPOS.map(function (c) { return v[c[0]] ? c[0] + ': ' + String(v[c[0]]).replace(/\s*\n\s*/g, '; ').trim() : ''; }).filter(Boolean).join('\n'); }
+  function formularioMao(host, texto, aoSalvar, aoCancelar) {
+    var v = medParaCampos(texto);
+    host.innerHTML = '<div class="v2p-aviso"><b>Ficha médica preenchida à mão</b><div class="mini">Ao efetivar, esta passa a ser a ficha atual. Você confere as diferenças antes.</div></div>'
+      + MED_CAMPOS.map(function (c, i) {
+        var val = esc(v[c[0]] || '');
+        return '<label>' + esc(c[0]) + '</label>' + (c[1] === 'area' ? '<textarea data-mc="' + i + '" rows="2">' + val + '</textarea>' : '<input data-mc="' + i + '" value="' + val + '" autocomplete="off">');
+      }).join('')
+      + '<div style="display:flex;gap:8px;margin-top:10px"><button type="button" class="v2p-bt" id="v2mCancMao">Cancelar</button><button type="button" class="v2p-bt p" id="v2mOkMao">Revisar</button></div>';
+    $('v2mCancMao').onclick = aoCancelar;
+    $('v2mOkMao').onclick = function () { var o = {}; host.querySelectorAll('[data-mc]').forEach(function (el) { o[MED_CAMPOS[+el.getAttribute('data-mc')][0]] = el.value.trim(); }); aoSalvar(camposParaMed(o)); };
+  }
+  // PDF de uma ficha (uma ou várias páginas)
+  function desenharFichaPdf(P, st, it, nova) {
+    var W = P.W, M = 40, L = W - 2 * M, y = 50, VINHO = '#6D1026';
+    function garantir(h) { if (y + h > P.H - 44) { P.nova(); y = 50; } }
+    if (nova) P.nova();
+    P.rect(0, 0, W, 6, VINHO); P.texto(M, y, 'FICHA MÉDICA', { t: 9, b: true, c: VINHO }); y += 20;
+    P.texto(M, y, it.nome || '', { t: 16, b: true }); y += 20;
+    var linhas = [it.nasc ? 'Nascimento: ' + new Date(it.nasc + 'T12:00:00').toLocaleDateString('pt-BR') : '', it.emerg ? 'Contato de emergência: ' + it.emerg : '', (it.med && it.med.em) ? 'Ficha de ' + new Date(it.med.em).toLocaleDateString('pt-BR') + (it.med.manual ? ' (preenchida à mão)' : ' (arquivo: ' + (it.med.nomeArq || '') + ')') : 'Ficha médica não enviada'].filter(Boolean);
+    linhas.forEach(function (l) { P.quebrar(l, L, 10).forEach(function (q) { garantir(14); P.texto(M, y, q, { t: 10, c: '#444444' }); y += 14; }); });
+    y += 8; P.rect(M, y, L, 0.8, '#DDDDDD'); y += 16;
+    var texto = it.med && it.med.texto ? it.med.texto : (it.med ? '(Ficha em arquivo sem texto legível. Baixe o arquivo original.)' : '');
+    texto.split('\n').forEach(function (ln) { P.quebrar(ln || ' ', L, 10).forEach(function (q) { garantir(14); P.texto(M, y, q, { t: 10 }); y += 14; }); });
+    P.texto(M, P.H - 24, 'GE Joaninha · documento confidencial · emitido em ' + new Date().toLocaleDateString('pt-BR'), { t: 8, c: '#888888' });
+  }
+  // ZIP simples (sem compressão) para entregar os arquivos originais de uma vez
+  function crc32(u8) { var t = crc32.t; if (!t) { t = crc32.t = []; for (var n = 0; n < 256; n++) { var c = n; for (var k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } } var r = 0xFFFFFFFF; for (var i = 0; i < u8.length; i++) r = t[(r ^ u8[i]) & 255] ^ (r >>> 8); return (r ^ 0xFFFFFFFF) >>> 0; }
+  function montarZip(arqs) {
+    var enc = new TextEncoder(), partes = [], central = [], off = 0;
+    function u16(n) { return [n & 255, (n >> 8) & 255]; } function u32(n) { return [n & 255, (n >> 8) & 255, (n >> 16) & 255, (n >>> 24) & 255]; }
+    arqs.forEach(function (a) {
+      var nome = enc.encode(a.nome), crc = crc32(a.bytes), tam = a.bytes.length;
+      var lh = [0x50, 0x4b, 3, 4].concat(u16(20), u16(0x0800), u16(0), u16(0), u16(0x21), u32(crc), u32(tam), u32(tam), u16(nome.length), u16(0));
+      partes.push(new Uint8Array(lh), nome, a.bytes);
+      central.push(new Uint8Array([0x50, 0x4b, 1, 2].concat(u16(20), u16(20), u16(0x0800), u16(0), u16(0), u16(0x21), u32(crc), u32(tam), u32(tam), u16(nome.length), u16(0), u16(0), u16(0), u16(0), u32(0), u32(off))), nome);
+      off += lh.length + nome.length + tam;
+    });
+    var tc = 0; central.forEach(function (c) { tc += c.length; });
+    var fim = new Uint8Array([0x50, 0x4b, 5, 6, 0, 0, 0, 0].concat(u16(arqs.length), u16(arqs.length), u32(tc), u32(off), u16(0)));
+    return new Blob(partes.concat(central, [fim]), { type: 'application/zip' });
+  }
+  function baixarBlob(blob, nome) { var u = URL.createObjectURL(blob), a = document.createElement('a'); a.href = u; a.download = nome; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(u); }, 60000); }
+  function dataUrlBytes(du) { var b = atob(String(du).split(',')[1] || ''), u = new Uint8Array(b.length); for (var i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u; }
+  // exportação de todas as fichas médicas de uma seção. jovens: [{id,nome,nasc,emerg,med}]
+  async function exportarSecao(sec, jovens, nomeSecao) {
+    var ov = document.createElement('div'); ov.className = 'v2p-ov';
+    var com = jovens.filter(function (j) { return j.med; }).length;
+    ov.innerHTML = '<div class="v2p-box"><div style="font-size:16px;font-weight:800">🩺 Exportar fichas médicas — ' + esc(nomeSecao) + '</div><div class="mini" style="margin:6px 0 12px">' + com + ' de ' + jovens.length + ' jovens têm ficha médica. O arquivo contém dados de saúde: guarde com cuidado.</div>'
+      + '<div style="display:flex;flex-direction:column;gap:8px"><button type="button" class="v2p-bt p" id="v2xPdf">📄 PDF único (uma ficha por página, com o texto)</button><button type="button" class="v2p-bt" id="v2xZip">🗂 ZIP com os arquivos originais enviados</button><button type="button" class="v2p-bt" id="v2xFecha">Fechar</button></div><div id="v2xMsg" class="mini" style="margin-top:8px"></div></div>';
+    document.body.appendChild(ov);
+    $('v2xFecha').onclick = function () { ov.remove(); };
+    $('v2xPdf').onclick = function () {
+      try {
+        var P = root.V2.criarPdf(595, 842), nomes = jovens.slice().sort(function (a, b) { return a.nome.localeCompare(b.nome, 'pt'); });
+        if (!nomes.length) { $('v2xMsg').textContent = 'Nenhum jovem na seção.'; return; }
+        nomes.forEach(function (j, i) { desenharFichaPdf(P, null, j, i > 0); });
+        root.V2.entregarPdf(P.bytes(), 'fichas-medicas-' + root.V2.nomeSeguro(nomeSecao) + '.pdf');
+      } catch (e) { $('v2xMsg').textContent = 'Não consegui gerar o PDF: ' + e.message; }
+    };
+    $('v2xZip').onclick = async function () {
+      $('v2xMsg').textContent = 'Reunindo os arquivos…';
+      try {
+        var r = await fetch(root.urlComAuthFirebase(root.V2_CONFIG.DB_URL + '/fichasMed/' + sec + '.json')), d = (await r.json()) || {}, arqs = [], usados = {};
+        jovens.forEach(function (j) {
+          var a = d[j.id]; if (!a || !a.dataUrl) return;
+          var base = root.V2.nomeSeguro(j.nome) || j.id, ext = a.tipo === 'application/pdf' ? '.pdf' : '.jpg', nome = base + ext, n = 2; while (usados[nome]) nome = base + '-' + (n++) + ext; usados[nome] = 1;
+          arqs.push({ nome: nome, bytes: dataUrlBytes(a.dataUrl) });
+        });
+        if (!arqs.length) { $('v2xMsg').textContent = 'Nenhum arquivo enviado nesta seção (fichas preenchidas à mão não geram arquivo: use o PDF).'; return; }
+        baixarBlob(montarZip(arqs), 'fichas-medicas-' + root.V2.nomeSeguro(nomeSecao) + '.zip'); $('v2xMsg').textContent = arqs.length + ' arquivos no ZIP.';
+      } catch (e) { $('v2xMsg').textContent = 'Não consegui reunir os arquivos: ' + e.message; }
+    };
+  }
+
   // painel dentro da ficha do jovem
   function montar(host, o) {
-    var med = (o.p && o.p.med) || null, pend = null;
+    var med = (o.p && o.p.med) || null, pend = null, mao = false;
     function desenhar(msg) {
       var h = '';
+      if (mao) { formularioMao(host, med && med.texto, function (texto) { pend = { f: { texto: texto, dataUrl: null, tipo: 'manual', nomeArq: 'Preenchida à mão', semTexto: !texto } }; mao = false; desenhar(); }, function () { mao = false; desenhar(); }); return; }
       if (med) {
         h += '<div style="font-size:13px;margin-bottom:6px">Ficha de <b>' + new Date(med.em).toLocaleDateString('pt-BR') + '</b> · enviada por ' + esc(med.nomePor || ('Registro ' + med.por)) + '</div>'
           + '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px"><button type="button" class="v2p-bt" id="v2mBaixar">⬇ Baixar arquivo</button>' + (med.texto ? '<button type="button" class="v2p-bt" id="v2mTexto">📄 Ver texto</button>' : '') + '</div><div id="v2mTxt" style="display:none;max-height:220px;overflow:auto;font-size:12px;white-space:pre-wrap;border:1px solid var(--border,#ddd);border-radius:8px;padding:8px;margin-bottom:6px"></div>';
@@ -3351,10 +3445,14 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
         var df = comparar(med && med.texto, pend.f.texto);
         h += '<div class="v2p-aviso"><b>Nova ficha: ' + esc(pend.f.nomeArq) + '</b>' + (med ? '<div style="margin:6px 0">O que mudou em relação à ficha atual:</div>' + htmlDiff(df) : '<div class="mini">Primeira ficha deste jovem.</div>') + (pend.f.semTexto ? '<div class="mini">Não consegui ler o texto; só o arquivo será guardado, sem comparação.</div>' : '')
           + '<div style="display:flex;gap:8px;margin-top:8px"><button type="button" class="v2p-bt" id="v2mDesc">Descartar</button><button type="button" class="v2p-bt p" id="v2mEf">Efetivar</button></div></div>';
-      } else h += '<label>' + (med ? 'Enviar ficha atualizada' : 'Enviar ficha') + ' (PDF ou foto)</label><input type="file" id="v2mArq" accept="application/pdf,image/*">';
+      } else h += '<label>' + (med ? 'Enviar ficha atualizada' : 'Enviar ficha') + ' (PDF ou foto)</label><input type="file" id="v2mArq" accept="application/pdf,image/*"><div style="margin-top:8px"><button type="button" class="v2p-bt" id="v2mMao">✍️ ' + (med ? 'Editar à mão' : 'Preencher à mão') + '</button></div>';
       h += '<div id="v2mMsg" class="mini" style="margin-top:6px">' + esc(msg || '') + '</div>';
       host.innerHTML = h;
-      var b = $('v2mBaixar'); if (b) b.onclick = function () { baixar(o.sec, o.id, o.nome); };
+      var bm = $('v2mMao'); if (bm) bm.onclick = function () { mao = true; desenhar(); };
+      var b = $('v2mBaixar'); if (b) b.onclick = function () {
+        if (med && med.manual) { var P = root.V2.criarPdf(595, 842); desenharFichaPdf(P, null, { nome: o.nome, med: med }, false); root.V2.entregarPdf(P.bytes(), 'ficha-medica-' + root.V2.nomeSeguro(o.nome) + '.pdf'); }
+        else baixar(o.sec, o.id, o.nome);
+      };
       var t = $('v2mTexto'); if (t) t.onclick = function () { var x = $('v2mTxt'); x.style.display = x.style.display === 'none' ? '' : 'none'; x.textContent = med.texto; };
       var inp = $('v2mArq'); if (inp) inp.onchange = async function () {
         if (!inp.files[0]) return;
@@ -3394,7 +3492,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
     lote._it = itens; lote._pintar = pintar; lote._sec = sec; pintar();
   }
   root.V2_FICHAMED = {
-    montar: montar, lerFicha: lerFicha, comparar: comparar, campos: campos, lote: lote,
+    montar: montar, exportarSecao: exportarSecao, lerFicha: lerFicha, comparar: comparar, campos: campos, lote: lote,
     _ef: async function (k) { var it = lote._it[k]; try { await gravarFicha(lote._sec, it.jovem.id, it.jovem.nome, it.f); it.feito = true; } catch (e) { it.erro = e.message; } lote._pintar(); }
   };
 })(typeof window !== 'undefined' ? window : globalThis);
