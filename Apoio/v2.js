@@ -3506,6 +3506,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
   if (typeof document === 'undefined') return;
   var NOMES = { alcateia: '🐺 Alcateia', escoteira: '⚜️ Tropa Escoteira', senior: '🧭 Tropa Sênior', cla: '🔥 Clã Pioneiro' };
   var SECS = ['alcateia', 'escoteira', 'senior', 'cla'];
+  var filtroSec = '';
   var ORIG = { grupo: ['Grupo', '#1b6e3a'], local: ['Local', '#2e7d32'], distrito: ['Distrital', '#1565c0'], regiao: ['Regional', '#7b1fa2'], nacional: ['Nacional', '#e65100'], internacional: ['Internacional', '#c2185b'], secao: ['Calendário da seção', '#00796b'] };
   var MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
   var cfg = null, eventos = {}, marcas = [], mes = null, equipe = {};
@@ -3542,13 +3543,21 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
       if (!e || !e.ini) return false;
       var s = e.secoes ? (Array.isArray(e.secoes) ? e.secoes : Object.keys(e.secoes).map(function (k2) { return e.secoes[k2]; })) : [];
       e._s = s;
-      return !cfg.secao || s.indexOf(cfg.secao) >= 0;
+      return (!cfg.secao && !filtroSec) || s.indexOf(cfg.secao || filtroSec) >= 0;
     }).concat(antigos());
   }
   // atividades lançadas no calendário antigo de cada seção (cada página expõe window.calSecaoEventos)
   function antigos() {
-    if (!cfg.secao || typeof root.calSecaoEventos !== 'function') return [];
     var out = [];
+    if (!cfg.secao) {
+      var tot = root.calSecoesAntigas || {};
+      Object.keys(tot).forEach(function (sc) {
+        if (filtroSec && sc !== filtroSec) return;
+        (tot[sc] || []).forEach(function (e, i) { if (e && e.ini && /^\d{4}-\d{2}-\d{2}/.test(e.ini)) out.push({ id: 'old' + sc + i, nome: e.nome || 'Atividade', ini: e.ini.slice(0, 10), fim: null, local: e.local || null, origem: 'secao', janela: false, _s: [sc], _old: true }); });
+      });
+      return out;
+    }
+    if (typeof root.calSecaoEventos !== 'function') return [];
     try { root.calSecaoEventos().forEach(function (e, i) { if (e && e.ini && /^\d{4}-\d{2}-\d{2}/.test(e.ini)) out.push({ id: 'old' + i, nome: e.nome || 'Atividade', ini: e.ini.slice(0, 10), fim: null, local: e.local || null, origem: 'secao', janela: false, _s: [cfg.secao], _old: true, _eid: e.id }); }); } catch (x) {}
     return out;
   }
@@ -3580,6 +3589,9 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
     var marc = root.V2_PESSOAS ? root.V2_PESSOAS.eventosDoAno(marcas, y) : [];
     var h = '<div class="v2c"><div class="v2c-top"><button class="v2c-bt" onclick="V2_CAL._m(-1)">‹</button><h3>' + MESES[m] + ' de ' + y + '</h3><button class="v2c-bt" onclick="V2_CAL._m(1)">›</button></div>';
     h += '<div class="v2c-top">' + (ehDir() && !cfg.secao ? '<button class="v2c-bt p" onclick="V2_CAL._novo()">➕ Atividade do grupo</button>' : '') + (cfg.podeImportar !== false ? '<button class="v2c-bt" onclick="V2_CAL._imp()">📥 Importar calendário</button>' : '') + '<button class="v2c-bt" onclick="V2_CAL._m(0)">Hoje</button></div>';
+    if (!cfg.secao) {
+      h += '<div class="v2c-top" style="flex-wrap:wrap;gap:6px">' + [['', 'Todas as seções']].concat(SECS.map(function (s2) { return [s2, NOMES[s2] || s2]; })).map(function (o) { return '<button class="v2c-bt' + (filtroSec === o[0] ? ' p' : '') + '" onclick="V2_CAL._fs(\'' + o[0] + '\')">' + esc(o[1]) + '</button>'; }).join('') + '</div>' + (root.calSecoesCarregando ? '<div style="font-size:12px;opacity:.7;margin:4px 0">⏳ Lendo o calendário de cada seção…</div>' : '');
+    }
     h += '<div class="v2c-g">' + ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(function (x) { return '<div class="v2c-h">' + x + '</div>'; }).join('');
     for (var i = 0; i < 42; i++) {
       var d = new Date(ini); d.setDate(ini.getDate() + i); var di = iso(d);
@@ -3589,7 +3601,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
         + es.slice(0, 5).map(function (e) { return '<span class="v2c-dot' + (e.janela ? ' j' : '') + '" style="background:' + cor(e) + '"></span>'; }).join('') + (es.length > 5 ? '+' : '')
         + ms.slice(0, 3).map(function (x) { return '<span class="v2c-em">' + (x.tipo === 'aniv' ? '🎂' : '⭐') + '</span>'; }).join('') + '</div></div>';
     }
-    h += '</div><div class="v2c-leg">' + Object.keys(ORIG).filter(function (k) { return k !== 'secao' || cfg.secao; }).map(function (k) { return '<span><i style="background:' + ORIG[k][1] + '"></i>' + ORIG[k][0] + '</span>'; }).join('') + '<span>▬ janela de execução</span><span>🎂 aniversário</span><span>⭐ estrela de promessa</span></div>';
+    h += '</div><div class="v2c-leg">' + Object.keys(ORIG).map(function (k) { return '<span><i style="background:' + ORIG[k][1] + '"></i>' + ORIG[k][0] + '</span>'; }).join('') + '<span>▬ janela de execução</span><span>🎂 aniversário</span><span>⭐ estrela de promessa</span></div>';
     var p0 = iso(prim), p1 = iso(ult);
     var jan = evs.filter(function (e) { return e.janela && e.ini <= p1 && (e.fim || e.ini) >= p0; });
     if (jan.length) {
@@ -3754,6 +3766,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
       var o = el.style.outline; el.style.outline = '3px solid #f9a825'; el.style.outlineOffset = '2px';
       setTimeout(function () { el.style.outline = o; el.style.outlineOffset = ''; }, 2200);
     },
+    _fs: function (sc) { filtroSec = sc; desenhar(); }, _redesenhar: function () { if (cfg && !cfg.secao) desenhar(); },
     _novo: function () { formulario(null); }, _ed: function (id) { var e = eventos[id]; if (e) { e.id = id; visiveis(); formulario(e); } }, _imp: importar, _fechar: fechar,
     _dia: function (di) {
       var evs = visiveis().filter(function (e) { return noDia(e, di); }), marc = (root.V2_PESSOAS ? root.V2_PESSOAS.eventosDoAno(marcas, +di.slice(0, 4)) : []).filter(function (x) { return x.data === di; });

@@ -199,9 +199,28 @@ async function mudarSecaoPessoa(uid, sec) {
   const u = EQUIPE && EQUIPE[uid]; if (!u || !confirm('Mudar ' + (u.nome || u.registro) + ' para a seção selecionada?')) { secoesQuadro(); return; }
   await gravarCargo(uid, { tropa: sec }); secoesQuadro();
 }
+let FORM_CACHE = null;
+async function carregarFormCache() {
+  if (FORM_CACHE) return;
+  try {
+    await carregarScript('Apoio/competencias.js');
+    const r = await fetch(urlComAuthFirebase(DB_URL + '/formacao.json'));
+    FORM_CACHE = r.ok ? ((await r.json()) || {}) : {};
+  } catch (e) { FORM_CACHE = {}; }
+  try { secoesQuadro(); } catch (e) {}
+}
+function formacaoDe(u) {
+  const F = window.FORMACAO; if (!F) return '<span style="color:var(--muted)">…</span>';
+  const d = (FORM_CACHE || {})[u._uid] || {}, pf = d.perfil || {}, cn = F.contar(d.done || {});
+  const lin = [[F.RK.indexOf(pf.ramo) >= 0 ? pf.ramo : null, pf.nivel], [F.RK.indexOf(pf.ramo2) >= 0 ? pf.ramo2 : null, pf.nivel2]].filter(l => l[0]);
+  const nomeApf = x => { const p = EQUIPE && EQUIPE[x]; return p ? (p.nome || ('Registro ' + p.registro)) : x; };
+  const ext = pf.apfExterno, apf = pf.apfUid ? nomeApf(pf.apfUid) : (ext && ext.nome ? ext.nome + ' (fora do grupo)' : 'sem APF');
+  const resumo = l => '<b>' + (l[1] != null ? cn[l[0]][l[1]] + '/' + F.TOT[l[0]][l[1]] : cn[l[0]][0] + cn[l[0]][1] + cn[l[0]][2] + '/' + F.totR(l[0])) + '</b> ' + escH(F.CAT[l[0]].n) + (l[1] != null ? ' · ' + F.NV[l[1]] : '');
+  return (lin.length ? lin.map(resumo).join('<br>') : '<span style="color:var(--muted)">ramo de formação não informado</span>') + '<br><span style="color:var(--muted)">APF: ' + escH(apf) + '</span> · <a href="formacao.html#c-' + encodeURIComponent(u._uid) + '" target="_top" style="color:var(--vinho);font-weight:700;text-decoration:none">Abrir ficha</a>';
+}
 function listaChefes(gente) {
   if (!gente || !gente.length) return '<div class="card-txt">Nenhum chefe ou assistente cadastrado.</div>';
-  return '<table class="tb-sec"><thead><tr><th>Nome</th><th>Cargo</th><th>Registro</th></tr></thead><tbody>' + gente.map(u => '<tr><td><b>' + escH(u.nome || ('Registro ' + u.registro)) + '</b></td><td>' + seletorCargo(u) + '</td><td>' + escH(u.registro || '') + '</td></tr>').join('') + '</tbody></table>';
+  return '<table class="tb-sec"><thead><tr><th>Nome</th><th>Cargo</th><th>Registro</th><th>Formação</th></tr></thead><tbody>' + gente.map(u => '<tr><td><b>' + escH(u.nome || ('Registro ' + u.registro)) + '</b></td><td>' + seletorCargo(u) + '</td><td>' + escH(u.registro || '') + '</td><td style="font-size:11px;line-height:1.5">' + formacaoDe(u) + '</td></tr>').join('') + '</tbody></table>';
 }
 function secoesQuadro() {
   const grupos = EQUIPE ? agruparEquipe(EQUIPE) : {};
@@ -264,11 +283,34 @@ function carregarSecoes(forcar) {
 function relatorioSecaoDir(id) { if (SEC_DADOS[id]) V2.abrirRelatorioTropa(SEC_DADOS[id]); }
 function relatorioGrupo() { if (SECOES_DIR.every(s => SEC_DADOS[s.id])) V2.abrirRelatorioGrupo(SECOES_DIR.map(s => SEC_DADOS[s.id])); }
 async function aoAbrirAba(id) {
-  if (id === 'secoes') return carregarSecoes();
+  if (id === 'secoes') { carregarFormCache(); return carregarSecoes(); }
   if (id === 'forms') return abrirFormacao();
   if (id === 'docs') return carregarSugestoesGrupo();
   if (id === 'fichas') return V2_PESSOAS.abrirDiretoria();
-  if (id === 'cal') return V2_CAL.abrirNaSecao(null, 'cal-box');
+  if (id === 'cal') { const r = V2_CAL.abrirNaSecao(null, 'cal-box'); carregarAntigosSecoes(); return r; }
+}
+
+/* calendário do grupo: lê as atividades já lançadas em cada seção (abre cada seção escondida, só leitura) */
+async function carregarAntigosSecoes() {
+  if (window.calSecoesCarregando || window.calSecoesAntigas) return;
+  window.calSecoesCarregando = true; window.calSecoesAntigas = {};
+  try { V2_CAL._redesenhar(); } catch (e) {}
+  for (const s of SECOES_DIR) {
+    await new Promise(ok => {
+      const fr = document.createElement('iframe'); fr.src = s.pagina + '?resumo=1'; fr.setAttribute('aria-hidden', 'true'); fr.tabIndex = -1;
+      fr.style.cssText = 'position:absolute;left:-9999px;width:900px;height:600px;border:0'; document.body.appendChild(fr);
+      const t0 = Date.now();
+      const fim = () => { try { fr.contentWindow.eval('try{__store.fechar()}catch(e){}'); } catch (e) {} fr.remove(); try { V2_CAL._redesenhar(); } catch (e) {} ok(); };
+      fr.addEventListener('load', () => (function tentar() {
+        let pronto = false;
+        try { const w = fr.contentWindow; pronto = !!w.eval('typeof __store !== "undefined" && !!__store && __store.carregado === true') && typeof w.calSecaoEventos === 'function';
+          if (pronto) { window.calSecoesAntigas[s.id] = JSON.parse(JSON.stringify(w.calSecaoEventos() || [])); return fim(); } } catch (e) {}
+        if (Date.now() - t0 > 25000) return fim();
+        setTimeout(tentar, 500);
+      })());
+    });
+  }
+  window.calSecoesCarregando = false; try { V2_CAL._redesenhar(); } catch (e) {}
 }
 async function carregarSugestoesGrupo() {
   const box = document.getElementById('sug-grupo-lista');
