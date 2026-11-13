@@ -3167,6 +3167,35 @@ function restaurarUltimaAba(){
     try { await fetch(url('/' + cfg.secao), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(mapa) }); await carregarSecao(cfg.secao); } catch (e) {}
   }
 
+
+  // ---- campos novos dentro do cadastro que cada seção já tem (jovem em edição) ----
+  var ctxC = null;
+  async function camposJovem(boxId, id, nomeAtual, inputNomeId) {
+    var box = $(boxId); if (!box || !cfg) return; var sec = cfg.secao;
+    if (!id) { box.innerHTML = '<div class="mini" style="margin-top:10px;opacity:.7">Salve o cadastro para preencher promessa, contato de emergência e ficha médica.</div>'; ctxC = null; return; }
+    box.innerHTML = '<div class="mini" style="margin-top:10px">Carregando…</div>';
+    if (!dados[sec]) await carregarSecao(sec);
+    var p = (dados[sec] || {})[id] || {}, legal = p.nomeCompleto || nomeAtual;
+    ctxC = { sec: sec, id: id, legal: legal, p: p, nomeInput: inputNomeId, box: boxId };
+    var temMed = root.V2_FICHAMED;
+    box.innerHTML = '<div class="v2p-sec" style="margin-top:14px">📇 Ficha do jovem</div>'
+      + '<label style="font-size:11px;font-weight:700;opacity:.75;text-transform:uppercase;display:block;margin:8px 0 3px">Nome social (opcional — se preenchido, é o nome que aparece no sistema)</label><input id="v2pcSocial" value="' + esc(p.nomeSocial || '') + '" autocomplete="off" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--border,#ccc);border-radius:8px;font-size:14px">'
+      + '<label style="font-size:11px;font-weight:700;opacity:.75;text-transform:uppercase;display:block;margin:8px 0 3px">Data de promessa</label><input id="v2pcProm" type="date" value="' + esc(p.promessa || '') + '" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--border,#ccc);border-radius:8px;font-size:14px"><div class="mini" id="v2pcTempo" style="font-size:11px;opacity:.7">' + (p.promessa ? 'Tempo de promessa: ' + tempoDesde(p.promessa) : '') + '</div>'
+      + '<div class="v2p-sec">🚑 Contato de emergência</div>'
+      + ['EN|Nome|emergNome|text', 'ET|Telefone|emergTel|tel', 'ER|Parentesco|emergRel|text'].map(function (c) { var q = c.split('|'); return '<label style="font-size:11px;font-weight:700;opacity:.75;text-transform:uppercase;display:block;margin:8px 0 3px">' + q[1] + '</label><input id="v2pc' + q[0] + '" type="' + q[3] + '" value="' + esc(p[q[2]] || '') + '" autocomplete="off" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--border,#ccc);border-radius:8px;font-size:14px">'; }).join('')
+      + (temMed ? '<details id="v2pcMedDet" style="margin-top:14px;border:1px solid var(--border,#ddd);border-radius:10px;padding:8px 10px"><summary style="cursor:pointer;font-weight:800;font-size:13px">🩺 Ficha médica ' + (p.med && p.med.em ? '<span class="mini">(enviada em ' + esc(dataBR(String(p.med.em).slice(0, 10))) + ')</span>' : '<span class="mini">(não enviada)</span>') + '</summary><div id="v2pcMed" style="margin-top:8px"></div></details>' : '');
+    $('v2pcProm').addEventListener('input', function () { $('v2pcTempo').textContent = this.value ? 'Tempo de promessa: ' + tempoDesde(this.value) : ''; });
+    $('v2pcSocial').addEventListener('input', function () { var ni = $(ctxC.nomeInput); if (ni) ni.value = this.value.trim() || ctxC.legal; });
+    if (temMed) $('v2pcMedDet').addEventListener('toggle', function () { if (this.open && !$('v2pcMed').firstChild) root.V2_FICHAMED.montar($('v2pcMed'), { sec: sec, id: id, nome: legal, p: p, recarregar: function () {} }); });
+  }
+  // lê os campos (na hora) e grava em /pessoas; o botão Salvar do cadastro chama isto
+  function salvarCampos() {
+    var c = ctxC; if (!c || !$('v2pcSocial')) return Promise.resolve();
+    var social = $('v2pcSocial').value.trim(), obj = { nomeSocial: social || null, promessa: $('v2pcProm').value || null, emergNome: $('v2pcEN').value.trim() || null, emergTel: $('v2pcET').value.trim() || null, emergRel: $('v2pcER').value.trim() || null, nome: c.legal, nomeCompleto: social ? c.legal : (c.p.nomeCompleto || null), tela: social || c.legal };
+    return gravar(c.sec, c.id, obj).catch(function (e) { alert(e.message); });
+  }
+  function nomeParaChecar(nome) { return ctxC && $('v2pcSocial') && $('v2pcSocial').value.trim() ? ctxC.legal : nome; }
+
   // ---- painel da Diretoria ----
   async function carregarDir() {
     await Promise.all(SECS.map(carregarSecao));
@@ -3195,7 +3224,8 @@ function restaurarUltimaAba(){
 
   root.V2_PESSOAS = {
     montar: function (o) { cfg = o; dir = null; injetarCss(); },
-    abrir: async function () { if (!cfg) return; var b = $(cfg.container); if (b && !b.innerHTML) b.innerHTML = '<div class="v2p"><div class="mini">Carregando…</div></div>'; await carregarSecao(cfg.secao); desenhar(); await sincronizarNomes(); desenhar(); },
+    campos: camposJovem, salvarDe: salvarCampos, nomeParaChecar: nomeParaChecar,
+    abrir: async function () { if (!cfg || !$(cfg.container)) return; var b = $(cfg.container); if (b && !b.innerHTML) b.innerHTML = '<div class="v2p"><div class="mini">Carregando…</div></div>'; await carregarSecao(cfg.secao); desenhar(); await sincronizarNomes(); desenhar(); },
     montarDiretoria: function (o) { dir = o; cfg = null; injetarCss(); },
     abrirDiretoria: async function () { if (!dir) return; var b = $(dir.container); if (b && !b.innerHTML) b.innerHTML = '<div class="v2p"><div class="mini">Carregando…</div></div>'; await carregarDir(); desenharDir(); },
     _f: function (v) { filtro = v; desenhar(); var i = document.querySelector('.v2p-busca'); if (i) { i.focus(); i.setSelectionRange(v.length, v.length); } },

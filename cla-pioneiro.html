@@ -516,7 +516,6 @@ body.modo-view{padding-bottom:12px;}
 </div>
 
 <div id="jovens" class="tab-content">
-<details class="fichas-det" style="margin:12px 12px 0;background:var(--card);border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.12)" ontoggle="if(this.open)V2_PESSOAS.abrir()"><summary style="cursor:pointer;padding:12px 14px;font-weight:800;font-size:13px">📇 Fichas: promessa, emergência, ficha médica e avisos da semana</summary><div id="fichasBox" style="padding-bottom:20px"></div></details>
   <div class="alert" style="margin-top:12px;">
     O Clã recebe jovens de <strong>18 a 22 anos incompletos</strong>. A cor vai do <strong style="color:#27AE60">verde</strong> (mais tempo até a Partida) ao <strong style="color:#E74C3C">vermelho</strong> (Partida próxima). Quem ainda não fez 18 anos aparece como <strong>Caminho</strong>.
   </div>
@@ -1739,7 +1738,7 @@ function showModal(yid){
 function saveYouth(){
   const name = $('inp-name').value.trim(), born = $('inp-born').value, role = $('inp-role').value.trim(), observacoes = $('inp-obs').value.trim();
   if (!name || !born) { alert('Nome e data de nascimento são obrigatórios.'); return; }
-  if (!V2_PESSOAS.temSobrenome(name)) { alert('Informe o nome e o sobrenome.'); return; }
+  if (!V2_PESSOAS.temSobrenome(V2_PESSOAS.nomeParaChecar(name))) { alert('Informe o nome e o sobrenome.'); return; }
   const eid = $('edit-id').value;
   if (eid) { const y = YOUTH_DATA.find(x => x.id === eid); if (y) { y.name = name; y.born = born; y.role = role; y.observacoes = observacoes; } }
   else YOUTH_DATA.push({id:'y_' + Date.now(), name, born, role, observacoes, archived:false, color:COLOR_PALETTE[YOUTH_DATA.length % COLOR_PALETTE.length]});
@@ -2029,8 +2028,10 @@ async function iniciarApp(){
   await loadState();
   syncJovens();
   V2_FIN.montar({ secao:'cla', container:'fin' });
-  window.calSecaoEventos = () => Object.values(eventos).filter(Boolean).map(e => ({ nome: e.nome, ini: e.dataISO, local: e.local }));
-V2_PESSOAS.montar({ secao:'cla', container:'fichasBox', jovens:()=>paxtuEstado().jovens, aplicarNome:(id,n)=>{ const y=YOUTH_DATA.find(x=>x.id===id); if(y){ y.name=n; syncJovens(); saveState(); renderAllTabs(); } } });
+  const _showModalOrig = showModal; showModal = function (yid) { _showModalOrig(yid); const y = yid ? YOUTH_DATA.find(x => x.id === yid) : null; V2_PESSOAS.campos('v2pCampos', yid || '', y ? y.name : '', 'inp-name'); };
+const _saveYouthOrig = saveYouth; saveYouth = function () { if (document.getElementById('edit-id').value) V2_PESSOAS.salvarDe(); _saveYouthOrig(); };
+window.calSecaoEventos = () => Object.values(eventos).filter(Boolean).map(e => ({ nome: e.nome, ini: e.dataISO, local: e.local }));
+V2_PESSOAS.montar({ secao:'cla', container:'fichasBox_off', jovens:()=>paxtuEstado().jovens, aplicarNome:(id,n)=>{ const y=YOUTH_DATA.find(x=>x.id===id); if(y){ y.name=n; syncJovens(); saveState(); renderAllTabs(); } } });
   V2_ALMOX.montar({ secao:'cla', nomeTropa:'Clã Pioneiro', outraTropa:'as outras seções', rotuloComp:'Compartilhado com as outras seções', subComp:'Aparece no almoxarifado de todas as seções', subTitulo:'Materiais do Clã Pioneiro. Itens compartilhados aparecem também nas outras seções.', container:'alm', padX:12 });
   renderAll(); renderCal(); renderCiclo(); renderJovens();
   Object.keys(EIXOS).forEach(aplicarEstadoEixo);
@@ -2057,6 +2058,7 @@ iniciarApp();
     <div class="f-field"><label class="f-label">Data de nascimento *</label><input type="date" class="f-input" id="inp-born"></div>
     <div class="f-field"><label class="f-label">Cargo</label><input type="text" class="f-input" id="inp-role" placeholder="Ex: Coordenador de equipe, Secretária…"></div>
     <div class="f-field"><label class="f-label">Observações (privado — suporte, restrições, etc.)</label><textarea class="f-input" id="inp-obs" rows="3" style="resize:vertical;" placeholder="Ex: restrição alimentar, necessidade de suporte…"></textarea></div>
+<div id="v2pCampos"></div>
     <div class="f-row"><button class="btn-sec" onclick="hideModal()">Cancelar</button><button class="btn-prim" onclick="saveYouth()">Salvar</button></div>
   </div>
 </div>

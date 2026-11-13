@@ -735,7 +735,6 @@ Toque em ▶ para abrir um bloco. Marque cada ação feita por jovem; o bloco se
 </div>
 
 <div id="pagina-jovens" style="display:none;">
-<details class="fichas-det" style="margin:12px 12px 0;background:var(--card);border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.12)" ontoggle="if(this.open)V2_PESSOAS.abrir()"><summary style="cursor:pointer;padding:12px 14px;font-weight:800;font-size:13px">📇 Fichas: promessa, emergência, ficha médica e avisos da semana</summary><div id="fichasBox" style="padding-bottom:20px"></div></details>
 
 <div class="alert">
 Toque num jovem para abrir a ficha dele. A barra de cor mostra o tempo até a transferência para a Tropa Sênior (aos 14 anos e 6 meses); no fim dela o jovem faz o Caminho. Arraste um jovem para outra patrulha para mudá-lo de lugar.
@@ -1989,6 +1988,7 @@ return `<div class="roster-row" onclick="event.stopPropagation()">
 <label class="campo-label">Observação (suporte, restrições alimentares, etc.)</label>
 <textarea class="campo-input" id="editObs_${j}" rows="3" placeholder="Ex: alergia a amendoim, acompanhamento com psicólogo, restrição de mobilidade...">${OBSERVACOES[j]||''}</textarea>
 </div>
+<div id="v2pCampos_${j}" onclick="event.stopPropagation()"></div>
 <div class="roster-edicao-btns">
 <button class="btn-primario" onclick="event.stopPropagation();salvarEdicaoJovem('${j}')">💾 Salvar</button>
 <button class="btn-secundario" onclick="event.stopPropagation();cancelarEdicaoJovem()">Cancelar</button>
@@ -3739,8 +3739,10 @@ window.addEventListener('online', () => { if (temAlteracaoLocalPendente && !(__s
 
 // ===== ALMOXARIFADO — módulo compartilhado (v2.js) =====
 V2_FIN.montar({ secao:'escoteira', container:'pagina-financeiro' });
+const _abrirEdOrig = abrirEdicaoJovem; abrirEdicaoJovem = function (id) { _abrirEdOrig(id); V2_PESSOAS.campos('v2pCampos_' + id, id, JNOMES[id], 'editNome_' + id); };
+const _salvarEdOrig = salvarEdicaoJovem; salvarEdicaoJovem = function (id) { V2_PESSOAS.salvarDe(); _salvarEdOrig(id); };
 window.calSecaoEventos = () => EVENTOS.filter(Boolean).map(e => ({ nome: e.nome, ini: e.data, local: e.local }));
-V2_PESSOAS.montar({ secao:'escoteira', container:'fichasBox', jovens:()=>paxtuEstado().jovens, aplicarNome:async (id,n)=>{ JNOMES[id]=n; temAlteracaoLocalPendente=true; await saveState(); renderRoster(); } });
+V2_PESSOAS.montar({ secao:'escoteira', container:'fichasBox_off', jovens:()=>paxtuEstado().jovens, aplicarNome:async (id,n)=>{ JNOMES[id]=n; temAlteracaoLocalPendente=true; await saveState(); renderRoster(); } });
 V2_ALMOX.montar({ secao:'escoteira', nomeTropa:'Escoteira', outraTropa:'Sênior', subTitulo:'Materiais da Tropa Escoteira. Você escolhe com quais seções cada item é compartilhado.', container:'pagina-almoxarifado', padX:14 });
 
 // ===== BUSCA DE AÇÕES (index.html) =====
