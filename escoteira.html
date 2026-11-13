@@ -213,10 +213,6 @@ scrollbar-width: thin; scrollbar-color: rgba(0,0,0,.25) transparent;
 
 .patrulhas-grid { display: flex; flex-direction: column; }
 .patrulha-secao { margin: 10px 14px 0; position: relative; }
-@media (min-width: 640px) {
-.patrulhas-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0; max-width: 1120px; margin: 0 auto; }
-.patrulhas-grid .patrulha-secao { margin: 10px 7px 0; }
-}
 .patrulha-secao-header {
 display: flex; align-items: center; justify-content: space-between; padding: 9px 12px;
 border-radius: 10px 10px 0 0; color: #fff; font-size: 11px; font-weight: 800;
@@ -235,6 +231,10 @@ border: none; background: var(--card); color: var(--text); cursor: pointer;
 }
 .patrulha-dropdown button:hover { background: #F5F3EF; }
 .patrulha-dropdown button.remover { color: #E74C3C; }
+.patrulha-drop-zone { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 8px; align-items: start;
+}
+.patrulha-drop-zone > .roster-row { margin: 0; }
+.patrulha-drop-zone > .patrulha-vazia { grid-column: 1 / -1; }
 .patrulha-drop-zone {
 background: #FAFAF8; border: 1px dashed var(--border); border-top: none;
 border-radius: 0 0 10px 10px; padding: 6px; min-height: 46px; transition: background .15s ease, border-color .15s ease;
