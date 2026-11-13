@@ -332,7 +332,6 @@ mark.hl{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
   <button class="tab-btn" data-tab="ep" onclick="showTab('ep',this);renderEP();">🏆 Ed. Pátria</button>
   <button class="tab-btn" data-tab="alm" onclick="showTab('alm',this);abrirAlmoSr();">📦 Almoxarifado</button>
   <button class="tab-btn" data-tab="fin" onclick="showTab('fin',this);V2_FIN.abrir();">💰 Financeiro</button>
-  <button class="tab-btn" data-tab="fichas" onclick="showTab('fichas',this);V2_PESSOAS.abrir();">📇 Fichas</button>
 </nav>
 
 <!-- ═══ TAB: PROGRESSÃO ═══════════════════════════════ -->
@@ -499,6 +498,7 @@ mark.hl{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 
 <!-- ═══ TAB: JOVENS ══════════════════════════════ -->
 <div id="jovens" class="tab-content">
+<details class="fichas-det" style="margin:12px 12px 0;background:var(--card);border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.12)" ontoggle="if(this.open)V2_PESSOAS.abrir()"><summary style="cursor:pointer;padding:12px 14px;font-weight:800;font-size:13px">📇 Fichas: promessa, emergência, ficha médica e avisos da semana</summary><div id="fichasBox" style="padding-bottom:20px"></div></details>
   <div class="alert" style="margin-top:12px;">
     As cores vão do <strong style="color:#27AE60">verde</strong> (mais tempo no ramo) ao <strong style="color:#E74C3C">vermelho</strong> (menos tempo). Clique em <strong>Atualizar</strong> para recalcular com a data de hoje.
   </div>
@@ -3231,7 +3231,8 @@ function irParaBlocoSr(bid){
 // ═══ ALMOXARIFADO — módulo compartilhado (v2.js) ═══
 function abrirAlmoSr(){ V2_ALMOX.abrir(); }
 document.addEventListener('DOMContentLoaded',function(){ V2_FIN.montar({ secao:'senior', container:'fin' });
-  V2_PESSOAS.montar({ secao:'senior', container:'fichas', jovens:()=>paxtuEstado().jovens, aplicarNome:(id,n)=>{ const y=YOUTH_DATA.find(x=>x.id===id); if(y){ y.name=n; syncJovens(); saveState(); renderAllTabs(); } } }); V2_ALMOX.montar({ secao:'senior', nomeTropa:'Sênior', outraTropa:'Escoteira', subTitulo:'Materiais da Tropa Sênior. Você escolhe com quais seções cada item é compartilhado.', container:'alm', padX:12, somenteLeitura:function(){ return !!MODO_VISUALIZACAO_SR; } }); });
+  window.calSecaoEventos = () => CAL_2S26.concat(CAL_1S27).filter(Boolean).map(e => ({ nome: e.nome, ini: e.dataISO, local: e.local }));
+V2_PESSOAS.montar({ secao:'senior', container:'fichasBox', jovens:()=>paxtuEstado().jovens, aplicarNome:(id,n)=>{ const y=YOUTH_DATA.find(x=>x.id===id); if(y){ y.name=n; syncJovens(); saveState(); renderAllTabs(); } } }); V2_ALMOX.montar({ secao:'senior', nomeTropa:'Sênior', outraTropa:'Escoteira', subTitulo:'Materiais da Tropa Sênior. Você escolhe com quais seções cada item é compartilhado.', container:'alm', padX:12, somenteLeitura:function(){ return !!MODO_VISUALIZACAO_SR; } }); });
 </script>
 
 <div class="modal-ov" id="youth-modal" onclick="if(event.target===this)hideModal()">
@@ -3272,7 +3273,6 @@ document.addEventListener('DOMContentLoaded',function(){ V2_FIN.montar({ secao:'
 <!-- ═══ TAB: ALMOXARIFADO ════════════════════════════ -->
 <div id="alm" class="tab-content" style="padding-bottom:80px;"></div>
 <div id="fin" class="tab-content" style="padding-bottom:80px;"></div>
-<div id="fichas" class="tab-content" style="padding-bottom:80px;"></div>
 
 
 <div class="save-bar" id="saveBarSr">
@@ -3295,7 +3295,7 @@ document.addEventListener('DOMContentLoaded',function(){ V2_FIN.montar({ secao:'
 </div>
 
 <script>
-V2_NAVG({ nav:'nav.tabs', embrulhar:true, grupos:[{ rotulo:'👥 Seção', botoes:['.tab-btn[data-tab="prog"]','.tab-btn[data-tab="ep"]','.tab-btn[data-tab="jovens"]'] }, { rotulo:'📅 Calendário/Ciclo', botoes:['.tab-btn[data-tab="cal"]','.tab-btn[data-tab="sem"]'] }, { rotulo:'🧰 Gestão', botoes:['.tab-btn[data-tab="alm"]','.tab-btn[data-tab="fin"]','.tab-btn[data-tab="fichas"]'] }] });
+V2_NAVG({ nav:'nav.tabs', embrulhar:true, grupos:[{ rotulo:'👥 Seção', botoes:['.tab-btn[data-tab="prog"]','.tab-btn[data-tab="ep"]','.tab-btn[data-tab="jovens"]'] }, { rotulo:'📅 Calendário/Ciclo', botoes:['.tab-btn[data-tab="cal"]','.tab-btn[data-tab="sem"]'] }, { rotulo:'🧰 Gestão', botoes:['.tab-btn[data-tab="alm"]','.tab-btn[data-tab="fin"]'] }] });
 </script>
 </body>
 </html>

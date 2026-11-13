@@ -3378,7 +3378,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
   if (typeof document === 'undefined') return;
   var NOMES = { alcateia: '🐺 Alcateia', escoteira: '⚜️ Tropa Escoteira', senior: '🧭 Tropa Sênior', cla: '🔥 Clã Pioneiro' };
   var SECS = ['alcateia', 'escoteira', 'senior', 'cla'];
-  var ORIG = { grupo: ['Grupo', '#1b6e3a'], distrito: ['Distrito', '#1565c0'], regiao: ['Região', '#7b1fa2'], nacional: ['Nacional', '#e65100'] };
+  var ORIG = { grupo: ['Grupo', '#1b6e3a'], distrito: ['Distrito', '#1565c0'], regiao: ['Região', '#7b1fa2'], nacional: ['Nacional', '#e65100'], secao: ['Calendário da seção', '#00796b'] };
   var MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
   var cfg = null, eventos = {}, marcas = [], mes = null, equipe = {};
   function esc(x) { return String(x == null ? '' : x).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
@@ -3390,6 +3390,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
   function url(p) { return root.urlComAuthFirebase(root.V2_CONFIG.DB_URL + p + '.json'); }
   function norm(t) { return String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
   function ehDir() { return !!(root.ehDiretoriaSessao && root.ehDiretoriaSessao()); }
+  function escolheSecoes() { return ehDir() && !(cfg && cfg.secao); }
   function minhaSecao() { return cfg && cfg.secao; }
   function injetarCss() {
     if ($('v2cCss')) return;
@@ -3414,12 +3415,20 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
       var s = e.secoes ? (Array.isArray(e.secoes) ? e.secoes : Object.keys(e.secoes).map(function (k2) { return e.secoes[k2]; })) : [];
       e._s = s;
       return !cfg.secao || s.indexOf(cfg.secao) >= 0;
-    });
+    }).concat(antigos());
+  }
+  // atividades lançadas no calendário antigo de cada seção (cada página expõe window.calSecaoEventos)
+  function antigos() {
+    if (!cfg.secao || typeof root.calSecaoEventos !== 'function') return [];
+    var out = [];
+    try { root.calSecaoEventos().forEach(function (e, i) { if (e && e.ini && /^\d{4}-\d{2}-\d{2}/.test(e.ini)) out.push({ id: 'old' + i, nome: e.nome || 'Atividade', ini: e.ini.slice(0, 10), fim: null, local: e.local || null, origem: 'secao', janela: false, _s: [cfg.secao], _old: true }); }); } catch (x) {}
+    return out;
   }
   function noDia(e, d) { return e.ini <= d && (e.fim || e.ini) >= d; }
   function cor(e) { return (ORIG[e.origem] || ORIG.grupo)[1]; }
   function podeMexer(e) {
-    if (ehDir()) return true;
+    if (e._old) return false;
+    if (ehDir() && !cfg.secao) return true;
     return e.criadoTropa && e.criadoTropa === minhaSecao() && e._s.length === 1;
   }
   async function carregar() {
@@ -3442,7 +3451,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
     var prim = new Date(y, m, 1), ult = new Date(y, m + 1, 0), ini = new Date(prim); ini.setDate(1 - prim.getDay());
     var marc = root.V2_PESSOAS ? root.V2_PESSOAS.eventosDoAno(marcas, y) : [];
     var h = '<div class="v2c"><div class="v2c-top"><button class="v2c-bt" onclick="V2_CAL._m(-1)">‹</button><h3>' + MESES[m] + ' de ' + y + '</h3><button class="v2c-bt" onclick="V2_CAL._m(1)">›</button></div>';
-    h += '<div class="v2c-top">' + (ehDir() ? '<button class="v2c-bt p" onclick="V2_CAL._novo()">➕ Atividade do grupo</button>' : '') + (cfg.podeImportar !== false ? '<button class="v2c-bt" onclick="V2_CAL._imp()">📥 Importar calendário</button>' : '') + '<button class="v2c-bt" onclick="V2_CAL._m(0)">Hoje</button></div>';
+    h += '<div class="v2c-top">' + (ehDir() && !cfg.secao ? '<button class="v2c-bt p" onclick="V2_CAL._novo()">➕ Atividade do grupo</button>' : '') + (cfg.podeImportar !== false ? '<button class="v2c-bt" onclick="V2_CAL._imp()">📥 Importar calendário</button>' : '') + '<button class="v2c-bt" onclick="V2_CAL._m(0)">Hoje</button></div>';
     h += '<div class="v2c-g">' + ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(function (x) { return '<div class="v2c-h">' + x + '</div>'; }).join('');
     for (var i = 0; i < 42; i++) {
       var d = new Date(ini); d.setDate(ini.getDate() + i); var di = iso(d);
@@ -3452,7 +3461,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
         + es.slice(0, 5).map(function (e) { return '<span class="v2c-dot' + (e.janela ? ' j' : '') + '" style="background:' + cor(e) + '"></span>'; }).join('') + (es.length > 5 ? '+' : '')
         + ms.slice(0, 3).map(function (x) { return '<span class="v2c-em">' + (x.tipo === 'aniv' ? '🎂' : '⭐') + '</span>'; }).join('') + '</div></div>';
     }
-    h += '</div><div class="v2c-leg">' + Object.keys(ORIG).map(function (k) { return '<span><i style="background:' + ORIG[k][1] + '"></i>' + ORIG[k][0] + '</span>'; }).join('') + '<span>▬ janela de execução</span><span>🎂 aniversário</span><span>⭐ estrela de promessa</span></div>';
+    h += '</div><div class="v2c-leg">' + Object.keys(ORIG).filter(function (k) { return k !== 'secao' || cfg.secao; }).map(function (k) { return '<span><i style="background:' + ORIG[k][1] + '"></i>' + ORIG[k][0] + '</span>'; }).join('') + '<span>▬ janela de execução</span><span>🎂 aniversário</span><span>⭐ estrela de promessa</span></div>';
     var p0 = iso(prim), p1 = iso(ult);
     var jan = evs.filter(function (e) { return e.janela && e.ini <= p1 && (e.fim || e.ini) >= p0; });
     if (jan.length) {
@@ -3478,17 +3487,17 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
   function fechar() { var o = $('v2cOv'); if (o) o.remove(); }
   function overlay(html) { fechar(); var o = document.createElement('div'); o.className = 'v2c-ov'; o.id = 'v2cOv'; o.innerHTML = '<div class="v2c-box">' + html + '</div>'; o.addEventListener('click', function (e) { if (e.target === o) fechar(); }); document.body.appendChild(o); }
   function checksSecoes(sel, prefixo) {
-    if (!ehDir()) return '<div style="font-size:13px">Seção: <b>' + (NOMES[minhaSecao()] || '') + '</b></div>';
+    if (!escolheSecoes()) return '<div style="font-size:13px">Seção: <b>' + (NOMES[minhaSecao()] || '') + '</b></div>';
     return SECS.map(function (s) { return '<label class="v2c-ck"><input type="checkbox" class="' + prefixo + '" value="' + s + '"' + (sel.indexOf(s) >= 0 ? ' checked' : '') + '> ' + NOMES[s] + '</label>'; }).join('');
   }
   function lerChecks(prefixo) {
-    if (!ehDir()) return [minhaSecao()];
+    if (!escolheSecoes()) return [minhaSecao()];
     return Array.prototype.map.call(document.querySelectorAll('.' + prefixo + ':checked'), function (c) { return c.value; });
   }
   function formulario(e) {
     var novo = !e; e = e || { nome: '', ini: '', fim: '', local: '', origem: 'grupo', janela: false, _s: SECS.slice() };
     overlay('<h3 style="margin:0 0 6px">' + (novo ? 'Nova atividade' : 'Editar atividade') + '</h3><label>Nome</label><input type="text" id="v2cN" value="' + esc(e.nome) + '"><label>Início</label><input type="date" id="v2cI" value="' + esc(e.ini) + '"><label>Fim (se durar mais de um dia)</label><input type="date" id="v2cF" value="' + esc(e.fim || '') + '"><label>Local</label><input type="text" id="v2cL" value="' + esc(e.local || '') + '">'
-      + (ehDir() ? '<label>Origem</label><select id="v2cO">' + Object.keys(ORIG).map(function (k) { return '<option value="' + k + '"' + (k === e.origem ? ' selected' : '') + '>' + ORIG[k][0] + '</option>'; }).join('') + '</select>' : '')
+      + (escolheSecoes() ? '<label>Origem</label><select id="v2cO">' + Object.keys(ORIG).filter(function (k) { return k !== 'secao'; }).map(function (k) { return '<option value="' + k + '"' + (k === e.origem ? ' selected' : '') + '>' + ORIG[k][0] + '</option>'; }).join('') + '</select>' : '')
       + '<label class="v2c-ck"><input type="checkbox" id="v2cJ"' + (e.janela ? ' checked' : '') + '> Janela de execução (a seção escolhe o dia dentro do intervalo, como MUTECO e MUTCOM)</label><label>Seções participantes</label>' + checksSecoes(e._s, 'v2cS')
       + '<div id="v2cErro" style="color:#c0392b;font-size:12px;margin-top:6px"></div><div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="v2c-bt p" id="v2cOk">Salvar</button><button class="v2c-bt" onclick="V2_CAL._fechar()">Cancelar</button>' + (novo ? '' : '<button class="v2c-bt" style="margin-left:auto;color:#c0392b" id="v2cDel">Excluir</button>') + '</div>');
     $('v2cOk').onclick = async function () {
@@ -3497,7 +3506,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
       if (f && f < i) { $('v2cErro').textContent = 'O fim não pode ser antes do início.'; return; }
       if (!s.length) { $('v2cErro').textContent = 'Escolha ao menos uma seção.'; return; }
       var sess = sessao();
-      var obj = { nome: n, ini: i, fim: f || null, local: $('v2cL').value.trim() || null, origem: $('v2cO') ? $('v2cO').value : (e.origem || 'distrito'), janela: $('v2cJ').checked, secoes: s, criadoTropa: e.criadoTropa || (ehDir() ? 'diretoria' : minhaSecao()), por: sess.nome || null };
+      var obj = { nome: n, ini: i, fim: f || null, local: $('v2cL').value.trim() || null, origem: $('v2cO') ? $('v2cO').value : (e.origem || 'distrito'), janela: $('v2cJ').checked, secoes: s, criadoTropa: e.criadoTropa || (escolheSecoes() ? 'diretoria' : minhaSecao()), por: sess.nome || null };
       await gravar(novo ? 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5) : e.id, obj);
     };
     if (!novo) $('v2cDel').onclick = async function () { if (!confirm('Excluir esta atividade?')) return; await gravar(e.id, null); };
@@ -3598,7 +3607,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
       var secs = lerChecks('v2cImpS'); if (!secs.length) { $('v2cImpMsg').textContent = 'Escolha ao menos uma seção.'; return; }
       document.querySelectorAll('#v2cImpLista [data-i]').forEach(function (el) { var e = pend[+el.dataset.i], c = el.dataset.c; e[c] = el.type === 'checkbox' ? el.checked : el.value; });
       var lote = {}, sess = sessao(), orig = $('v2cImpO').value, n = 0;
-      pend.forEach(function (e) { if (!e.ok || !e.nome || !e.ini) return; lote['i' + Date.now().toString(36) + (n++) + Math.random().toString(36).slice(2, 4)] = { nome: e.nome, ini: e.ini, fim: e.fim && e.fim > e.ini ? e.fim : null, local: null, origem: orig, janela: !!e.janela, secoes: secs, criadoTropa: ehDir() ? 'diretoria' : minhaSecao(), por: sess.nome || null }; });
+      pend.forEach(function (e) { if (!e.ok || !e.nome || !e.ini) return; lote['i' + Date.now().toString(36) + (n++) + Math.random().toString(36).slice(2, 4)] = { nome: e.nome, ini: e.ini, fim: e.fim && e.fim > e.ini ? e.fim : null, local: null, origem: orig, janela: !!e.janela, secoes: secs, criadoTropa: escolheSecoes() ? 'diretoria' : minhaSecao(), por: sess.nome || null }; });
       if (!n) { $('v2cImpMsg').textContent = 'Nada selecionado.'; return; }
       try { var r = await fetch(url('/grupoCal'), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(lote) }); if (!r.ok) throw 0; Object.assign(eventos, lote); pend = []; fechar(); desenhar(); }
       catch (e) { $('v2cImpMsg').textContent = 'O banco não aceitou. O admin precisa publicar as regras novas do Firebase.'; }

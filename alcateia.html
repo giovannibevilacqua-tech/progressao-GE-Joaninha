@@ -410,7 +410,6 @@ body.modo-view{padding-bottom:12px;}
   <button class="tab-btn" data-tab="bp" onclick="showTab('bp',this)">🌟 Cruzeiro do Sul</button>
   <button class="tab-btn" data-tab="alm" onclick="showTab('alm',this);V2_ALMOX.abrir();">📦 Almoxarifado</button>
   <button class="tab-btn" data-tab="fin" onclick="showTab('fin',this);V2_FIN.abrir();">💰 Financeiro</button>
-  <button class="tab-btn" data-tab="fichas" onclick="showTab('fichas',this);V2_PESSOAS.abrir();">📇 Fichas</button>
 </nav>
 
 <!-- ═══ TAB: PROGRESSÃO ═══════════════════════════════ -->
@@ -532,6 +531,7 @@ body.modo-view{padding-bottom:12px;}
 </div>
 
 <div id="jovens" class="tab-content">
+<details class="fichas-det" style="margin:12px 12px 0;background:var(--card);border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.12)" ontoggle="if(this.open)V2_PESSOAS.abrir()"><summary style="cursor:pointer;padding:12px 14px;font-weight:800;font-size:13px">📇 Fichas: promessa, emergência, ficha médica e avisos da semana</summary><div id="fichasBox" style="padding-bottom:20px"></div></details>
   <div class="alert" style="margin-top:12px;">
     A Alcateia acompanha o lobinho até a <strong>passagem para o Ramo Escoteiro</strong> (considerada aos 11 anos). A cor vai do <strong style="color:#27AE60">verde</strong> (mais tempo até a passagem) ao <strong style="color:#E74C3C">vermelho</strong> (passagem próxima). Nos últimos 4 meses o lobinho faz o <strong>Caminho</strong> para a Tropa.
   </div>
@@ -558,7 +558,6 @@ body.modo-view{padding-bottom:12px;}
 <!-- ═══ TAB: ALMOXARIFADO ════════════════════════════ -->
 <div id="alm" class="tab-content" style="padding-bottom:80px;"></div>
 <div id="fin" class="tab-content" style="padding-bottom:80px;"></div>
-<div id="fichas" class="tab-content" style="padding-bottom:80px;"></div>
 
 <script>
 // ╔═══════════════════════════════════════════════════╗
@@ -2637,7 +2636,8 @@ async function iniciarApp(){
   await loadState();
   syncJovens();
   V2_FIN.montar({ secao:'alcateia', container:'fin' });
-  V2_PESSOAS.montar({ secao:'alcateia', container:'fichas', jovens:()=>paxtuEstado().jovens, aplicarNome:(id,n)=>{ const y=YOUTH_DATA.find(x=>x.id===id); if(y){ y.name=n; syncJovens(); saveState(); renderAllTabs(); } } });
+  window.calSecaoEventos = () => Object.values(eventos).filter(Boolean).map(e => ({ nome: e.nome, ini: e.dataISO, local: e.local }));
+V2_PESSOAS.montar({ secao:'alcateia', container:'fichasBox', jovens:()=>paxtuEstado().jovens, aplicarNome:(id,n)=>{ const y=YOUTH_DATA.find(x=>x.id===id); if(y){ y.name=n; syncJovens(); saveState(); renderAllTabs(); } } });
   V2_ALMOX.montar({ secao:'alcateia', nomeTropa:'Alcateia', outraTropa:'as outras seções', rotuloComp:'Compartilhado com as outras seções', subComp:'Aparece no almoxarifado de todas as seções', subTitulo:'Materiais do Alcateia. Itens compartilhados aparecem também nas outras seções.', container:'alm', padX:12 });
   renderAll(); renderCal(); renderCiclo(); renderJovens();
   Object.keys(EIXOS).forEach(aplicarEstadoEixo);
@@ -2685,7 +2685,7 @@ iniciarApp();
 </div>
 
 <script>
-if (!(MODO_VIEW)) { V2_NAVG({ nav:'nav.tabs', embrulhar:true, grupos:[{ rotulo:'👥 Seção', botoes:['.tab-btn[data-tab="prog"]','.tab-btn[data-tab="bp"]','.tab-btn[data-tab="jovens"]'] }, { rotulo:'📅 Calendário/Ciclo', botoes:['.tab-btn[data-tab="cal"]','.tab-btn[data-tab="ciclo"]'] }, { rotulo:'🧰 Gestão', botoes:['.tab-btn[data-tab="alm"]','.tab-btn[data-tab="fin"]','.tab-btn[data-tab="fichas"]'] }] });
+if (!(MODO_VIEW)) { V2_NAVG({ nav:'nav.tabs', embrulhar:true, grupos:[{ rotulo:'👥 Seção', botoes:['.tab-btn[data-tab="prog"]','.tab-btn[data-tab="bp"]','.tab-btn[data-tab="jovens"]'] }, { rotulo:'📅 Calendário/Ciclo', botoes:['.tab-btn[data-tab="cal"]','.tab-btn[data-tab="ciclo"]'] }, { rotulo:'🧰 Gestão', botoes:['.tab-btn[data-tab="alm"]','.tab-btn[data-tab="fin"]'] }] });
 }
 </script>
 </body>

@@ -695,7 +695,6 @@ mark.hl-esc{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 <button class="tab-btn-linha" id="tabLis" onclick="mudarPagina('lis')">🏅 Lis de Ouro</button>
 <button class="tab-btn-linha" id="tabAlmoxarifado" onclick="mudarPagina('almoxarifado')">📦 Almoxarifado</button>
 <button class="tab-btn-linha" id="tabFinanceiro" onclick="mudarPagina('financeiro')">💰 Financeiro</button>
-<button class="tab-btn-linha" id="tabFichas" onclick="mudarPagina('fichas')">📇 Fichas</button>
 </nav>
 </div>
 
@@ -736,6 +735,7 @@ Toque em ▶ para abrir um bloco. Marque cada ação feita por jovem; o bloco se
 </div>
 
 <div id="pagina-jovens" style="display:none;">
+<details class="fichas-det" style="margin:12px 12px 0;background:var(--card);border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.12)" ontoggle="if(this.open)V2_PESSOAS.abrir()"><summary style="cursor:pointer;padding:12px 14px;font-weight:800;font-size:13px">📇 Fichas: promessa, emergência, ficha médica e avisos da semana</summary><div id="fichasBox" style="padding-bottom:20px"></div></details>
 
 <div class="alert">
 Toque num jovem para abrir a ficha dele. A barra de cor mostra o tempo até a transferência para a Tropa Sênior (aos 14 anos e 6 meses); no fim dela o jovem faz o Caminho. Arraste um jovem para outra patrulha para mudá-lo de lugar.
@@ -883,7 +883,6 @@ Toque num jovem para abrir a ficha dele. A barra de cor mostra o tempo até a tr
 
 <div id="pagina-almoxarifado" style="display:none;padding-bottom:32px;"></div>
 <div id="pagina-financeiro" style="display:none;padding-bottom:32px;"></div>
-<div id="pagina-fichas" style="display:none;padding-bottom:32px;"></div>
 
 <button class="reset-btn somente-admin" id="btnLimparMarcacoes" onclick="confirmReset()">↺ LIMPAR MARCAÇÕES</button>
 
@@ -2288,7 +2287,7 @@ if (card) card.classList.toggle('open');
 // ===== PÁGINA 2: TABELA POR BLOCO =====
 let paginaAtiva = 'tabela';
 
-const PAGINAS_ESC = { tabela: ['pagina-tabela', 'tabTabela'], calendario: ['pagina-calendario', 'tabCalendario'], jovens: ['pagina-jovens', 'tabJovens'], ciclo: ['pagina-ciclo', 'tabCiclo'], lis: ['pagina-lis', 'tabLis'], almoxarifado: ['pagina-almoxarifado', 'tabAlmoxarifado'], financeiro: ['pagina-financeiro', 'tabFinanceiro'], fichas: ['pagina-fichas', 'tabFichas'] };
+const PAGINAS_ESC = { tabela: ['pagina-tabela', 'tabTabela'], calendario: ['pagina-calendario', 'tabCalendario'], jovens: ['pagina-jovens', 'tabJovens'], ciclo: ['pagina-ciclo', 'tabCiclo'], lis: ['pagina-lis', 'tabLis'], almoxarifado: ['pagina-almoxarifado', 'tabAlmoxarifado'], financeiro: ['pagina-financeiro', 'tabFinanceiro'] };
 function mudarPagina(p) {
 if (!PAGINAS_ESC[p]) p = 'tabela';
 paginaAtiva = p;
@@ -2305,7 +2304,6 @@ if (p === 'ciclo') renderPaginaCiclo();
 if (p === 'lis') renderPaginaLis();
 if (p === 'almoxarifado') V2_ALMOX.abrir();
 if (p === 'financeiro') V2_FIN.abrir();
-if (p === 'fichas') V2_PESSOAS.abrir();
 }
 
 let blocosAbertosTabela = {};
@@ -3741,7 +3739,8 @@ window.addEventListener('online', () => { if (temAlteracaoLocalPendente && !(__s
 
 // ===== ALMOXARIFADO — módulo compartilhado (v2.js) =====
 V2_FIN.montar({ secao:'escoteira', container:'pagina-financeiro' });
-V2_PESSOAS.montar({ secao:'escoteira', container:'pagina-fichas', jovens:()=>paxtuEstado().jovens, aplicarNome:async (id,n)=>{ JNOMES[id]=n; temAlteracaoLocalPendente=true; await saveState(); renderRoster(); } });
+window.calSecaoEventos = () => EVENTOS.filter(Boolean).map(e => ({ nome: e.nome, ini: e.data, local: e.local }));
+V2_PESSOAS.montar({ secao:'escoteira', container:'fichasBox', jovens:()=>paxtuEstado().jovens, aplicarNome:async (id,n)=>{ JNOMES[id]=n; temAlteracaoLocalPendente=true; await saveState(); renderRoster(); } });
 V2_ALMOX.montar({ secao:'escoteira', nomeTropa:'Escoteira', outraTropa:'Sênior', subTitulo:'Materiais da Tropa Escoteira. Você escolhe com quais seções cada item é compartilhado.', container:'pagina-almoxarifado', padX:14 });
 
 // ===== BUSCA DE AÇÕES (index.html) =====
@@ -3833,7 +3832,7 @@ function irParaBlocoEsc(eixoId, bid){
 })();
 </script>
 <script>
-V2_NAVG({ nav:'#tabsLinha', embrulhar:false, grupos:[{ rotulo:'👥 Seção', botoes:['#tabTabela','#tabLis','#tabJovens'] }, { rotulo:'📅 Calendário/Ciclo', botoes:['#tabCalendario','#tabCiclo'] }, { rotulo:'🧰 Gestão', botoes:['#tabAlmoxarifado','#tabFinanceiro','#tabFichas'] }] });
+V2_NAVG({ nav:'#tabsLinha', embrulhar:false, grupos:[{ rotulo:'👥 Seção', botoes:['#tabTabela','#tabLis','#tabJovens'] }, { rotulo:'📅 Calendário/Ciclo', botoes:['#tabCalendario','#tabCiclo'] }, { rotulo:'🧰 Gestão', botoes:['#tabAlmoxarifado','#tabFinanceiro'] }] });
 </script>
 </body>
 </html>
