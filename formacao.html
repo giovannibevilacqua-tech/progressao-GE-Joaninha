@@ -324,50 +324,42 @@ async function calcularAlarmes() {
   } catch (e) {}
 }
 const PPF_ITENS = [['dentro', 'Dentro do Movimento Escoteiro'], ['fora', 'Fora do Movimento Escoteiro']], PPF_TIPOS = [['cursos', 'Cursos'], ['leituras', 'Leituras'], ['praticas', 'Práticas']];
+const PPF_CAMPOS = [['nome', 'Nome'], ['endereco', 'Endereço'], ['telefones', 'Telefones'], ['email', 'E-mail'], ['nasc', 'Data de nascimento', 'date'], ['promessa', 'Data de promessa', 'date'], ['ramo', 'Diretoria/Ramo em que atua'], ['tempoRamo', 'Tempo de atuação no Ramo'], ['instrucao', 'Grau de instrução'], ['profissao', 'Profissão'], ['grupo', 'Grupo Escoteiro'], ['distrito', 'Distrito'], ['registro', 'Registro na UEB'], ['religiao', 'Religião']];
 const podePpf = () => souDono() || souApf() || souAdmin;
 function normPpf(p) {
-  p = p || {}; p.diag = p.diag || {};
-  PPF_ITENS.forEach(([k]) => { p.diag[k] = p.diag[k] || {}; });
-  p.plano = Array.isArray(p.plano) ? p.plano.filter(Boolean) : Object.keys(p.plano || {}).sort((a, b) => a - b).map(k => p.plano[k]);
+  p = p || {}; p.dir = p.dir || {}; p.ass = p.ass || {}; p.diag = p.diag || {}; p.plano = p.plano || {}; p.aval = p.aval || {};
+  PPF_ITENS.forEach(([k]) => { p.diag[k] = p.diag[k] || {}; p.plano[k] = p.plano[k] || {}; });
   return p;
 }
-function dadosDirigente() {
-  const pe = E.equipe[E.uid] || {}, p = E.perfil || {}, ext = p.apfExterno;
+function prefillPpf() {
+  const pe = E.equipe[E.uid] || {}, p = E.perfil || {}, ext = p.apfExterno || {}, d = E.ppf.dir, a = E.ppf.ass;
   const rot = { alcateia: 'Alcateia', escoteira: 'Tropa Escoteira', senior: 'Tropa Sênior', cla: 'Clã Pioneiro', diretoria: 'Diretoria' };
-  const linhas = [p.ramo && CAT[p.ramo] ? CAT[p.ramo].n + (p.nivel != null ? ' · ' + NV[p.nivel] : '') : '', p.ramo2 && CAT[p.ramo2] ? CAT[p.ramo2].n + (p.nivel2 != null ? ' · ' + NV[p.nivel2] : '') : ''].filter(Boolean);
-  return {
-    nome: souDono() ? (nomeLogado || pe.nome || '') : nomeDe(E.uid), registro: pe.registro || '',
-    funcao: (pe.funcao === 'assistente' ? 'Assistente' : 'Chefe') + (pe.tropa ? ' · ' + (rot[pe.tropa] || pe.tropa) : ''),
-    formacao: linhas.join(' / '),
-    assessor: p.apfUid ? nomeDe(p.apfUid) : (ext && ext.nome ? ext.nome : '')
-  };
+  const pre = (o, k, v) => { if (!o[k] && v) o[k] = v; };
+  pre(d, 'nome', souDono() ? (nomeLogado || pe.nome) : nomeDe(E.uid)); pre(d, 'registro', pe.registro); pre(d, 'ramo', rot[pe.tropa]); pre(d, 'grupo', 'GE Joaninha'); pre(d, 'distrito', '14º Distrito Escoteiro Caminho do Mar');
+  if (E.pessoa) { pre(d, 'nasc', E.pessoa.nasc); pre(d, 'promessa', E.pessoa.promessa); }
+  pre(a, 'nome', p.apfUid ? nomeDe(p.apfUid) : ext.nome); pre(a, 'registro', p.apfUid ? (E.equipe[p.apfUid] || {}).registro : ext.registro);
+  if (p.apfUid) { pre(a, 'grupo', 'GE Joaninha'); pre(a, 'distrito', '14º Distrito Escoteiro Caminho do Mar'); }
+}
+const ppfInp = 'font:inherit;font-size:13px;padding:8px;border:1.5px solid var(--border);border-radius:8px;width:100%';
+function htmlBloco(titulo, obj, pref, extra, dis) {
+  return `<div class="panel"><h3>${titulo}</h3><div class="perfil">` + PPF_CAMPOS.concat(extra || []).map(([k, t, tp]) => `<div class="f-field"><label>${t}</label><input type="${tp || 'text'}" data-ppf="${pref}.${k}" value="${esc((obj || {})[k] || '')}"${dis}></div>`).join('') + '</div></div>';
 }
 function htmlPpf() {
-  const P = E.ppf, dd = dadosDirigente(), ed = podePpf(), dis = ed ? '' : ' disabled';
-  const al = alertaPpf(P);
-  let h = `<div class="quem"><h2>📝 Plano pessoal de formação${souDono() ? '' : ' — ' + esc(dd.nome)}</h2><div class="sub">Elaborado pelo dirigente com o seu assessor. ${ed ? 'As alterações são salvas automaticamente.' : 'Somente leitura.'}</div></div>`;
-  if (al) h += `<div class="panel" style="border:2px solid #e0a800;background:#fff8e1">⏰ <b>${esc(al)}</b> ${ed ? 'Revise o plano com ' + (souDono() ? 'o seu assessor' : 'o assessorado') + ' e registre a revisão abaixo.' : ''}</div>`;
-  if (!P.criadoEm && !ed) h += '<div class="panel">Este PPF ainda não foi iniciado.</div>';
-  h += `<div class="panel"><h3>1. Dados do dirigente</h3><div class="perfil">
-    <div class="f-field"><label>Nome</label><input disabled value="${esc(dd.nome)}"></div>
-    <div class="f-field"><label>Registro</label><input disabled value="${esc(dd.registro)}"></div>
-    <div class="f-field"><label>Função</label><input disabled value="${esc(dd.funcao)}"></div>
-    <div class="f-field"><label>Ramo e nível de formação</label><input disabled value="${esc(dd.formacao)}"></div>
-    <div class="f-field"><label>Assessor pessoal de formação</label><input disabled value="${esc(dd.assessor)}"></div></div></div>`;
-  h += '<div class="panel"><h3>2. Diagnóstico de necessidades de formação</h3>';
+  const P = E.ppf, ed = podePpf(), dis = ed ? '' : ' disabled', al = alertaPpf(P);
+  let h = `<div class="quem"><h2>📝 Plano pessoal de formação${souDono() ? '' : ' — ' + esc(P.dir.nome || nomeDe(E.uid))}</h2><div class="sub">Elaborado pelo dirigente com o seu assessor. ${ed ? 'As alterações são salvas automaticamente.' : 'Somente leitura.'}</div></div>`;
+  if (al) h += `<div class="panel" style="border:2px solid #e0a800;background:#fff8e1">⏰ <b>${esc(al)}</b> ${ed ? 'Revise o plano com ' + (souDono() ? 'o seu assessor' : 'o assessorado') + ' e registre a revisão no fim da página.' : ''}</div>`;
+  h += htmlBloco('Dados do dirigente/escotista', P.dir, 'dir', null, dis);
+  h += htmlBloco('Dados do assessor pessoal de formação', P.ass, 'ass', [['tempoAssessor', 'Tempo como Assessor Pessoal de Formação (anos/meses)']], dis);
+  const ta = (k, v) => `<div class="f-field"><textarea data-ppf="${k}" rows="6" style="${ppfInp}"${dis}>${esc(v || '')}</textarea></div>`;
   PPF_ITENS.forEach(([k, t]) => {
-    h += `<div style="font-weight:800;margin:10px 0 6px">${t}</div><div class="perfil">` + PPF_TIPOS.map(([tk, tt]) => `<div class="f-field" style="grid-column:1/-1"><label>${tt}</label><textarea data-ppf="diag.${k}.${tk}" rows="3" style="font:inherit;font-size:13px;padding:8px;border:1.5px solid var(--border);border-radius:8px;width:100%"${dis}>${esc((P.diag[k] || {})[tk] || '')}</textarea></div>`).join('') + '</div>';
+    h += `<div class="panel"><h3>Diagnóstico das minhas necessidades ${k === 'dentro' ? 'dentro' : 'fora'} do Movimento Escoteiro</h3><div class="perfil">` + PPF_TIPOS.map(([tk, tt]) => `<div class="f-field"><label>${tt}</label>${ta('diag.' + k + '.' + tk, P.diag[k][tk])}</div>`).join('') + '</div>'
+      + '<h3 style="margin-top:14px">Plano de atendimento às necessidades identificadas</h3><div class="perfil">' + PPF_TIPOS.map(([tk, tt]) => `<div class="f-field"><label>${tt} · ação/prazo</label>${ta('plano.' + k + '.' + tk, P.plano[k][tk])}</div>`).join('') + '</div>'
+      + `<h3 style="margin-top:14px">Avaliação e novas propostas: redimensionando espaços e tempos</h3><div class="perfil"><div class="f-field" style="grid-column:1/-1">${ta('aval.' + k, P.aval[k])}</div></div></div>`;
   });
-  h += '</div>';
-  h += '<div class="panel"><h3>3. Plano de atendimento</h3><div id="ppfPlano">' + P.plano.map((a, i) => htmlLinhaPlano(a, i, dis)).join('') + '</div>' + (ed ? '<button class="btn-v" type="button" onclick="ppfAddLinha()">+ Adicionar ação</button>' : '') + '</div>';
-  h += `<div class="panel"><h3>4. Avaliação e novas propostas</h3><div class="perfil"><div class="f-field" style="grid-column:1/-1"><label>Avaliação do período</label><textarea data-ppf="avaliacao" rows="4" style="font:inherit;font-size:13px;padding:8px;border:1.5px solid var(--border);border-radius:8px;width:100%"${dis}>${esc(P.avaliacao || '')}</textarea></div><div class="f-field" style="grid-column:1/-1"><label>Novas propostas</label><textarea data-ppf="propostas" rows="4" style="font:inherit;font-size:13px;padding:8px;border:1.5px solid var(--border);border-radius:8px;width:100%"${dis}>${esc(P.propostas || '')}</textarea></div></div></div>`;
   const rv = Object.keys(P.revisoes || {}).sort().reverse().map(k => `<li>${esc(ppfData(k.slice(0, 10)))} · ${esc(P.revisoes[k].por || '')}${P.revisoes[k].nota ? ' — ' + esc(P.revisoes[k].nota) : ''}</li>`).join('');
-  h += `<div class="panel"><h3>5. Revisão</h3><div class="perfil"><div class="f-field"><label>Próxima revisão (gera alarme para o dirigente e o assessor)</label><input type="date" data-ppf="revisaoEm" value="${esc(P.revisaoEm || '')}"${dis}></div></div>${ed ? '<button class="btn-v" style="margin-top:10px" type="button" onclick="ppfRevisar()">Registrar revisão feita</button>' : ''}${rv ? '<ul style="margin:10px 0 0 18px;font-size:12px">' + rv + '</ul>' : ''}</div>`;
+  h += `<div class="panel"><h3>Revisão do plano</h3><div class="perfil"><div class="f-field"><label>Próxima revisão (gera alarme para o dirigente e o assessor)</label><input type="date" data-ppf="revisaoEm" value="${esc(P.revisaoEm || '')}"${dis}></div></div>${ed ? '<button class="btn-v" style="margin-top:10px" type="button" onclick="ppfRevisar()">Registrar revisão feita</button>' : ''}${rv ? '<ul style="margin:10px 0 0 18px;font-size:12px">' + rv + '</ul>' : ''}</div>`;
   h += `<div class="panel" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="btn-v" type="button" onclick="ppfPdf()">📄 Baixar PDF</button><span id="ppfSt" class="msg" style="margin:0"></span></div>`;
   return h;
-}
-function htmlLinhaPlano(a, i, dis) {
-  return `<div class="ppf-lin" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px"><input data-ppfp="${i}.acao" placeholder="Ação (curso, leitura, prática…)" value="${esc(a.acao || '')}" style="flex:1 1 220px;font:inherit;font-size:13px;padding:8px;border:1.5px solid var(--border);border-radius:8px"${dis}><input type="date" data-ppfp="${i}.prazo" value="${esc(a.prazo || '')}" style="font:inherit;font-size:13px;padding:7px;border:1.5px solid var(--border);border-radius:8px"${dis}><label style="font-size:12px;display:flex;gap:4px;align-items:center"><input type="checkbox" data-ppfp="${i}.feito"${a.feito ? ' checked' : ''}${dis}> cumprida</label>${dis ? '' : `<button type="button" class="btn-v" style="background:#999" onclick="ppfRemLinha(${i})">✕</button>`}</div>`;
 }
 let ppfTimer = null;
 function ppfSalvarAgora() {
@@ -384,9 +376,6 @@ function ppfSet(caminho, v) {
   for (let i = 0; i < ks.length - 1; i++) { o[ks[i]] = o[ks[i]] || {}; o = o[ks[i]]; }
   o[ks[ks.length - 1]] = v;
 }
-function ppfRedesenhar() { document.getElementById('ppfPlano').innerHTML = E.ppf.plano.map((a, i) => htmlLinhaPlano(a, i, '')).join(''); }
-function ppfAddLinha() { E.ppf.plano.push({ acao: '', prazo: '', feito: false }); ppfRedesenhar(); ppfAgendar(); }
-function ppfRemLinha(i) { E.ppf.plano.splice(i, 1); ppfRedesenhar(); ppfAgendar(); }
 function ppfRevisar() {
   const nota = prompt('Observação da revisão (opcional):'); if (nota === null) return;
   const prox = prompt('Data da próxima revisão (dd/mm/aaaa) — deixe em branco para definir depois:') || '';
@@ -401,45 +390,54 @@ async function telaPpf(uid) {
   try {
     await carregarFicha(uid);
     E.ppf = normPpf(await j('/formacao/' + encodeURIComponent(uid) + '/ppf'));
+    E.pessoa = null; try { E.pessoa = await j('/pessoas/chefes/' + encodeURIComponent(uid)); } catch (e) {}
+    if (podePpf()) prefillPpf();
     desenharPpf();
   } catch (e) { $('#corpo').innerHTML = '<div class="vazio">Não foi possível abrir este PPF. Você precisa ser o próprio dirigente, o assessor dele ou da Diretoria.</div>'; }
 }
 document.addEventListener('input', e => {
   const el = e.target; if (!el || !el.getAttribute || !E.ppf || !podePpf()) return;
-  const k = el.getAttribute('data-ppf'), kp = el.getAttribute('data-ppfp');
-  if (k) { ppfSet(k, el.value || null); ppfAgendar(); }
-  else if (kp) { const [i, c] = kp.split('.'); E.ppf.plano[+i][c] = el.type === 'checkbox' ? el.checked : el.value; ppfAgendar(); }
+  const k = el.getAttribute('data-ppf'); if (k) { ppfSet(k, el.value || null); ppfAgendar(); }
 });
 window.addEventListener('pagehide', () => { if (ppfTimer) ppfSalvarAgora(); });
 function ppfPdf() {
   try {
-    const P = E.ppf, dd = dadosDirigente(), W = 595, H = 842, M = 40, VINHO = '#6D1026', pdf = V2.criarPdf(W, H); let y = 0;
-    const largura = W - 2 * M;
-    const garantir = h => { if (y + h > H - 50) { pdf.nova(); y = 50; } };
-    pdf.rect(0, 0, W, 70, VINHO); pdf.texto(M, 32, 'PLANO PESSOAL DE FORMAÇÃO - PPF', { t: 16, b: true, c: '#FFFFFF' }); pdf.texto(M, 52, 'GE Joaninha · Escoteiros do Brasil', { t: 10, c: '#F3DDE3' });
-    y = 92;
-    const titulo = t => { garantir(30); pdf.rect(M, y, largura, 18, '#F6EFEA'); pdf.texto(M + 6, y + 13, t, { t: 11, b: true, c: VINHO }); y += 28; };
-    const par = (rot, val) => { const ls = pdf.quebrar(val || '-', largura - 12, 10); garantir(14 + ls.length * 13); pdf.texto(M + 4, y, rot, { t: 9, b: true, c: '#666666' }); y += 13; ls.forEach(l => { pdf.texto(M + 10, y, l, { t: 10 }); y += 13; }); y += 4; };
-    titulo('1. Dados do dirigente');
-    par('Nome', dd.nome + (dd.registro ? ' (registro ' + dd.registro + ')' : '')); par('Função', dd.funcao); par('Ramo e nível de formação', dd.formacao); par('Assessor pessoal de formação', dd.assessor);
-    titulo('2. Diagnóstico de necessidades de formação');
-    PPF_ITENS.forEach(([k, t]) => { garantir(20); pdf.texto(M + 4, y, t, { t: 10, b: true }); y += 16; PPF_TIPOS.forEach(([tk, tt]) => par(tt, (P.diag[k] || {})[tk])); });
-    titulo('3. Plano de atendimento');
-    garantir(20); pdf.texto(M + 4, y, 'Ação', { t: 9, b: true, c: '#666666' }); pdf.texto(M + largura - 150, y, 'Prazo', { t: 9, b: true, c: '#666666' }); pdf.texto(M + largura - 70, y, 'Situação', { t: 9, b: true, c: '#666666' }); y += 14;
-    if (!P.plano.length) { pdf.texto(M + 10, y, '-', { t: 10 }); y += 16; }
-    P.plano.forEach(a => { const ls = pdf.quebrar(a.acao || '-', largura - 175, 10); garantir(ls.length * 13 + 6); ls.forEach((l, i) => { pdf.texto(M + 10, y + i * 13, l, { t: 10 }); }); pdf.texto(M + largura - 150, y, ppfData(a.prazo) || '-', { t: 10 }); pdf.texto(M + largura - 70, y, a.feito ? 'Cumprida' : 'Em andamento', { t: 9, c: a.feito ? '#1E8449' : '#B26A00' }); y += ls.length * 13 + 6; });
-    y += 6;
-    titulo('4. Avaliação e novas propostas');
-    par('Avaliação do período', P.avaliacao); par('Novas propostas', P.propostas);
-    titulo('5. Revisão');
-    par('Próxima revisão', P.revisaoEm ? ppfData(P.revisaoEm) : ''); 
-    Object.keys(P.revisoes || {}).sort().forEach(k => par('Revisão realizada em ' + ppfData(k.slice(0, 10)) + (P.revisoes[k].por ? ' por ' + P.revisoes[k].por : ''), P.revisoes[k].nota || ''));
-    garantir(90); y += 36;
-    pdf.rect(M, y, 200, 0.8, '#222222'); pdf.rect(M + largura - 200, y, 200, 0.8, '#222222');
-    pdf.texto(M, y + 13, 'Dirigente: ' + dd.nome, { t: 9 }); pdf.texto(M + largura - 200, y + 13, 'Assessor: ' + (dd.assessor || ''), { t: 9 });
-    pdf.texto(M, y + 30, 'Data: ____/____/________', { t: 9 }); pdf.texto(M + largura - 200, y + 30, 'Data: ____/____/________', { t: 9 });
-    pdf.texto(M, H - 24, 'Emitido em ' + new Date().toLocaleDateString('pt-BR') + ' · GE Joaninha', { t: 8, c: '#888888' });
-    V2.entregarPdf(pdf.bytes(), 'ppf-' + V2.nomeSeguro(dd.nome || 'dirigente') + '.pdf');
+    const P = E.ppf, W = 595, H = 842, M = 36, VINHO = '#6D1026', pdf = V2.criarPdf(W, H), L = W - 2 * M; let y = 0;
+    const garantir = h => { if (y + h > H - 40) { pdf.nova(); y = 44; } };
+    const faixa = t => { garantir(34); pdf.rect(M, y, L, 17, VINHO); const w = pdf.larg(t, 9.5, true); pdf.texto(M + (L - w) / 2, y + 12, t, { t: 9.5, b: true, c: '#FFFFFF' }); y += 23; };
+    const grade = (obj, campos) => {
+      for (let i = 0; i < campos.length; i += 2) {
+        const par = campos.slice(i, i + 2), ls = par.map(([k, t, tp]) => pdf.quebrar(t + ': ' + (tp === 'date' ? ppfData((obj || {})[k]) : ((obj || {})[k] || '')), L / 2 - 10, 9.5)), n = Math.max(ls[0].length, ls[1] ? ls[1].length : 1);
+        garantir(n * 12 + 8);
+        par.forEach((c, ci) => ls[ci].forEach((l, li) => pdf.texto(M + ci * (L / 2) + 2, y + 9 + li * 12, l, { t: 9.5 })));
+        y += n * 12 + 8;
+      }
+      y += 6;
+    };
+    const tres = (rot, vals) => {
+      const cw = L / 3 - 8; garantir(40);
+      PPF_TIPOS.forEach(([tk, tt], i) => { pdf.texto(M + i * (L / 3) + 2, y + 9, tt.toUpperCase().replace('PRATICAS', 'PRÁTICAS'), { t: 8.5, b: true, c: VINHO }); });
+      y += 16;
+      const cols = PPF_TIPOS.map(([tk]) => { const t = (vals[tk] || '-'); let ls = []; String(t).split(/\n/).forEach(p => { ls = ls.concat(pdf.quebrar(p || ' ', cw, 9)); }); return ls; });
+      const n = Math.max.apply(null, cols.map(c => c.length));
+      for (let r = 0; r < n; r++) { garantir(12); cols.forEach((c, ci) => { if (c[r]) pdf.texto(M + ci * (L / 3) + 2, y + 8, c[r], { t: 9 }); }); y += 12; }
+      y += 8;
+    };
+    const texto = t => { let ls = []; String(t || '-').split(/\n/).forEach(p => { ls = ls.concat(pdf.quebrar(p || ' ', L - 6, 9.5)); }); ls.forEach(l => { garantir(13); pdf.texto(M + 3, y + 9, l, { t: 9.5 }); y += 13; }); y += 8; };
+    pdf.texto(M, 28, 'PLANO PESSOAL DE FORMAÇÃO', { t: 14, b: true, c: VINHO }); pdf.texto(M, 42, 'GE Joaninha · Escoteiros do Brasil', { t: 8.5, c: '#777777' }); y = 56;
+    faixa('DADOS DO DIRIGENTE/ESCOTISTA'); grade(P.dir, PPF_CAMPOS);
+    faixa('DADOS DO ASSESSOR PESSOAL DE FORMAÇÃO'); grade(P.ass, PPF_CAMPOS.concat([['tempoAssessor', 'Tempo como Assessor Pessoal de Formação (anos/meses)']]));
+    PPF_ITENS.forEach(([k]) => {
+      faixa('DIAGNÓSTICO DAS MINHAS NECESSIDADES ' + (k === 'dentro' ? 'DENTRO' : 'FORA') + ' DO MOVIMENTO ESCOTEIRO'); tres('', P.diag[k]);
+      faixa('PLANO DE ATENDIMENTO ÀS NECESSIDADES IDENTIFICADAS (AÇÃO/PRAZO)'); tres('', P.plano[k]);
+      faixa('AVALIAÇÃO E NOVAS PROPOSTAS: REDIMENSIONANDO ESPAÇOS E TEMPOS'); texto(P.aval[k]);
+    });
+    if (P.revisaoEm || Object.keys(P.revisoes || {}).length) { faixa('REVISÃO DO PLANO'); if (P.revisaoEm) texto('Próxima revisão: ' + ppfData(P.revisaoEm)); Object.keys(P.revisoes || {}).sort().forEach(k => texto('Revisão em ' + ppfData(k.slice(0, 10)) + (P.revisoes[k].por ? ' por ' + P.revisoes[k].por : '') + (P.revisoes[k].nota ? ': ' + P.revisoes[k].nota : ''))); }
+    garantir(90); y += 30;
+    pdf.texto(M + L / 2 - 120, y, '_______________________, ____ de ____________________ de 20___.', { t: 9.5 }); y += 46;
+    pdf.rect(M, y, 220, 0.8, '#222222'); pdf.rect(M + L - 220, y, 220, 0.8, '#222222');
+    pdf.texto(M + 30, y + 12, 'Dirigente/Escotista em formação', { t: 9 }); pdf.texto(M + L - 190, y + 12, 'Assessor Pessoal de Formação', { t: 9 });
+    V2.entregarPdf(pdf.bytes(), 'ppf-' + V2.nomeSeguro((P.dir && P.dir.nome) || 'dirigente') + '.pdf');
   } catch (e) { alert('Não consegui gerar o PDF: ' + e.message); }
 }
 let temAss = false;
