@@ -2429,6 +2429,7 @@ function cardLobinho(e, today){
         <div style="display:flex;gap:4px;">
           <button class="btn-ic" onclick="showModal('${e.id}')">✏ Editar</button>
           <button class="btn-ic" onclick="verObservacao('${e.id}')">📋${e.observacoes ? ' •' : ''}</button>
+          ${V2_CONV.cardBtn(e.id)}
           <button class="btn-ic" onclick="relatorioJovem('${e.id}')" title="Relatório em PDF">📄</button>
           ${(caminho || passou) ? `<button class="btn-ic" style="color:#E67E22;" onclick="transferirParaTropa('${e.id}')" title="Transferir para a Tropa Escoteira">🛤 Transferir p/ Tropa</button>` : ''}
           <button class="btn-ic" style="color:#E74C3C;" onclick="archiveYouth('${e.id}')" title="Arquivar">📦</button>

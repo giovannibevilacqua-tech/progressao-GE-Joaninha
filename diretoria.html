@@ -15,7 +15,7 @@
 .sec-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}</style>
 </head>
 <body>
-<div class="cabecalho-fixo"><nav class="tabs-linha"><button class="tab-btn-linha" data-aba="almox" onclick="mostrarAba('almox',this)">📦 Almoxarifado geral</button><button class="tab-btn-linha" data-aba="fin" onclick="mostrarAba('fin',this)">💰 Financeiro</button><button class="tab-btn-linha" data-aba="cal" onclick="mostrarAba('cal',this)">📅 Calendário do grupo</button><button class="tab-btn-linha" data-aba="fichas" onclick="mostrarAba('fichas',this)">📇 Fichas e datas</button><button class="tab-btn-linha" data-aba="secoes" onclick="mostrarAba('secoes',this)">🗂️ Seções</button><button class="tab-btn-linha" data-aba="forms" onclick="mostrarAba('forms',this)">🎓 Formação dos chefes</button><button class="tab-btn-linha" data-aba="docs" onclick="mostrarAba('docs',this)">📄 Documentação</button></nav></div>
+<div class="cabecalho-fixo"><nav class="tabs-linha"><button class="tab-btn-linha" data-aba="almox" onclick="mostrarAba('almox',this)">📦 Almoxarifado geral</button><button class="tab-btn-linha" data-aba="fin" onclick="mostrarAba('fin',this)">💰 Financeiro</button><button class="tab-btn-linha" data-aba="cal" onclick="mostrarAba('cal',this)">📅 Calendário do grupo</button><button class="tab-btn-linha" data-aba="fichas" onclick="mostrarAba('fichas',this)">📇 Fichas e datas</button><button class="tab-btn-linha" data-aba="secoes" onclick="mostrarAba('secoes',this)">🗂️ Seções</button><button class="tab-btn-linha" data-aba="docs" onclick="mostrarAba('docs',this)">📄 Documentação</button></nav></div>
 <div class="pagina" id="pg-almox"><div id="almox-box"></div></div>
 <div class="pagina" id="pg-fin"><div id="fin-box"></div></div>
 <div class="pagina" id="pg-cal"><div id="cal-box"></div></div>
@@ -23,7 +23,6 @@
 <div class="pagina" id="pg-secoes"><div class="pagina-ttl">Seções</div><div class="pagina-sub">Resumo de progressão de cada seção. Toque no nome para abrir os detalhes.</div>
 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"><button type="button" class="btn-ic" id="btnRelGrupo" style="font-weight:700;padding:10px 14px" disabled onclick="relatorioGrupo()">📄 Relatório do grupo inteiro</button><button type="button" class="btn-ic" style="padding:10px 14px" onclick="carregarSecoes(true)">↻ Atualizar</button></div>
 <div id="secoes-lista"></div><div id="secoes-frames" style="position:absolute;width:0;height:0;overflow:hidden;visibility:hidden"></div></div>
-<div class="pagina" id="pg-forms"><div class="pagina-ttl">Formação dos chefes</div><div class="pagina-sub">Ramo de formação, nível, APF e atividades marcadas por chefe. Toque em Abrir ficha para ver o detalhe.</div><div id="forms-lista"><div class="vazio">Carregando…</div></div></div>
 <div class="pagina" id="pg-docs"><div class="pagina-ttl">Documentação</div><div class="pagina-sub">Documentos de gestão do Grupo Escoteiro.</div>
 <div class="card"><div class="card-ttl">💡 Sugestões sobre o grupo</div><div id="sug-grupo-lista" class="card-txt">Carregando…</div></div>
 <div class="card"><div class="card-ttl">📝 Atas de reunião <span class="em-breve">em construção</span></div><div class="card-txt">Registro das reuniões da diretoria e dos chefes.</div></div>
@@ -284,7 +283,6 @@ function relatorioSecaoDir(id) { if (SEC_DADOS[id]) V2.abrirRelatorioTropa(SEC_D
 function relatorioGrupo() { if (SECOES_DIR.every(s => SEC_DADOS[s.id])) V2.abrirRelatorioGrupo(SECOES_DIR.map(s => SEC_DADOS[s.id])); }
 async function aoAbrirAba(id) {
   if (id === 'secoes') { carregarFormCache(); return carregarSecoes(); }
-  if (id === 'forms') return abrirFormacao();
   if (id === 'docs') return carregarSugestoesGrupo();
   if (id === 'fichas') return V2_PESSOAS.abrirDiretoria();
   if (id === 'cal') { const r = V2_CAL.abrirNaSecao(null, 'cal-box'); carregarAntigosSecoes(); return r; }

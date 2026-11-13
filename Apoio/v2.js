@@ -3092,7 +3092,7 @@ function restaurarUltimaAba(){
   function injetarCss() {
     if ($('v2pCss')) return;
     var st = document.createElement('style'); st.id = 'v2pCss';
-    st.textContent = '.v2p-mf{margin-bottom:10px}.v2p-mf label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;opacity:.75;margin-bottom:4px}.v2p-mf input,.v2p-mf textarea{display:block;width:100%;box-sizing:border-box;padding:9px 11px;border:1px solid var(--border,#ccc);border-radius:8px;font:inherit;font-size:14px;background:var(--card,#fff);color:inherit;resize:vertical}.v2p{padding:12px 14px 80px}.v2p .mini{font-size:11px;opacity:.7}.v2p-aviso{background:rgba(255,193,7,.15);border:1px solid rgba(255,193,7,.5);border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:13px;line-height:1.6}.v2p-aviso.vazio{background:transparent;border-color:var(--border,#ddd);opacity:.8}'
+    st.textContent = '.v2p-conv td{background:rgba(249,168,37,.25)!important;cursor:help}.v2p-mf{margin-bottom:10px}.v2p-mf label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;opacity:.75;margin-bottom:4px}.v2p-mf input,.v2p-mf textarea{display:block;width:100%;box-sizing:border-box;padding:9px 11px;border:1px solid var(--border,#ccc);border-radius:8px;font:inherit;font-size:14px;background:var(--card,#fff);color:inherit;resize:vertical}.v2p{padding:12px 14px 80px}.v2p .mini{font-size:11px;opacity:.7}.v2p-aviso{background:rgba(255,193,7,.15);border:1px solid rgba(255,193,7,.5);border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:13px;line-height:1.6}.v2p-aviso.vazio{background:transparent;border-color:var(--border,#ddd);opacity:.8}'
       + '.v2p-busca{width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--border,#ddd);border-radius:10px;font-size:14px;margin-bottom:10px;background:var(--card,#fff);color:inherit}'
       + '.v2p-row{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--card,#fff);border:1px solid var(--border,#ddd);border-radius:12px;margin-bottom:6px;cursor:pointer}.v2p-row b{flex:1;min-width:0}.v2p-tag{font-size:11px;border-radius:8px;padding:2px 7px;background:rgba(128,128,128,.18);white-space:nowrap}.v2p-tag.ok{background:rgba(27,110,58,.2)}.v2p-tag.falta{background:rgba(179,38,30,.18)}'
       + '.v2p-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100030;display:flex;align-items:center;justify-content:center;padding:14px}.v2p-box{background:var(--card,#fff);color:var(--text,#1a1a1a);border-radius:14px;padding:18px 16px;width:100%;max-width:460px;max-height:92vh;overflow:auto}'
@@ -3199,6 +3199,7 @@ function restaurarUltimaAba(){
   // ---- painel da Diretoria ----
   async function carregarDir() {
     await Promise.all(SECS.map(carregarSecao));
+    try { dir.conv = root.V2_CONV ? await root.V2_CONV.todas(SECS) : {}; } catch (e0) { dir.conv = {}; }
     try { var r = await fetch(url('/chefes')); var c = await r.json(); dados.chefes = c && !c.error ? c : {}; } catch (e) { dados.chefes = dados.chefes || {}; }
     try { var r2 = await fetch(urlComAuthFirebase(root.V2_CONFIG.DB_URL + '/equipe.json')); var e = await r2.json(); chefesEq = e && !e.error ? e : {}; } catch (e2) {}
   }
@@ -3216,7 +3217,8 @@ function restaurarUltimaAba(){
     SECS.forEach(function (s) {
       var l = todos.filter(function (t) { return t.sec === s; }).sort(function (a, c) { return a.nome.localeCompare(c.nome, 'pt'); });
       h += '<div class="v2p-sec">' + NOMES_SEC[s] + ' <span class="mini">(' + l.length + ')</span></div>' + (l.length ? '<table class="v2p-tb"><tr><th>Jovem</th><th>Nasc.</th><th>Promessa</th><th>Emergência</th></tr>' + l.map(function (t) {
-        return '<tr><td><b>' + esc(t.nome) + '</b></td><td>' + esc(dataBR(t.p.nasc)) + '</td><td>' + esc(dataBR(t.p.promessa)) + '</td><td>' + (t.p.emergTel ? esc((t.p.emergNome || '') + (t.p.emergRel ? ' (' + t.p.emergRel + ')' : '') + ' ' + t.p.emergTel) : '<span class="v2p-tag falta">falta</span>') + '</td></tr>';
+        var mot = root.V2_CONV ? root.V2_CONV.motivos(((dir.conv || {})[t.sec] || {})[t.id]) : [];
+        return '<tr' + (mot.length ? ' class="v2p-conv" title="' + esc('Conversar com ' + t.nome + ':\n• ' + mot.join('\n• ')) + '"' : '') + '><td><b>' + (mot.length ? '💬 ' : '') + esc(t.nome) + '</b></td><td>' + esc(dataBR(t.p.nasc)) + '</td><td>' + esc(dataBR(t.p.promessa)) + '</td><td>' + (t.p.emergTel ? esc((t.p.emergNome || '') + (t.p.emergRel ? ' (' + t.p.emergRel + ')' : '') + ' ' + t.p.emergTel) : '<span class="v2p-tag falta">falta</span>') + '</td></tr>';
       }).join('') + '</table>' : '<div class="mini">Ainda sem dados. A lista é preenchida quando a seção abre a aba Fichas.</div>');
     });
     b.innerHTML = h + '</div>';
@@ -3873,6 +3875,19 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
     }
   }
   function d(x) { return decodeURIComponent(x); }
+  function rot(x) { return x.k === '_geral' ? 'Assunto: ' + (x.nome || 'conversar') : (x.nome || x.k); }
+  function perguntar(y) {
+    var old = document.getElementById('v2cvOv'); if (old) old.remove();
+    var ov = document.createElement('div'); ov.className = 'v2cv-ov'; ov.id = 'v2cvOv';
+    ov.addEventListener('click', function (e) { if (e.target === ov) ov.remove(); });
+    ov.innerHTML = '<div class="v2cv-box"><div style="font-size:16px;font-weight:800">💬 Conversar com o jovem</div><div style="font-size:12px;opacity:.75;margin:4px 0 8px">Tem algum assunto para conversar? (opcional)</div>'
+      + '<textarea id="v2cvTx" rows="3" style="width:100%;box-sizing:border-box;padding:9px;border:1px solid var(--border,#ccc);border-radius:8px;font:inherit;font-size:14px;background:var(--card,#fff);color:inherit" placeholder="Ex.: faltou duas atividades, dúvida sobre o acampamento…"></textarea>'
+      + '<div style="display:flex;gap:8px;margin-top:12px"><button class="v2cv-b" id="v2cvNo" style="padding:9px 14px;font-size:13px">Cancelar</button><button id="v2cvOk" style="border:0;background:#1b6e3a;color:#fff;border-radius:8px;padding:9px 16px;font-weight:700;font-size:13px;cursor:pointer;flex:1">Marcar para conversar</button></div></div>';
+    document.body.appendChild(ov);
+    var tx = ov.querySelector('#v2cvTx'); tx.focus();
+    ov.querySelector('#v2cvNo').onclick = function () { ov.remove(); };
+    ov.querySelector('#v2cvOk').onclick = async function () { var t = tx.value.trim(); ov.remove(); await gravar(y, '_geral', t || 'Sem assunto definido', true); };
+  }
   root.V2_CONV = {
     // o: { base:'/conversar/escoteira', flat:false, concluir:function(yid,k,nome), aoMudar:function(), aviso:function(m), pode:function() }
     init: function (o) {
@@ -3890,8 +3905,20 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
     faixa: function (yid) {
       if (!cfg) return '';
       var l = lista(yid); if (!l.length) return '';
-      return '<div class="v2cv-faixa" onclick="event.stopPropagation()"><b>💬 Conversar na próxima atividade</b> · ' + l.length + (l.length === 1 ? ' item' : ' itens') + '<ul>' + l.slice(0, 4).map(function (x) { return '<li>' + esc(x.nome || x.k) + '</li>'; }).join('') + (l.length > 4 ? '<li>+ ' + (l.length - 4) + '…</li>' : '') + '</ul>' + (cfg.somenteVer && cfg.somenteVer() ? '<i>Seu APF marcou estes itens para conversar com você.</i>' : '<button type="button" onclick="V2_CONV.resolver(\'' + encodeURIComponent(yid) + '\')">Marcar como conversado</button>') + '</div>';
+      return '<div class="v2cv-faixa" onclick="event.stopPropagation()"><b>💬 Conversar na próxima atividade</b> · ' + l.length + (l.length === 1 ? ' item' : ' itens') + '<ul>' + l.slice(0, 4).map(function (x) { return '<li>' + esc(rot(x)) + '</li>'; }).join('') + (l.length > 4 ? '<li>+ ' + (l.length - 4) + '…</li>' : '') + '</ul>' + (cfg.somenteVer && cfg.somenteVer() ? '<i>Seu APF marcou estes itens para conversar com você.</i>' : '<button type="button" onclick="V2_CONV.resolver(\'' + encodeURIComponent(yid) + '\')">Marcar como conversado</button>') + '</div>';
     },
+    cardBtn: function (yid) {
+      if (!cfg) return '';
+      var tem = lista(yid).length > 0;
+      return '<button type="button" class="btn-ic" onclick="event.stopPropagation();V2_CONV._card(\'' + encodeURIComponent(yid) + '\')" title="' + (tem ? 'Já conversei: ver o que foi marcado' : 'Marcar para conversar na próxima atividade') + '">' + (tem ? '✅ Já conversei' : '💬 Conversar') + '</button>';
+    },
+    _card: function (y) { y = d(y); if (lista(y).length) root.V2_CONV.resolver(encodeURIComponent(y)); else perguntar(y); },
+    todas: async function (secoes) {
+      var out = {};
+      for (var i = 0; i < secoes.length; i++) { try { var r = await fetch(root.urlComAuthFirebase(root.V2_CONFIG.DB_URL + '/conversar/' + secoes[i] + '.json')); var x = await r.json(); out[secoes[i]] = x && !x.error ? x : {}; } catch (e) { out[secoes[i]] = {}; } }
+      return out;
+    },
+    motivos: function (itensDoJovem) { return Object.keys(itensDoJovem || {}).map(function (k) { return itensDoJovem[k]; }).filter(function (x) { return x && x.k; }).map(rot); },
     _alt: function (y, k, n) { y = d(y); k = d(k); n = d(n); gravar(y, k, n, !marcado(y, k)); },
     resolver: function (y) {
       y = d(y);
@@ -3903,9 +3930,10 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
         var l = lista(y);
         if (!l.length) { ov.remove(); return; }
         ov.innerHTML = '<div class="v2cv-box"><div style="font-size:16px;font-weight:800">💬 Conversa feita</div><div style="font-size:12px;opacity:.75;margin-top:4px">Para cada item: ele foi concluído?</div>'
-          + l.map(function (x, i) { return '<div class="v2cv-it"><div class="t">' + esc(x.nome || x.k) + '</div><div class="bs"><button class="ok" data-i="' + i + '" data-a="c">✅ Foi concluído</button><button data-i="' + i + '" data-a="n">⏳ Ainda não</button><button data-i="' + i + '" data-a="m">💬 Manter para conversar</button></div></div>'; }).join('')
-          + '<div style="margin-top:12px"><button class="v2cv-b" id="v2cvFecha" style="padding:8px 14px;font-size:13px">Fechar</button></div></div>';
+          + l.map(function (x, i) { return '<div class="v2cv-it"><div class="t">' + esc(rot(x)) + '</div><div class="bs">' + (x.k === '_geral' ? '<button class="ok" data-i="' + i + '" data-a="n">✅ Conversado</button>' : '<button class="ok" data-i="' + i + '" data-a="c">✅ Foi concluído</button><button data-i="' + i + '" data-a="n">⏳ Ainda não</button>') + '<button data-i="' + i + '" data-a="m">💬 Manter para conversar</button></div></div>'; }).join('')
+          + '<div style="margin-top:12px"><button class="v2cv-b" id="v2cvMais" style="padding:8px 14px;font-size:13px;margin-right:6px">➕ Novo assunto</button><button class="v2cv-b" id="v2cvFecha" style="padding:8px 14px;font-size:13px">Fechar</button></div></div>';
         ov.querySelector('#v2cvFecha').onclick = function () { ov.remove(); };
+        ov.querySelector('#v2cvMais').onclick = function () { perguntar(y); };
         ov.querySelectorAll('button[data-a]').forEach(function (b) {
           b.onclick = async function () {
             var x = l[+b.getAttribute('data-i')], a = b.getAttribute('data-a');

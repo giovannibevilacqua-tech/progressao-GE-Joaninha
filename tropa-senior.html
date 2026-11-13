@@ -3043,6 +3043,7 @@ function makeYouthCard(e,today,maxDays){
         <div style="display:flex;gap:4px;">
           <button class="btn-ic" onclick="showModal('${e.id}')" title="Editar">✏ Editar</button>
           <button class="btn-ic" onclick="verObservacaoSenior('${e.id}')" title="Observação">📋${e.observacoes?' •':''}</button>
+          ${V2_CONV.cardBtn(e.id)}
           <button class="btn-ic" onclick="relatorioJovemSr('${e.id}')" title="Relatório em PDF">📄</button>
           ${(caminho||passed)?`<button class="btn-ic" style="color:#E67E22;" onclick="transferirParaCla('${e.id}')" title="Transferir para o Clã Pioneiro">🛤 Transferir p/ Clã</button>`:''}
           <button class="btn-ic" style="color:#E74C3C;" onclick="archiveYouth('${e.id}')" title="Arquivar">📦</button>

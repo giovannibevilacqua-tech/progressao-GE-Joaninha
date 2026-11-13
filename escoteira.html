@@ -2077,7 +2077,7 @@ ${caminho ? `<button class="btn-ic" style="margin-top:10px;width:100%;padding:9p
 <div class="card-acoes" onclick="event.stopPropagation()">
 <button class="btn-ic" onclick="abrirEdicaoJovem('${j}')">✏ Editar</button>
 <button class="btn-ic" onclick="verObservacao('${j}')">📋 Obs.${OBSERVACOES[j] ? ' •' : ''}</button>
-<button class="btn-ic" onclick="toggleConversar('${j}')" title="${marcadoConversar ? 'Já conversei' : 'Marcar para conversar na próxima atividade'}">${marcadoConversar ? '✅ Já conversei' : '💬 Conversar'}</button>
+${marcadoConversar ? `<button class="btn-ic" onclick="toggleConversar('${j}')" title="Já conversei">✅ Já conversei</button>` : V2_CONV.cardBtn(j)}
 <button class="btn-ic" onclick="abrirLisOuro('${j}')">🏅 Ramo</button>
 </div>
 ${menuAberto ? `<div class="roster-dropdown" style="top:44px;right:10px;" onclick="event.stopPropagation()">
