@@ -152,6 +152,10 @@ async function carregarFicha(uid) {
   if (RK.indexOf(E.perfil.ramo) >= 0) E.ramo = E.perfil.ramo; else E.ramo = 'esc';
   E.nivel = [0, 1, 2].indexOf(E.perfil.nivel) >= 0 ? E.perfil.nivel : 0;
   E.pend = {}; E.carregado = true;
+  V2_CONV.init({ base: '/formacao/' + encodeURIComponent(uid) + '/conversar', flat: true,
+    somenteVer: () => !podeConversar(),
+    aoMudar: () => { if (E.carregado && E.uid === uid && document.getElementById('ficha')) { const y = window.scrollY; desenhar(); window.scrollTo(0, y); } },
+    concluir: (y, k) => { if (!E.done[k]) marcar(k, true); } });
 }
 function contar() { return F.contar(Object.assign({}, E.done)); }
 
@@ -224,7 +228,7 @@ function htmlFicha() {
   if (RK.indexOf(p.ramo2) >= 0 && p.nivel2 != null) linhas.push([p.ramo2, p.nivel2, '2ª linha']);
   const atalhos = linhas.length ? `<div class="lv lv-lin" style="margin-top:12px">${linhas.map(l => `<button type="button" class="t-${l[0]}" data-linha="${l[0]}:${l[1]}" aria-pressed="${l[0] === rk && l[1] === ni}">${l[2]}: ${esc(CAT[l[0]].n)} · ${NV[l[1]]}</button>`).join('')}</div>` : '';
   const seletor = linhas.length ? '' : `<div class="tiles">${tiles}</div>`, nivs = linhas.length ? '' : `<div class="lv">${lvs}</div>`;
-  let h = `${atalhos}${seletor}<div class="t-${rk}">${nivs}<div class="foldbar"><button data-foldall="close">Recolher tudo</button><button data-foldall="open">Expandir tudo</button></div>`;
+  let h = `${V2_CONV.faixa('_')}${atalhos}${seletor}<div class="t-${rk}">${nivs}<div class="foldbar"><button data-foldall="close">Recolher tudo</button><button data-foldall="open">Expandir tudo</button></div>`;
   CAT[rk].g.forEach(g => {
     h += `<div class="grupo"><h3>${esc(g.t)}</h3><div class="grid">`;
     g.c.forEach(c => {
@@ -233,11 +237,11 @@ function htmlFicha() {
       if (l.d) h += `<p class="lead">${esc(l.d)}</p>`;
       l.g.filter(gr => gr[0] === F.ATIV).forEach(gr => {
         h += `<div class="lbl2">${esc(gr[0])}</div><div>`;
-        gr[1].forEach(t => { h += `<label class="item"><input type="checkbox" data-k="${base}-${k}"><span>${esc(t)}</span></label>`; k++; });
+        gr[1].forEach(t => { h += `<label class="item"><input type="checkbox" data-k="${base}-${k}"><span>${esc(t)}</span>${convBtn(base + '-' + k, t)}</label>`; k++; });
         h += '</div>';
       });
       l.g.filter(gr => gr[0] !== F.ATIV).forEach(gr => {
-        if (gr[0] === F.PPF) { let pk = 0; h += `<div class="lbl2">${esc(gr[0])}</div><div>`; gr[1].forEach(t => { h += `<label class="item"><input type="checkbox" data-p="1" data-k="${base}-p-${pk}"><span>${esc(t)}</span></label>`; pk++; }); h += '</div>'; }
+        if (gr[0] === F.PPF) { let pk = 0; h += `<div class="lbl2">${esc(gr[0])}</div><div>`; gr[1].forEach(t => { h += `<label class="item"><input type="checkbox" data-p="1" data-k="${base}-p-${pk}"><span>${esc(t)}</span>${convBtn(base + '-p-' + pk, t)}</label>`; pk++; }); h += '</div>'; }
         else h += `<div class="lbl2">${esc(gr[0])}</div><ul class="res plain">${gr[1].map(t => '<li>' + esc(t) + '</li>').join('')}</ul>`;
       });
       if (l.r && l.r.length) h += `<div class="lbl2">Resultados esperados</div><ul class="res">${l.r.map(t => '<li>' + esc(t) + '</li>').join('')}</ul>`;
@@ -248,6 +252,11 @@ function htmlFicha() {
   const PROC = ['Processo criado no PAXTU pelo assessorado', 'Processo preenchido pelo assessorado', 'Processo preenchido pelo APF', 'Processo enviado à UEL', 'Processo enviado à Região'];
   h += `<div class="panel" id="proc"><h3>Conclusão do nível · ${esc(CAT[rk].n)} · ${NV[ni]}</h3><p id="procMsg" style="margin-bottom:8px;font-size:12px;color:var(--muted)"></p>${PROC.map((t, i) => `<label class="item"><input type="checkbox" data-proc="1" data-k="proc-${rk}-${ni}-${i}"><span>${esc(t)}</span></label>`).join('')}</div>`;
   return h + '</div>';
+}
+const podeConversar = () => souApf() || souAdmin;
+function convBtn(k, t) {
+  if (podeConversar()) return V2_CONV.btn('_', k, t, true);
+  return V2_CONV.marcado('_', k) ? '<span class="v2cv-b on" style="cursor:default" title="Seu APF marcou este item para conversar com você">💬 Conversar com o APF</span>' : '';
 }
 function atualizar() {
   const cn = contar(), edit = podeMarcar();

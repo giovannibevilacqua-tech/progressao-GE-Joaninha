@@ -2586,7 +2586,7 @@ function secaoAcoes(bid, tipo, lista, rotulo, rotuloClasse, estilo){
     const cells = actJ().map(({yid}) => {
       const ok = feito(bid, tipo, a.id, yid);
       const st = estilo ? (ok ? estilo.on : estilo.off) : '';
-      return `<td><div class="cb ${ok?'done':'pending'}" ${st?`style="${st}"`:''} onclick="toggle('${bid}','${tipo}','${a.id}','${yid}')">${ok ? (estilo ? '★' : '✓') : '·'}</div></td>`;
+      return `<td><div class="cb ${ok?'done':'pending'}" ${st?`style="${st}"`:''} onclick="toggle('${bid}','${tipo}','${a.id}','${yid}')">${ok ? (estilo ? '★' : '✓') : '·'}</div><div style="text-align:center;margin-top:2px">${window.V2_CONV ? window.V2_CONV.btn(yid, 't|' + bid + '|' + tipo + '|' + a.id, ((getBlock(bid) || {}).name || '') + ': ' + a.name) : ''}</div></td>`;
     }).join('');
     const icone = tipo === 'f' ? '📌 ' : tipo === 's' ? '🎖 ' : tipo === 'g' ? '🏅 ' : '';
     const x = a.custom ? `<button class="custom-x" title="Remover ação personalizada" onclick="removerCustom('${bid}','${a.id}')">✕</button>` : '';
@@ -3824,4 +3824,100 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
     try { (ev.source || root.parent).postMessage({ tipo: 'v2-recebido', rid: m.rid, ok: true }, '*'); } catch (e) {}
   }
   root.V2_TRANSFER = { enviar: enviar, aoReceber: aoReceber, NOMES: NOMES };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+/* ---------- 💬 Conversar: marcar itens de progressão para conversar com o jovem (ou com o assessorado) ---------- */
+(function (root) {
+  if (typeof document === 'undefined') return;
+  var cfg = null, dados = {};
+  function esc(x) { return String(x == null ? '' : x).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
+  function slug(k) { return String(k).replace(/[.#$\/\[\]\s]/g, '_'); }
+  function caminho(yid, sl) { return cfg.base + (cfg.flat ? '' : '/' + encodeURIComponent(yid)) + (sl ? '/' + sl : ''); }
+  function url(p) { return root.urlComAuthFirebase(root.V2_CONFIG.DB_URL + p + '.json'); }
+  function css() {
+    if (document.getElementById('v2cvCss')) return;
+    var st = document.createElement('style'); st.id = 'v2cvCss';
+    st.textContent = '.v2cv-b{border:1px solid var(--border,#ccc);background:transparent;color:inherit;border-radius:7px;padding:2px 7px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;opacity:.75;flex-shrink:0}.v2cv-b:hover{opacity:1}.v2cv-b.on{background:#f9a825;border-color:#e69100;color:#1a1a1a;opacity:1}'
+      + '.v2cv-faixa{background:rgba(249,168,37,.18);border:1px solid #f9a825;border-radius:9px;padding:7px 9px;margin-bottom:8px;font-size:11.5px;line-height:1.45}.v2cv-faixa b{font-weight:800}.v2cv-faixa ul{margin:4px 0 6px;padding-left:16px}.v2cv-faixa button{border:0;background:#1b6e3a;color:#fff;border-radius:7px;padding:5px 10px;font-weight:700;font-size:11px;cursor:pointer}'
+      + '.v2cv-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100050;display:flex;align-items:center;justify-content:center;padding:12px}.v2cv-box{background:var(--card,#fff);color:var(--text,#1a1a1a);border-radius:14px;padding:16px;width:100%;max-width:520px;max-height:90vh;overflow:auto;box-sizing:border-box}'
+      + '.v2cv-it{border:1px solid var(--border,#ddd);border-radius:10px;padding:10px;margin-top:8px}.v2cv-it .t{font-weight:700;font-size:13px;margin-bottom:6px}.v2cv-it .bs{display:flex;gap:6px;flex-wrap:wrap}.v2cv-it button{border:1px solid var(--border,#ccc);background:transparent;color:inherit;border-radius:8px;padding:7px 10px;font-weight:700;font-size:12px;cursor:pointer}.v2cv-it button.ok{background:#1b6e3a;color:#fff;border-color:#1b6e3a}';
+    document.head.appendChild(st);
+  }
+  function jaPronto() { try { return typeof root.__store === 'undefined' || (root.__store && root.__store.carregado === true); } catch (e) { return true; } }
+  async function carregar() {
+    try {
+      var r = await fetch(url(cfg.base)); var d = await r.json();
+      d = d && !d.error ? d : {};
+      dados = cfg.flat ? { _: d } : d;
+    } catch (e) { dados = {}; }
+    if (cfg.aoMudar) cfg.aoMudar();
+  }
+  function lista(yid) { var o = (dados[cfg.flat ? '_' : yid]) || {}; return Object.keys(o).map(function (k) { return o[k]; }).filter(function (x) { return x && x.k; }); }
+  function marcado(yid, k) { var o = dados[cfg.flat ? '_' : yid] || {}; return !!o[slug(k)]; }
+  function aviso(m) { try { if (cfg.aviso) cfg.aviso(m); else alert(m); } catch (e) {} }
+  async function gravar(yid, k, nome, ligar) {
+    var y = cfg.flat ? '_' : yid, sl = slug(k);
+    dados[y] = dados[y] || {};
+    var antes = dados[y][sl];
+    if (ligar) dados[y][sl] = { k: k, nome: nome || '', em: new Date().toISOString().slice(0, 10) }; else delete dados[y][sl];
+    if (cfg.aoMudar) cfg.aoMudar();
+    try {
+      var r = await fetch(url(caminho(yid, sl)), ligar ? { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados[y][sl]) } : { method: 'DELETE' });
+      if (!r.ok) throw 0;
+      return true;
+    } catch (e) {
+      if (antes) dados[y][sl] = antes; else delete dados[y][sl];
+      if (cfg.aoMudar) cfg.aoMudar();
+      aviso('Não consegui salvar. O banco não aceitou: o admin precisa publicar as regras novas do Firebase.');
+      return false;
+    }
+  }
+  function d(x) { return decodeURIComponent(x); }
+  root.V2_CONV = {
+    // o: { base:'/conversar/escoteira', flat:false, concluir:function(yid,k,nome), aoMudar:function(), aviso:function(m), pode:function() }
+    init: function (o) {
+      cfg = o; css();
+      var t0 = Date.now();
+      (function tentar() { if (jaPronto() || Date.now() - t0 > 30000) carregar(); else setTimeout(tentar, 500); })();
+    },
+    recarregar: function () { if (cfg) return carregar(); },
+    marcado: marcado, lista: lista,
+    btn: function (yid, k, nome, comRotulo) {
+      if (!cfg) return '';
+      var on = marcado(yid, k);
+      return '<button type="button" class="v2cv-b' + (on ? ' on' : '') + '" title="' + (on ? 'Marcado para conversar. Toque para desmarcar' : 'Marcar para conversar sobre este item') + '" onclick="event.stopPropagation();V2_CONV._alt(\'' + encodeURIComponent(yid) + '\',\'' + encodeURIComponent(k) + '\',\'' + encodeURIComponent(nome || '') + '\')">💬' + (comRotulo ? ' Conversar' : '') + '</button>';
+    },
+    faixa: function (yid) {
+      if (!cfg) return '';
+      var l = lista(yid); if (!l.length) return '';
+      return '<div class="v2cv-faixa" onclick="event.stopPropagation()"><b>💬 Conversar na próxima atividade</b> · ' + l.length + (l.length === 1 ? ' item' : ' itens') + '<ul>' + l.slice(0, 4).map(function (x) { return '<li>' + esc(x.nome || x.k) + '</li>'; }).join('') + (l.length > 4 ? '<li>+ ' + (l.length - 4) + '…</li>' : '') + '</ul>' + (cfg.somenteVer && cfg.somenteVer() ? '<i>Seu APF marcou estes itens para conversar com você.</i>' : '<button type="button" onclick="V2_CONV.resolver(\'' + encodeURIComponent(yid) + '\')">Marcar como conversado</button>') + '</div>';
+    },
+    _alt: function (y, k, n) { y = d(y); k = d(k); n = d(n); gravar(y, k, n, !marcado(y, k)); },
+    resolver: function (y) {
+      y = d(y);
+      var old = document.getElementById('v2cvOv'); if (old) old.remove();
+      var ov = document.createElement('div'); ov.className = 'v2cv-ov'; ov.id = 'v2cvOv';
+      ov.addEventListener('click', function (e) { if (e.target === ov) ov.remove(); });
+      document.body.appendChild(ov);
+      function desenhar() {
+        var l = lista(y);
+        if (!l.length) { ov.remove(); return; }
+        ov.innerHTML = '<div class="v2cv-box"><div style="font-size:16px;font-weight:800">💬 Conversa feita</div><div style="font-size:12px;opacity:.75;margin-top:4px">Para cada item: ele foi concluído?</div>'
+          + l.map(function (x, i) { return '<div class="v2cv-it"><div class="t">' + esc(x.nome || x.k) + '</div><div class="bs"><button class="ok" data-i="' + i + '" data-a="c">✅ Foi concluído</button><button data-i="' + i + '" data-a="n">⏳ Ainda não</button><button data-i="' + i + '" data-a="m">💬 Manter para conversar</button></div></div>'; }).join('')
+          + '<div style="margin-top:12px"><button class="v2cv-b" id="v2cvFecha" style="padding:8px 14px;font-size:13px">Fechar</button></div></div>';
+        ov.querySelector('#v2cvFecha').onclick = function () { ov.remove(); };
+        ov.querySelectorAll('button[data-a]').forEach(function (b) {
+          b.onclick = async function () {
+            var x = l[+b.getAttribute('data-i')], a = b.getAttribute('data-a');
+            if (a === 'm') { b.parentNode.parentNode.remove(); return; }
+            b.disabled = true;
+            if (a === 'c' && cfg.concluir) { try { await cfg.concluir(y, x.k, x.nome); } catch (e) {} }
+            await gravar(y, x.k, x.nome, false);
+            desenhar();
+          };
+        });
+      }
+      desenhar();
+    }
+  };
 })(typeof window !== 'undefined' ? window : globalThis);

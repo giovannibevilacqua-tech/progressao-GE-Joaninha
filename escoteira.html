@@ -2058,6 +2058,7 @@ const badge = caminho ? '<span style="background:#E67E22;color:#fff;font-size:9p
 const caixa = (t, v) => `<div style="background:rgba(255,255,255,.75);border-radius:7px;padding:5px 8px;"><div style="font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#999;margin-bottom:1px;">${t}</div><div style="font-size:12px;font-weight:700;color:#1A1A1A;">${v}</div></div>`;
 return `<div class="roster-row${ativo === j ? ' active' : ''}${marcadoConversar ? ' marcado-conversar' : ''}" draggable="true" ondragstart="dragJovemStart(event,'${j}')" onclick="selecionarJovem('${j}')" style="background:${cor}14;border-left:5px solid ${cor};padding:10px 12px;position:relative;">
 ${marcadoConversar ? `<div class="faixa-conversar">💬 CONVERSAR NA PRÓXIMA ATIVIDADE</div>` : ''}
+${V2_CONV.faixa(j)}
 <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
 <div style="width:36px;height:36px;border-radius:50%;background:${JCOR[j] || cor};color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;flex-shrink:0;">${initials}</div>
 <div style="flex:1;min-width:0;">
@@ -2076,7 +2077,7 @@ ${caminho ? `<button class="btn-ic" style="margin-top:10px;width:100%;padding:9p
 <div class="card-acoes" onclick="event.stopPropagation()">
 <button class="btn-ic" onclick="abrirEdicaoJovem('${j}')">✏ Editar</button>
 <button class="btn-ic" onclick="verObservacao('${j}')">📋 Obs.${OBSERVACOES[j] ? ' •' : ''}</button>
-<button class="btn-ic" onclick="toggleConversar('${j}')" title="${marcadoConversar ? 'Já conversei' : 'Marcar para conversar na próxima atividade'}">${marcadoConversar ? '✅' : '💬'}</button>
+<button class="btn-ic" onclick="toggleConversar('${j}')" title="${marcadoConversar ? 'Já conversei' : 'Marcar para conversar na próxima atividade'}">${marcadoConversar ? '✅ Já conversei' : '💬 Conversar'}</button>
 <button class="btn-ic" onclick="abrirLisOuro('${j}')">🏅 Ramo</button>
 </div>
 ${menuAberto ? `<div class="roster-dropdown" style="top:44px;right:10px;" onclick="event.stopPropagation()">
@@ -2306,6 +2307,7 @@ const d = st.fixas[i];
 html += `<div class="item-row">
 <div class="item-check ${d?'done':''}" onclick="toggleFixa('${j}','${b}',${i})">${d?'✓':''}</div>
 <div class="item-text" onclick="toggleFixa('${j}','${b}',${i})">${txt}</div>
+${V2_CONV.btn(j, 'f|' + b + '|' + i, def.nome + ': ' + txt, true)}
 </div>`;
 });
 }
@@ -2315,11 +2317,13 @@ const d = st.variaveis[i];
 html += `<div class="item-row">
 <div class="item-check ${d?'done':''}" onclick="toggleVar('${j}','${b}',${i})">${d?'✓':''}</div>
 <div class="item-text" onclick="toggleVar('${j}','${b}',${i})">${txt}</div>
+${V2_CONV.btn(j, 'v|' + b + '|' + i, def.nome + ': ' + txt, true)}
 </div>`;
 });
 html += `<div class="especialidade-row">
 <div class="item-check ${st.especialidade?'done':''}" onclick="toggleEsp('${j}','${b}')">${st.especialidade?'✓':''}</div>
 <label onclick="toggleEsp('${j}','${b}')">Especialidade ou insígnia relacionada conquistada (substitui as ações variáveis)</label>
+${V2_CONV.btn(j, 'e|' + b, def.nome + ': especialidade ou insígnia', true)}
 </div>`;
 html += `<div class="meta-note">Regra: todas as fixas (quando houver) + ${def.metaVar} variáveis, ou 1 especialidade/insígnia no lugar das variáveis.</div>`;
 html += `</div></div>`;
@@ -2420,7 +2424,7 @@ if (def.fixas.length) {
 const rows = def.fixas.map((txt, i) => {
 const cells = JOVENS.map(j => {
 const marcado = S[j][b].fixas[i];
-return `<td data-jovem-pb="${j}" class="${jovensDestacadosPB.includes(j)?'destaque-jovem-pb':''}"><div class="cb-pb ${marcado ? 'done-pb' : 'pending-pb'}" onclick="toggleFixaTabela('${j}','${b}',${i})">${marcado ? '✓' : '·'}</div></td>`;
+return `<td data-jovem-pb="${j}" class="${jovensDestacadosPB.includes(j)?'destaque-jovem-pb':''}"><div class="cb-pb ${marcado ? 'done-pb' : 'pending-pb'}" onclick="toggleFixaTabela('${j}','${b}',${i})">${marcado ? '✓' : '·'}</div><div style="text-align:center;margin-top:3px">${V2_CONV.btn(j, 'f|' + b + '|' + i, def.nome + ': ' + txt)}</div></td>`;
 }).join('');
 return `<tr class="fixed-row-pb"><td class="act-col-pb">${txt}</td>${cells}</tr>`;
 }).join('');
@@ -2438,7 +2442,7 @@ if (def.variaveis.length) {
 const rows = def.variaveis.map((txt, i) => {
 const cells = JOVENS.map(j => {
 const marcado = S[j][b].variaveis[i];
-return `<td data-jovem-pb="${j}" class="${jovensDestacadosPB.includes(j)?'destaque-jovem-pb':''}"><div class="cb-pb ${marcado ? 'done-pb' : 'pending-pb'}" onclick="toggleVarTabela('${j}','${b}',${i})">${marcado ? '✓' : '·'}</div></td>`;
+return `<td data-jovem-pb="${j}" class="${jovensDestacadosPB.includes(j)?'destaque-jovem-pb':''}"><div class="cb-pb ${marcado ? 'done-pb' : 'pending-pb'}" onclick="toggleVarTabela('${j}','${b}',${i})">${marcado ? '✓' : '·'}</div><div style="text-align:center;margin-top:3px">${V2_CONV.btn(j, 'v|' + b + '|' + i, def.nome + ': ' + txt)}</div></td>`;
 }).join('');
 return `<tr><td class="act-col-pb">${txt}</td>${cells}</tr>`;
 }).join('');
@@ -3795,6 +3799,14 @@ window.addEventListener('online', () => { if (temAlteracaoLocalPendente && !(__s
 
 // ===== ALMOXARIFADO — módulo compartilhado (v2.js) =====
 V2_FIN.montar({ secao:'escoteira', container:'pagina-financeiro' });
+V2_CONV.init({ base: '/conversar/escoteira',
+  aoMudar: () => { try { renderRoster(); if (ativo) renderDetail(ativo); if (paginaAtiva === 'tabela') preservarScroll(atualizarTabelaBloco); } catch (e) {} },
+  concluir: (j, k) => {
+    const p = k.split('|'), st = S[j] && S[j][p[1]]; if (!st) return;
+    if (p[0] === 'f' && !st.fixas[+p[2]]) toggleFixa(j, p[1], +p[2]);
+    else if (p[0] === 'v' && !st.variaveis[+p[2]]) toggleVar(j, p[1], +p[2]);
+    else if (p[0] === 'e' && !st.especialidade) toggleEsp(j, p[1]);
+  } });
 window.calSecaoEventos = () => EVENTOS.filter(Boolean).map(e => ({ id: e.id, nome: e.nome, ini: e.data, local: e.local }));
 V2_PESSOAS.montar({ secao:'escoteira', container:'fichasBox_off', jovens:()=>paxtuEstado().jovens, aplicarNome:async (id,n)=>{ JNOMES[id]=n; temAlteracaoLocalPendente=true; await saveState(); renderRoster(); } });
 V2_ALMOX.montar({ secao:'escoteira', nomeTropa:'Escoteira', outraTropa:'Sênior', subTitulo:'Materiais da Tropa Escoteira. Você escolhe com quais seções cada item é compartilhado.', container:'pagina-almoxarifado', padX:14 });

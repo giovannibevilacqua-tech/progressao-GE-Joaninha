@@ -1024,7 +1024,7 @@ function renderEixo(eixoId){
       const rows=bl.fixed.map(a=>{
         const cells=actJ().map(({yid:j,i})=>{
           const done=getActionDone(bid,'f',a.id,i);
-          return `<td><div class="cb ${done?'done':'pending'}" onclick="toggle('${bid}','f','${a.id}',${i})">${done?'✓':'·'}</div></td>`;
+          return `<td><div class="cb ${done?'done':'pending'}" onclick="toggle('${bid}','f','${a.id}',${i})">${done?'✓':'·'}</div><div style="text-align:center;margin-top:2px">${V2_CONV.btn(j,'t|'+bid+'|f|'+a.id,(bl.name||'')+': '+a.name)}</div></td>`;
         }).join('');
         return `<tr class="fixed-row"><td class="act-col">📌 ${a.name}</td>${cells}</tr>`;
       }).join('');
@@ -1043,7 +1043,7 @@ function renderEixo(eixoId){
       const rows=bl.variable.map(a=>{
         const cells=actJ().map(({yid:j,i})=>{
           const done=getActionDone(bid,'v',a.id,i);
-          return `<td><div class="cb ${done?'done':'pending'}" onclick="toggle('${bid}','v','${a.id}',${i})">${done?'✓':'·'}</div></td>`;
+          return `<td><div class="cb ${done?'done':'pending'}" onclick="toggle('${bid}','v','${a.id}',${i})">${done?'✓':'·'}</div><div style="text-align:center;margin-top:2px">${V2_CONV.btn(j,'t|'+bid+'|v|'+a.id,(bl.name||'')+': '+a.name)}</div></td>`;
         }).join('');
         return `<tr><td class="act-col">${a.name}</td>${cells}</tr>`;
       }).join('');
@@ -1062,7 +1062,7 @@ function renderEixo(eixoId){
       const rows=bl.specialties.map(a=>{
         const cells=actJ().map(({yid:j,i})=>{
           const done=getActionDone(bid,'s',a.id,i);
-          return `<td><div class="cb ${done?'done':'pending'}" style="background:${done?'#F39C12':'#FFF8E1'};border-color:${done?'#E67E22':'#F5CBA7'};color:${done?'#fff':'#E67E22'}" onclick="toggle('${bid}','s','${a.id}',${i})">${done?'★':'·'}</div></td>`;
+          return `<td><div class="cb ${done?'done':'pending'}" style="background:${done?'#F39C12':'#FFF8E1'};border-color:${done?'#E67E22':'#F5CBA7'};color:${done?'#fff':'#E67E22'}" onclick="toggle('${bid}','s','${a.id}',${i})">${done?'★':'·'}</div><div style="text-align:center;margin-top:2px">${V2_CONV.btn(j,'t|'+bid+'|s|'+a.id,(bl.name||'')+': '+a.name)}</div></td>`;
         }).join('');
         return `<tr><td class="act-col">🎖 ${a.name}</td>${cells}</tr>`;
       }).join('');
@@ -1081,7 +1081,7 @@ function renderEixo(eixoId){
       const rows=bl.insignias.map(a=>{
         const cells=actJ().map(({yid:j,i})=>{
           const done=getActionDone(bid,'g',a.id,i);
-          return `<td><div class="cb ${done?'done':'pending'}" style="background:${done?'#8E44AD':'#F4ECF7'};border-color:${done?'#7D3C98':'#D7BDE2'};color:${done?'#fff':'#8E44AD'}" onclick="toggle('${bid}','g','${a.id}',${i})">${done?'★':'·'}</div></td>`;
+          return `<td><div class="cb ${done?'done':'pending'}" style="background:${done?'#8E44AD':'#F4ECF7'};border-color:${done?'#7D3C98':'#D7BDE2'};color:${done?'#fff':'#8E44AD'}" onclick="toggle('${bid}','g','${a.id}',${i})">${done?'★':'·'}</div><div style="text-align:center;margin-top:2px">${V2_CONV.btn(j,'t|'+bid+'|g|'+a.id,(bl.name||'')+': '+a.name)}</div></td>`;
         }).join('');
         return `<tr><td class="act-col">🏅 ${a.name}</td>${cells}</tr>`;
       }).join('');
@@ -3031,6 +3031,7 @@ function makeYouthCard(e,today,maxDays){
   const card=document.createElement('div');
   card.style.cssText='background:'+c.bg+';border-left:5px solid '+c.border+';border-radius:10px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.09);';
   card.innerHTML=`
+    ${V2_CONV.faixa(e.id)}
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:11px;">
       <div style="width:42px;height:42px;border-radius:50%;background:${c.fg};color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;flex-shrink:0;">${initials(e.name)}</div>
       <div style="flex:1;min-width:0;">
@@ -3239,6 +3240,9 @@ function abrirAlmoSr(){ V2_ALMOX.abrir(); }
 document.addEventListener('DOMContentLoaded',function(){ V2_FIN.montar({ secao:'senior', container:'fin' });
   const _showModalOrig = showModal; showModal = function (yid) { _showModalOrig(yid); const y = yid ? YOUTH_DATA.find(x => x.id === yid) : null; V2_PESSOAS.campos('v2pCampos', yid || '', y ? y.name : '', 'inp-name'); };
 const _saveYouthOrig = saveYouth; saveYouth = function () { if (document.getElementById('edit-id').value) V2_PESSOAS.salvarDe(); _saveYouthOrig(); };
+V2_CONV.init({ base: '/conversar/senior',
+  aoMudar: () => { try { preservarScrollSr(() => { renderAll(); if (typeof renderJovens === 'function') renderJovens(); }); } catch (e) {} },
+  concluir: (yid, k) => { const p = k.split('|'), i = JOVENS.indexOf(yid); if (i >= 0 && !getActionDone(p[1], p[2], p.slice(3).join('|'), i)) toggle(p[1], p[2], p.slice(3).join('|'), i); } });
 window.calSecaoEventos = () => CAL_2S26.concat(CAL_1S27).filter(Boolean).map(e => ({ id: e.id, nome: e.nome, ini: e.dataISO, local: e.local }));
 V2_PESSOAS.montar({ secao:'senior', container:'fichasBox_off', jovens:()=>paxtuEstado().jovens, aplicarNome:(id,n)=>{ const y=YOUTH_DATA.find(x=>x.id===id); if(y){ y.name=n; syncJovens(); saveState(); renderAllTabs(); } } }); V2_ALMOX.montar({ secao:'senior', nomeTropa:'Sênior', outraTropa:'Escoteira', subTitulo:'Materiais da Tropa Sênior. Você escolhe com quais seções cada item é compartilhado.', container:'alm', padX:12, somenteLeitura:function(){ return !!MODO_VISUALIZACAO_SR; } }); });
 </script>
