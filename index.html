@@ -781,6 +781,7 @@ REGISTRO ESCOTEIRO
 <button class="conta-barra-btn somente-admin" id="btnSugestoesAdmin" onclick="abrirSugestoesAdmin()">📬 Sugestões</button>
 <button class="conta-barra-btn chefe-sec" id="btnMeusAssist" onclick="abrirMeusAssistentes()">👥 Meus assistentes</button>
 <button class="conta-barra-btn" id="btnHistorico" onclick="abrirHistorico()">📜 Histórico</button>
+<button class="conta-barra-btn somente-admin" id="btnExportarDados" onclick="abrirExportacao()">📤 Exportar dados</button>
 <button class="conta-barra-btn admin-ou-dir" id="btnImportarPaxtu" onclick="ImportarPaxtu.abrir()">📥 Fichas 120</button>
 <button class="conta-barra-btn" onclick="if(confirm('Sair da sua conta neste navegador?'))fazerLogout()">🚪 Sair</button>
 </div>
@@ -1594,6 +1595,55 @@ async function entrarComSenhaSalva() {
 function guardarSenhaNoAparelho(registro, senha) {
   if (!senhaSalvaSuportada() || !navigator.credentials.store) return;
   try { navigator.credentials.store(new PasswordCredential({ id: registro, password: senha || registro, name: nomeLogado || registro })).catch(() => {}); } catch (e) {}
+}
+
+
+// ═══ Exportação padrão de todos os dados (para levar a outro sistema ou guardar uma cópia completa) ═══
+const EXP_PARTES = [
+  ['progressao', 'Progressão e calendário de cada seção', true],
+  ['pessoas', 'Fichas dos jovens e chefes (nascimento, promessa, emergência, texto da ficha médica)', true],
+  ['financeiro', 'Financeiro (caixas das seções e do grupo)', true],
+  ['calendarioGrupo', 'Calendário do grupo', true],
+  ['equipe', 'Equipe: nomes, registros, funções e seções (sem senhas)', true],
+  ['formacao', 'Formação dos chefes', true],
+  ['conversar', 'Itens marcados para conversar', true],
+  ['fichasMedArquivos', 'Arquivos (PDF/foto) das fichas médicas — deixa o arquivo bem maior', false]
+];
+function abrirExportacao() {
+  const m = modalSimples('modalExportar', '<div style="font-size:16px;font-weight:800;margin-bottom:6px;">📤 Exportar dados do sistema</div>'
+    + '<div style="font-size:12.5px;color:#555;line-height:1.5;margin-bottom:10px;">Gera um arquivo único (.json) com o formato padrão do sistema, versão 1, com um guia de como os dados estão organizados. Serve para transferir para outro sistema ou guardar uma cópia completa. Dados de saúde e de menores: guarde com cuidado.</div>'
+    + EXP_PARTES.map(p => '<label style="display:flex;gap:8px;align-items:flex-start;font-size:13px;margin:6px 0;"><input type="checkbox" data-p="' + p[0] + '"' + (p[2] ? ' checked' : '') + ' style="margin-top:3px;"> <span>' + p[1] + '</span></label>').join('')
+    + '<div id="expMsg" style="font-size:12.5px;margin:8px 0;color:#555;"></div>'
+    + '<div style="display:flex;gap:8px;position:sticky;bottom:0;background:#fff;padding-top:6px;"><button type="button" id="expFecha" style="flex:1;padding:11px;border-radius:8px;border:1px solid #bbb;background:#fff;color:#1a1a1a;font-weight:700;cursor:pointer;">Fechar</button><button type="button" id="expGera" style="flex:1;padding:11px;border-radius:8px;border:0;background:#1b6e3a;color:#fff;font-weight:700;cursor:pointer;">Gerar arquivo</button></div>');
+  m.querySelector('#expFecha').onclick = () => m.remove();
+  m.querySelector('#expGera').onclick = async () => {
+    const sel = {}; m.querySelectorAll('input[data-p]').forEach(i => sel[i.dataset.p] = i.checked);
+    const msg = m.querySelector('#expMsg'), b = m.querySelector('#expGera'); b.disabled = true;
+    try { const n = await gerarExportacao(sel, t => msg.textContent = t); msg.textContent = 'Pronto: ' + n; } catch (e) { msg.style.color = '#b3261e'; msg.textContent = 'Não consegui exportar: ' + e.message; }
+    b.disabled = false;
+  };
+}
+async function gerarExportacao(sel, aoStatus) {
+  const ler = async (caminho) => { const r = await fetch(urlComAuthFirebase(DB_URL + '/' + caminho + '.json')); if (!r.ok) throw new Error(caminho + ': HTTP ' + r.status); return await r.json(); };
+  const ids = (V2.CFG && V2.CFG.ID_ARRAYS) || {}, SECS = ['alcateia', 'escoteira', 'senior', 'cla', 'diretoria'], c = {};
+  if (sel.progressao) { c.progressao = {}; for (const sc of SECS) { aoStatus('Lendo ' + sc + '…'); const t = await ler((V2.CFG.RAIZ || 'v2') + '/' + sc).catch(() => null); if (t) c.progressao[sc] = V2.decDados(t, ids[sc] || []); } }
+  if (sel.pessoas) { aoStatus('Lendo fichas…'); c.pessoas = await ler('pessoas'); }
+  if (sel.financeiro) { aoStatus('Lendo financeiro…'); c.financeiro = await ler('financeiro'); }
+  if (sel.calendarioGrupo) { aoStatus('Lendo calendário…'); c.calendarioGrupo = await ler('grupoCal'); }
+  if (sel.equipe) { aoStatus('Lendo equipe…'); const u = (await ler('usuarios')) || {}, eq = (await ler('equipe')) || {}; c.equipe = Object.keys(u).map(k => { const x = u[k] || {}; return { uid: k, registro: x.registro, nome: x.nome || (eq[k] && eq[k].nome) || '', admin: !!x.admin, funcao: x.funcao || 'chefe', secao: x.tropa || null, secao2: x.tropa2 || null }; }); }
+  if (sel.formacao) { aoStatus('Lendo formação…'); c.formacao = await ler('formacao'); }
+  if (sel.conversar) { aoStatus('Lendo conversas…'); c.conversar = await ler('conversar'); }
+  if (sel.fichasMedArquivos) { aoStatus('Lendo arquivos das fichas médicas (pode demorar)…'); c.fichasMedArquivos = await ler('fichasMed'); }
+  const quando = new Date();
+  const arq = {
+    formato: 'ge-joaninha-export', versao: 1, geradoEm: quando.toISOString(), geradoPor: { registro: registroLogado || null, nome: nomeLogado || null },
+    leiame: 'Exportação do sistema de progressão do Grupo Escoteiro Joaninha. "conteudo.progressao.<seção>" traz os dados de cada seção já decodificados (jovens, presenças, calendário, patrulhas etc.). "pessoas.<seção>.<idDoJovem>" traz a ficha do jovem; o id é o mesmo usado na progressão. "financeiro.<seção|grupo>.lanc" são os lançamentos (tipo entrada|saida, valor, data); lançamentos com "transf" são transferências entre caixas. "calendarioGrupo" são as atividades do grupo (ini, fim, origem, secoes). "equipe" não contém senhas. Datas em AAAA-MM-DD; horários em ISO 8601 (UTC).',
+    conteudo: c
+  };
+  const blob = new Blob([JSON.stringify(arq, null, 1)], { type: 'application/json' });
+  const nome = 'ge-joaninha-export-' + quando.toISOString().slice(0, 10) + '.json';
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nome; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+  return nome + ' (' + Math.round(blob.size / 1024) + ' KB)';
 }
 
 function menuLateral(abrir) { const m = document.getElementById('contaMenu'), f = document.getElementById('contaMenuFundo'); if (m) m.classList.toggle('aberto', !!abrir); if (f) f.classList.toggle('aberto', !!abrir); }
