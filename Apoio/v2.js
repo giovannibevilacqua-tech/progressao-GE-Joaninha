@@ -4547,7 +4547,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
       + '.v2pt th,.v2pt td{padding:8px 10px;border-bottom:1px solid var(--border,#e5e5e5);text-align:center;white-space:nowrap}.v2pt th{font-size:11px;text-transform:uppercase;letter-spacing:.3px;background:rgba(128,128,128,.1);vertical-align:bottom}'
       + '.v2pt th small{display:block;font-weight:600;opacity:.7;text-transform:none;letter-spacing:0}.v2pt td.n,.v2pt th.n{text-align:left;position:sticky;left:0;background:var(--card,#fff);z-index:1;min-width:130px}.v2pt th.n{background:#eee}'
       + '.v2pt td.t{font-weight:800;font-size:14px}.v2pt td.pos{opacity:.7;font-weight:700}.v2pt .neg{color:#b3261e}.v2pt .zero{opacity:.35}.v2pt tr.top td{background:rgba(255,193,7,.1)}.v2pt tr.top td.n{background:#fdf6e0}'
-      + '.v2pt-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}'
+      + '.v2pt-pt th,.v2pt-pt td{min-width:128px;white-space:normal}.v2pt-pt td.n,.v2pt-pt th.n{min-width:120px;max-width:140px;text-align:left}.v2pt-sub td{background:rgba(128,128,128,.14);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;text-align:left!important;position:static!important}.v2pt-tot td{background:rgba(27,107,58,.1)}.v2pt-tot td.n{background:#e6f1ea}.v2pt-mm{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;padding:3px 0;border-bottom:1px dashed rgba(128,128,128,.3)}.v2pt-mm b{white-space:nowrap}.v2pt-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}'
       + '.v2pt-cr{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border,#ddd);border-radius:10px;margin-bottom:6px;background:var(--card,#fff)}.v2pt-cr .pts{font-weight:800;font-size:15px;min-width:54px;text-align:center;border-radius:8px;padding:4px 6px;background:rgba(27,107,58,.14);color:#1b6b3a}'
       + '.v2pt-cr .pts.neg{background:rgba(179,38,30,.12);color:#b3261e}.v2pt-cr .d{font-size:12px;opacity:.75;margin-top:2px}.v2pt-hi{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border,#e5e5e5);font-size:13px}.v2pt-hi .pts{font-weight:800;min-width:46px}'
       + '.v2pt-vz{opacity:.7;font-size:13px;padding:8px 0}.v2pt-mf{margin-bottom:10px}.v2pt-mf label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;opacity:.75;margin-bottom:4px}'
@@ -4584,9 +4584,9 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
       var critIds = {}; crit.forEach(function (k) { critIds[k.id] = 1; });
       var orfaos = ls.some(function (l) { return !critIds[l.crit]; });
       var linhas = ps.map(function (p) {
-        var por = {}, tot = 0;
+        var por = {}, tot = 0, mem = (c.membros ? c.membros(p.id) : []) || [];
         ls.forEach(function (l) { if (l.pat !== p.id) return; var k = critIds[l.crit] ? l.crit : '_o'; por[k] = (por[k] || 0) + num(l.pts); tot += num(l.pts); });
-        return { p: p, por: por, tot: tot };
+        return { p: p, por: por, tot: tot, mem: mem };
       }).sort(function (a, b) { return b.tot - a.tot; });
       var pos = 0, ant = null; linhas.forEach(function (r, i) { if (ant === null || r.tot !== ant) pos = i + 1; ant = r.tot; r.pos = pos; });
       var h = '<div class="v2pt"><h2>🏅 Pontuação das patrulhas</h2>'
@@ -4598,14 +4598,26 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
         + '<button type="button" class="v2pt-bt" id="v2ptLimpa">Todo o período</button>' + (ed ? '<button type="button" class="v2pt-bt p" id="v2ptLanca" style="margin-left:auto">➕ Lançar pontos</button>' : '') + '</div>';
       if (!ps.length) h += '<div class="v2pt-vz">Nenhuma patrulha cadastrada. Crie as patrulhas na aba de jovens para pontuar.</div>';
       else {
-        h += '<div class="v2pt-sc"><table><thead><tr><th>#</th><th class="n">Patrulha</th>'
-          + crit.map(function (k) { return '<th>' + esc(k.nome) + '<small>vale ' + esc(fmt(num(k.pts))) + '</small></th>'; }).join('') + (orfaos ? '<th>Outros<small>critério removido</small></th>' : '') + '<th>Total</th></tr></thead><tbody>'
-          + linhas.map(function (r) {
-            var medal = r.tot > 0 && r.pos <= 3 ? ['🥇', '🥈', '🥉'][r.pos - 1] : r.pos + 'º';
-            return '<tr' + (r.tot > 0 && r.pos <= 3 ? ' class="top"' : '') + '><td class="pos">' + medal + '</td><td class="n"><span class="v2pt-dot" style="background:' + esc(r.p.cor || '#888') + '"></span>' + esc((r.p.icone || '') + ' ' + r.p.nome) + '</td>'
-              + crit.map(function (k) { var v = r.por[k.id] || 0; return '<td class="' + (v < 0 ? 'neg' : v === 0 ? 'zero' : '') + '">' + (v ? fmtTot(v) : '–') + '</td>'; }).join('')
-              + (orfaos ? '<td>' + (r.por._o ? fmtTot(r.por._o) : '–') + '</td>' : '') + '<td class="t">' + fmtTot(r.tot) + '</td></tr>';
-          }).join('') + '</tbody></table></div>';
+        var nc = linhas.length + 1;
+        function perc(m) { return m.total ? Math.round(m.pres / m.total * 100) : null; }
+        h += '<div class="v2pt-sc"><table class="v2pt-pt"><thead><tr><th class="n"></th>'
+          + linhas.map(function (r) { return '<th style="border-top:4px solid ' + esc(r.p.cor || '#888') + '"><div style="font-size:15px;text-transform:none;letter-spacing:0">' + esc((r.p.icone || '') + ' ' + r.p.nome) + '</div></th>'; }).join('') + '</tr></thead><tbody>'
+          + '<tr><td class="n"><b>Posição</b></td>' + linhas.map(function (r) { return '<td class="pos" style="font-size:16px">' + (r.tot > 0 && r.pos <= 3 ? ['🥇', '🥈', '🥉'][r.pos - 1] : r.pos + 'º') + '</td>'; }).join('') + '</tr>'
+          + '<tr><td class="n"><b>Membros</b></td>' + linhas.map(function (r) { return '<td>' + r.mem.length + '</td>'; }).join('') + '</tr>'
+          + '<tr class="v2pt-sub"><td colspan="' + nc + '">Pontos por critério</td></tr>'
+          + crit.map(function (k) {
+            return '<tr><td class="n">' + esc(k.nome) + '<small style="display:block;opacity:.65">vale ' + esc(fmt(num(k.pts))) + ' por ocorrência</small></td>'
+              + linhas.map(function (r) { var v = r.por[k.id] || 0; return '<td class="' + (v < 0 ? 'neg' : v === 0 ? 'zero' : '') + '">' + (v ? fmtTot(v) : '–') + '</td>'; }).join('') + '</tr>';
+          }).join('')
+          + (orfaos ? '<tr><td class="n">Outros<small style="display:block;opacity:.65">critério removido</small></td>' + linhas.map(function (r) { return '<td>' + (r.por._o ? fmtTot(r.por._o) : '–') + '</td>'; }).join('') + '</tr>' : '')
+          + '<tr class="v2pt-tot"><td class="n"><b>TOTAL</b></td>' + linhas.map(function (r) { return '<td class="t">' + fmtTot(r.tot) + '</td>'; }).join('') + '</tr>'
+          + '<tr class="v2pt-sub"><td colspan="' + nc + '">Presença dos membros</td></tr>'
+          + '<tr><td class="n"><b>Média da patrulha</b></td>' + linhas.map(function (r) {
+            var ps2 = r.mem.map(perc).filter(function (x) { return x !== null; }), m = ps2.length ? Math.round(ps2.reduce(function (x, y) { return x + y; }, 0) / ps2.length) : null;
+            return '<td class="t">' + (m === null ? '–' : '<span style="color:' + (m >= 75 ? '#2e9f5a' : m >= 50 ? '#e67e22' : '#b3261e') + '">' + m + '%</span>') + '</td>'; }).join('') + '</tr>'
+          + '<tr><td class="n">Cada membro</td>' + linhas.map(function (r) {
+            return '<td style="text-align:left;vertical-align:top">' + (r.mem.length ? r.mem.map(function (m) { var pc = perc(m); return '<div class="v2pt-mm"><span>' + esc(m.nome) + '</span><b style="color:' + (pc === null ? 'inherit' : pc >= 75 ? '#2e9f5a' : pc >= 50 ? '#e67e22' : '#b3261e') + '">' + (pc === null ? '–' : m.pres + '/' + m.total + ' · ' + pc + '%') + '</b></div>'; }).join('') : '<span class="zero">sem membros</span>') + '</td>'; }).join('') + '</tr>'
+          + '</tbody></table></div>';
         if (!crit.length) h += '<div class="v2pt-vz">Ainda não há critérios. Cadastre-os abaixo para começar a pontuar.</div>';
       }
       // critérios
