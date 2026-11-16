@@ -1518,6 +1518,9 @@ function modalSimples(id, html) {
   m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:16px;';
   m.innerHTML = '<div style="background:#fff;color:#1a1a1a;border-radius:8px;padding:18px;width:100%;max-width:420px;max-height:88vh;overflow:auto;box-shadow:0 10px 40px rgba(0,0,0,.35);">' + html + '</div>';
   document.body.appendChild(m); m.addEventListener('click', e => { if (e.target === m) m.remove(); });
+  // botões de salvar/cancelar (última linha do pop-up) ficam sempre visíveis embaixo
+  const caixa = m.firstElementChild, ult = caixa && caixa.lastElementChild;
+  if (ult && ult.querySelector && ult.querySelector('button')) ult.style.cssText += ';position:sticky;bottom:-18px;background:#fff;padding:10px 0 18px;margin-bottom:-18px;z-index:3;border-top:1px solid rgba(0,0,0,.12)';
   return m;
 }
 const SUG_TIPOS = { melhoria: '✨ Melhoria', correcao: '🛠️ Correção', ajuste: '🔧 Ajuste' };
