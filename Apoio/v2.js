@@ -174,7 +174,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-11-16f"
+  VERSAO: "2026-11-16g"
 };
 
 /* ============================================================
@@ -4735,4 +4735,284 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
     document.head.appendChild(st);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ligar); else ligar();
+})();
+
+/* =====================================================================
+   V2_DOCS: página "Documentos" (Gestão das seções e Diretoria).
+   Guarda os arquivos em /documentos (índice) e /v2/anexos (conteúdo).
+   PDF abre dentro da página: texto para leitura no celular e páginas do próprio PDF.
+   ===================================================================== */
+window.V2_DOCS = (function () {
+  var BASE = (window.V2_CONFIG || {}).DB_URL + '/documentos';
+  var CATS = [['cerimonias', 'Cerimônias', '🕯️'], ['atas', 'Atas e reuniões', '📝'], ['modelos', 'Modelos e formulários', '📋'], ['outros', 'Outros', '📁']];
+  var MODELO = "CERIMÔNIA DE DESPEDIDA\nRamo Escoteiro, para o jovem que deixa a tropa ou o grupo\n\nOs documentos do movimento pedem que as cerimônias escoteiras sejam simples, breves e significativas. Esta tem cerca de 10 a 15 minutos e funciona de dia ou de noite, com pequenas trocas indicadas em cada etapa.\n\nQUANDO FAZER\nNo fim de uma reunião, atividade ou acampamento, ou numa reunião própria. Em acampamento, o fim da tarde e a noite costumam dar o clima ideal.\n\nQUEM PARTICIPA\nToda a tropa, o jovem que parte e os escotistas. Se o jovem quiser, a família pode ser convidada e assistir de fora da formação. Combine tudo antes com ele, para não ser surpresa desconfortável.\n\nMATERIAL\nDiurno: bandeira do Brasil e bandeira do grupo no mastro.\nNoturno: uma lanterna ou vela em copo para cada pessoa e uma luz maior no centro, que pode ser o fogo de conselho ou uma lanterna grande.\nNos dois casos: a lembrança da despedida, como uma carta escrita pela patrulha, uma foto da tropa e um distintivo ou objeto simbólico escolhido pela patrulha.\n\nPREPARAÇÃO\n1. O chefe conversa com o jovem e pergunta se aceita a cerimônia e se quer falar.\n2. O monitor reúne a patrulha, e cada um escolhe uma frase curta sobre o que aprendeu ou viveu com o colega.\n3. O chefe prepara um resumo curto da trajetória do jovem: quando entrou, etapas, especialidades, atividades marcantes e o que ficou como exemplo.\n4. Escolha um lugar calmo, sem barulho de fundo.\n\nROTEIRO\n\n1. Formação\nDiurno: a tropa forma em ferradura diante do mastro, com os monitores à frente de suas patrulhas. O jovem fica com a sua patrulha.\nNoturno: a tropa forma uma roda ao redor da luz central apagada. Cada pessoa segura sua lanterna ou vela apagada. O jovem fica com a sua patrulha.\n\n2. Silêncio e abertura\nO chefe pede silêncio e Alerta. Diurno: saudação à bandeira com o grito de Alerta da tropa. Noturno: o monitor da patrulha do jovem acende a luz central, e o chefe diz: \"Esta luz representa o caminho que andamos juntos. Cada um de nós leva um pouco dela.\"\n\n3. Chamado\nO chefe chama o jovem pelo nome. Ele vai à frente da formação, diante do chefe. À noite, fica ao lado da luz central.\n\n4. Palavras do chefe\nO chefe fala pouco, de forma sincera e com fatos reais. Modelo: \"Hoje nos despedimos de (nome). Ele entrou na tropa em (ano), fez (etapas e conquistas) e deixou marcas em cada patrulha e em cada atividade. O que ele viveu aqui vai com ele para onde for.\"\n\n5. Palavras da patrulha\nO monitor fala primeiro e depois cada membro diz uma frase curta, olhando para o jovem. Quem preferir pode apenas dar um passo à frente e fazer a saudação escoteira.\n\n6. Palavras do jovem\nOpcional. Se quiser, ele diz algumas palavras. Se não quiser, basta um obrigado e o chefe segue.\n\n7. Renovação da Promessa\nO chefe chama todos para a saudação escoteira. O jovem e toda a tropa repetem juntos a Promessa: \"Prometo pela minha honra fazer o melhor possível para cumprir meus deveres para com Deus e minha Pátria, ajudar o próximo em toda e qualquer ocasião e obedecer à Lei Escoteira.\" Isso mostra que o compromisso continua depois da saída da tropa.\n\n8. Mensagem de Baden-Powell\nO chefe lê a última mensagem do fundador, que pedia, em essência: \"Tente deixar este mundo um pouco melhor do que você encontrou.\" E completa: \"Você já deixou a nossa tropa um pouco melhor, e agora o mundo espera o mesmo de você.\"\n\n9. Entrega da lembrança\nO monitor entrega a lembrança preparada pela patrulha. O chefe entrega o que for do grupo, como certificado, distintivo ou foto. Noturno: cada pessoa acende a sua lanterna ou vela na luz central, e o jovem recebe a sua por último, acesa por toda a tropa.\n\n10. Aperto de mão esquerda\nO jovem passa diante de toda a tropa, e cada um o cumprimenta com a mão esquerda, o aperto tradicional escoteiro, a mão que fica mais perto do coração. Pode haver uma palavra curta de cada um. Enquanto isso, a tropa pode cantar baixinho a Canção da Despedida, que lembra que a despedida escoteira é um até logo.\n\n11. Encerramento\nO chefe diz: \"Uma vez escoteiro, sempre escoteiro. A porta da tropa fica aberta para você.\" Todos fazem a saudação e dizem juntos \"Sempre Alerta!\". Diurno: arria-se a bandeira e a tropa é dispensada. Noturno: a luz central é apagada em silêncio por quem a acendeu, e as lanternas individuais ficam acesas até o fim da dispersão.\n\nADAPTAÇÕES\nChuva ou vento: faça dentro da sede, mantendo a mesma formação, e use a lanterna central no lugar da bandeira ou do fogo.\nTropa pequena: o próprio chefe pode ler as frases de cada patrulha.\nPassagem para o Ramo Sênior: use a cerimônia de passagem e inclua um momento de despedida da tropa antes dela.\nJovem tímido: combine antes que ele não precisa falar e que o momento de maior atenção é o da patrulha.\n\nCUIDADOS\nMantenha os textos curtos. Evite piadas ou histórias que exponham o jovem. Se usar fogo ou vela, deixe um adulto responsável pela segurança e tenha água por perto.";
+  var cfg = null, itens = {}, filtro = '', busca = '', carregado = false, erroCarga = '', ocupado = false, pdfCache = {};
+  function esc(x) { return String(x == null ? '' : x).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
+  function $(id) { return document.getElementById(id); }
+  function url(sub) { return urlComAuthFirebase(BASE + (sub || '') + '.json'); }
+  function sessao() { try { return JSON.parse(localStorage.getItem('chefeSessao') || 'null') || {}; } catch (e) { return {}; } }
+  function ehDir() { var s = sessao(); return s.admin === true || s.tropa === 'diretoria' || s.tropa2 === 'diretoria'; }
+  function podeMexer(it) { var s = sessao(); return ehDir() || (it && it.registro && String(it.registro) === String(s.registro)); }
+  function cat(id) { for (var i = 0; i < CATS.length; i++) if (CATS[i][0] === id) return CATS[i]; return CATS[3]; }
+  function tipoDe(it) {
+    var a = it.anexo; if (!a) return 'texto';
+    var n = String(a.name || '').toLowerCase(), t = String(a.type || '');
+    if (t === 'application/pdf' || /\.pdf$/.test(n)) return 'pdf';
+    if (/^image\//.test(t) || /\.(png|jpe?g|gif|webp)$/.test(n)) return 'img';
+    return 'outro';
+  }
+  function dataBr(ts) { if (!ts) return ''; var d = new Date(ts); return ('0' + d.getDate()).slice(-2) + '/' + ('0' + (d.getMonth() + 1)).slice(-2) + '/' + d.getFullYear(); }
+
+  function css() {
+    if ($('v2DocsCss')) return;
+    var st = document.createElement('style'); st.id = 'v2DocsCss';
+    st.textContent = [
+      '.dc{padding:12px ' + (cfg.padX || 14) + 'px 90px;}',
+      '.dc-ttl{font-size:16px;font-weight:800;color:var(--vinho);}',
+      '.dc-sub{font-size:11px;color:var(--muted);margin:2px 0 10px;}',
+      '.dc-topo{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}',
+      '.dc-btn{padding:9px 13px;border-radius:10px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;}',
+      '.dc-btn.p{background:var(--vinho);border-color:var(--vinho);color:#fff;}',
+      '.dc-btn.s{padding:7px 10px;font-size:12px;}',
+      '.dc-btn.r{color:#b42318;}',
+      '.dc-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}',
+      '.dc-chip{padding:7px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}',
+      '.dc-chip.on{border-color:var(--vinho);color:var(--vinho);box-shadow:inset 0 0 0 1px var(--vinho);}',
+      '.dc-busca{width:100%;box-sizing:border-box;padding:9px 11px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;background:var(--card);color:var(--text);margin-bottom:10px;font-family:inherit;}',
+      '.dc-card{background:var(--card);border-radius:var(--r,12px);box-shadow:var(--shadow);padding:13px;margin-bottom:10px;border-left:4px solid var(--vinho);}',
+      '.dc-nome{font-size:14px;font-weight:800;color:var(--text);}',
+      '.dc-meta{font-size:10.5px;color:var(--muted);margin:3px 0 6px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;}',
+      '.dc-tag{background:rgba(128,128,128,.15);border-radius:10px;padding:1px 8px;font-weight:700;}',
+      '.dc-desc{font-size:12.5px;color:var(--text);opacity:.85;margin-bottom:8px;white-space:pre-wrap;}',
+      '.dc-acoes{display:flex;gap:6px;flex-wrap:wrap;}',
+      '.dc-vazio{text-align:center;color:var(--muted);font-size:13px;padding:26px 10px;}',
+      '.dc-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100020;display:flex;align-items:center;justify-content:center;padding:14px;}',
+      '.dc-box{background:var(--card);color:var(--text);border-radius:10px;width:100%;max-width:560px;max-height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.45);}',
+      '.dc-box h3{margin:0;padding:14px 16px 4px;font-size:16px;}',
+      '.dc-corpo{padding:8px 16px;overflow:auto;flex:1;}',
+      '.dc-rod{padding:10px 16px;border-top:1px solid rgba(128,128,128,.25);display:flex;gap:8px;}',
+      '.dc-rod .dc-btn{flex:1;padding:11px;}',
+      '.dc-lbl{display:block;font-size:10.5px;font-weight:700;color:var(--muted);margin:10px 0 3px;text-transform:uppercase;}',
+      '.dc-in{width:100%;box-sizing:border-box;padding:9px 10px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;background:var(--card);color:var(--text);font-family:inherit;}',
+      'textarea.dc-in{min-height:130px;resize:vertical;line-height:1.45;}',
+      '.dc-aviso{font-size:11.5px;color:var(--muted);margin-top:6px;}',
+      '.dc-erro{font-size:12px;color:#b42318;margin-top:8px;font-weight:700;}',
+      '.dc-leitor{position:fixed;inset:0;z-index:100030;background:var(--bg,#f4f1ec);display:flex;flex-direction:column;}',
+      '.dc-lh{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--card);box-shadow:0 1px 6px rgba(0,0,0,.18);flex-wrap:wrap;}',
+      '.dc-lh .t{flex:1;min-width:120px;font-weight:800;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}',
+      '.dc-lh .dc-btn{padding:7px 11px;font-size:12px;}',
+      '.dc-lh .dc-btn.on{background:var(--vinho);border-color:var(--vinho);color:#fff;}',
+      '.dc-lc{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:14px 12px 60px;}',
+      '.dc-txt{max-width:720px;margin:0 auto;background:var(--card);color:var(--text);border-radius:10px;padding:18px 18px 26px;font-size:16px;line-height:1.6;box-shadow:var(--shadow);}',
+      '.dc-txt p{margin:0 0 10px;white-space:pre-wrap;}',
+      '.dc-txt .h{font-weight:800;color:var(--vinho);margin:18px 0 6px;font-size:15px;letter-spacing:.2px;}',
+      '.dc-txt .n{font-weight:800;margin:14px 0 4px;}',
+      '.dc-pg{max-width:900px;margin:0 auto;}',
+      '.dc-pg canvas{display:block;width:100%;height:auto;background:#fff;margin:0 auto 10px;box-shadow:0 1px 6px rgba(0,0,0,.25);}',
+      '.dc-pg img{display:block;max-width:100%;margin:0 auto;border-radius:6px;}',
+      '.dc-msg{text-align:center;color:var(--muted);padding:30px 10px;font-size:13px;}'
+    ].join('');
+    document.head.appendChild(st);
+  }
+
+  /* ---------- dados ---------- */
+  async function carregar() {
+    try {
+      var r = await fetch(url('')); if (!r.ok) throw new Error('HTTP ' + r.status);
+      var d = await r.json(); itens = (d && !d.error) ? d : {}; erroCarga = ''; carregado = true;
+    } catch (e) { erroCarga = 'Não consegui carregar os documentos (' + e.message + ').'; }
+  }
+  async function gravar(id, obj) {
+    var r = await fetch(url('/' + id), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(obj) });
+    if (!r.ok) throw new Error(r.status === 401 || r.status === 403 ? 'O banco recusou (HTTP ' + r.status + '). Publique as regras novas do Firebase (arquivo regras-firebase.json).' : 'Falha ao gravar (HTTP ' + r.status + ')');
+    itens[id] = obj;
+  }
+  async function apagar(id) {
+    var r = await fetch(url('/' + id), { method: 'DELETE' }); if (!r.ok) throw new Error('Falha ao excluir (HTTP ' + r.status + ')');
+    delete itens[id];
+  }
+  async function bytesDoAnexo(a) {
+    if (a.ref) {
+      var r = await fetch(urlComAuthFirebase((window.V2_CONFIG || {}).DB_URL + '/' + (window.V2_CONFIG || {}).RAIZ + '/anexos/' + a.ref + '/data.json'));
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      var b64 = await r.json(); if (!b64) throw new Error('arquivo não encontrado');
+      return b64;
+    }
+    if (a.data) return a.data;
+    throw new Error('anexo sem conteúdo');
+  }
+  function b64Bytes(b64) { var bin = atob(b64), u = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u; }
+
+  /* ---------- PDF ---------- */
+  function carregarScript(src) { return new Promise(function (ok, no) { var s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = function () { no(new Error('Não consegui carregar o leitor de PDF. Confira a internet.')); }; document.head.appendChild(s); }); }
+  async function pdfjs() {
+    if (!window.pdfjsLib) { await carregarScript('Apoio/vendor/pdfjs/pdf.min.js'); window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'Apoio/vendor/pdfjs/pdf.worker.min.js'; }
+    return window.pdfjsLib;
+  }
+  async function abrirPdf(bytes) { var lib = await pdfjs(); return lib.getDocument({ data: bytes, disableFontFace: true }).promise; }
+  async function textoDoPdf(doc) {
+    var out = [];
+    for (var n = 1; n <= doc.numPages; n++) {
+      var c = await (await doc.getPage(n)).getTextContent(), por = [], atual = null;
+      c.items.forEach(function (i) {
+        if (!i.str && !i.hasEOL) return;
+        var y = Math.round(i.transform[5]);
+        if (!atual || Math.abs(atual.y - y) > 3) { atual = { y: y, partes: [] }; por.push(atual); }
+        atual.partes.push({ x: i.transform[4], s: i.str });
+      });
+      var linhas = por.map(function (l) { l.partes.sort(function (a, b) { return a.x - b.x; }); return { y: l.y, t: l.partes.map(function (p) { return p.s; }).join(' ').replace(/\s+/g, ' ').trim() }; }).filter(function (l) { return l.t; });
+      var gaps = []; for (var q = 1; q < linhas.length; q++) gaps.push(Math.abs(linhas[q - 1].y - linhas[q].y));
+      gaps.sort(function (m, o) { return m - o; }); var med = gaps.length ? gaps[Math.floor(gaps.length / 4)] : 0, txt = '';
+      linhas.forEach(function (l, q) { if (q) txt += (med && Math.abs(linhas[q - 1].y - l.y) > med * 1.45) ? '\n\n' : '\n'; txt += l.t; });
+      out.push(txt);
+    }
+    return out.join('\n\n').slice(0, 60000);
+  }
+  function htmlTexto(t) {
+    return String(t || '').split(/\n/).map(function (l) {
+      var s = l.trim(); if (!s) return '';
+      if (s.length < 70 && /^[A-ZÀ-Ú0-9 ,.\-()ªº\/]{4,}$/.test(s) && /[A-ZÀ-Ú]{3}/.test(s)) return '<div class="h">' + esc(s) + '</div>';
+      if (/^\d{1,2}\.\s+\S/.test(s) && s.length < 60) return '<div class="n">' + esc(s) + '</div>';
+      return '<p>' + esc(s) + '</p>';
+    }).join('');
+  }
+
+  /* ---------- leitor ---------- */
+  function travar(on) { try { document.documentElement.style.overflow = on ? 'hidden' : ''; document.body.style.overflow = on ? 'hidden' : ''; } catch (e) {} }
+  async function abrir(id) {
+    var it = itens[id]; if (!it) return;
+    var tipo = tipoDe(it), modo = it.texto ? 'texto' : (tipo === 'pdf' || tipo === 'img' ? 'pag' : 'texto');
+    var ov = document.createElement('div'); ov.className = 'dc-leitor';
+    ov.innerHTML = '<div class="dc-lh"><button class="dc-btn" id="dcX">← Voltar</button><div class="t">' + esc(it.titulo) + '</div>' +
+      (it.texto && (tipo === 'pdf' || tipo === 'img') ? '<button class="dc-btn" id="dcMT">Texto</button><button class="dc-btn" id="dcMP">Páginas</button>' : '') +
+      (it.anexo ? '<button class="dc-btn" id="dcBx">Baixar</button>' : '') + '</div><div class="dc-lc" id="dcLC"></div>';
+    document.body.appendChild(ov); travar(true);
+    function fechar() { ov.remove(); travar(false); }
+    $('dcX').onclick = fechar;
+    var lc = $('dcLC'), seq = 0;
+    function marca() { var a = $('dcMT'), b = $('dcMP'); if (a) a.classList.toggle('on', modo === 'texto'); if (b) b.classList.toggle('on', modo === 'pag'); }
+    async function desenhar() {
+      var meu = ++seq; marca(); lc.scrollTop = 0;
+      if (modo === 'texto') {
+        lc.innerHTML = it.texto ? '<div class="dc-txt">' + htmlTexto(it.texto) + '</div>' : '<div class="dc-msg">Este documento não tem versão em texto.</div>';
+        return;
+      }
+      lc.innerHTML = '<div class="dc-msg">Abrindo o arquivo…</div>';
+      try {
+        var b64 = await bytesDoAnexo(it.anexo); if (meu !== seq) return;
+        if (tipo === 'img') { lc.innerHTML = '<div class="dc-pg"><img alt="" src="data:' + esc(it.anexo.type || 'image/jpeg') + ';base64,' + b64 + '"></div>'; return; }
+        if (tipo !== 'pdf') { lc.innerHTML = '<div class="dc-msg">Este tipo de arquivo não abre na página. Use "Baixar".</div>'; return; }
+        var doc = await abrirPdf(b64Bytes(b64)); if (meu !== seq) return;
+        lc.innerHTML = '<div class="dc-pg" id="dcPg"></div>'; var host = $('dcPg');
+        var larg = Math.min(host.clientWidth || 360, 900), esc2 = Math.min(window.devicePixelRatio || 1, 2);
+        for (var n = 1; n <= doc.numPages; n++) {
+          if (meu !== seq) return;
+          var pg = await doc.getPage(n), v0 = pg.getViewport({ scale: 1 }), v = pg.getViewport({ scale: (larg / v0.width) * esc2 });
+          var cv = document.createElement('canvas'); cv.width = Math.floor(v.width); cv.height = Math.floor(v.height); host.appendChild(cv);
+          await pg.render({ canvasContext: cv.getContext('2d'), viewport: v }).promise;
+        }
+      } catch (e) { if (meu === seq) lc.innerHTML = '<div class="dc-msg">Não consegui abrir o arquivo: ' + esc(e.message) + '</div>'; }
+    }
+    if ($('dcMT')) $('dcMT').onclick = function () { modo = 'texto'; desenhar(); };
+    if ($('dcMP')) $('dcMP').onclick = function () { modo = 'pag'; desenhar(); };
+    if ($('dcBx')) $('dcBx').onclick = function () { V2.baixarAnexo(it.anexo); };
+    desenhar();
+  }
+
+  /* ---------- formulário ---------- */
+  function formulario(id) {
+    var it = id ? itens[id] : null, arq = null, tirar = false;
+    var ov = document.createElement('div'); ov.className = 'dc-ov';
+    ov.innerHTML = '<div class="dc-box"><h3>' + (it ? 'Editar documento' : 'Novo documento') + '</h3><div class="dc-corpo">' +
+      '<label class="dc-lbl">Título</label><input class="dc-in" id="dcT" maxlength="120" value="' + esc(it ? it.titulo : '') + '">' +
+      '<label class="dc-lbl">Categoria</label><select class="dc-in" id="dcC">' + CATS.map(function (c) { return '<option value="' + c[0] + '"' + ((it ? it.cat : (filtro || 'cerimonias')) === c[0] ? ' selected' : '') + '>' + c[2] + ' ' + c[1] + '</option>'; }).join('') + '</select>' +
+      '<label class="dc-lbl">Descrição (opcional)</label><input class="dc-in" id="dcD" maxlength="240" value="' + esc(it ? it.desc : '') + '">' +
+      '<label class="dc-lbl">Arquivo (PDF, foto ou outro, até 3 MB)</label>' +
+      (it && it.anexo ? '<div class="dc-aviso" id="dcAtual">Arquivo atual: ' + esc(it.anexo.name) + ' <button class="dc-btn s r" type="button" id="dcTirar">Remover arquivo</button></div>' : '') +
+      '<input class="dc-in" type="file" id="dcA" accept=".pdf,image/*,.doc,.docx,.odt,.txt">' +
+      '<label class="dc-lbl">Texto para leitura no celular (opcional)</label><textarea class="dc-in" id="dcX" placeholder="Cole aqui o texto, ou deixe vazio. Em PDF, o texto é extraído automaticamente.">' + esc(it ? it.texto : '') + '</textarea>' +
+      '<div class="dc-aviso">PDF com texto é lido e guardado também como texto, para abrir leve e legível no celular.</div><div class="dc-erro" id="dcE"></div></div>' +
+      '<div class="dc-rod"><button class="dc-btn" id="dcN">Cancelar</button><button class="dc-btn p" id="dcS">Salvar</button></div></div>';
+    document.body.appendChild(ov); travar(true);
+    function fechar() { ov.remove(); travar(false); }
+    $('dcN').onclick = fechar;
+    if ($('dcTirar')) $('dcTirar').onclick = function () { tirar = true; $('dcAtual').style.display = 'none'; };
+    $('dcA').onchange = function () { arq = this.files[0] || null; if (arq && !$('dcT').value.trim()) $('dcT').value = arq.name.replace(/\.[^.]+$/, ''); };
+    $('dcS').onclick = async function () {
+      if (ocupado) return;
+      var titulo = $('dcT').value.trim(), er = $('dcE'); er.textContent = '';
+      if (!titulo) { er.textContent = 'Dê um título ao documento.'; return; }
+      var texto = $('dcX').value.trim();
+      if (!texto && !arq && !(it && it.anexo && !tirar)) { er.textContent = 'Envie um arquivo ou escreva o texto.'; return; }
+      ocupado = true; var btn = $('dcS'); btn.textContent = 'Salvando…'; btn.disabled = true;
+      try {
+        var s = sessao(), anexo = (it && it.anexo && !tirar) ? it.anexo : null, velho = it && it.anexo ? it.anexo : null;
+        if (arq) {
+          anexo = await V2.subirAnexo(arq, 'documentos');
+          if (!texto && (/\.pdf$/i.test(arq.name) || arq.type === 'application/pdf')) {
+            try { btn.textContent = 'Lendo o PDF…'; texto = (await textoDoPdf(await abrirPdf(new Uint8Array(await arq.arrayBuffer())))).trim(); } catch (e) { texto = ''; }
+            if (texto.length < 40) texto = '';
+          }
+        }
+        var obj = { titulo: titulo, cat: $('dcC').value, desc: $('dcD').value.trim(), texto: texto, registro: it ? it.registro : (s.registro || ''), autor: it ? it.autor : (s.nome || ''), secao: it ? it.secao : cfg.secao, ts: it ? it.ts : Date.now(), alteradoEm: Date.now() };
+        if (anexo) obj.anexo = anexo;
+        await gravar(id || ('d' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5)), obj);
+        if (velho && (!anexo || anexo.ref !== velho.ref)) V2.removerAnexo(velho);
+        fechar(); desenhar();
+      } catch (e) { er.textContent = e.message; btn.textContent = 'Salvar'; btn.disabled = false; }
+      ocupado = false;
+    };
+  }
+
+  async function incluirModelo() {
+    var s = sessao();
+    try {
+      await gravar('modelo_despedida', { titulo: 'Cerimônia de despedida (modelo)', cat: 'cerimonias', desc: 'Roteiro simples para o jovem que deixa a tropa, para dia ou noite.', texto: MODELO, registro: s.registro || '', autor: s.nome || '', secao: cfg.secao, ts: Date.now(), alteradoEm: Date.now() });
+      desenhar();
+    } catch (e) { alert(e.message); }
+  }
+
+  /* ---------- lista ---------- */
+  function desenhar() {
+    var c = $(cfg.container); if (!c) return; css();
+    var ids = Object.keys(itens).filter(function (k) { return itens[k] && itens[k].titulo; });
+    var b = busca.toLowerCase();
+    var vis = ids.filter(function (k) { var it = itens[k]; return (!filtro || it.cat === filtro) && (!b || (it.titulo + ' ' + (it.desc || '') + ' ' + (it.texto || '')).toLowerCase().indexOf(b) >= 0); })
+      .sort(function (a, z) { return (itens[z].alteradoEm || itens[z].ts || 0) - (itens[a].alteradoEm || itens[a].ts || 0); });
+    var h = '<div class="dc"><div class="dc-ttl">📄 Documentos</div><div class="dc-sub">Arquivos do grupo, iguais para todas as seções. Toque em Abrir para ler aqui mesmo, inclusive no celular.</div>';
+    h += '<div class="dc-topo"><button class="dc-btn p" id="dcNovo">+ Adicionar documento</button>' + (!itens.modelo_despedida ? '<button class="dc-btn" id="dcMod">🕯️ Incluir modelo de cerimônia de despedida</button>' : '') + '</div>';
+    h += '<div class="dc-chips"><button class="dc-chip' + (!filtro ? ' on' : '') + '" data-f="">Todos</button>' + CATS.map(function (k) { return '<button class="dc-chip' + (filtro === k[0] ? ' on' : '') + '" data-f="' + k[0] + '">' + k[2] + ' ' + k[1] + '</button>'; }).join('') + '</div>';
+    h += '<input class="dc-busca" id="dcB" placeholder="Buscar nos documentos…" value="' + esc(busca) + '">';
+    if (erroCarga) h += '<div class="dc-vazio">' + esc(erroCarga) + '<br><button class="dc-btn" id="dcRe" style="margin-top:8px">Tentar de novo</button></div>';
+    else if (!carregado) h += '<div class="dc-vazio">Carregando…</div>';
+    else if (!vis.length) h += '<div class="dc-vazio">' + (ids.length ? 'Nenhum documento neste filtro.' : 'Ainda não há documentos. Adicione o primeiro ou inclua o modelo de cerimônia.') + '</div>';
+    vis.forEach(function (k) {
+      var it = itens[k], tp = tipoDe(it), ct = cat(it.cat);
+      h += '<div class="dc-card"><div class="dc-nome">' + esc(it.titulo) + '</div><div class="dc-meta"><span class="dc-tag">' + ct[2] + ' ' + ct[1] + '</span><span>' + (tp === 'pdf' ? 'PDF' : tp === 'img' ? 'Imagem' : tp === 'outro' ? esc(it.anexo.name) : 'Texto') + '</span>' + (it.autor ? '<span>por ' + esc(it.autor) + '</span>' : '') + '<span>' + dataBr(it.alteradoEm || it.ts) + '</span></div>' +
+        (it.desc ? '<div class="dc-desc">' + esc(it.desc) + '</div>' : '') +
+        '<div class="dc-acoes"><button class="dc-btn s p" data-a="ver" data-i="' + k + '">Abrir</button>' + (it.anexo ? '<button class="dc-btn s" data-a="bx" data-i="' + k + '">Baixar</button>' : '') +
+        (podeMexer(it) ? '<button class="dc-btn s" data-a="ed" data-i="' + k + '">Editar</button><button class="dc-btn s r" data-a="del" data-i="' + k + '">Excluir</button>' : '') + '</div></div>';
+    });
+    c.innerHTML = h + '</div>';
+    $('dcNovo').onclick = function () { formulario(null); };
+    if ($('dcMod')) $('dcMod').onclick = incluirModelo;
+    if ($('dcRe')) $('dcRe').onclick = function () { abrirPag(true); };
+    $('dcB').oninput = function () { busca = this.value; var p = this.selectionStart; desenhar(); var n = $('dcB'); n.focus(); try { n.setSelectionRange(p, p); } catch (e) {} };
+    Array.prototype.forEach.call(c.querySelectorAll('.dc-chip'), function (x) { x.onclick = function () { filtro = this.dataset.f; desenhar(); }; });
+    Array.prototype.forEach.call(c.querySelectorAll('[data-a]'), function (x) {
+      x.onclick = async function () {
+        var i = this.dataset.i, a = this.dataset.a;
+        if (a === 'ver') abrir(i); else if (a === 'bx') V2.baixarAnexo(itens[i].anexo); else if (a === 'ed') formulario(i);
+        else if (a === 'del') {
+          if (!confirm('Excluir "' + itens[i].titulo + '"? Não dá para desfazer.')) return;
+          var an = itens[i].anexo; try { await apagar(i); if (an) V2.removerAnexo(an); desenhar(); } catch (e) { alert(e.message); }
+        }
+      };
+    });
+  }
+  async function abrirPag(forca) {
+    if (!cfg) return; if (!carregado || forca) { erroCarga = ''; desenhar(); await carregar(); }
+    desenhar();
+  }
+  return { montar: function (c) { cfg = c; }, abrir: abrirPag, _estado: function () { return itens; } };
 })();

@@ -7,7 +7,7 @@
 <title>Diretoria — GE Joaninha</title>
 <link rel="stylesheet" href="Apoio/secao.css">
 <style>:root{--vinho:#1F5FBF;--vinho2:#2F74D6;}.cabecalho-fixo{position:sticky;top:0;z-index:310;background:var(--bg,#f0ede8);overflow-anchor:none}</style>
-<script src="Apoio/v2.js?v=20261116f"></script>
+<script src="Apoio/v2.js?v=20261116g"></script>
 <style>.sec-grid{display:grid;grid-template-columns:minmax(230px,1fr) minmax(0,2fr);gap:18px;margin-top:14px;align-items:start}@media(max-width:720px){.sec-grid{grid-template-columns:1fr}}
 .sec-box{background:rgba(127,127,127,.07);border-radius:10px;padding:10px 12px;min-width:0}.sec-box h4{margin:0 0 8px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
 .tb-sec{width:100%;border-collapse:collapse;font-size:12px}.tb-sec th{text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);padding:4px 8px;border-bottom:1px solid var(--border)}.tb-sec td{padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:middle}.tb-sec tr:last-child td{border-bottom:0}.tb-sec td.n{white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}
@@ -26,7 +26,7 @@
 <div class="pagina" id="pg-docs"><div class="pagina-ttl">Documentação</div><div class="pagina-sub">Documentos de gestão do Grupo Escoteiro.</div>
 <div class="card"><div class="card-ttl">💡 Sugestões sobre o grupo</div><div id="sug-grupo-lista" class="card-txt">Carregando…</div></div>
 <div class="card"><div class="card-ttl">📝 Atas de reunião <span class="em-breve">em construção</span></div><div class="card-txt">Registro das reuniões da diretoria e dos chefes.</div></div>
-<div class="card"><div class="card-ttl">📁 Documentos do grupo <span class="em-breve">em construção</span></div><div class="card-txt">Estatuto, registros, certificados e arquivos de consulta.</div></div>
+<div id="docs-box" style="margin:0 -14px"></div>
 <div class="card"><div class="card-ttl">✅ Pendências da gestão <span class="em-breve">em construção</span></div><div class="card-txt">Renovações, prazos e tarefas do grupo.</div></div></div>
 <script>
 const DB_URL = "https://joaninha-progressao-default-rtdb.firebaseio.com";
@@ -103,6 +103,7 @@ async function iniciarSecao() {
 <script>
 V2_FIN.montarDiretoria({ container:'fin-box' });
 V2_PESSOAS.montarDiretoria({ container:'fichas-box' });
+V2_DOCS.montar({ secao:'diretoria', container:'docs-box', padX:14 });
 V2_ALMOX.montar({ secao:'diretoria', nomeTropa:'Diretoria', outraTropa:'', verTudo:true, subTitulo:'Visão geral do material de todas as seções. A Diretoria pode editar qualquer item; cada seção edita só os seus.', container:'almox-box', padX:14 });
 const ROTULOS = { admin:'⭐ Administrador', escoteira: icoRamo('escoteira') + ' Tropa Escoteira', senior: icoRamo('senior') + ' Tropa Sênior', alcateia:'🐺 Alcateia', cla: icoRamo('cla') + ' Clã Pioneiro', diretoria: icoRamo('diretoria') + ' Diretoria', sem:'❔ Seção não definida (defina em Gerenciar Chefes)' };
 function escH(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -283,7 +284,7 @@ function relatorioSecaoDir(id) { if (SEC_DADOS[id]) V2.abrirRelatorioTropa(SEC_D
 function relatorioGrupo() { if (SECOES_DIR.every(s => SEC_DADOS[s.id])) V2.abrirRelatorioGrupo(SECOES_DIR.map(s => SEC_DADOS[s.id])); }
 async function aoAbrirAba(id) {
   if (id === 'secoes') { carregarFormCache(); return carregarSecoes(); }
-  if (id === 'docs') return carregarSugestoesGrupo();
+  if (id === 'docs') { V2_DOCS.abrir(); return carregarSugestoesGrupo(); }
   if (id === 'fichas') return V2_PESSOAS.abrirDiretoria();
   if (id === 'cal') { const r = V2_CAL.abrirNaSecao(null, 'cal-box'); carregarAntigosSecoes(); return r; }
 }

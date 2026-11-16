@@ -25,6 +25,12 @@
         ".write": "root.child('usuarios').child(auth.uid).exists() && ($id === '_config' || root.child('usuarios').child(auth.uid).child('admin').val() === true || root.child('usuarios').child(auth.uid).child('tropa').val() === 'diretoria' || (data.exists() ? (data.child('tropa').val() === null || data.child('tropa').val() === root.child('usuarios').child(auth.uid).child('tropa').val() || data.child('tropa').val() === root.child('usuarios').child(auth.uid).child('tropa2').val()) : (newData.child('tropa').val() === null || newData.child('tropa').val() === root.child('usuarios').child(auth.uid).child('tropa').val() || newData.child('tropa').val() === root.child('usuarios').child(auth.uid).child('tropa2').val())))"
       }
     },
+    "documentos": {
+      ".read": "auth != null",
+      "$id": {
+        ".write": "root.child('usuarios').child(auth.uid).exists()"
+      }
+    },
     "v2": {
       ".read": "root.child('usuarios').child(auth.uid).exists()",
       "escoteira": {

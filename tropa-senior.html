@@ -318,7 +318,7 @@ body{padding-bottom:50px;}
 mark.hl{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 
 </style>
-<script src="Apoio/v2.js?v=20261116f"></script>
+<script src="Apoio/v2.js?v=20261116g"></script>
 </head>
 <body>
 
@@ -333,6 +333,7 @@ mark.hl{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
   <button class="tab-btn" data-tab="ep" onclick="showTab('ep',this);renderEP();">🏆 Ed. Pátria</button>
   <button class="tab-btn" data-tab="alm" onclick="showTab('alm',this);abrirAlmoSr();">📦 Almoxarifado</button>
   <button class="tab-btn" data-tab="fin" onclick="showTab('fin',this);V2_FIN.abrir();">💰 Financeiro</button>
+  <button class="tab-btn" data-tab="docs" onclick="showTab('docs',this);V2_DOCS.abrir();">📄 Documentos</button>
 </nav>
 
 <!-- ═══ TAB: PROGRESSÃO ═══════════════════════════════ -->
@@ -3117,7 +3118,7 @@ async function iniciarApp(){
 }
 
 function aplicarModoVisualizacaoSr() {
-document.querySelectorAll('.tab-btn[data-tab="prog"], .tab-btn[data-tab="jovens"], .tab-btn[data-tab="ep"], .tab-btn[data-tab="pont"], .tab-btn[data-tab="alm"], .tab-btn[data-tab="fin"]').forEach(el => el.style.display = 'none');
+document.querySelectorAll('.tab-btn[data-tab="prog"], .tab-btn[data-tab="jovens"], .tab-btn[data-tab="ep"], .tab-btn[data-tab="pont"], .tab-btn[data-tab="alm"], .tab-btn[data-tab="fin"], .tab-btn[data-tab="docs"]').forEach(el => el.style.display = 'none');
 const resumoPresenca = document.getElementById('presenca-summary'); if (resumoPresenca) { resumoPresenca.parentElement.style.display = 'none'; }
 document.querySelectorAll('#cabecalhoAddEventoSr').forEach(el => { el.style.display = 'none'; const body = el.nextElementSibling; if (body) body.style.display = 'none'; });
 const saveBar = document.getElementById('saveBarSr');
@@ -3249,7 +3250,7 @@ function irParaBlocoSr(bid){
 
 // ═══ ALMOXARIFADO — módulo compartilhado (v2.js) ═══
 function abrirAlmoSr(){ V2_ALMOX.abrir(); }
-document.addEventListener('DOMContentLoaded',function(){ V2_FIN.montar({ secao:'senior', container:'fin' });
+document.addEventListener('DOMContentLoaded',function(){ V2_FIN.montar({ secao:'senior', container:'fin' }); V2_DOCS.montar({ secao:'senior', container:'docs', padX:12 });
   const _showModalOrig = showModal; showModal = function (yid) { _showModalOrig(yid); const y = yid ? YOUTH_DATA.find(x => x.id === yid) : null; V2_PESSOAS.campos('v2pCampos', yid || '', y ? y.name : '', 'inp-name'); };
 const _saveYouthOrig = saveYouth; saveYouth = function () { if (document.getElementById('edit-id').value) V2_PESSOAS.salvarDe(); _saveYouthOrig(); };
 V2_CONV.init({ base: '/conversar/senior',
@@ -3301,6 +3302,7 @@ V2_PESSOAS.montar({ secao:'senior', container:'fichasBox_off', jovens:()=>paxtuE
 <!-- ═══ TAB: ALMOXARIFADO ════════════════════════════ -->
 <div id="alm" class="tab-content" style="padding-bottom:80px;"></div>
 <div id="fin" class="tab-content" style="padding-bottom:80px;"></div>
+<div id="docs" class="tab-content" style="padding-bottom:80px;"></div>
 
 
 <div class="save-bar" id="saveBarSr">
@@ -3323,7 +3325,7 @@ V2_PESSOAS.montar({ secao:'senior', container:'fichasBox_off', jovens:()=>paxtuE
 </div>
 
 <script>
-V2_NAVG({ nav:'nav.tabs', embrulhar:true, grupos:[{ rotulo:'👥 Seção', botoes:['.tab-btn[data-tab="prog"]','.tab-btn[data-tab="pont"]','.tab-btn[data-tab="ep"]','.tab-btn[data-tab="jovens"]'] }, { rotulo:'📅 Calendário/Ciclo', botoes:['.tab-btn[data-tab="cal"]','.tab-btn[data-tab="sem"]'] }, { rotulo:'🧰 Gestão', botoes:['.tab-btn[data-tab="alm"]','.tab-btn[data-tab="fin"]'] }] });
+V2_NAVG({ nav:'nav.tabs', embrulhar:true, grupos:[{ rotulo:'👥 Seção', botoes:['.tab-btn[data-tab="prog"]','.tab-btn[data-tab="pont"]','.tab-btn[data-tab="ep"]','.tab-btn[data-tab="jovens"]'] }, { rotulo:'📅 Calendário/Ciclo', botoes:['.tab-btn[data-tab="cal"]','.tab-btn[data-tab="sem"]'] }, { rotulo:'🧰 Gestão', botoes:['.tab-btn[data-tab="alm"]','.tab-btn[data-tab="fin"]','.tab-btn[data-tab="docs"]'] }] });
 </script>
 </body>
 </html>

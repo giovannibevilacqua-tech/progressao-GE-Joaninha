@@ -699,7 +699,7 @@ mark.hl-esc{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 .card-acoes .btn-ic{padding:4px 7px;font-size:10.5px;font-weight:600;}
 .patrulha-drop-zone{align-items:stretch !important;}
 </style>
-<script src="Apoio/v2.js?v=20261116f"></script>
+<script src="Apoio/v2.js?v=20261116g"></script>
 <script>const { EIXOS, BLOCOS, BLOCO_IDS } = window.V2_BLOCOS;</script>
 </head>
 <body>
@@ -713,6 +713,7 @@ mark.hl-esc{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 <button class="tab-btn-linha" id="tabLis" onclick="mudarPagina('lis')">🏅 Lis de Ouro</button>
 <button class="tab-btn-linha" id="tabAlmoxarifado" onclick="mudarPagina('almoxarifado')">📦 Almoxarifado</button>
 <button class="tab-btn-linha" id="tabFinanceiro" onclick="mudarPagina('financeiro')">💰 Financeiro</button>
+<button class="tab-btn-linha" id="tabDocumentos" onclick="mudarPagina('documentos')">📄 Documentos</button>
 </nav>
 </div>
 
@@ -904,6 +905,7 @@ Toque num jovem para abrir a ficha dele. A barra de cor mostra o tempo até a tr
 
 <div id="pagina-almoxarifado" style="display:none;padding-bottom:32px;"></div>
 <div id="pagina-financeiro" style="display:none;padding-bottom:32px;"></div>
+<div id="pagina-documentos" style="display:none;padding-bottom:32px;"></div>
 
 <button class="reset-btn somente-admin" id="btnLimparMarcacoes" onclick="confirmReset()">↺ LIMPAR MARCAÇÕES</button>
 
@@ -2355,7 +2357,7 @@ if (card) card.classList.toggle('open');
 // ===== PÁGINA 2: TABELA POR BLOCO =====
 let paginaAtiva = 'tabela';
 
-const PAGINAS_ESC = { tabela: ['pagina-tabela', 'tabTabela'], calendario: ['pagina-calendario', 'tabCalendario'], jovens: ['pagina-jovens', 'tabJovens'], ciclo: ['pagina-ciclo', 'tabCiclo'], lis: ['pagina-lis', 'tabLis'], pont: ['pagina-pont', 'tabPont'], almoxarifado: ['pagina-almoxarifado', 'tabAlmoxarifado'], financeiro: ['pagina-financeiro', 'tabFinanceiro'] };
+const PAGINAS_ESC = { tabela: ['pagina-tabela', 'tabTabela'], calendario: ['pagina-calendario', 'tabCalendario'], jovens: ['pagina-jovens', 'tabJovens'], ciclo: ['pagina-ciclo', 'tabCiclo'], lis: ['pagina-lis', 'tabLis'], pont: ['pagina-pont', 'tabPont'], almoxarifado: ['pagina-almoxarifado', 'tabAlmoxarifado'], financeiro: ['pagina-financeiro', 'tabFinanceiro'], documentos: ['pagina-documentos', 'tabDocumentos'] };
 function membrosPontEsc(pid, atvId) {
 const hoje = new Date().toISOString().slice(0, 10);
 const ev = atvId ? EVENTOS.find(e => String(e.id) === String(atvId)) : null;
@@ -2379,6 +2381,7 @@ if (p === 'lis') renderPaginaLis();
 if (p === 'pont') V2_PONT.montar(document.getElementById('pontHost'), { patrulhas: () => PATRULHAS, dados: () => PONT, membros: membrosPontEsc, atividades: () => (window.calSecaoEventos ? window.calSecaoEventos() : []), salvar: () => { temAlteracaoLocalPendente = true; saveState(); }, podeEditar: true });
 if (p === 'almoxarifado') V2_ALMOX.abrir();
 if (p === 'financeiro') V2_FIN.abrir();
+if (p === 'documentos') V2_DOCS.abrir();
 }
 
 let blocosAbertosTabela = {};
@@ -3834,6 +3837,7 @@ window.addEventListener('online', () => { if (temAlteracaoLocalPendente && !(__s
 
 // ===== ALMOXARIFADO — módulo compartilhado (v2.js) =====
 V2_FIN.montar({ secao:'escoteira', container:'pagina-financeiro' });
+V2_DOCS.montar({ secao:'escoteira', container:'pagina-documentos', padX:14 });
 V2_CONV.init({ base: '/conversar/escoteira',
   aoMudar: () => { try { renderRoster(); if (ativo) renderDetail(ativo); if (paginaAtiva === 'tabela') preservarScroll(atualizarTabelaBloco); } catch (e) {} },
   concluir: (j, k) => {
@@ -3935,7 +3939,7 @@ function irParaBlocoEsc(eixoId, bid){
 })();
 </script>
 <script>
-V2_NAVG({ nav:'#tabsLinha', embrulhar:false, grupos:[{ rotulo:'👥 Seção', botoes:['#tabTabela','#tabPont','#tabLis','#tabJovens'] }, { rotulo:'📅 Calendário/Ciclo', botoes:['#tabCalendario','#tabCiclo'] }, { rotulo:'🧰 Gestão', botoes:['#tabAlmoxarifado','#tabFinanceiro'] }] });
+V2_NAVG({ nav:'#tabsLinha', embrulhar:false, grupos:[{ rotulo:'👥 Seção', botoes:['#tabTabela','#tabPont','#tabLis','#tabJovens'] }, { rotulo:'📅 Calendário/Ciclo', botoes:['#tabCalendario','#tabCiclo'] }, { rotulo:'🧰 Gestão', botoes:['#tabAlmoxarifado','#tabFinanceiro','#tabDocumentos'] }] });
 </script>
 </body>
 </html>
