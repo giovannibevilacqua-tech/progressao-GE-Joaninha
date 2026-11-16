@@ -3225,7 +3225,7 @@ function restaurarUltimaAba(){
   function formulario(o) {
     // o: { sec, id, nome, nasc, p, chefe, podeNasc, aplicarNome, aoSalvar }
     var p = o.p || {}, ov = document.createElement('div'); ov.className = 'v2p-ov';
-    var med = !o.chefe && root.V2_FICHAMED ? '<div class="v2p-sec">🩺 Ficha médica</div><div id="v2pMed"></div>' : '';
+    var med = !o.chefe && root.V2_FICHAMED ? '<div class="v2p-sec">🩺 Ficha médica</div><button type="button" class="v2p-bt" id="v2pMedBt" style="width:100%">🩺 Abrir ficha médica</button>' : '';
     ov.innerHTML = '<div class="v2p-box"><div style="font-size:16px;font-weight:800">' + (o.chefe ? '👤 ' : '🧒 ') + esc(nomeTela(p, o.nome)) + '</div>'
       + (p.nomeSocial ? '<div class="mini" style="font-size:11px;opacity:.7">Nome: ' + esc(p.nomeCompleto || o.nome) + '</div>' : '')
       + '<label>Nome social (opcional — se preenchido, é o nome que aparece no sistema)</label><input id="v2pSocial" value="' + esc(p.nomeSocial || '') + '" autocomplete="off">'
@@ -3236,7 +3236,7 @@ function restaurarUltimaAba(){
     document.body.appendChild(ov);
     $('v2pProm').addEventListener('input', function () { $('v2pTempo').textContent = this.value ? 'Tempo de promessa: ' + tempoDesde(this.value) : ''; });
     $('v2pNao').onclick = function () { ov.remove(); };
-    if (med && root.V2_FICHAMED) root.V2_FICHAMED.montar($('v2pMed'), { sec: o.sec, id: o.id, nome: o.nome, p: p, recarregar: o.aoSalvar });
+    if (med && root.V2_FICHAMED) $('v2pMedBt').onclick = function () { root.V2_FICHAMED.ver(o.sec, o.id, o.nome); };
     $('v2pSim').onclick = async function () {
       var b = this, er = $('v2pErro'); er.style.display = 'none';
       var social = $('v2pSocial').value.trim(), obj = { nomeSocial: social || null, promessa: $('v2pProm').value || null, emergNome: $('v2pEN').value.trim() || null, emergTel: $('v2pET').value.trim() || null, emergRel: $('v2pER').value.trim() || null };
@@ -3295,10 +3295,10 @@ function restaurarUltimaAba(){
       + '<label style="font-size:11px;font-weight:700;opacity:.75;text-transform:uppercase;display:block;margin:8px 0 3px">Data de promessa</label><input id="v2pcProm" type="date" value="' + esc(p.promessa || '') + '" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--border,#ccc);border-radius:8px;font-size:14px"><div class="mini" id="v2pcTempo" style="font-size:11px;opacity:.7">' + (p.promessa ? 'Tempo de promessa: ' + tempoDesde(p.promessa) : '') + '</div>'
       + '<div class="v2p-sec">🚑 Contato de emergência</div>'
       + ['EN|Nome|emergNome|text', 'ET|Telefone|emergTel|tel', 'ER|Parentesco|emergRel|text'].map(function (c) { var q = c.split('|'); return '<label style="font-size:11px;font-weight:700;opacity:.75;text-transform:uppercase;display:block;margin:8px 0 3px">' + q[1] + '</label><input id="v2pc' + q[0] + '" type="' + q[3] + '" value="' + esc(p[q[2]] || '') + '" autocomplete="off" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--border,#ccc);border-radius:8px;font-size:14px">'; }).join('')
-      + (temMed ? '<details id="v2pcMedDet" style="margin-top:14px;border:1px solid var(--border,#ddd);border-radius:10px;padding:8px 10px"><summary style="cursor:pointer;font-weight:800;font-size:13px">🩺 Ficha médica ' + (p.med && p.med.em ? '<span class="mini">(enviada em ' + esc(dataBR(String(p.med.em).slice(0, 10))) + ')</span>' : '<span class="mini">(não enviada)</span>') + '</summary><div id="v2pcMed" style="margin-top:8px"></div></details>' : '');
+      + (temMed ? '<button type="button" id="v2pcMedBt" class="v2p-bt" style="margin-top:14px;width:100%">🩺 Abrir ficha médica ' + (p.med && p.med.em ? '<span class="mini">(enviada em ' + esc(dataBR(String(p.med.em).slice(0, 10))) + ')</span>' : '<span class="mini">(não enviada)</span>') + '</button>' : '');
     $('v2pcProm').addEventListener('input', function () { $('v2pcTempo').textContent = this.value ? 'Tempo de promessa: ' + tempoDesde(this.value) : ''; });
     $('v2pcSocial').addEventListener('input', function () { var ni = $(ctxC.nomeInput); if (ni) ni.value = this.value.trim() || ctxC.legal; });
-    if (temMed) $('v2pcMedDet').addEventListener('toggle', function () { if (this.open && !$('v2pcMed').firstChild) root.V2_FICHAMED.montar($('v2pcMed'), { sec: sec, id: id, nome: legal, p: p, recarregar: function () {} }); });
+    if (temMed) $('v2pcMedBt').onclick = function () { root.V2_FICHAMED.ver(sec, id, legal); };
   }
   // lê os campos (na hora) e grava em /pessoas; o botão Salvar do cadastro chama isto
   function salvarCampos() {
@@ -3533,8 +3533,8 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
       if (s.meds) { h += '<div data-meds="1"></div><button type="button" class="v2p-bt" data-medadd="1" style="margin-top:6px">➕ Medicamento</button>'; return; }
       s.c.forEach(function (c, ci) {
         var id = si + '_' + ci, val = v[c.k] || '';
-        if (c.t === 'chk') h += '<label style="display:flex;gap:8px;align-items:center;margin:6px 0;font-size:14px;text-transform:none;font-weight:600"><input type="checkbox" data-mk="' + id + '"' + (val ? ' checked' : '') + '> ' + esc(c.k) + '</label>';
-        else if (c.t === 'chktxt') { var txt = val && !/^sim$/i.test(val) ? val : ''; h += '<div class="v2p-mf"><label style="display:flex;gap:8px;align-items:center;text-transform:none;font-weight:600;font-size:14px"><input type="checkbox" data-mk="' + id + '" data-ck="1"' + (val ? ' checked' : '') + '> ' + esc(c.k) + '</label><input data-mt="' + id + '" placeholder="' + esc(c.ph || 'detalhes') + '" value="' + esc(txt) + '" autocomplete="off"></div>'; }
+        if (c.t === 'chk') h += '<label style="display:flex;gap:8px;align-items:center;margin:6px 0;font-size:14px;text-transform:none;font-weight:600"><input type="checkbox" style="width:auto;flex:none;margin:0;display:inline-block" data-mk="' + id + '"' + (val ? ' checked' : '') + '> ' + esc(c.k) + '</label>';
+        else if (c.t === 'chktxt') { var txt = val && !/^sim$/i.test(val) ? val : ''; h += '<div class="v2p-mf"><label style="display:flex;gap:8px;align-items:center;text-transform:none;font-weight:600;font-size:14px"><input type="checkbox" style="width:auto;flex:none;margin:0;display:inline-block" data-mk="' + id + '" data-ck="1"' + (val ? ' checked' : '') + '> ' + esc(c.k) + '</label><input data-mt="' + id + '" placeholder="' + esc(c.ph || 'detalhes') + '" value="' + esc(txt) + '" autocomplete="off"></div>'; }
         else if (c.t === 'sel') h += '<div class="v2p-mf"><label>' + esc(c.k) + '</label><select data-mk="' + id + '" style="width:100%;padding:9px;border-radius:8px"><option value="">—</option>' + c.o.map(function (o) { return '<option' + (o === val ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select></div>';
         else if (c.t === 'area') h += '<div class="v2p-mf"><label>' + esc(c.k) + '</label><textarea data-mk="' + id + '" rows="3">' + esc(val) + '</textarea></div>';
         else h += '<div class="v2p-mf"><label>' + esc(c.k) + '</label><input data-mk="' + id + '" value="' + esc(val) + '" placeholder="' + esc(c.ph || '') + '" autocomplete="off"></div>';
@@ -3747,17 +3747,29 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
   async function ver(sec, id, nome) {
     var ov = document.createElement('div'); ov.className = 'v2p-ov';
     ov.innerHTML = '<div class="v2p-box" style="display:flex;flex-direction:column;max-height:90vh;padding:0;overflow:hidden"><div style="padding:14px 16px 6px;font-size:16px;font-weight:800">🩺 Ficha médica — ' + esc(nome) + '</div><div id="v2vCorpo" style="padding:4px 16px;overflow:auto;flex:1"><div class="mini">Carregando…</div></div>'
-      + '<div class="v2p-pe" style="padding:10px 16px;border-top:1px solid rgba(128,128,128,.25);display:flex;gap:8px;background:inherit"><button type="button" class="v2p-bt" id="v2vFecha">Fechar</button><button type="button" class="v2p-bt" id="v2vBaixa" style="display:none">⬇ Baixar arquivo</button></div></div>';
+      + '<div class="v2p-pe" style="padding:10px 16px;border-top:1px solid rgba(128,128,128,.25);display:flex;gap:8px;background:inherit"><button type="button" class="v2p-bt" id="v2vFecha">Fechar</button><button type="button" class="v2p-bt" id="v2vBaixa" style="display:none">⬇ Baixar arquivo</button><button type="button" class="v2p-bt p" id="v2vEdita">✏️ Editar / enviar ficha</button></div></div>';
     document.body.appendChild(ov); ov.addEventListener('click', function (e) { if (e.target === ov) ov.remove(); });
     $('v2vFecha').onclick = function () { ov.remove(); };
-    var med = null;
-    try { var d = await root.V2_PESSOAS.carregar(sec); med = d && d[id] && d[id].med; } catch (e) {}
-    if (!med) { $('v2vCorpo').innerHTML = '<div class="mini">Este jovem ainda não tem ficha médica. Envie pela aba Fichas ou use “Importar fichas médicas”.</div>'; return; }
-    var v = medParaCampos(med.texto), h = '<div class="mini" style="margin-bottom:8px">Ficha de <b>' + new Date(med.em).toLocaleDateString('pt-BR') + '</b> · por ' + esc(med.nomePor || ('Registro ' + med.por)) + '</div>', algum = false;
-    h += htmlLeitura(v); algum = !!camposParaMed(v);
-    if (!algum) h += '<div class="mini">' + (med.semTexto ? 'O texto desta ficha não foi lido; baixe o arquivo para ver.' : 'Sem campos preenchidos.') + '</div>';
-    $('v2vCorpo').innerHTML = h;
-    if (!med.manual) { var b = $('v2vBaixa'); b.style.display = ''; b.onclick = function () { baixar(sec, id, nome); }; }
+    var pessoa = {}, editando = false;
+    async function mostrar() {
+      var med = null;
+      try { var d = await root.V2_PESSOAS.carregar(sec); pessoa = (d && d[id]) || {}; med = pessoa.med; } catch (e) {}
+      var corpo = $('v2vCorpo'), bx = $('v2vBaixa'), be = $('v2vEdita');
+      if (editando) {
+        be.textContent = '← Voltar à ficha'; bx.style.display = 'none';
+        montar(corpo, { sec: sec, id: id, nome: nome, p: pessoa, recarregar: function () {} });
+        return;
+      }
+      be.textContent = '✏️ Editar / enviar ficha';
+      if (!med) { corpo.innerHTML = '<div class="mini">Este jovem ainda não tem ficha médica. Use “Editar / enviar ficha” para enviar o PDF ou preencher à mão.</div>'; bx.style.display = 'none'; return; }
+      var v = medParaCampos(med.texto), h = '<div class="mini" style="margin-bottom:8px">Ficha de <b>' + new Date(med.em).toLocaleDateString('pt-BR') + '</b> · por ' + esc(med.nomePor || ('Registro ' + med.por)) + '</div>', algum = false;
+      h += htmlLeitura(v); algum = !!camposParaMed(v);
+      if (!algum) h += '<div class="mini">' + (med.semTexto ? 'O texto desta ficha não foi lido; baixe o arquivo para ver.' : 'Sem campos preenchidos.') + '</div>';
+      corpo.innerHTML = h;
+      bx.style.display = med.manual ? 'none' : ''; bx.onclick = function () { baixar(sec, id, nome); };
+    }
+    $('v2vEdita').onclick = function () { editando = !editando; mostrar(); };
+    mostrar();
   }
 
   // PDF de uma ficha (uma ou várias páginas)
