@@ -3499,6 +3499,23 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
     };
   }
 
+  // ver a ficha médica de um jovem (só leitura) direto do card
+  async function ver(sec, id, nome) {
+    var ov = document.createElement('div'); ov.className = 'v2p-ov';
+    ov.innerHTML = '<div class="v2p-box" style="display:flex;flex-direction:column;max-height:90vh;padding:0"><div style="padding:14px 16px 6px;font-size:16px;font-weight:800">🩺 Ficha médica — ' + esc(nome) + '</div><div id="v2vCorpo" style="padding:4px 16px;overflow:auto;flex:1"><div class="mini">Carregando…</div></div>'
+      + '<div style="padding:10px 16px;border-top:1px solid rgba(0,0,0,.1);display:flex;gap:8px;position:sticky;bottom:0;background:inherit"><button type="button" class="v2p-bt" id="v2vFecha">Fechar</button><button type="button" class="v2p-bt" id="v2vBaixa" style="display:none">⬇ Baixar arquivo</button></div></div>';
+    document.body.appendChild(ov); ov.addEventListener('click', function (e) { if (e.target === ov) ov.remove(); });
+    $('v2vFecha').onclick = function () { ov.remove(); };
+    var med = null;
+    try { var d = await root.V2_PESSOAS.carregar(sec); med = d && d[id] && d[id].med; } catch (e) {}
+    if (!med) { $('v2vCorpo').innerHTML = '<div class="mini">Este jovem ainda não tem ficha médica. Envie pela aba Fichas ou use “Importar fichas médicas”.</div>'; return; }
+    var v = medParaCampos(med.texto), h = '<div class="mini" style="margin-bottom:8px">Ficha de <b>' + new Date(med.em).toLocaleDateString('pt-BR') + '</b> · por ' + esc(med.nomePor || ('Registro ' + med.por)) + '</div>', algum = false;
+    MED_CAMPOS.forEach(function (c) { if (v[c[0]]) { algum = true; h += '<div class="v2p-mf"><label>' + esc(c[0]) + '</label><div style="white-space:pre-wrap;font-size:14px">' + esc(v[c[0]]) + '</div></div>'; } });
+    if (!algum) h += '<div class="mini">' + (med.semTexto ? 'O texto desta ficha não foi lido; baixe o arquivo para ver.' : 'Sem campos preenchidos.') + '</div>';
+    $('v2vCorpo').innerHTML = h;
+    if (!med.manual) { var b = $('v2vBaixa'); b.style.display = ''; b.onclick = function () { baixar(sec, id, nome); }; }
+  }
+
   // PDF de uma ficha (uma ou várias páginas)
   function desenharFichaPdf(P, st, it, nova) {
     var W = P.W, M = 40, L = W - 2 * M, y = 50, VINHO = '#6D1026';
@@ -3628,7 +3645,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
     lote._it = itens; lote._pintar = pintar; lote._sec = sec; pintar();
   }
   root.V2_FICHAMED = {
-    montar: montar, importarGeral: importarGeral, extrairCampos: extrairCampos, exportarSecao: exportarSecao, lerFicha: lerFicha, comparar: comparar, campos: campos, lote: lote,
+    montar: montar, ver: ver, importarGeral: importarGeral, extrairCampos: extrairCampos, exportarSecao: exportarSecao, lerFicha: lerFicha, comparar: comparar, campos: campos, lote: lote,
     _ef: async function (k) { var it = lote._it[k]; try { await gravarFicha(lote._sec, it.jovem.id, it.jovem.nome, it.f); it.feito = true; } catch (e) { it.erro = e.message; } lote._pintar(); }
   };
 })(typeof window !== 'undefined' ? window : globalThis);

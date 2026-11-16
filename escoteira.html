@@ -2078,6 +2078,7 @@ ${caminho ? `<button class="btn-ic" style="margin-top:10px;width:100%;padding:9p
 <button class="btn-ic" onclick="abrirEdicaoJovem('${j}')">✏ Editar</button>
 <button class="btn-ic" onclick="verObservacao('${j}')">📋 Obs.${OBSERVACOES[j] ? ' •' : ''}</button>
 ${marcadoConversar ? `<button class="btn-ic" onclick="toggleConversar('${j}')" title="Já conversei">✅ Já conversei</button>` : V2_CONV.cardBtn(j)}
+<button class="btn-ic" onclick="V2_FICHAMED.ver('escoteira','${j}',JNOMES['${j}'])">🩺 Ficha</button>
 <button class="btn-ic" onclick="abrirLisOuro('${j}')">🏅 Ramo</button>
 </div>
 ${menuAberto ? `<div class="roster-dropdown" style="top:44px;right:10px;" onclick="event.stopPropagation()">
