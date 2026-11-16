@@ -4547,7 +4547,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
       + '.v2pt th,.v2pt td{padding:8px 10px;border-bottom:1px solid var(--border,#e5e5e5);text-align:center;white-space:nowrap}.v2pt th{font-size:11px;text-transform:uppercase;letter-spacing:.3px;background:rgba(128,128,128,.1);vertical-align:bottom}'
       + '.v2pt th small{display:block;font-weight:600;opacity:.7;text-transform:none;letter-spacing:0}.v2pt td.n,.v2pt th.n{text-align:left;position:sticky;left:0;background:var(--card,#fff);z-index:1;min-width:130px}.v2pt th.n{background:#eee}'
       + '.v2pt td.t{font-weight:800;font-size:14px}.v2pt td.pos{opacity:.7;font-weight:700}.v2pt .neg{color:#b3261e}.v2pt .zero{opacity:.35}.v2pt tr.top td{background:rgba(255,193,7,.1)}.v2pt tr.top td.n{background:#fdf6e0}'
-      + '.v2pt-pt th,.v2pt-pt td{min-width:128px;white-space:normal}.v2pt-pt td.n,.v2pt-pt th.n{min-width:120px;max-width:140px;text-align:left}.v2pt-sub td{background:rgba(128,128,128,.14);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;text-align:left!important;position:static!important}.v2pt-tot td{background:rgba(27,107,58,.1)}.v2pt-tot td.n{background:#e6f1ea}.v2pt-mm{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;padding:3px 0;border-bottom:1px dashed rgba(128,128,128,.3)}.v2pt-mm b{white-space:nowrap}.v2pt-av{border:1px solid var(--border,#ddd);border-radius:12px;padding:12px;background:var(--card,#fff)}.v2pt-avh{display:flex;gap:10px;flex-wrap:wrap}.v2pt-st{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border,#e5e5e5)}.v2pt-st .d{font-size:12px;opacity:.7;margin-top:1px}.v2pt-stp{display:flex;align-items:center;gap:10px}.v2pt-stp b{min-width:22px;text-align:center;font-size:15px}.v2pt-stp .v2pt-bt{width:36px;padding:7px 0;text-align:center}.v2pt-sub2{margin:10px 0 2px;font-size:13px}.v2pt-sub2 .neg{color:#b3261e}.v2pt-add{display:flex;gap:8px;margin-top:12px}.v2pt-add input{flex:1;min-width:0;padding:9px 11px;border:1px solid var(--border,#ccc);border-radius:8px;font:inherit;font-size:14px;background:var(--card,#fff);color:inherit}.v2pt-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}'
+      + '.v2pt-pt th,.v2pt-pt td{min-width:128px;white-space:normal}.v2pt-pt td.n,.v2pt-pt th.n{min-width:120px;max-width:140px;text-align:left}.v2pt-sub td{background:rgba(128,128,128,.14);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;text-align:left!important;position:static!important}.v2pt-tot td{background:rgba(27,107,58,.1)}.v2pt-tot td.n{background:#e6f1ea}.v2pt-mm{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;padding:3px 0;border-bottom:1px dashed rgba(128,128,128,.3)}.v2pt-mm b{white-space:nowrap}.v2pt-av{border:1px solid var(--border,#ddd);border-radius:12px;padding:12px;background:var(--card,#fff)}.v2pt-avh{display:flex;gap:10px;flex-wrap:wrap}.v2pt-st{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border,#e5e5e5)}.v2pt-st .d{font-size:12px;opacity:.7;margin-top:1px}.v2pt-stp{display:flex;align-items:center;justify-content:center;gap:6px}.v2pt-stp b.pad{opacity:.45;font-weight:600}.v2pt-stp b.neg{color:#b3261e}.v2pt small.ac{display:block;margin-top:3px;font-size:10.5px;opacity:.6}.v2pt-stp b{min-width:26px;text-align:center;font-size:15px}.v2pt-stp .v2pt-bt{width:30px;padding:6px 0;text-align:center}.v2pt-sub2{margin:10px 0 2px;font-size:13px}.v2pt-sub2 .neg{color:#b3261e}.v2pt-add{display:flex;gap:8px;margin-top:12px}.v2pt-add input{flex:1;min-width:0;padding:9px 11px;border:1px solid var(--border,#ccc);border-radius:8px;font:inherit;font-size:14px;background:var(--card,#fff);color:inherit}.v2pt-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}'
       + '.v2pt-cr{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border,#ddd);border-radius:10px;margin-bottom:6px;background:var(--card,#fff)}.v2pt-cr .pts{font-weight:800;font-size:15px;min-width:54px;text-align:center;border-radius:8px;padding:4px 6px;background:rgba(27,107,58,.14);color:#1b6b3a}'
       + '.v2pt-cr .pts.neg{background:rgba(179,38,30,.12);color:#b3261e}.v2pt-cr .d{font-size:12px;opacity:.75;margin-top:2px}.v2pt-hi{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border,#e5e5e5);font-size:13px}.v2pt-hi .pts{font-weight:800;min-width:46px}'
       + '.v2pt-vz{opacity:.7;font-size:13px;padding:8px 0}.v2pt-mf{margin-bottom:10px}.v2pt-mf label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;opacity:.75;margin-bottom:4px}'
@@ -4591,65 +4591,55 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
         var por = {}, tot = 0, mem = (c.membros ? c.membros(p.id) : []) || [];
         ls.forEach(function (l) { if (l.pat !== p.id) return; var k = critIds[l.crit] ? l.crit : '_o'; por[k] = (por[k] || 0) + ptsOf(l); tot += ptsOf(l); });
         return { p: p, por: por, tot: tot, mem: mem };
-      }).sort(function (a, b) { return b.tot - a.tot; });
-      var pos = 0, ant = null; linhas.forEach(function (r, i) { if (ant === null || r.tot !== ant) pos = i + 1; ant = r.tot; r.pos = pos; });
+      });
+      // as colunas ficam sempre na mesma ordem (não pulam ao ajustar); a posição vem do total acumulado
+      linhas.forEach(function (r) { r.pos = 1 + linhas.filter(function (o) { return o.tot > r.tot; }).length; });
       var h = '<div class="v2pt"><h2>🏅 Pontuação das patrulhas</h2>'
         + '<div class="v2pt-leg"><b>Como funciona</b><ol><li><b>Critérios:</b> a chefia define o que dá ponto e quanto cada coisa vale (por exemplo, “Uniforme completo = +5”; valores negativos descontam).</li>'
-        + '<li><b>Avaliação:</b> escolha a atividade do calendário e a patrulha, e marque com + e − quantas vezes ela cumpriu cada critério. Pontos = vezes × valor do critério.</li>'
-        + '<li><b>Tabela geral:</b> soma tudo e mostra todas as patrulhas lado a lado, com o total e a posição.</li></ol></div>';
-      // tabela geral
-      h += '<h3>📊 Tabela geral — todas as patrulhas</h3><div class="v2pt-bar"><div><label>De</label><input type="date" id="v2ptIni" value="' + esc(ini) + '"></div><div><label>Até</label><input type="date" id="v2ptFim" value="' + esc(fim) + '"></div>'
-        + '<button type="button" class="v2pt-bt" id="v2ptLimpa">Todo o período</button>' + ''+ '</div>';
+        + '<li><b>Avaliação:</b> escolha a atividade do calendário. Na tabela, cada patrulha começa com o valor padrão do critério; use − e + para ajustar a pontuação dela naquela atividade.</li>'
+        + '<li><b>Acumulado:</b> a última linha soma todas as atividades e mostra a posição de cada patrulha.</li></ol></div>';
+      // tabela geral: colunas = patrulhas, linhas = critérios; cada célula tem − valor + (começa no valor padrão do critério)
+      var atvs = atividades();
+      if (sel.atv === null) { var hj0 = hoje(), pass = atvs.filter(function (a) { return a.ini <= hj0; })[0]; sel.atv = (pass || atvs[0] || { id: '*' }).id; }
+      if (!sel.data) sel.data = hoje();
+      var atvAtual = atvs.filter(function (a) { return a.id === sel.atv; })[0];
+      var chave = sel.atv === '*' ? 'd' + sel.data : String(sel.atv);
+      var nomeAtv = sel.atv === '*' ? 'Atividade em ' + dBR(sel.data) : (atvAtual ? atvAtual.nome : '—');
+      function lancDe(pid, cid) { return d.lanc.filter(function (x) { return x.atv === chave && x.pat === pid && x.crit === cid && x.qtd == null; })[0]; }
+      h += '<h3>📊 Pontuação das patrulhas por atividade</h3><div class="v2pt-avh">'
+        + '<div class="v2pt-mf" style="flex:2;min-width:190px"><label>Atividade (do calendário)</label><select id="v2ptAa">' + atvs.map(function (a) { return '<option value="' + esc(a.id) + '"' + (a.id === sel.atv ? ' selected' : '') + '>' + esc(a.nome) + ' — ' + esc(dBR(String(a.ini).slice(0, 10)).slice(0, 5)) + '</option>'; }).join('') + '<option value="*"' + (sel.atv === '*' ? ' selected' : '') + '>Outra data…</option></select></div>'
+        + (sel.atv === '*' ? '<div class="v2pt-mf" style="flex:1;min-width:130px"><label>Data</label><input type="date" id="v2ptAd" value="' + esc(sel.data) + '"></div>' : '') + '</div>'
+        + '<div class="v2pt-bar"><div><label>Acumulado de</label><input type="date" id="v2ptIni" value="' + esc(ini) + '"></div><div><label>até</label><input type="date" id="v2ptFim" value="' + esc(fim) + '"></div>'
+        + '<button type="button" class="v2pt-bt" id="v2ptLimpa">Todo o período</button>' + (ed && ps.length && crit.length ? '<button type="button" class="v2pt-bt" id="v2ptPad" style="margin-left:auto">Lançar valores padrão</button><button type="button" class="v2pt-bt" id="v2ptZera">Limpar atividade</button>' : '') + '</div>';
       if (!ps.length) h += '<div class="v2pt-vz">Nenhuma patrulha cadastrada. Crie as patrulhas na aba de jovens para pontuar.</div>';
       else {
         var nc = linhas.length + 1;
         function perc(m) { return m.total ? Math.round(m.pres / m.total * 100) : null; }
+        var totAtv = {}; linhas.forEach(function (r) { totAtv[r.p.id] = 0; crit.forEach(function (k) { var l = lancDe(r.p.id, k.id); if (l) totAtv[r.p.id] += num(l.pts); }); });
         h += '<div class="v2pt-sc"><table class="v2pt-pt"><thead><tr><th class="n"></th>'
           + linhas.map(function (r) { return '<th style="border-top:4px solid ' + esc(r.p.cor || '#888') + '"><div style="font-size:15px;text-transform:none;letter-spacing:0">' + esc((r.p.icone || '') + ' ' + r.p.nome) + '</div></th>'; }).join('') + '</tr></thead><tbody>'
-          + '<tr><td class="n"><b>Posição</b></td>' + linhas.map(function (r) { return '<td class="pos" style="font-size:16px">' + (r.tot > 0 && r.pos <= 3 ? ['🥇', '🥈', '🥉'][r.pos - 1] : r.pos + 'º') + '</td>'; }).join('') + '</tr>'
+          + '<tr><td class="n"><b>Posição</b><small style="display:block;opacity:.65">pelo acumulado</small></td>' + linhas.map(function (r) { return '<td class="pos" style="font-size:16px">' + (r.tot > 0 && r.pos <= 3 ? ['🥇', '🥈', '🥉'][r.pos - 1] : r.pos + 'º') + '</td>'; }).join('') + '</tr>'
           + '<tr><td class="n"><b>Membros</b></td>' + linhas.map(function (r) { return '<td>' + r.mem.length + '</td>'; }).join('') + '</tr>'
-          + '<tr class="v2pt-sub"><td colspan="' + nc + '">Pontos por critério</td></tr>'
+          + '<tr class="v2pt-sub"><td colspan="' + nc + '">Pontos em: ' + esc(nomeAtv) + '</td></tr>'
           + crit.map(function (k) {
-            return '<tr><td class="n">' + esc(k.nome) + '<small style="display:block;opacity:.65">vale ' + esc(fmt(num(k.pts))) + ' por ocorrência</small></td>'
-              + linhas.map(function (r) { var v = r.por[k.id] || 0; return '<td class="' + (v < 0 ? 'neg' : v === 0 ? 'zero' : '') + '">' + (v ? fmtTot(v) : '–') + '</td>'; }).join('') + '</tr>';
+            var base = num(k.pts);
+            return '<tr><td class="n">' + esc(k.nome) + '<small style="display:block;opacity:.65">padrão ' + esc(fmt(base)) + '</small></td>'
+              + linhas.map(function (r) {
+                var l = lancDe(r.p.id, k.id), v = l ? num(l.pts) : base, ac = r.por[k.id] || 0;
+                return '<td><div class="v2pt-stp"><button type="button" class="v2pt-bt" data-c="' + esc(r.p.id + '|' + k.id + '|-1') + '">−</button><b class="' + (l ? '' : 'pad') + (v < 0 ? ' neg' : '') + '" title="' + (l ? 'lançado' : 'valor padrão, ainda não lançado') + '">' + fmtTot(v) + '</b><button type="button" class="v2pt-bt" data-c="' + esc(r.p.id + '|' + k.id + '|1') + '">+</button></div><small class="ac">acum. ' + fmtTot(ac) + '</small></td>';
+              }).join('') + '</tr>';
           }).join('')
           + (orfaos ? '<tr><td class="n">Outros<small style="display:block;opacity:.65">critério removido</small></td>' + linhas.map(function (r) { return '<td>' + (r.por._o ? fmtTot(r.por._o) : '–') + '</td>'; }).join('') + '</tr>' : '')
-          + '<tr class="v2pt-tot"><td class="n"><b>TOTAL</b></td>' + linhas.map(function (r) { return '<td class="t">' + fmtTot(r.tot) + '</td>'; }).join('') + '</tr>'
+          + '<tr class="v2pt-tot"><td class="n"><b>Total da atividade</b></td>' + linhas.map(function (r) { return '<td class="t">' + fmtTot(totAtv[r.p.id]) + '</td>'; }).join('') + '</tr>'
+          + '<tr class="v2pt-tot"><td class="n"><b>TOTAL ACUMULADO</b></td>' + linhas.map(function (r) { return '<td class="t">' + fmtTot(r.tot) + '</td>'; }).join('') + '</tr>'
           + '<tr class="v2pt-sub"><td colspan="' + nc + '">Presença dos membros</td></tr>'
           + '<tr><td class="n"><b>Média da patrulha</b></td>' + linhas.map(function (r) {
             var ps2 = r.mem.map(perc).filter(function (x) { return x !== null; }), m = ps2.length ? Math.round(ps2.reduce(function (x, y) { return x + y; }, 0) / ps2.length) : null;
             return '<td class="t">' + (m === null ? '–' : '<span style="color:' + (m >= 75 ? '#2e9f5a' : m >= 50 ? '#e67e22' : '#b3261e') + '">' + m + '%</span>') + '</td>'; }).join('') + '</tr>'
           + '<tr><td class="n">Cada membro</td>' + linhas.map(function (r) {
             return '<td style="text-align:left;vertical-align:top">' + (r.mem.length ? r.mem.map(function (m) { var pc = perc(m); return '<div class="v2pt-mm"><span>' + esc(m.nome) + '</span><b style="color:' + (pc === null ? 'inherit' : pc >= 75 ? '#2e9f5a' : pc >= 50 ? '#e67e22' : '#b3261e') + '">' + (pc === null ? '–' : m.pres + '/' + m.total + ' · ' + pc + '%') + '</b></div>'; }).join('') : '<span class="zero">sem membros</span>') + '</td>'; }).join('') + '</tr>'
-          + '</tbody></table></div>';
-        if (!crit.length) h += '<div class="v2pt-vz">Ainda não há critérios. Cadastre-os abaixo para começar a pontuar.</div>';
-      }
-      // avaliação por atividade (como no exemplo): critério = base, +/- = quantas vezes a patrulha cumpriu
-      if (ed) {
-        var atvs = atividades();
-        if (sel.atv === null) { var hj0 = hoje(), pass = atvs.filter(function (a) { return a.ini <= hj0; })[0]; sel.atv = (pass || atvs[0] || { id: '*' }).id; }
-        if (!sel.data) sel.data = hoje();
-        if (!sel.pat || !ps.some(function (p) { return p.id === sel.pat; })) sel.pat = ps.length ? ps[0].id : null;
-        var atvAtual = atvs.filter(function (a) { return a.id === sel.atv; })[0];
-        var chave = sel.atv === '*' ? 'd' + sel.data : String(sel.atv), dataAtv = sel.atv === '*' ? sel.data : (atvAtual ? atvAtual.ini.slice(0, 10) : sel.data);
-        var nomeAtv = sel.atv === '*' ? 'Atividade em ' + dBR(sel.data) : (atvAtual ? atvAtual.nome : '');
-        function qtdDe(cid) { var l = d.lanc.filter(function (x) { return x.atv === chave && x.pat === sel.pat && x.crit === cid; })[0]; return l ? l.qtd || 0 : 0; }
-        var sub = 0; crit.forEach(function (k) { sub += qtdDe(k.id) * num(k.pts); });
-        h += '<h3>📝 Avaliar patrulha na atividade</h3><div class="v2pt-av">';
-        if (!ps.length) h += '<div class="v2pt-vz">Cadastre as patrulhas na aba de jovens para avaliar.</div>';
-        else {
-          h += '<div class="v2pt-avh"><div class="v2pt-mf" style="flex:2;min-width:180px"><label>Atividade (do calendário)</label><select id="v2ptAa">' + atvs.map(function (a) { return '<option value="' + esc(a.id) + '"' + (a.id === sel.atv ? ' selected' : '') + '>' + esc(a.nome) + ' — ' + esc(dBR(String(a.ini).slice(0, 10)).slice(0, 5)) + '</option>'; }).join('') + '<option value="*"' + (sel.atv === '*' ? ' selected' : '') + '>Outra data…</option></select></div>'
-            + (sel.atv === '*' ? '<div class="v2pt-mf" style="flex:1;min-width:130px"><label>Data</label><input type="date" id="v2ptAd" value="' + esc(sel.data) + '"></div>' : '')
-            + '<div class="v2pt-mf" style="flex:1;min-width:130px"><label>Patrulha</label><select id="v2ptAp">' + ps.map(function (p) { return '<option value="' + esc(p.id) + '"' + (p.id === sel.pat ? ' selected' : '') + '>' + esc((p.icone || '') + ' ' + p.nome) + '</option>'; }).join('') + '</select></div></div>'
-            + '<div class="mini" style="font-size:12px;opacity:.75;margin:2px 0 6px">Critérios definidos pela chefia (pontos por vez). Use + e − para marcar quantas vezes a patrulha cumpriu cada critério nesta atividade.</div>';
-          h += crit.length ? crit.map(function (k) {
-            var n = num(k.pts), q = qtdDe(k.id);
-            return '<div class="v2pt-st"><div style="flex:1;min-width:0"><b>' + esc(k.nome) + '</b><div class="d">' + esc(fmt(n)) + (Math.abs(n) === 1 ? ' ponto' : ' pontos') + (k.desc ? ' · ' + esc(k.desc) : '') + '</div></div>'
-              + '<div class="v2pt-stp"><button type="button" class="v2pt-bt" data-q="' + esc(k.id) + '|-1">−</button><b>' + q + '</b><button type="button" class="v2pt-bt" data-q="' + esc(k.id) + '|1">+</button></div></div>';
-          }).join('') : '<div class="v2pt-vz">Ainda não há critérios. Adicione abaixo.</div>';
-          h += '<div class="v2pt-sub2">Total desta patrulha nesta atividade: <b class="' + (sub < 0 ? 'neg' : '') + '">' + esc(fmt(sub)) + '</b></div>';
-        }
-        h += '<div class="v2pt-add"><input id="v2ptQn" placeholder="Novo critério, ex.: Canto da patrulha" autocomplete="off"><input id="v2ptQp" inputmode="decimal" value="5" style="max-width:64px"><button type="button" class="v2pt-bt" id="v2ptQa">Adicionar critério</button></div></div>';
+          + '</tbody></table></div><div class="mini" style="font-size:11.5px;opacity:.7;margin-top:6px">Números em cinza ainda não foram lançados: usam o valor padrão do critério. Ao tocar em − ou +, o valor é lançado na atividade escolhida.</div>';
+        if (ed) h += '<div class="v2pt-add"><input id="v2ptQn" placeholder="Novo critério, ex.: Canto da patrulha" autocomplete="off"><input id="v2ptQp" inputmode="decimal" value="5" style="max-width:64px"><button type="button" class="v2pt-bt" id="v2ptQa">Adicionar critério</button></div>';
       }
       // critérios
       h += '<h3>📋 Critérios e pontos por ocorrência' + (ed ? '<button type="button" class="v2pt-bt" id="v2ptNovoC" style="margin-left:auto">➕ Novo critério</button>' : '') + '</h3>'
@@ -4673,16 +4663,19 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
       if (i1) i1.onchange = function () { ini = this.value; desenhar(); }; if (i2) i2.onchange = function () { fim = this.value; desenhar(); };
       on('v2ptLimpa', function () { ini = ''; fim = ''; desenhar(); }); on('v2ptTodos', function () { verTodos = !verTodos; desenhar(); });
       on('v2ptNovoC', function () { formCrit(null); });
-      var sa = document.getElementById('v2ptAa'), sp = document.getElementById('v2ptAp'), sd = document.getElementById('v2ptAd');
-      if (sa) sa.onchange = function () { sel.atv = this.value; desenhar(); }; if (sp) sp.onchange = function () { sel.pat = this.value; desenhar(); }; if (sd) sd.onchange = function () { sel.data = this.value || hoje(); desenhar(); };
-      host.querySelectorAll('[data-q]').forEach(function (b) { b.onclick = function () {
-        var pr = b.getAttribute('data-q').split('|'), cid = pr[0], dl = parseInt(pr[1], 10), base = baseDe(cid);
-        var chv = sel.atv === '*' ? 'd' + sel.data : String(sel.atv), at = atividades().filter(function (a) { return a.id === sel.atv; })[0];
-        var lid = 'a|' + chv + '|' + sel.pat + '|' + cid, ex = d.lanc.filter(function (x) { return x.id === lid; })[0], q = Math.max(0, ((ex && ex.qtd) || 0) + dl);
+      var sa = document.getElementById('v2ptAa'), sd = document.getElementById('v2ptAd');
+      if (sa) sa.onchange = function () { sel.atv = this.value; desenhar(); }; if (sd) sd.onchange = function () { sel.data = this.value || hoje(); desenhar(); };
+      function gravar(pid, cid, v) {
+        var lid = 'a|' + chave + '|' + pid + '|' + cid;
         d.lanc = d.lanc.filter(function (x) { return x.id !== lid; });
-        if (q > 0) d.lanc.push({ id: lid, atv: chv, atvNome: sel.atv === '*' ? 'Atividade em ' + dBR(sel.data) : (at ? at.nome : ''), pat: sel.pat, crit: cid, qtd: q, pts: q * (base || 0), data: sel.atv === '*' ? sel.data : (at ? String(at.ini).slice(0, 10) : hoje()) });
-        c.salvar(); desenhar();
+        if (v !== null) d.lanc.push({ id: lid, atv: chave, atvNome: nomeAtv, pat: pid, crit: cid, pts: v, data: sel.atv === '*' ? sel.data : (atvAtual ? String(atvAtual.ini).slice(0, 10) : hoje()) });
+      }
+      host.querySelectorAll('[data-c]').forEach(function (b) { b.onclick = function () {
+        var pr = b.getAttribute('data-c').split('|'), l = lancDe(pr[0], pr[1]), base = baseDe(pr[1]) || 0;
+        gravar(pr[0], pr[1], (l ? num(l.pts) : base) + parseInt(pr[2], 10)); c.salvar(); desenhar();
       }; });
+      on('v2ptPad', function () { ps.forEach(function (p) { crit.forEach(function (k) { if (!lancDe(p.id, k.id)) gravar(p.id, k.id, num(k.pts)); }); }); c.salvar(); desenhar(); });
+      on('v2ptZera', function () { if (!confirm('Limpar todos os lançamentos desta atividade?')) return; d.lanc = d.lanc.filter(function (x) { return !(x.atv === chave && x.qtd == null); }); c.salvar(); desenhar(); });
       on('v2ptQa', function () {
         var n = document.getElementById('v2ptQn').value.trim(), pt = document.getElementById('v2ptQp').value.trim();
         if (!n) { alert('Escreva o nome do critério.'); return; } if (pt === '' || isNaN(parseFloat(pt.replace(',', '.')))) { alert('Informe os pontos (número).'); return; }
