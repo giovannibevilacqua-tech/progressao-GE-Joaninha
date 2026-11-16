@@ -3842,7 +3842,7 @@ V2_CONV.init({ base: '/conversar/escoteira',
     else if (p[0] === 'v' && !st.variaveis[+p[2]]) toggleVar(j, p[1], +p[2]);
     else if (p[0] === 'e' && !st.especialidade) toggleEsp(j, p[1]);
   } });
-window.calSecaoEventos = () => EVENTOS.filter(Boolean).map(e => ({ id: e.id, nome: e.nome, ini: e.data, local: e.local }));
+window.calSecaoEventos = () => EVENTOS.filter(Boolean).map(e => ({ id: e.id, nome: e.nome, ini: e.data, local: e.local, pres: (e.presentes || []).length }));
 V2_PESSOAS.montar({ secao:'escoteira', container:'fichasBox_off', jovens:()=>paxtuEstado().jovens, aplicarNome:async (id,n)=>{ JNOMES[id]=n; temAlteracaoLocalPendente=true; await saveState(); renderRoster(); } });
 V2_ALMOX.montar({ secao:'escoteira', nomeTropa:'Escoteira', outraTropa:'Sênior', subTitulo:'Materiais da Tropa Escoteira. Você escolhe com quais seções cada item é compartilhado.', container:'pagina-almoxarifado', padX:14 });
 

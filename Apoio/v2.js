@@ -3995,12 +3995,12 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
       var tot = root.calSecoesAntigas || {};
       Object.keys(tot).forEach(function (sc) {
         if (filtroSec && sc !== filtroSec) return;
-        (tot[sc] || []).forEach(function (e, i) { if (e && e.ini && /^\d{4}-\d{2}-\d{2}/.test(e.ini)) out.push({ id: 'old' + sc + i, nome: e.nome || 'Atividade', ini: e.ini.slice(0, 10), fim: null, local: e.local || null, origem: 'secao', janela: false, _s: [sc], _old: true }); });
+        (tot[sc] || []).forEach(function (e, i) { if (e && e.ini && /^\d{4}-\d{2}-\d{2}/.test(e.ini)) out.push({ id: 'old' + sc + i, nome: e.nome || 'Atividade', ini: e.ini.slice(0, 10), fim: null, local: e.local || null, origem: 'secao', janela: false, _s: [sc], _old: true, _pres: e.pres || 0 }); });
       });
       return out;
     }
     if (typeof root.calSecaoEventos !== 'function') return [];
-    try { root.calSecaoEventos().forEach(function (e, i) { if (e && e.ini && /^\d{4}-\d{2}-\d{2}/.test(e.ini)) out.push({ id: 'old' + i, nome: e.nome || 'Atividade', ini: e.ini.slice(0, 10), fim: null, local: e.local || null, origem: 'secao', janela: false, _s: [cfg.secao], _old: true, _eid: e.id }); }); } catch (x) {}
+    try { root.calSecaoEventos().forEach(function (e, i) { if (e && e.ini && /^\d{4}-\d{2}-\d{2}/.test(e.ini)) out.push({ id: 'old' + i, nome: e.nome || 'Atividade', ini: e.ini.slice(0, 10), fim: null, local: e.local || null, origem: 'secao', janela: false, _s: [cfg.secao], _old: true, _eid: e.id, _pres: e.pres || 0 }); }); } catch (x) {}
     return out;
   }
   function noDia(e, d) { return e.ini <= d && (e.fim || e.ini) >= d; }
@@ -4077,7 +4077,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
   }
   function item(e) {
     var o = ORIG[e.origem] || ORIG.grupo;
-    return '<div class="v2c-it" data-ini="' + esc(e.ini) + '" data-fim="' + esc(e.fim || e.ini) + '" style="border-left-color:' + o[1] + ';cursor:pointer" title="Abrir a atividade" onclick="V2_CAL._abrir(\'' + String(e.id).replace(/'/g, '') + '\')"><div class="q"><b>' + esc(e.nome) + '</b><small>' + dBR(e.ini) + (e.fim && e.fim !== e.ini ? ' a ' + dBR(e.fim) : '') + (e.local ? ' · ' + esc(e.local) : '') + '</small><small>' + o[0] + ' · ' + e._s.map(function (s) { return NOMES[s] || s; }).join(', ') + '</small></div></div>';
+    return '<div class="v2c-it" data-ini="' + esc(e.ini) + '" data-fim="' + esc(e.fim || e.ini) + '" style="border-left-color:' + o[1] + ';cursor:pointer" title="Abrir a atividade" onclick="V2_CAL._abrir(\'' + String(e.id).replace(/'/g, '') + '\')"><div class="q"><b>' + esc(e.nome) + '</b><small>' + dBR(e.ini) + (e.fim && e.fim !== e.ini ? ' a ' + dBR(e.fim) : '') + (e.local ? ' · ' + esc(e.local) : '') + (e._pres ? ' · 👥 ' + e._pres + (e._pres === 1 ? ' presente' : ' presentes') : '') + '</small><small>' + o[0] + ' · ' + e._s.map(function (s) { return NOMES[s] || s; }).join(', ') + '</small></div></div>';
   }
   // abre a atividade em pop-up: se a seção tem o card completo (presença, relato, editar), ele é mostrado aqui dentro; senão, um resumo
   function abrirAtividade(id) {
