@@ -3537,11 +3537,11 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
   // importação geral: vários arquivos de uma vez, cada um ligado a um jovem da seção; os campos já vêm preenchidos para conferir
   async function importarGeral(sec, jovens, nomeSecao, aoFim) {
     var ov = document.createElement('div'); ov.className = 'v2p-ov';
-    ov.innerHTML = '<div class="v2p-box" style="display:flex;flex-direction:column;max-height:90vh;padding:0">'
+    ov.innerHTML = '<div class="v2p-box" style="display:flex;flex-direction:column;max-height:90vh;padding:0;overflow:hidden">'
       + '<div style="padding:14px 16px 6px;font-size:16px;font-weight:800">📥 Importar fichas médicas — ' + esc(nomeSecao) + '</div>'
       + '<div id="v2iCorpo" style="padding:4px 16px;overflow:auto;flex:1"><div class="mini">Escolha as fichas (PDF ou foto), uma por jovem. O sistema lê o texto, tenta achar o jovem pelo nome e preencher os campos. <b>Você confere tudo antes de gravar.</b> Fichas escaneadas ou fotos dependem de leitura de imagem e erram mais.</div>'
       + '<label class="paxtu-envio" style="display:block;margin-top:10px"><input type="file" id="v2iArq" accept="application/pdf,image/*" multiple><div><strong>Escolher fichas</strong></div></label><div id="v2iLista"></div></div>'
-      + '<div style="padding:10px 16px;border-top:1px solid rgba(0,0,0,.1);display:flex;gap:8px;position:sticky;bottom:0;background:inherit"><button type="button" class="v2p-bt" id="v2iFecha">Fechar</button><button type="button" class="v2p-bt p" id="v2iTodas" style="display:none">Gravar todas conferidas</button></div></div>';
+      + '<div class="v2p-pe" style="padding:10px 16px;border-top:1px solid rgba(128,128,128,.25);display:flex;gap:8px;background:inherit"><button type="button" class="v2p-bt" id="v2iFecha">Fechar</button><button type="button" class="v2p-bt p" id="v2iTodas" style="display:none">Gravar todas conferidas</button></div></div>';
     document.body.appendChild(ov);
     var itens = [], dadosSec = {};
     $('v2iFecha').onclick = function () { ov.remove(); if (aoFim) aoFim(); };
@@ -3593,8 +3593,8 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
   // ver a ficha médica de um jovem (só leitura) direto do card
   async function ver(sec, id, nome) {
     var ov = document.createElement('div'); ov.className = 'v2p-ov';
-    ov.innerHTML = '<div class="v2p-box" style="display:flex;flex-direction:column;max-height:90vh;padding:0"><div style="padding:14px 16px 6px;font-size:16px;font-weight:800">🩺 Ficha médica — ' + esc(nome) + '</div><div id="v2vCorpo" style="padding:4px 16px;overflow:auto;flex:1"><div class="mini">Carregando…</div></div>'
-      + '<div style="padding:10px 16px;border-top:1px solid rgba(0,0,0,.1);display:flex;gap:8px;position:sticky;bottom:0;background:inherit"><button type="button" class="v2p-bt" id="v2vFecha">Fechar</button><button type="button" class="v2p-bt" id="v2vBaixa" style="display:none">⬇ Baixar arquivo</button></div></div>';
+    ov.innerHTML = '<div class="v2p-box" style="display:flex;flex-direction:column;max-height:90vh;padding:0;overflow:hidden"><div style="padding:14px 16px 6px;font-size:16px;font-weight:800">🩺 Ficha médica — ' + esc(nome) + '</div><div id="v2vCorpo" style="padding:4px 16px;overflow:auto;flex:1"><div class="mini">Carregando…</div></div>'
+      + '<div class="v2p-pe" style="padding:10px 16px;border-top:1px solid rgba(128,128,128,.25);display:flex;gap:8px;background:inherit"><button type="button" class="v2p-bt" id="v2vFecha">Fechar</button><button type="button" class="v2p-bt" id="v2vBaixa" style="display:none">⬇ Baixar arquivo</button></div></div>';
     document.body.appendChild(ov); ov.addEventListener('click', function (e) { if (e.target === ov) ov.remove(); });
     $('v2vFecha').onclick = function () { ov.remove(); };
     var med = null;
@@ -4306,6 +4306,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
   st.textContent = '.modal-ov,.obs-modal-ov,.lis-modal-ov{align-items:center!important;padding:12px!important;box-sizing:border-box}'
     + '.modal-box,.obs-modal-box,.lis-modal-box,.almo-cat-box,.fin-md,.v2p-box,.v2c-box,.v2cv-box,.v2-popup,.modal-secao-box{border-radius:8px!important}'
     + '.modal-box,.obs-modal-box,.lis-modal-box{margin:0!important;max-height:88vh!important}'
+    + '.v2p-box>.v2p-pe:last-child{position:static!important;margin:0!important;padding:10px 16px!important;flex:none}.v2p-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100030;display:flex;align-items:center;justify-content:center;padding:12px;box-sizing:border-box}'
     + '.fin-md>div:last-child:has(button),.v2p-box>div:last-child:has(button),.v2c-box>div:last-child:has(button),.v2cv-box>div:last-child:has(button),.almo-cat-box>.almo-cat-acoes{position:sticky;bottom:-16px;background:var(--card,#fff);padding:10px 0 16px;margin-bottom:-16px!important;z-index:3;border-top:1px solid rgba(128,128,128,.25)}'
     + '.v2-popup-foot{position:sticky;bottom:-14px;background:var(--card,#fff);padding:10px 14px 14px;margin:0 -14px -14px;display:flex;flex-direction:column;gap:8px;z-index:3;border-top:1px solid rgba(128,128,128,.25)}';
   document.head.appendChild(st);
