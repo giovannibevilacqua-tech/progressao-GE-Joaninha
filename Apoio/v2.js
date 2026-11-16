@@ -4000,7 +4000,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
         + es.slice(0, 5).map(function (e) { return '<span class="v2c-dot' + (e.janela ? ' j' : '') + '" style="background:' + cor(e) + '"></span>'; }).join('') + (es.length > 5 ? '+' : '')
         + ms.slice(0, 3).map(function (x) { return '<span class="v2c-em">' + (x.tipo === 'aniv' ? '🎂' : '⭐') + '</span>'; }).join('') + '</div></div>';
     }
-    h += '</div><div class="v2c-leg">' + Object.keys(ORIG).map(function (k) { return '<span><i style="background:' + ORIG[k][1] + '"></i>' + ORIG[k][0] + '</span>'; }).join('') + '<span>▬ janela de execução</span><span>🎂 aniversário</span><span>⭐ estrela de promessa</span></div>';
+    h += '</div><div class="v2c-leg">' + Object.keys(ORIG).map(function (k) { return '<span><i style="background:' + ORIG[k][1] + '"></i>' + ORIG[k][0] + '</span>'; }).join('') + '<span>▬ janela de execução</span><span>🎂 aniversário</span><span>⭐ estrela de promessa</span></div><div id="v2cAddSlot"></div>';
     var p0 = iso(prim), p1 = iso(ult);
     var jan = evs.filter(function (e) { return e.janela && e.ini <= p1 && (e.fim || e.ini) >= p0; });
     if (jan.length) {
@@ -4016,7 +4016,14 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
     var mm = marc.filter(function (x) { return x.data >= p0 && x.data <= p1; }).sort(function (a, b) { return a.data < b.data ? -1 : 1; });
     if (mm.length) h += '<div class="v2c-sec">Datas de pessoas</div>' + mm.map(function (x) { return '<div class="v2c-it" data-ini="' + x.data + '" data-fim="' + x.data + '" style="border-left-color:#f9a825"><div class="q">' + esc(x.titulo) + '<small>' + dBR(x.data) + '</small></div></div>'; }).join('');
     h += '</div>';
+    // o bloco "Adicionar atividade" da seção fica entre a legenda e a lista; é solto antes de redesenhar para não ser destruído
+    var cab = document.getElementById('cabecalhoAddEvento') || document.getElementById('cabecalhoAddEventoSr');
+    var addW = cab && cab.parentElement;
+    if (addW && box.contains(addW)) { document.body.appendChild(addW); addW.style.display = 'none'; }
     box.innerHTML = h;
+    var slot = document.getElementById('v2cAddSlot');
+    if (addW && slot && cab.style.display !== 'none') { addW.style.display = ''; addW.style.margin = '0 0 10px'; slot.appendChild(addW); }
+    else if (addW && !slot) addW.style.display = '';
   }
   function item(e) {
     var o = ORIG[e.origem] || ORIG.grupo;
