@@ -2741,18 +2741,24 @@ function cicloSelectBloco(sem, j) {
     }).join('') + '<div class="picker-bloco-sr" style="cursor:pointer;"><div class="picker-bloco-head-sr" onclick="cicloTrocarBloco(\'' + sem.key + '\',' + j + ',\'\')"><span>— Limpar seleção</span></div></div></div>';
   }
   return '<div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:6px;"><div style="flex:1;min-width:0;"><button type="button" class="btn-picker-toggle-sr" style="' + estiloBtn + '" onclick="cicloTogglePicker(\'' + sem.key + '\',' + j + ')"><span>' + (def ? esc(def.name) : 'Selecionar bloco') + '</span><span class="chev" style="transform:rotate(' + (aberto ? 180 : 0) + 'deg);' + (def ? 'color:#fff;' : '') + '">▾</span></button>' + painel +
-    (def && !aberto ? '<div style="font-size:10px;color:var(--muted);margin:3px 0 0 4px;">' + JOVENS.filter(y => isConcluido(sel, y)).length + ' de ' + JOVENS.length + ' concluíram</div>' : '') + '</div>' +
+    '</div>' +
     '<button class="btn-ic" style="color:#E74C3C;flex-shrink:0;" onclick="cicloRemoverBloco(\'' + sem.key + '\',' + j + ')" title="Remover este bloco">✕</button></div>';
 }
 function cicloTrocarBloco(k, j, v) { cicloSem(k).blocos[j] = v; cicloPickerAberto = null; saveState(); renderCiclo(); }
 function cicloAddBloco(k) { cicloSem(k).blocos.push(''); saveState(); renderCiclo(); }
 function cicloRemoverBloco(k, j) { cicloPickerAberto = null; cicloSem(k).blocos.splice(j, 1); saveState(); renderCiclo(); }
+var cicloMetaForm = null, cicloMetaEd = null;
+function cicloMetaAbrir(k) { cicloMetaForm = k; cicloMetaEd = null; renderCiclo(); }
+function cicloMetaEditar(k, i) { cicloMetaForm = k; cicloMetaEd = { k: k, i: i }; renderCiclo(); }
+function cicloMetaCancelar() { cicloMetaForm = null; cicloMetaEd = null; renderCiclo(); }
 function cicloAddMeta(k) {
   const t = document.getElementById('cicloMetaTxt_' + k), ic = document.getElementById('cicloMetaIc_' + k);
-  if (!t || !t.value.trim()) return;
-  cicloSem(k).metas.push({ icone: ic.value, texto: t.value.trim() }); saveState(); renderCiclo();
+  if (!t || !t.value.trim()) { alert('Escreva o texto da meta.'); return; }
+  const m = { icone: ic.value, texto: t.value.trim() };
+  if (cicloMetaEd && cicloMetaEd.k === k) cicloSem(k).metas[cicloMetaEd.i] = m; else cicloSem(k).metas.push(m);
+  cicloMetaForm = null; cicloMetaEd = null; saveState(); renderCiclo();
 }
-function cicloRemoverMeta(k, i) { cicloSem(k).metas.splice(i, 1); saveState(); renderCiclo(); }
+function cicloRemoverMeta(k, i) { if (!confirm('Remover esta meta?')) return; cicloSem(k).metas.splice(i, 1); saveState(); renderCiclo(); }
 function cicloToggle(k) { cicloAbertos[k] = !cicloAbertos[k]; renderCiclo(); }
 function cicloEditar(k) { cicloEditando = k; cicloAbertos[k] = true; renderCiclo(); }
 function cicloCancelar() { cicloEditando = null; renderCiclo(); }
@@ -2801,11 +2807,18 @@ function cicloCard(s) {
     h += '<div class="sem-body"><div class="section-label" style="margin-bottom:7px;">Blocos-foco do semestre</div><div class="sem-blocks">' +
       s.blocos.map((b, j) => cicloSelectBloco(s, j)).join('') + (s.blocos.length ? '' : '<div style="font-size:11px;color:var(--muted);">Nenhum bloco selecionado ainda.</div>') +
       '<button class="btn-ic" style="width:100%;margin-top:4px;text-align:center;" onclick="cicloAddBloco(\'' + s.key + '\')">+ Adicionar bloco</button></div>' +
-      '<div class="sem-special"><div class="section-label" style="margin-bottom:7px;">📍 Atividades externas no calendário</div>' +
-      (ext.length ? ext.map(e => '<div class="sem-special-item"><span class="sem-special-icon">📍</span><div><strong>' + new Date(e.dataISO + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) + ':</strong> ' + esc(e.nome) + '</div></div>').join('') : '<div style="font-size:11px;color:var(--muted);">Nenhuma atividade externa marcada neste período.</div>') + '</div>' +
+      '<div class="sem-special"><div class="section-label" style="margin-bottom:7px;">📍 Atividades externas marcadas no calendário</div>' +
+      (ext.length ? ext.map(e => '<div class="sem-special-item"><span class="sem-special-icon">📍</span><div><strong>' + new Date(e.dataISO + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) + ':</strong> ' + esc(e.nome) + '</div></div>').join('') : '<div style="font-size:11px;color:var(--muted);">Nenhuma atividade externa marcada ainda. Marque o toggle "🌍 Atividade externa" ao criar uma atividade no Calendário.</div>') + '</div>' +
       '<div class="milestone-box"><div class="section-label" style="margin-bottom:7px;">Metas — ' + esc(s.titulo) + '</div>' +
-      s.metas.map((m, i) => '<div class="milestone-item"><span class="milestone-star">' + esc(m.icone) + '</span><div style="flex:1;">' + esc(m.texto) + '</div><button class="btn-ic" style="color:#E74C3C;" onclick="cicloRemoverMeta(\'' + s.key + '\',' + i + ')">🗑️</button></div>').join('') +
-      '<div style="display:flex;gap:6px;margin-top:6px;"><select class="f-input" id="cicloMetaIc_' + s.key + '" style="width:64px;"><option>⭐</option><option>🏆</option><option>🎯</option><option>📌</option></select><input type="text" class="f-input" id="cicloMetaTxt_' + s.key + '" placeholder="Nova meta…" style="flex:1;"><button class="btn-prim" style="width:auto;flex:0 0 auto;padding:8px 14px;font-size:12px;" onclick="cicloAddMeta(\'' + s.key + '\')">+</button></div></div>' +
+      s.metas.map((m, i) => '<div class="milestone-item" style="align-items:center;"><span class="milestone-star">' + esc(m.icone) + '</span><div style="flex:1;">' + esc(m.texto) + '</div><div style="display:flex;gap:4px;flex-shrink:0;"><button class="btn-ic" onclick="cicloMetaEditar(\'' + s.key + '\',' + i + ')">✏️</button><button class="btn-ic" style="color:#E74C3C;" onclick="cicloRemoverMeta(\'' + s.key + '\',' + i + ')">🗑️</button></div></div>').join('') +
+      (!s.metas.length && cicloMetaForm !== s.key ? '<div style="font-size:11px;color:var(--muted);padding:4px 0;">Nenhuma meta cadastrada ainda.</div>' : '') +
+      (cicloMetaForm === s.key ? (function () {
+        const ed = cicloMetaEd && cicloMetaEd.k === s.key ? s.metas[cicloMetaEd.i] : null, vi = ed ? ed.icone : '⭐', vt = ed ? ed.texto : '';
+        return '<div style="margin-top:8px;padding:10px;background:#FAFAF8;border-radius:8px;display:flex;flex-direction:column;gap:8px;"><select class="f-input" id="cicloMetaIc_' + s.key + '">' +
+          [['⭐', 'Marco'], ['🏆', 'Conquista'], ['🎯', 'Meta'], ['📌', 'Observação']].map(o => '<option value="' + o[0] + '"' + (vi === o[0] ? ' selected' : '') + '>' + o[0] + ' ' + o[1] + '</option>').join('') +
+          '</select><textarea class="f-input" id="cicloMetaTxt_' + s.key + '" rows="2" placeholder="Ex: Fulano conclui o bloco 5">' + esc(vt) + '</textarea>' +
+          '<div style="display:flex;gap:8px;"><button class="btn-prim" style="flex:1;padding:8px;font-size:12px;" onclick="cicloAddMeta(\'' + s.key + '\')">💾 Salvar</button><button class="btn-sec" style="flex:1;padding:8px;font-size:12px;" onclick="cicloMetaCancelar()">Cancelar</button></div></div>';
+      })() : '<button class="btn-ic" style="margin-top:8px;width:100%;text-align:center;" onclick="cicloMetaAbrir(\'' + s.key + '\')">+ Adicionar meta</button>') + '</div>' +
       '<div class="prog-overview"><div class="prog-overview-title">Previsão de blocos ao final de ' + esc(s.titulo) + '</div>' +
       actJ().map(({ yid, i }) => {
         const n = statsJovem(yid).n, ganho = ids.filter(b => !isConcluido(b, yid)).length, exp = Math.min(TOTAL_BLOCOS, n + ganho), et = etapaAtual(exp);
@@ -2860,7 +2873,7 @@ function cicloCardView(s) {
     h += '<div class="sem-body"><div class="section-label" style="margin-bottom:7px;">Blocos-foco do semestre</div><div class="sem-blocks">' +
       (s.blocos.filter(Boolean).map(id => { const b = BLOCKS.find(x => x.id === id); if (!b) return ''; const cor = (EIXOS[b.eixo] || {}).cor || '#666'; return '<div class="sem-block-row" style="background:' + cor + '16;border-left:4px solid ' + cor + ';"><span class="sem-block-name">' + esc(b.name) + '</span></div>'; }).join('') || '<div style="font-size:11px;color:var(--muted);">Nenhum bloco definido ainda.</div>') + '</div>' +
       '<div class="sem-special"><div class="section-label" style="margin-bottom:7px;">📍 Atividades externas</div>' +
-      (ext.length ? ext.map(e => '<div class="sem-special-item"><span class="sem-special-icon">📍</span><div><strong>' + new Date(e.dataISO + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) + ':</strong> ' + esc(e.nome) + '</div></div>').join('') : '<div style="font-size:11px;color:var(--muted);">Nenhuma atividade externa marcada neste período.</div>') + '</div>' +
+      (ext.length ? ext.map(e => '<div class="sem-special-item"><span class="sem-special-icon">📍</span><div><strong>' + new Date(e.dataISO + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) + ':</strong> ' + esc(e.nome) + '</div></div>').join('') : '<div style="font-size:11px;color:var(--muted);">Nenhuma atividade externa marcada ainda. Marque o toggle "🌍 Atividade externa" ao criar uma atividade no Calendário.</div>') + '</div>' +
       (s.metas.length ? '<div class="milestone-box"><div class="section-label" style="margin-bottom:7px;">Metas</div>' + s.metas.map(m => '<div class="milestone-item"><span class="milestone-star">' + esc(m.icone) + '</span><div style="flex:1;">' + esc(m.texto) + '</div></div>').join('') + '</div>' : '') + '</div>';
   }
   return h + '</div>';
