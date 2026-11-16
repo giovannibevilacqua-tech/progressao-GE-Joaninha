@@ -3585,12 +3585,30 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
     };
   }
   // leitura (só ver): apenas o que está preenchido, por seção
+  var ICONE_SEC = { 'Informações básicas': '🧍', 'Emergências médicas': '🚨', 'Informações gerais': 'ℹ️', 'Plano de saúde': '💳', 'Alergias': '🤧', 'Equipamentos de auxílio': '🦽', 'Saúde física': '🫀', 'Deficiências': '♿', 'Medicamentos': '💊', 'Saúde mental': '🧠', 'Dados comportamentais': '🧩', 'Observações': '📝' };
+  var SEC_ALERTA = { 'Alergias': 1, 'Emergências médicas': 1, 'Saúde física': 1, 'Deficiências': 1, 'Medicamentos': 1 };
+  function estiloLeitura() {
+    if (document.getElementById('v2fCss')) return;
+    var st = document.createElement('style'); st.id = 'v2fCss';
+    st.textContent = '.v2f-sec{border:1px solid var(--border,rgba(128,128,128,.35));border-radius:12px;margin:0 0 12px;overflow:hidden;background:rgba(128,128,128,.06)}'
+      + '.v2f-sh{display:flex;align-items:center;gap:8px;padding:9px 12px;font-weight:800;font-size:13.5px;background:rgba(128,128,128,.14)}.v2f-sec.al .v2f-sh{background:rgba(255,160,0,.2)}'
+      + '.v2f-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;padding:10px}.v2f-c{border:1px solid var(--border,rgba(128,128,128,.35));border-radius:8px;padding:7px 10px;background:var(--card,rgba(128,128,128,.08));min-width:0}'
+      + '.v2f-c.l{grid-column:1/-1}.v2f-k{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;opacity:.65;line-height:1.25}.v2f-v{font-size:14.5px;font-weight:600;margin-top:3px;word-break:break-word;line-height:1.35}'
+      + '.v2f-ok{display:inline-block;padding:1px 9px;border-radius:20px;background:rgba(46,160,90,.22);color:#2e9f5a;font-weight:800;font-size:13px}'
+      + '.v2f-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;margin-bottom:10px;padding:9px 12px;border-radius:10px;background:rgba(128,128,128,.12)}';
+    document.head.appendChild(st);
+  }
   function htmlLeitura(v) {
+    estiloLeitura();
     var h = '';
     MED_SECOES.forEach(function (s) {
-      var l = s.meds ? medChaves(v).map(function (k) { return [k.replace('Medicamento ', 'Medicamento '), String(v[k]).replace(/ \| /g, ' · ')]; }) : s.c.filter(function (c) { return v[c.k]; }).map(function (c) { return [c.k, v[c.k]]; });
+      var l = s.meds ? medChaves(v).map(function (k) { return [k, String(v[k]).replace(/ \| /g, ' · ')]; }) : s.c.filter(function (c) { return v[c.k]; }).map(function (c) { return [c.k, v[c.k]]; });
       if (!l.length) return;
-      h += '<div class="v2p-sec" style="margin-top:12px">' + esc(s.s) + '</div>' + l.map(function (x) { return '<div style="font-size:14px;margin:3px 0"><b>' + esc(x[0]) + ':</b> ' + esc(x[1]) + '</div>'; }).join('');
+      h += '<div class="v2f-sec' + (SEC_ALERTA[s.s] ? ' al' : '') + '"><div class="v2f-sh"><span>' + (ICONE_SEC[s.s] || '📋') + '</span>' + esc(s.s) + '</div><div class="v2f-g">'
+        + l.map(function (x) {
+          var sim = /^sim$/i.test(String(x[1]).trim());
+          return '<div class="v2f-c' + (!sim && String(x[1]).length > 36 ? ' l' : '') + '"><div class="v2f-k">' + esc(x[0]) + '</div><div class="v2f-v">' + (sim ? '<span class="v2f-ok">✓ Sim</span>' : esc(x[1])) + '</div></div>';
+        }).join('') + '</div></div>';
     });
     return h;
   }
@@ -4658,4 +4676,25 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
     desenhar();
   }
   root.V2_PONT = { montar: montar };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+/* ---------- trava a rolagem da página de fundo enquanto houver um pop-up aberto ---------- */
+(function (root) {
+  if (typeof document === 'undefined') return;
+  var SEL = '.almo-cat-ov,.fin-ov,.v2c-ov,.v2cv-ov,.v2p-ov,#v2PopBk,.modal-ov.open,.obs-modal-ov.open,.lis-modal-ov.open,.modal-secao-view.open,[class*="-ov"].open';
+  function ligar() {
+    if (document.getElementById('v2TravaCss')) return;
+    var st = document.createElement('style'); st.id = 'v2TravaCss';
+    st.textContent = 'html.v2-trava,html.v2-trava body{overflow:hidden!important}.almo-cat-ov,.fin-ov,.v2c-ov,.v2cv-ov,.v2p-ov,.modal-ov,.obs-modal-ov,.lis-modal-ov{overscroll-behavior:contain}.v2-popup{overscroll-behavior:contain}';
+    document.head.appendChild(st);
+    var agendado = false;
+    function ver() {
+      agendado = false;
+      var t = false; try { t = !!document.querySelector(SEL); } catch (e) {}
+      var h = document.documentElement; if (h.classList.contains('v2-trava') !== t) h.classList.toggle('v2-trava', t);
+    }
+    new MutationObserver(function () { if (!agendado) { agendado = true; root.requestAnimationFrame(ver); } }).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+    ver();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ligar); else ligar();
 })(typeof window !== 'undefined' ? window : globalThis);
