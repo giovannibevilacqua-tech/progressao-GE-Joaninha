@@ -3385,7 +3385,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
    ============================================================ */
 (function (root) {
   if (typeof document === 'undefined') return;
-  var LIM_PDF = 900 * 1024;
+  var LIM_PDF = 2048 * 1024;
   function esc(x) { return String(x == null ? '' : x).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
   function $(id) { return document.getElementById(id); }
   function urlArq(sec, id) { return urlComAuthFirebase(root.V2_CONFIG.DB_URL + '/fichasMed/' + sec + (id ? '/' + id : '') + '.json'); }
@@ -3471,7 +3471,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
       { k: 'Tipo sanguíneo', t: 'sel', o: ['A', 'B', 'AB', 'O'] }, { k: 'Fator RH', t: 'sel', o: ['+', '-'] }] },
     { s: 'Emergências médicas', h: 'EMERGÊNCIAS MÉDICAS', c: [
       { k: 'Em emergência, aguardar pais/responsáveis', t: 'chk', px: 'Aguardar Pais/Responsáveis' }, { k: 'Em emergência, aceita decisões médicas', t: 'chk', px: 'Aceita decisões médicas' },
-      { k: 'Avisar em emergência (pais)', t: 'chktxt', px: 'Pais\\s*[–-]\\s*Tel', ph: 'telefone' }, { k: 'Avisar em emergência (outro)', t: 'chktxt', px: 'Outro', ph: 'nome e telefone' }] },
+      { k: 'Avisar em emergência (pais)', t: 'chktxt', px: 'Pais(?:\\s*[–-]\\s*Tel)?', ph: 'telefone' }, { k: 'Avisar em emergência (outro)', t: 'chktxt', px: 'Outro(?:\\s*[–-]\\s*Tel)?', ph: 'nome e telefone' }] },
     { s: 'Plano de saúde', h: 'PLANO DE SAÚDE', c: [
       { k: 'Plano de saúde', t: 'txt' }, { k: 'Número do documento', t: 'txt' }, { k: 'Médico de preferência', t: 'txt' }, { k: 'Telefone do médico', t: 'txt' }] },
     { s: 'Informações gerais', h: 'INFORMAÇÕES GERAIS', c: [
@@ -3595,7 +3595,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
   // Ficha Médica gerada pelo Paxtu: caixas "(X)" marcadas e valores ao lado
   function ehPaxtu(T) { return /PAXTU|Ficha M[eé]dica/i.test(T) && /\(\s*[Xx ]?\s*\)\s*[A-Za-zÀ-ÿ]/.test(T) && /INFORMA[ÇC][OÕ]ES B[AÁ]SICAS|ALERGIAS|SA[UÚ]DE F[IÍ]SICA/.test(T); }
   function extrairPaxtu(bruto) {
-    var T = String(bruto || '').replace(/P[aá]gina \d+ de \d+\s*-?/g, ' ').replace(/\s+/g, ' ');
+    var T = String(bruto || '').replace(/P[aá]gina \d+ de \d+\s*-?[^()]*?(?=\s{2,}|\n|$)/g, ' ').replace(/P[aá]gina \d+ de \d+\s*-?/g, ' ').replace(/\*\s*Equiparado[^]*?de \d{4}/i, ' ').replace(/\s+/g, ' ');
     var v = {}, pos = [];
     HEADS.forEach(function (h) { var i = T.indexOf(h); if (i >= 0) pos.push({ h: h, i: i }); });
     pos.sort(function (a, b) { return a.i - b.i; });
@@ -3612,14 +3612,25 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
       var S = seg[s.h]; if (S == null || s.meds) return;
       s.c.forEach(function (c) {
         if (!c.px || (c.t !== 'chk' && c.t !== 'chktxt')) return;
-        var m = new RegExp('\\(\\s*[Xx]\\s*\\)\\s*' + c.px.replace(/ /g, '\\s+') + '\\s*:?\\s*(.*?)' + FIM, 'i').exec(S);
+        var m = new RegExp('\\(\\s*([Xx]?)\\s*\\)\\s*' + c.px.replace(/ /g, '\\s+') + '\\s*:?\\s*(.*?)' + FIM, 'i').exec(S);
         if (!m) return;
-        var val = limparValor(m[1]); v[c.k] = c.t === 'chk' ? 'Sim' : (val || 'Sim');
+        var val = limparValor(m[2].replace(/^(?:[–-]\s*)?Tel:?\s*/i, ''));
+        // caixa marcada = sim; caixa vazia mas com texto escrito ao lado (ex.: "Acompanhamento com psicólogo: TCC") também vale
+        if (c.t === 'chk') { if (m[1]) v[c.k] = 'Sim'; } else if (m[1]) v[c.k] = val || 'Sim'; else if (val) v[c.k] = val;
       });
     });
     // tabelas e campos livres
-    var pl = limparValor((seg['PLANO DE SAÚDE'] || '').replace(/PLANO DE SA[UÚ]DE|N[UÚ]MERO DO DOCUMENTO|M[EÉ]DICO DE PREFER[EÊ]NCIA|TELEFONE/g, ''));
-    if (pl && !/^n[aã]o informado$/i.test(pl)) v['Plano de saúde'] = pl;
+    var pl = limparValor((seg['PLANO DE SAÚDE'] || '').replace(/PLANO DE SA[UÚ]DE|N[UÚ]MERO DO DOCUMENTO|M[EÉ]DICO DE PREFER[EÊ]NCIA|TELEFONE/g, ' '));
+    if (pl && !/^n[aã]o informado$/i.test(pl)) {
+      // linha da tabela: plano, número do documento, médico de preferência, telefone ("---" = em branco)
+      var mp = /^(.*?)\s+(\d[\d.\-\/]{4,}\d|---)\s*(.*)$/.exec(pl);
+      if (mp) {
+        var rest = limparValor(mp[3].replace(/(^|\s)-{3,}(?=\s|$)/g, ' ')), tel = '', mt = /(\(?\d{2}\)?\s?\d{4,5}-?\d{4})\s*$/.exec(rest);
+        if (mt) { tel = mt[1]; rest = limparValor(rest.slice(0, mt.index)); }
+        var nome = limparValor(mp[1]); if (nome) v['Plano de saúde'] = nome; if (mp[2] !== '---') v['Número do documento'] = mp[2];
+        if (rest) v['Médico de preferência'] = rest; if (tel) v['Telefone do médico'] = tel;
+      } else v['Plano de saúde'] = limparValor(pl.replace(/-{3,}/g, ' '));
+    }
     var md = limparValor((seg['MEDICAMENTOS'] || '').replace(/NOME DO MEDICAMENTO|USO CONT[IÍ]NUO|INFORMA[ÇC][OÕ]ES|-{3,}/g, ''));
     if (md) v['Medicamento 1'] = md;
     var ob = (seg['OBSERVAÇÕES'] || ''), at = /Atualizado em:\s*(\d{2}\/\d{2}\/\d{4})/i.exec(ob);
