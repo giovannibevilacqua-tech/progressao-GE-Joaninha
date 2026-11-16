@@ -390,17 +390,36 @@ padding: 8px; background: var(--focus-y); border-radius: 8px;
 .conta-hamb { display: none; border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 18px; line-height: 1; width: 38px; height: 34px; border-radius: 8px; cursor: pointer; }
 .conta-menu-topo, .conta-menu-fundo { display: none; }
 .conta-menu { display: contents; }
-@media (max-width: 760px) {
-  .conta-barra { flex-wrap: nowrap; }
-  .conta-barra-registro { flex: 1 1 auto !important; }
-  .conta-hamb { display: block; }
-  .conta-menu-fundo.aberto { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 100010; }
-  .conta-menu { display: none; position: fixed; top: 0; right: 0; bottom: 0; width: min(280px, 82vw); background: var(--card); z-index: 100011; padding: 12px; flex-direction: column; gap: 8px; overflow-y: auto; box-shadow: -8px 0 30px rgba(0,0,0,.3); }
-  .conta-menu.aberto { display: flex; }
-  .conta-menu .conta-barra-btn { width: 100%; text-align: left; padding: 11px 12px; font-size: 13px; }
-  .conta-menu-topo { display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 15px; margin-bottom: 4px; }
-  .conta-menu-topo button { border: 0; background: none; font-size: 20px; cursor: pointer; color: var(--text); }
-}
+.conta-barra { flex-wrap: nowrap; justify-content: flex-end; }
+.conta-barra-registro { display: none; }
+.conta-hamb { display: block; }
+.conta-perfil { display: flex; align-items: center; gap: 8px; border: 0; background: none; color: var(--text); cursor: pointer; padding: 2px 4px; border-radius: 22px; font-family: inherit; max-width: 60%; }
+.conta-perfil .conta-nome { font-size: 12.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.conta-av { width: 34px; height: 34px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; color: #fff; overflow: hidden; flex-shrink: 0; border: 2px solid rgba(255,255,255,.55); box-shadow: 0 1px 4px rgba(0,0,0,.3); }
+.conta-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.conta-av.grande { width: 72px; height: 72px; font-size: 38px; }
+.conta-menu-fundo.aberto { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 100010; }
+.conta-menu { display: none; position: fixed; top: 0; right: 0; bottom: 0; width: min(300px, 86vw); background: var(--card); z-index: 100011; padding: 12px; flex-direction: column; gap: 8px; overflow-y: auto; box-shadow: -8px 0 30px rgba(0,0,0,.3); }
+.conta-menu.aberto { display: flex; }
+.conta-menu .conta-barra-btn { width: 100%; text-align: left; padding: 11px 12px; font-size: 13px; }
+.conta-menu-topo { display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 15px; margin-bottom: 4px; }
+.conta-menu-topo button { border: 0; background: none; font-size: 20px; cursor: pointer; color: var(--text); }
+.conta-menu-perfil { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 0 12px; border-bottom: 1px solid var(--border); margin-bottom: 4px; text-align: center; }
+.conta-menu-perfil .nm { font-weight: 800; font-size: 15px; }
+.conta-menu-perfil button { border: 1px solid var(--border); background: transparent; color: var(--text); border-radius: 8px; padding: 6px 10px; font-size: 12px; font-weight: 700; cursor: pointer; }
+.av-ov { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 100050; display: flex; align-items: center; justify-content: center; padding: 14px; }
+.av-box { background: var(--card); color: var(--text); border-radius: 8px; width: min(420px, 100%); max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 12px 40px rgba(0,0,0,.45); }
+.av-box h3 { margin: 0; padding: 14px 16px 6px; font-size: 16px; }
+.av-corpo { padding: 6px 16px; overflow: auto; flex: 1; }
+.av-grade { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; margin: 6px 0 12px; }
+.av-grade button { border: 2px solid transparent; background: rgba(128,128,128,.12); border-radius: 8px; font-size: 20px; padding: 4px 0; cursor: pointer; }
+.av-grade button.sel { border-color: var(--vinho, #1A6B3C); }
+.av-cores { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0 12px; }
+.av-cores button { width: 30px; height: 30px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; }
+.av-cores button.sel { border-color: var(--text); }
+.av-rod { padding: 10px 16px; border-top: 1px solid rgba(128,128,128,.25); display: flex; gap: 8px; }
+.av-rod button, .av-corpo .av-bt { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-weight: 700; font-size: 13px; cursor: pointer; }
+.av-rod button.p { background: var(--vinho, #1A6B3C); color: #fff; border-color: var(--vinho, #1A6B3C); }
 
 .ramo-btn {
 padding: 16px 10px; border-radius: 12px; border: 2px solid var(--text);
@@ -736,7 +755,7 @@ mark.hl-esc{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 .chefe-det{flex-basis:100%;border:1px solid var(--border,#444);border-radius:10px;padding:0 10px;margin:2px 0}.chefe-det>summary{cursor:pointer;font-size:12px;font-weight:700;color:var(--muted);padding:7px 0;list-style:none}.chefe-det>summary::-webkit-details-marker{display:none}.chefe-det>summary::before{content:"▸ "}.chefe-det[open]>summary::before{content:"▾ "}.chefe-det[data-k="novo"]{border:1px solid #3fa66a;background:rgba(63,166,106,.12)}.chefe-det[data-k="novo"]>summary{color:#7fe0a6;font-size:13px;padding:10px 0}.chefe-det-corpo{display:flex;flex-direction:column;gap:6px;padding-bottom:10px}
 .func-lista{display:flex;flex-direction:column;gap:6px}.func-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:4px;border-radius:8px;border:1px dashed transparent}.func-row.arrastando{opacity:.5}.func-row.alvo{border-color:var(--vinho,#9b2c43);background:rgba(155,44,67,.12)}.func-h{cursor:grab;font-size:18px;line-height:1;padding:2px 6px;color:var(--muted);touch-action:none;user-select:none}.func-h.off{opacity:.25;cursor:not-allowed}.func-n{font-size:10px;font-weight:700;color:var(--muted);min-width:56px}
 </style>
-<script src="Apoio/v2.js?v=20261116e"></script>
+<script src="Apoio/v2.js?v=20261116f"></script>
 </head>
 <body>
 <div id="lembreteBackupSlot"></div>
@@ -767,11 +786,12 @@ REGISTRO ESCOTEIRO
 
 <div class="cabecalho-fixo" id="cabecalhoFixo">
 <div class="conta-barra">
-<span class="conta-barra-registro">👤 <strong id="contaRegistroTxt"></strong></span>
+<button type="button" class="conta-perfil" onclick="menuLateral(true)" aria-label="Meu perfil"><span class="conta-nome" id="contaRegistroTxt"></span><span class="conta-av" id="contaAvatar"></span></button>
 <button class="conta-hamb" id="btnMenuLat" aria-label="Menu" onclick="menuLateral(true)">☰</button>
 <div class="conta-menu-fundo" id="contaMenuFundo" onclick="menuLateral(false)"></div>
-<div class="conta-menu" id="contaMenu" onclick="if(event.target.closest('button'))menuLateral(false)">
+<div class="conta-menu" id="contaMenu" onclick="if(event.target.closest('.conta-barra-btn'))menuLateral(false)">
 <div class="conta-menu-topo"><span>Menu</span><button type="button" onclick="menuLateral(false)" aria-label="Fechar">✕</button></div>
+<div class="conta-menu-perfil"><span class="conta-av grande" id="contaAvatarGrande"></span><span class="nm" id="contaNomeMenu"></span><button type="button" onclick="abrirAvatar()">🖼️ Avatar ou foto</button></div>
 <button class="conta-barra-btn" id="btnTrocarSenha" onclick="abrirTrocarSenha()">🔒 Trocar minha senha</button>
 <button class="conta-barra-btn" id="btnMinhaFormacao" onclick="location.href=V2.pagina('formacao')">🎓 Minha formação</button>
 <button class="conta-barra-btn" id="btnSugestao" onclick="abrirSugestao()">💡 Sugestão</button>
@@ -1802,9 +1822,63 @@ async function atualizarLembreteBackup() {
     div.remove();
   };
 }
+
+// ===== Avatar do perfil (guardado neste aparelho) =====
+const AV_EMOJIS = ['🐺','🦅','🦉','🦊','🐻','🐯','🦁','🐼','🐸','🐢','🦋','🐞','🌲','🏕️','⛺','🔥','🧭','⚜️','🪢','🎒','🌟','🚀','🎸','🐶'];
+const AV_CORES = ['#1A6B3C','#B26A00','#1B3B6F','#6D1026','#7B3FA0','#0E7C86','#C0392B','#555555'];
+function avKey() { return 'avatarPerfil_' + (registroLogado || ''); }
+function avLer() { try { return JSON.parse(localStorage.getItem(avKey()) || 'null'); } catch (e) { return null; } }
+function avHtml(a) {
+  if (a && a.t === 'foto' && /^data:image\//.test(a.u || '')) return '<img alt="" src="' + a.u + '">';
+  if (a && a.t === 'emoji') return a.e;
+  const n = (nomeLogado || 'U').trim(); return n.charAt(0).toUpperCase();
+}
+function avCor(a) { return (a && a.c) || AV_CORES[((nomeLogado || registroLogado || 'u').length) % AV_CORES.length]; }
+function renderAvatar() {
+  const a = avLer();
+  ['contaAvatar', 'contaAvatarGrande'].forEach(id => { const el = document.getElementById(id); if (el) { el.innerHTML = avHtml(a); el.style.background = (a && a.t === 'foto') ? '#444' : avCor(a); } });
+}
+function abrirAvatar() {
+  const ant = avLer() || {}; let atual = { t: ant.t || 'inicial', e: ant.e || '', c: ant.c || '', u: ant.u || '' };
+  const ov = document.createElement('div'); ov.className = 'av-ov';
+  ov.innerHTML = '<div class="av-box"><h3>🖼️ Meu avatar</h3><div class="av-corpo"><div style="display:flex;justify-content:center;margin:6px 0 10px"><span class="conta-av grande" id="avPrev"></span></div>'
+    + '<div style="font-size:11px;font-weight:700;text-transform:uppercase;opacity:.7">Escolha um desenho</div><div class="av-grade" id="avGrade">' + AV_EMOJIS.map(e => '<button type="button" data-e="' + e + '">' + e + '</button>').join('') + '</div>'
+    + '<div style="font-size:11px;font-weight:700;text-transform:uppercase;opacity:.7">Cor de fundo</div><div class="av-cores" id="avCores">' + AV_CORES.map(c => '<button type="button" data-c="' + c + '" style="background:' + c + '"></button>').join('') + '</div>'
+    + '<div style="display:flex;gap:8px"><button type="button" class="av-bt" id="avFotoBt">📷 Enviar foto</button><button type="button" class="av-bt" id="avSem">Só a inicial</button></div><input type="file" id="avArq" accept="image/*" style="display:none">'
+    + '<div id="avMsg" style="font-size:12px;opacity:.7;margin-top:6px">A foto fica guardada neste aparelho.</div></div>'
+    + '<div class="av-rod"><button type="button" id="avNao">Cancelar</button><button type="button" class="p" id="avSim">Salvar</button></div></div>';
+  document.body.appendChild(ov);
+  const g = id => document.getElementById(id);
+  function pinta() {
+    const p = g('avPrev'); p.innerHTML = avHtml(atual); p.style.background = atual.t === 'foto' ? '#444' : avCor(atual);
+    g('avGrade').querySelectorAll('button').forEach(b => b.classList.toggle('sel', atual.t === 'emoji' && b.dataset.e === atual.e));
+    g('avCores').querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.c === (atual.c || avCor(atual))));
+  }
+  g('avGrade').onclick = ev => { const b = ev.target.closest('button'); if (!b) return; atual = { t: 'emoji', e: b.dataset.e, c: atual.c || '' }; pinta(); };
+  g('avCores').onclick = ev => { const b = ev.target.closest('button'); if (!b) return; atual.c = b.dataset.c; pinta(); };
+  g('avSem').onclick = () => { atual = { t: 'inicial', c: atual.c || '' }; pinta(); };
+  g('avFotoBt').onclick = () => g('avArq').click();
+  g('avArq').onchange = () => {
+    const f = g('avArq').files[0]; if (!f) return;
+    const img = new Image(), url = URL.createObjectURL(f);
+    img.onload = () => {
+      const T = 192, cv = document.createElement('canvas'); cv.width = T; cv.height = T; const cx = cv.getContext('2d');
+      const m = Math.min(img.width, img.height), sx = (img.width - m) / 2, sy = (img.height - m) / 2; cx.drawImage(img, sx, sy, m, m, 0, 0, T, T);
+      atual = { t: 'foto', u: cv.toDataURL('image/jpeg', 0.85), c: atual.c || '' }; URL.revokeObjectURL(url); pinta();
+    };
+    img.onerror = () => { g('avMsg').textContent = 'Não consegui ler essa imagem.'; };
+    img.src = url;
+  };
+  g('avNao').onclick = () => ov.remove();
+  ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+  g('avSim').onclick = () => { try { localStorage.setItem(avKey(), JSON.stringify(atual)); } catch (e) { g('avMsg').textContent = 'Não foi possível guardar neste aparelho.'; return; } renderAvatar(); ov.remove(); };
+  pinta();
+}
 function aplicarEstadoContaLogada() {
 const txt = document.getElementById('contaRegistroTxt');
 if (txt) txt.textContent = nomeLogado ? nomeLogado : ('Registro ' + (registroLogado || ''));
+const nm2 = document.getElementById('contaNomeMenu'); if (nm2) nm2.textContent = txt ? txt.textContent : '';
+renderAvatar();
 document.body.classList.toggle('eh-admin', verTudo()); document.body.classList.toggle('eh-dir', tropaDoChefeLogado === 'diretoria' || tropa2DoChefeLogado === 'diretoria'); document.body.classList.toggle('eh-chsec', !!tropaDoChefeLogado && tropaDoChefeLogado !== 'diretoria' && funcaoDoChefeLogado === 'chefe');
 if (souAdmin) { migrarSenhasParaHash(); atualizarLembreteBackup(); carregarListaChefes(); }
 else { const lb = document.getElementById('lembreteBackup'); if (lb) lb.remove(); }
