@@ -2918,13 +2918,29 @@ jovens: grupos[pid]
 }));
 }
 
+// dentro do card aberto no calendário, link/presença abrem no próprio card (painel abaixo dele), sem segundo pop-up
+function eventoAlvo() {
+const pop = document.getElementById('v2cCardCorpo');
+const pn = pop && eventoModalAbertoId ? document.getElementById('evInline') : null;
+return pn ? { tit: pn.querySelector('.ev-in-tit'), corpo: pn.querySelector('.ev-in-corpo') } : { tit: document.getElementById('eventoModalTitulo'), corpo: document.getElementById('eventoModalBody') };
+}
+function abrirEventoInline(id, tipo) {
+const pop = document.getElementById('v2cCardCorpo'); if (!pop) return false;
+let pn = document.getElementById('evInline'); if (pn) pn.remove();
+pn = document.createElement('div'); pn.id = 'evInline'; pn.style.cssText = 'border-top:1px solid rgba(128,128,128,.3);padding:10px 12px 12px;margin-top:6px';
+pn.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px"><b class="ev-in-tit" style="font-size:14px"></b><button type="button" class="btn-ic" onclick="fecharEventoInline()">✕ Fechar</button></div><div class="ev-in-corpo"></div>';
+pop.appendChild(pn); eventoModalAbertoId = id; eventoModalTipo = tipo; renderEventoModalBody();
+pn.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); return true;
+}
+function fecharEventoInline() { const pn = document.getElementById('evInline'); if (pn) pn.remove(); eventoModalAbertoId = null; }
 function renderEventoModalBody() {
 if (!eventoModalAbertoId) return;
 const ev = EVENTOS.find(e => e.id === eventoModalAbertoId);
 if (!ev) { fecharEventoModal(); return; }
+const alvo = eventoAlvo();
 if (eventoModalTipo === 'extra') {
-document.getElementById('eventoModalTitulo').textContent = '📎 Link, arquivo e avaliação';
-document.getElementById('eventoModalBody').innerHTML = `<div style="display:flex;flex-direction:column;gap:10px;">
+alvo.tit.textContent = '📎 Link, arquivo e avaliação';
+alvo.corpo.innerHTML = `<div style="display:flex;flex-direction:column;gap:10px;">
 <div>
 <label class="campo-label">Link (Google Drive, fotos, documento etc.)</label>
 <input type="url" class="campo-input" value="${ev.link||''}" placeholder="https://drive.google.com/..." onchange="salvarLinkEventoCard('${ev.id}',this.value)">
@@ -2946,9 +2962,9 @@ const presentes = ev.presentes || [];
 const itens = ev.itens || [];
 const partesData = (ev.data || '').split('-');
 const dataTxt = partesData.length === 3 ? `${partesData[2]} ${MESES_ABREV[parseInt(partesData[1], 10) - 1] || ''}` : '';
-document.getElementById('eventoModalTitulo').textContent = `📋 Presença — ${dataTxt} (${presentes.length}/${JOVENS.length})`;
+alvo.tit.textContent = `📋 Presença — ${dataTxt} (${presentes.length}/${JOVENS.length})`;
 const grupos = ordenarJovensPorPatrulha(JOVENS);
-document.getElementById('eventoModalBody').innerHTML = `<div class="presenca-list">
+alvo.corpo.innerHTML = `<div class="presenca-list">
 <div class="presenca-marcar-todos">
 <button onclick="marcarTodosPresentes('${ev.id}', true)">✓ Marcar todos</button>
 <button onclick="marcarTodosPresentes('${ev.id}', false)">✗ Desmarcar todos</button>
@@ -2970,12 +2986,14 @@ ${!itens.length ? '<div class="presenca-hint">Nenhum item de progressão vincula
 }
 
 function abrirModalExtraEvento(id) {
+if (abrirEventoInline(id, 'extra')) return;
 eventoModalAbertoId = id;
 eventoModalTipo = 'extra';
 renderEventoModalBody();
 document.getElementById('eventoModalOv').classList.add('open', 'centralizado');
 }
 function abrirModalPresencaEvento(id) {
+if (abrirEventoInline(id, 'presenca')) return;
 eventoModalAbertoId = id;
 eventoModalTipo = 'presenca';
 renderEventoModalBody();

@@ -3779,7 +3779,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
       + '.v2c-sec{margin:14px 0 6px;font-weight:800;font-size:14px}.v2c-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100040;display:flex;align-items:center;justify-content:center;padding:12px}.v2c-box{background:var(--card,#fff);color:var(--text,#1a1a1a);border-radius:8px;padding:16px;width:100%;max-width:560px;max-height:90vh;overflow:auto;box-sizing:border-box}'
       + '.v2c-box select,.v2c-box option{background:#fff;color:#1a1a1a}.v2c-box select{cursor:pointer}.v2c-box label{display:block;font-size:11px;font-weight:700;margin:10px 0 3px;opacity:.75;text-transform:uppercase}.v2c-box input[type=text],.v2c-box input[type=date],.v2c-box select{width:100%;box-sizing:border-box;padding:9px;border:1px solid var(--border,#ccc);border-radius:8px;font-size:14px;background:var(--card,#fff);color:inherit}'
       + 'body.v2c-sem-lista #cal-lista,body.v2c-sem-lista #listaEventos,body.v2c-sem-lista #cal-2s26,body.v2c-sem-lista #cal-1s27,body.v2c-sem-lista .cal-legend,.v2c-oculto{display:none!important}'
-      + '.v2c-cab{padding:14px 16px 8px;font-size:16px;font-weight:800}.v2c-corpo{padding:4px 16px 12px;overflow:auto;flex:1}.v2c-pe{position:sticky;bottom:0;padding:10px 16px;border-top:1px solid rgba(128,128,128,.25);display:flex;gap:8px;justify-content:flex-end;background:inherit}'
+      + '.v2c-box:has(>.v2c-cab){padding:0;display:flex;flex-direction:column;overflow:hidden}.v2c-box>.v2c-pe:last-child{position:static!important;margin:0!important;padding:10px 16px!important;flex:none}.v2c-box>.v2c-corpo,.v2c-box>#v2cCardCorpo{overflow:auto;flex:0 1 auto;min-height:0}.v2c-cab{flex:none;padding:14px 16px 8px;font-size:16px;font-weight:800}.v2c-corpo{padding:4px 16px 12px;overflow:auto;flex:1}.v2c-pe{position:sticky;bottom:0;padding:10px 16px;border-top:1px solid rgba(128,128,128,.25);display:flex;gap:8px;justify-content:flex-end;background:inherit}'
       + '.v2c-ck{display:flex;gap:6px;align-items:center;font-size:13px;margin:4px 0;text-transform:none!important;font-weight:600!important;opacity:1!important}.v2c-imp{border:1px solid var(--border,#ddd);border-radius:10px;padding:8px;margin-bottom:6px;font-size:12px}.v2c-imp input[type=text],.v2c-imp input[type=date]{padding:6px!important;font-size:12px!important}.v2c-imp .l{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:4px}';
     document.head.appendChild(st);
   }
@@ -3900,7 +3900,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
       if (!novo) return;
       var abertos = Array.prototype.map.call(cardAberto.el.querySelectorAll('details'), function (d) { return d.open; }), st = corpo.scrollTop;
       cardAberto.home = novo.parentNode; cardAberto.margem = novo.style.margin; novo.style.margin = '0';
-      corpo.replaceChildren(novo); cardAberto.el = novo;
+      cardAberto.el.replaceWith(novo); cardAberto.el = novo;
       Array.prototype.forEach.call(novo.querySelectorAll('details'), function (d, k) { if (abertos[k]) d.open = true; });
       corpo.scrollTop = st;
     }, 250);
@@ -4060,7 +4060,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
       (achou[0] || lista).scrollIntoView({ behavior: 'smooth', block: achou[0] ? 'center' : 'start' });
       setTimeout(function () { achou.forEach(function (el) { el.style.outline = ''; el.style.outlineOffset = ''; }); }, 2600);
     },
-    _abrir: abrirAtividade,
+    _abrir: abrirAtividade, _fecharCard: fecharCard,
     abrirNaSecao: function (secao, container) { try { if (new URLSearchParams(location.search).get('view') === '1') return; } catch (e) {} if (cfg && cfg.container === container && cfg.secao === secao && $(container) && $(container).firstChild) return root.V2_CAL.atualizar(); return root.V2_CAL.montar({ container: container, secao: secao }); },
     _parse: parseDatas, _extrair: extrair
   };
@@ -4248,7 +4248,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
   root.V2_POPUP = {
     // headerId: id do cabeçalho do formulário "Adicionar atividade"; aoFechar: função que cancela a edição
     abrir: function (headerId, aoFechar, botoes) {
-      css(); this.fechar();
+      css(); this.fechar(); if (root.V2_CAL && root.V2_CAL._fecharCard) root.V2_CAL._fecharCard();
       var h = document.getElementById(headerId); if (!h || !h.parentElement) return;
       var box = h.parentElement; atual = box;
       var bk = document.createElement('div'); bk.id = 'v2PopBk'; bk.onclick = function () { if (aoFechar) aoFechar(); else root.V2_POPUP.fechar(); };
