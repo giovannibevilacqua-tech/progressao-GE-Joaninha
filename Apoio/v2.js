@@ -1226,13 +1226,71 @@ window.V2_CONFIG = {
     setTimeout(function () { URL.revokeObjectURL(url); }, 600000);
   }
   function abrirRelatorio(r) { abrirNovaAba('Relatório — ' + r.nome, htmlJovem(r), function () { return montarPdfJovem(r); }, false); }
-  function abrirRelatorioGrupo(specs) {
+  // ---- versão resumida: quadro geral (números por eixo, etapa e patrulha), sem a lista de cada jovem ----
+  function resumoDe(r) {
+    var n = r.linhas.length || 1, eixos = (r.colunas || []).map(function (c, i) {
+      var soma = 0; r.linhas.forEach(function (l) { soma += l.porEixo[i] || 0; });
+      var tot = c.total * n; return { nome: c.nome, cor: c.cor, pct: tot ? Math.round(soma / tot * 100) : 0, soma: soma, tot: tot };
+    });
+    var pats = {}, ordem = [];
+    r.linhas.forEach(function (l) { var k = l.patrulha || '—'; if (!pats[k]) { pats[k] = { nome: k, n: 0, bl: 0, tot: 0 }; ordem.push(k); } pats[k].n++; pats[k].bl += l.n; pats[k].tot += l.total; });
+    var ps = ordem.map(function (k) { var x = pats[k]; return { nome: x.nome, n: x.n, pct: x.tot ? Math.round(x.bl / x.tot * 100) : 0 }; });
+    var pres = [], tp = 0; r.linhas.forEach(function (l) { var m = /(\d+)\s*%/.exec(l.presenca || ''); if (m) { pres.push(+m[1]); tp += +m[1]; } });
+    return { eixos: eixos, pats: ps, presMedia: pres.length ? Math.round(tp / pres.length) : null };
+  }
+  function htmlTropaResumo(r) {
+    var q = resumoDe(r);
+    var h = '<header><h1>' + escHtml(r.tropa) + '</h1><div class="sub">GE Joaninha · Resumo geral da seção · ' + escHtml(dataExtenso()) + '</div></header>' +
+      '<div class="cards"><div class="card"><b>' + r.resumo.jovens + '</b>jovens</div><div class="card"><b>' + r.resumo.media + '</b>média de blocos (de ' + r.resumo.total + ')</div>' + (q.presMedia != null ? '<div class="card"><b>' + q.presMedia + '%</b>presença média</div>' : '') +
+      (r.etapas || []).map(function (e) { return '<div class="card"><b>' + e[1] + '</b>' + escHtml(e[0]) + '</div>'; }).join('') + '</div>';
+    if (q.eixos.length) h += '<h3>Progresso por eixo</h3>' + q.eixos.map(function (e) { return '<div style="margin:6px 0"><b>' + escHtml(e.nome) + '</b> · ' + e.pct + '%<div class="barra" style="height:8px"><i style="width:' + e.pct + '%;background:' + escHtml(e.cor) + '"></i></div></div>'; }).join('');
+    if (q.pats.length > 1 || (q.pats[0] && q.pats[0].nome !== '—')) h += '<h3>Por ' + escHtml((r.rotuloGrupo || 'Patrulha').toLowerCase()) + '</h3><table><thead><tr><th>' + escHtml(r.rotuloGrupo || 'Patrulha') + '</th><th class="e">Jovens</th><th>Progresso médio</th></tr></thead><tbody>' + q.pats.map(function (x) { return '<tr><td><b>' + escHtml(x.nome) + '</b></td><td class="c">' + x.n + '</td><td>' + x.pct + '%<div class="barra" style="height:6px;margin-top:3px"><i style="width:' + x.pct + '%"></i></div></td></tr>'; }).join('') + '</tbody></table>';
+    return h + '<footer>Os dados refletem o que estava registrado no momento da emissão.</footer>';
+  }
+  function desenharTropaResumo(P, r, nova) {
+    var M = 36, y = M, VINHO = '#6D1026', q = resumoDe(r);
+    if (nova) P.nova();
+    function rod() { P.texto(M, P.H - 16, 'GE Joaninha · Resumo da ' + r.tropa, { t: 7.5, c: '#888888' }); }
+    function garantir(h) { if (y + h > P.H - 30) { rod(); P.nova(); y = M; } }
+    P.texto(M, y + 14, r.tropa, { t: 20, b: 1, c: VINHO }); P.texto(M, y + 30, 'GE Joaninha · Resumo geral da seção · ' + dataExtenso(), { t: 9, c: '#666666' });
+    P.rect(M, y + 38, P.W - 2 * M, 2, VINHO); y += 52;
+    var cartoes = [[String(r.resumo.jovens), 'jovens'], [String(r.resumo.media), 'média de blocos (de ' + r.resumo.total + ')']].concat(q.presMedia != null ? [[q.presMedia + '%', 'presença média']] : []).concat((r.etapas || []).map(function (e) { return [String(e[1]), e[0]]; }));
+    var x = M;
+    cartoes.forEach(function (c) { var w = Math.max(70, P.larg(c[1], 8.5) + 20); if (x + w > P.W - M) return; P.rect(x, y, w, 40, '#F6EFEA'); P.texto(x + 10, y + 18, c[0], { t: 16, b: 1, c: VINHO }); P.texto(x + 10, y + 32, c[1], { t: 8.5, c: '#555555' }); x += w + 8; });
+    y += 58;
+    function barra(rot, pct, cor, det) { garantir(26); P.texto(M, y + 9, rot, { t: 10, b: 1 }); P.texto(P.W - M - 60, y + 9, det || (pct + '%'), { t: 10 }); P.rect(M, y + 13, P.W - 2 * M, 7, '#E4D9D0'); if (pct) P.rect(M, y + 13, (P.W - 2 * M) * pct / 100, 7, cor || VINHO); y += 28; }
+    if (q.eixos.length) { P.texto(M, y + 10, 'Progresso por eixo', { t: 12, b: 1, c: VINHO }); y += 20; q.eixos.forEach(function (e) { barra(e.nome, e.pct, e.cor); }); y += 6; }
+    if (q.pats.length > 1 || (q.pats[0] && q.pats[0].nome !== '—')) { garantir(40); P.texto(M, y + 10, 'Por ' + (r.rotuloGrupo || 'Patrulha').toLowerCase(), { t: 12, b: 1, c: VINHO }); y += 20; q.pats.forEach(function (p2) { barra(p2.nome + ' (' + p2.n + ' jovem' + (p2.n === 1 ? '' : 's') + ')', p2.pct, VINHO); }); }
+    rod();
+  }
+  function montarPdfTropaResumo(r) { try { var P = criarPdf(595, 842); desenharTropaResumo(P, r, false); return { bytes: P.bytes(), nome: 'resumo-' + nomeSeguro(r.tropa) + '.pdf' }; } catch (e) { console.error(e); throw e; } }
+  function montarPdfGrupoResumo(specs) { try { var P = criarPdf(595, 842); specs.forEach(function (r, i) { desenharTropaResumo(P, r, i > 0); }); return { bytes: P.bytes(), nome: 'resumo-grupo.pdf' }; } catch (e) { console.error(e); throw e; } }
+  // pergunta qual relatório imprimir: detalhado ou resumo
+  function escolherModo(aoEscolher) {
+    var ov = document.createElement('div'); ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100030;display:flex;align-items:center;justify-content:center;padding:16px';
+    ov.innerHTML = '<div style="background:#fff;color:#1a1a1a;border-radius:8px;width:100%;max-width:360px;box-shadow:0 10px 40px rgba(0,0,0,.35);display:flex;flex-direction:column;max-height:90vh"><div style="padding:16px 18px 6px;font-size:16px;font-weight:800">📄 Qual relatório?</div><div style="padding:6px 18px;overflow:auto;display:flex;flex-direction:column;gap:8px;font-size:13px">'
+      + '<button type="button" data-m="det" style="text-align:left;padding:12px;border-radius:8px;border:1px solid #6D1026;background:#6D1026;color:#fff;cursor:pointer;font-weight:700">📋 Detalhado<div style="font-weight:400;font-size:12px;margin-top:2px">Todos os jovens, com blocos, eixos e presença.</div></button>'
+      + '<button type="button" data-m="res" style="text-align:left;padding:12px;border-radius:8px;border:1px solid #bbb;background:#fff;color:#1a1a1a;cursor:pointer;font-weight:700">📊 Resumo geral<div style="font-weight:400;font-size:12px;margin-top:2px">Quadro geral: números por eixo, etapa e patrulha. Cabe em uma folha.</div></button></div>'
+      + '<div style="padding:10px 18px;border-top:1px solid rgba(0,0,0,.12);position:sticky;bottom:0;background:#fff;border-radius:0 0 8px 8px"><button type="button" data-m="" style="width:100%;padding:10px;border-radius:8px;border:1px solid #bbb;background:#fff;color:#1a1a1a;cursor:pointer;font-weight:700">Cancelar</button></div></div>';
+    document.body.appendChild(ov);
+    ov.addEventListener('click', function (e) { var b = e.target.closest('button[data-m]'); if (!b && e.target !== ov) return; ov.remove(); if (b && b.dataset.m) aoEscolher(b.dataset.m); });
+  }
+  function abrirRelatorioGrupo(specs, modo) {
+    if (!modo) return escolherModo(function (m) { abrirRelatorioGrupo(specs, m); });
+    if (modo === 'res') {
+      var cr = '<header><h1>Grupo Escoteiro Joaninha</h1><div class="sub">Resumo geral de todas as seções · ' + escHtml(dataExtenso()) + '</div></header>' + specs.map(function (r, i) { return '<div style="' + (i ? 'break-before:page;margin-top:24px' : '') + '">' + htmlTropaResumo(r).replace(/<header>.*?<\/header>/, '<h2 style="color:#6D1026;margin:0 0 6px">' + escHtml(r.tropa) + '</h2>') + '</div>'; }).join('');
+      return abrirNovaAba('Resumo — Grupo', cr, function () { return montarPdfGrupoResumo(specs); }, false);
+    }
     var corpo = '<header><h1>Grupo Escoteiro Joaninha</h1><div class="sub">Relatório de progressão de todas as seções · ' + escHtml(dataExtenso()) + '</div></header>' +
       '<div class="cards">' + specs.map(function (r) { return '<div class="card"><b>' + r.resumo.jovens + '</b>' + escHtml(r.tropa) + '</div>'; }).join('') + '</div>' +
       specs.map(function (r) { return '<div style="break-before:page;margin-top:24px">' + htmlTropa(r) + '</div>'; }).join('');
     abrirNovaAba('Relatório — Grupo', corpo, function () { return montarPdfGrupo(specs); }, true);
   }
-  function abrirRelatorioTropa(r) { abrirNovaAba('Relatório — ' + r.tropa, htmlTropa(r), function () { return montarPdfTropa(r); }, true); }
+  function abrirRelatorioTropa(r, modo) {
+    if (!modo) return escolherModo(function (m) { abrirRelatorioTropa(r, m); });
+    if (modo === 'res') return abrirNovaAba('Resumo — ' + r.tropa, htmlTropaResumo(r), function () { return montarPdfTropaResumo(r); }, false);
+    abrirNovaAba('Relatório — ' + r.tropa, htmlTropa(r), function () { return montarPdfTropa(r); }, true);
+  }
 
   /* ---------- lembrete mensal de backup (admins) ---------- */
   // Janela: últimos 5 dias do mês até o dia 5 do mês seguinte. Devolve "AAAA-MM" do mês a fechar, ou null fora da janela.
