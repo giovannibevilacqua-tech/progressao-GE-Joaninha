@@ -2374,7 +2374,7 @@ if (p === 'calendario') { renderPaginaCalendario(); V2_CAL.abrirNaSecao('escotei
 if (p === 'jovens') renderRoster();
 if (p === 'ciclo') renderPaginaCiclo();
 if (p === 'lis') renderPaginaLis();
-if (p === 'pont') V2_PONT.montar(document.getElementById('pontHost'), { patrulhas: () => PATRULHAS, dados: () => PONT, membros: membrosPontEsc, salvar: () => { temAlteracaoLocalPendente = true; saveState(); }, podeEditar: true });
+if (p === 'pont') V2_PONT.montar(document.getElementById('pontHost'), { patrulhas: () => PATRULHAS, dados: () => PONT, membros: membrosPontEsc, atividades: () => (window.calSecaoEventos ? window.calSecaoEventos() : []), salvar: () => { temAlteracaoLocalPendente = true; saveState(); }, podeEditar: true });
 if (p === 'almoxarifado') V2_ALMOX.abrir();
 if (p === 'financeiro') V2_FIN.abrir();
 }

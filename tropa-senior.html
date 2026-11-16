@@ -2081,7 +2081,7 @@ function renderSemestres(){
 function membrosPontSr(pid) {
   return actJ().filter(it => PATRULHA_DE_SR[it.yid] === pid).map(it => ({ nome: JNOMES[it.i], pres: Object.values(PRESENCA).filter(ev => ev[it.yid] === 1).length, total: Object.values(PRESENCA).filter(ev => ev[it.yid] !== undefined).length }));
 }
-function montarPontSr() { V2_PONT.montar(document.getElementById('pontHostSr'), { patrulhas: () => PATRULHAS_SR, dados: () => PONTUACAO_SR, membros: membrosPontSr, salvar: () => saveState(), podeEditar: !MODO_VISUALIZACAO_SR }); }
+function montarPontSr() { V2_PONT.montar(document.getElementById('pontHostSr'), { patrulhas: () => PATRULHAS_SR, dados: () => PONTUACAO_SR, membros: membrosPontSr, atividades: () => (window.calSecaoEventos ? window.calSecaoEventos() : []), salvar: () => saveState(), podeEditar: !MODO_VISUALIZACAO_SR }); }
 function showTab(id,btn){
   document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));

@@ -4547,7 +4547,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
       + '.v2pt th,.v2pt td{padding:8px 10px;border-bottom:1px solid var(--border,#e5e5e5);text-align:center;white-space:nowrap}.v2pt th{font-size:11px;text-transform:uppercase;letter-spacing:.3px;background:rgba(128,128,128,.1);vertical-align:bottom}'
       + '.v2pt th small{display:block;font-weight:600;opacity:.7;text-transform:none;letter-spacing:0}.v2pt td.n,.v2pt th.n{text-align:left;position:sticky;left:0;background:var(--card,#fff);z-index:1;min-width:130px}.v2pt th.n{background:#eee}'
       + '.v2pt td.t{font-weight:800;font-size:14px}.v2pt td.pos{opacity:.7;font-weight:700}.v2pt .neg{color:#b3261e}.v2pt .zero{opacity:.35}.v2pt tr.top td{background:rgba(255,193,7,.1)}.v2pt tr.top td.n{background:#fdf6e0}'
-      + '.v2pt-pt th,.v2pt-pt td{min-width:128px;white-space:normal}.v2pt-pt td.n,.v2pt-pt th.n{min-width:120px;max-width:140px;text-align:left}.v2pt-sub td{background:rgba(128,128,128,.14);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;text-align:left!important;position:static!important}.v2pt-tot td{background:rgba(27,107,58,.1)}.v2pt-tot td.n{background:#e6f1ea}.v2pt-mm{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;padding:3px 0;border-bottom:1px dashed rgba(128,128,128,.3)}.v2pt-mm b{white-space:nowrap}.v2pt-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}'
+      + '.v2pt-pt th,.v2pt-pt td{min-width:128px;white-space:normal}.v2pt-pt td.n,.v2pt-pt th.n{min-width:120px;max-width:140px;text-align:left}.v2pt-sub td{background:rgba(128,128,128,.14);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;text-align:left!important;position:static!important}.v2pt-tot td{background:rgba(27,107,58,.1)}.v2pt-tot td.n{background:#e6f1ea}.v2pt-mm{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;padding:3px 0;border-bottom:1px dashed rgba(128,128,128,.3)}.v2pt-mm b{white-space:nowrap}.v2pt-av{border:1px solid var(--border,#ddd);border-radius:12px;padding:12px;background:var(--card,#fff)}.v2pt-avh{display:flex;gap:10px;flex-wrap:wrap}.v2pt-st{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border,#e5e5e5)}.v2pt-st .d{font-size:12px;opacity:.7;margin-top:1px}.v2pt-stp{display:flex;align-items:center;gap:10px}.v2pt-stp b{min-width:22px;text-align:center;font-size:15px}.v2pt-stp .v2pt-bt{width:36px;padding:7px 0;text-align:center}.v2pt-sub2{margin:10px 0 2px;font-size:13px}.v2pt-sub2 .neg{color:#b3261e}.v2pt-add{display:flex;gap:8px;margin-top:12px}.v2pt-add input{flex:1;min-width:0;padding:9px 11px;border:1px solid var(--border,#ccc);border-radius:8px;font:inherit;font-size:14px;background:var(--card,#fff);color:inherit}.v2pt-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}'
       + '.v2pt-cr{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border,#ddd);border-radius:10px;margin-bottom:6px;background:var(--card,#fff)}.v2pt-cr .pts{font-weight:800;font-size:15px;min-width:54px;text-align:center;border-radius:8px;padding:4px 6px;background:rgba(27,107,58,.14);color:#1b6b3a}'
       + '.v2pt-cr .pts.neg{background:rgba(179,38,30,.12);color:#b3261e}.v2pt-cr .d{font-size:12px;opacity:.75;margin-top:2px}.v2pt-hi{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border,#e5e5e5);font-size:13px}.v2pt-hi .pts{font-weight:800;min-width:46px}'
       + '.v2pt-vz{opacity:.7;font-size:13px;padding:8px 0}.v2pt-mf{margin-bottom:10px}.v2pt-mf label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;opacity:.75;margin-bottom:4px}'
@@ -4574,7 +4574,11 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
   // c: { patrulhas: () => [{id,nome,cor,icone}], dados: () => {crit,lanc}, salvar: () => void, podeEditar: bool }
   function montar(host, c) {
     estilo();
-    var ini = '', fim = '', verTodos = false;
+    var ini = '', fim = '', verTodos = false, sel = { atv: null, pat: null, data: '' };
+    function baseDe(id) { var k = D().crit.filter(function (x) { return x.id === id; })[0]; return k ? num(k.pts) : null; }
+    // lançamentos novos guardam a quantidade (vezes) e valem quantidade x pontos-base do critério; os antigos valem o que foi gravado
+    function ptsOf(l) { var b = l.qtd != null ? baseDe(l.crit) : null; return b !== null ? l.qtd * b : num(l.pts); }
+    function atividades() { var hj = hoje(), l = []; try { l = (c.atividades ? c.atividades() : []) || []; } catch (e) {} return l.filter(function (a) { return a && a.id && a.ini; }).sort(function (a, b) { return (b.ini > hj ? 1 : 0) - (a.ini > hj ? 1 : 0) || (b.ini < a.ini ? -1 : b.ini > a.ini ? 1 : 0); }); }
     function D() { var d = c.dados(); if (!Array.isArray(d.crit)) d.crit = []; if (!Array.isArray(d.lanc)) d.lanc = []; return d; }
     function pats() { return (c.patrulhas() || []).filter(function (p) { return p && p.id; }); }
     function noPeriodo(l) { return (!ini || l.data >= ini) && (!fim || l.data <= fim); }
@@ -4585,17 +4589,17 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
       var orfaos = ls.some(function (l) { return !critIds[l.crit]; });
       var linhas = ps.map(function (p) {
         var por = {}, tot = 0, mem = (c.membros ? c.membros(p.id) : []) || [];
-        ls.forEach(function (l) { if (l.pat !== p.id) return; var k = critIds[l.crit] ? l.crit : '_o'; por[k] = (por[k] || 0) + num(l.pts); tot += num(l.pts); });
+        ls.forEach(function (l) { if (l.pat !== p.id) return; var k = critIds[l.crit] ? l.crit : '_o'; por[k] = (por[k] || 0) + ptsOf(l); tot += ptsOf(l); });
         return { p: p, por: por, tot: tot, mem: mem };
       }).sort(function (a, b) { return b.tot - a.tot; });
       var pos = 0, ant = null; linhas.forEach(function (r, i) { if (ant === null || r.tot !== ant) pos = i + 1; ant = r.tot; r.pos = pos; });
       var h = '<div class="v2pt"><h2>🏅 Pontuação das patrulhas</h2>'
         + '<div class="v2pt-leg"><b>Como funciona</b><ol><li><b>Critérios:</b> a chefia define o que dá ponto e quanto cada coisa vale (por exemplo, “Uniforme completo = +5”; valores negativos descontam).</li>'
-        + '<li><b>Lançamentos:</b> depois de cada atividade, registre os pontos de cada patrulha em um critério.</li>'
+        + '<li><b>Avaliação:</b> escolha a atividade do calendário e a patrulha, e marque com + e − quantas vezes ela cumpriu cada critério. Pontos = vezes × valor do critério.</li>'
         + '<li><b>Tabela geral:</b> soma tudo e mostra todas as patrulhas lado a lado, com o total e a posição.</li></ol></div>';
       // tabela geral
       h += '<h3>📊 Tabela geral — todas as patrulhas</h3><div class="v2pt-bar"><div><label>De</label><input type="date" id="v2ptIni" value="' + esc(ini) + '"></div><div><label>Até</label><input type="date" id="v2ptFim" value="' + esc(fim) + '"></div>'
-        + '<button type="button" class="v2pt-bt" id="v2ptLimpa">Todo o período</button>' + (ed ? '<button type="button" class="v2pt-bt p" id="v2ptLanca" style="margin-left:auto">➕ Lançar pontos</button>' : '') + '</div>';
+        + '<button type="button" class="v2pt-bt" id="v2ptLimpa">Todo o período</button>' + ''+ '</div>';
       if (!ps.length) h += '<div class="v2pt-vz">Nenhuma patrulha cadastrada. Crie as patrulhas na aba de jovens para pontuar.</div>';
       else {
         var nc = linhas.length + 1;
@@ -4620,6 +4624,33 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
           + '</tbody></table></div>';
         if (!crit.length) h += '<div class="v2pt-vz">Ainda não há critérios. Cadastre-os abaixo para começar a pontuar.</div>';
       }
+      // avaliação por atividade (como no exemplo): critério = base, +/- = quantas vezes a patrulha cumpriu
+      if (ed) {
+        var atvs = atividades();
+        if (sel.atv === null) { var hj0 = hoje(), pass = atvs.filter(function (a) { return a.ini <= hj0; })[0]; sel.atv = (pass || atvs[0] || { id: '*' }).id; }
+        if (!sel.data) sel.data = hoje();
+        if (!sel.pat || !ps.some(function (p) { return p.id === sel.pat; })) sel.pat = ps.length ? ps[0].id : null;
+        var atvAtual = atvs.filter(function (a) { return a.id === sel.atv; })[0];
+        var chave = sel.atv === '*' ? 'd' + sel.data : String(sel.atv), dataAtv = sel.atv === '*' ? sel.data : (atvAtual ? atvAtual.ini.slice(0, 10) : sel.data);
+        var nomeAtv = sel.atv === '*' ? 'Atividade em ' + dBR(sel.data) : (atvAtual ? atvAtual.nome : '');
+        function qtdDe(cid) { var l = d.lanc.filter(function (x) { return x.atv === chave && x.pat === sel.pat && x.crit === cid; })[0]; return l ? l.qtd || 0 : 0; }
+        var sub = 0; crit.forEach(function (k) { sub += qtdDe(k.id) * num(k.pts); });
+        h += '<h3>📝 Avaliar patrulha na atividade</h3><div class="v2pt-av">';
+        if (!ps.length) h += '<div class="v2pt-vz">Cadastre as patrulhas na aba de jovens para avaliar.</div>';
+        else {
+          h += '<div class="v2pt-avh"><div class="v2pt-mf" style="flex:2;min-width:180px"><label>Atividade (do calendário)</label><select id="v2ptAa">' + atvs.map(function (a) { return '<option value="' + esc(a.id) + '"' + (a.id === sel.atv ? ' selected' : '') + '>' + esc(a.nome) + ' — ' + esc(dBR(String(a.ini).slice(0, 10)).slice(0, 5)) + '</option>'; }).join('') + '<option value="*"' + (sel.atv === '*' ? ' selected' : '') + '>Outra data…</option></select></div>'
+            + (sel.atv === '*' ? '<div class="v2pt-mf" style="flex:1;min-width:130px"><label>Data</label><input type="date" id="v2ptAd" value="' + esc(sel.data) + '"></div>' : '')
+            + '<div class="v2pt-mf" style="flex:1;min-width:130px"><label>Patrulha</label><select id="v2ptAp">' + ps.map(function (p) { return '<option value="' + esc(p.id) + '"' + (p.id === sel.pat ? ' selected' : '') + '>' + esc((p.icone || '') + ' ' + p.nome) + '</option>'; }).join('') + '</select></div></div>'
+            + '<div class="mini" style="font-size:12px;opacity:.75;margin:2px 0 6px">Critérios definidos pela chefia (pontos por vez). Use + e − para marcar quantas vezes a patrulha cumpriu cada critério nesta atividade.</div>';
+          h += crit.length ? crit.map(function (k) {
+            var n = num(k.pts), q = qtdDe(k.id);
+            return '<div class="v2pt-st"><div style="flex:1;min-width:0"><b>' + esc(k.nome) + '</b><div class="d">' + esc(fmt(n)) + (Math.abs(n) === 1 ? ' ponto' : ' pontos') + (k.desc ? ' · ' + esc(k.desc) : '') + '</div></div>'
+              + '<div class="v2pt-stp"><button type="button" class="v2pt-bt" data-q="' + esc(k.id) + '|-1">−</button><b>' + q + '</b><button type="button" class="v2pt-bt" data-q="' + esc(k.id) + '|1">+</button></div></div>';
+          }).join('') : '<div class="v2pt-vz">Ainda não há critérios. Adicione abaixo.</div>';
+          h += '<div class="v2pt-sub2">Total desta patrulha nesta atividade: <b class="' + (sub < 0 ? 'neg' : '') + '">' + esc(fmt(sub)) + '</b></div>';
+        }
+        h += '<div class="v2pt-add"><input id="v2ptQn" placeholder="Novo critério, ex.: Canto da patrulha" autocomplete="off"><input id="v2ptQp" inputmode="decimal" value="5" style="max-width:64px"><button type="button" class="v2pt-bt" id="v2ptQa">Adicionar critério</button></div></div>';
+      }
       // critérios
       h += '<h3>📋 Critérios e pontos por ocorrência' + (ed ? '<button type="button" class="v2pt-bt" id="v2ptNovoC" style="margin-left:auto">➕ Novo critério</button>' : '') + '</h3>'
         + '<div class="mini" style="font-size:12px;opacity:.75;margin-bottom:8px">Cada vez que a patrulha cumprir o critério, ganha (ou perde) os pontos indicados ao lado.</div>';
@@ -4632,8 +4663,8 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
       var hist = ls.slice().sort(function (a, b) { return (b.data || '').localeCompare(a.data || '') || (b.id || '').localeCompare(a.id || ''); });
       var mostra = verTodos ? hist : hist.slice(0, 15);
       h += '<h3>🧾 Últimos lançamentos</h3>' + (mostra.length ? mostra.map(function (l) {
-        var p = ps.filter(function (x) { return x.id === l.pat; })[0], k = crit.filter(function (x) { return x.id === l.crit; })[0], n = num(l.pts);
-        return '<div class="v2pt-hi"><span style="opacity:.7;min-width:78px">' + esc(dBR(l.data)) + '</span><span class="pts' + (n < 0 ? ' neg' : '') + '">' + esc(fmt(n)) + '</span><div style="flex:1;min-width:0"><b>' + esc(p ? p.nome : 'Patrulha removida') + '</b> · ' + esc(k ? k.nome : 'critério removido') + (l.obs ? '<div style="font-size:12px;opacity:.75">' + esc(l.obs) + '</div>' : '') + '</div>'
+        var p = ps.filter(function (x) { return x.id === l.pat; })[0], k = crit.filter(function (x) { return x.id === l.crit; })[0], n = ptsOf(l);
+        return '<div class="v2pt-hi"><span style="opacity:.7;min-width:78px">' + esc(dBR(l.data)) + '</span><span class="pts' + (n < 0 ? ' neg' : '') + '">' + esc(fmt(n)) + '</span><div style="flex:1;min-width:0"><b>' + esc(p ? p.nome : 'Patrulha removida') + '</b> · ' + esc(k ? k.nome : 'critério removido') + (l.qtd != null ? ' ×' + l.qtd : '') + (l.atvNome ? '<div style="font-size:12px;opacity:.75">' + esc(l.atvNome) + '</div>' : '') + (l.obs ? '<div style="font-size:12px;opacity:.75">' + esc(l.obs) + '</div>' : '') + '</div>'
           + (ed ? '<button type="button" class="v2pt-bt" data-dl="' + esc(l.id) + '" style="color:#b3261e">🗑️</button>' : '') + '</div>';
       }).join('') + (hist.length > 15 ? '<button type="button" class="v2pt-bt" id="v2ptTodos" style="margin-top:8px">' + (verTodos ? 'Mostrar menos' : 'Ver todos (' + hist.length + ')') + '</button>' : '') : '<div class="v2pt-vz">Nenhum lançamento neste período.</div>');
       host.innerHTML = h + '</div>';
@@ -4641,7 +4672,22 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
       var i1 = document.getElementById('v2ptIni'), i2 = document.getElementById('v2ptFim');
       if (i1) i1.onchange = function () { ini = this.value; desenhar(); }; if (i2) i2.onchange = function () { fim = this.value; desenhar(); };
       on('v2ptLimpa', function () { ini = ''; fim = ''; desenhar(); }); on('v2ptTodos', function () { verTodos = !verTodos; desenhar(); });
-      on('v2ptNovoC', function () { formCrit(null); }); on('v2ptLanca', function () { formLanc(); });
+      on('v2ptNovoC', function () { formCrit(null); });
+      var sa = document.getElementById('v2ptAa'), sp = document.getElementById('v2ptAp'), sd = document.getElementById('v2ptAd');
+      if (sa) sa.onchange = function () { sel.atv = this.value; desenhar(); }; if (sp) sp.onchange = function () { sel.pat = this.value; desenhar(); }; if (sd) sd.onchange = function () { sel.data = this.value || hoje(); desenhar(); };
+      host.querySelectorAll('[data-q]').forEach(function (b) { b.onclick = function () {
+        var pr = b.getAttribute('data-q').split('|'), cid = pr[0], dl = parseInt(pr[1], 10), base = baseDe(cid);
+        var chv = sel.atv === '*' ? 'd' + sel.data : String(sel.atv), at = atividades().filter(function (a) { return a.id === sel.atv; })[0];
+        var lid = 'a|' + chv + '|' + sel.pat + '|' + cid, ex = d.lanc.filter(function (x) { return x.id === lid; })[0], q = Math.max(0, ((ex && ex.qtd) || 0) + dl);
+        d.lanc = d.lanc.filter(function (x) { return x.id !== lid; });
+        if (q > 0) d.lanc.push({ id: lid, atv: chv, atvNome: sel.atv === '*' ? 'Atividade em ' + dBR(sel.data) : (at ? at.nome : ''), pat: sel.pat, crit: cid, qtd: q, pts: q * (base || 0), data: sel.atv === '*' ? sel.data : (at ? String(at.ini).slice(0, 10) : hoje()) });
+        c.salvar(); desenhar();
+      }; });
+      on('v2ptQa', function () {
+        var n = document.getElementById('v2ptQn').value.trim(), pt = document.getElementById('v2ptQp').value.trim();
+        if (!n) { alert('Escreva o nome do critério.'); return; } if (pt === '' || isNaN(parseFloat(pt.replace(',', '.')))) { alert('Informe os pontos (número).'); return; }
+        d.crit.push({ id: uid(), nome: n, pts: num(pt), desc: '' }); c.salvar(); desenhar();
+      });
       host.querySelectorAll('[data-ec]').forEach(function (b) { b.onclick = function () { formCrit(b.getAttribute('data-ec')); }; });
       host.querySelectorAll('[data-dc]').forEach(function (b) { b.onclick = function () {
         var id = b.getAttribute('data-dc'), usos = d.lanc.filter(function (l) { return l.crit === id; }).length;
@@ -4664,26 +4710,6 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
           if (k) { k.nome = nome; k.pts = num(pts); k.desc = desc; } else d.crit.push({ id: uid(), nome: nome, pts: num(pts), desc: desc });
           c.salvar(); desenhar();
         });
-    }
-    function formLanc() {
-      var d = D(), ps = pats();
-      if (!ps.length || !d.crit.length) { alert(!ps.length ? 'Cadastre as patrulhas primeiro.' : 'Cadastre ao menos um critério primeiro.'); return; }
-      var ov = janela('➕ Lançar pontos',
-        '<div class="v2pt-mf"><label>Data da atividade</label><input type="date" id="v2ptLd" value="' + hoje() + '"></div>'
-        + '<div class="v2pt-mf"><label>Patrulha</label><select id="v2ptLp">' + ps.map(function (p) { return '<option value="' + esc(p.id) + '">' + esc((p.icone || '') + ' ' + p.nome) + '</option>'; }).join('') + '<option value="*">Todas as patrulhas (mesmos pontos)</option></select></div>'
-        + '<div class="v2pt-mf"><label>Critério</label><select id="v2ptLc">' + d.crit.map(function (k) { return '<option value="' + esc(k.id) + '">' + esc(k.nome) + ' (' + esc(fmt(num(k.pts))) + ')</option>'; }).join('') + '</select></div>'
-        + '<div class="v2pt-mf"><label>Quantas vezes</label><input id="v2ptLq" inputmode="numeric" value="1"></div>'
-        + '<div class="v2pt-mf"><label>Pontos (calculado, pode ajustar)</label><input id="v2ptLn" inputmode="decimal"></div>'
-        + '<div class="v2pt-mf"><label>Observação (opcional)</label><input id="v2ptLo" placeholder="Ex.: jogo de pioneirias" autocomplete="off"></div>',
-        'Lançar', function (o) {
-          var pts = document.getElementById('v2ptLn').value.trim(); if (pts === '' || isNaN(parseFloat(pts.replace(',', '.')))) return 'Informe os pontos.';
-          var dt = document.getElementById('v2ptLd').value; if (!dt) return 'Informe a data.';
-          var pid = document.getElementById('v2ptLp').value, alvo = pid === '*' ? ps.map(function (p) { return p.id; }) : [pid];
-          alvo.forEach(function (a) { d.lanc.push({ id: uid(), pat: a, crit: document.getElementById('v2ptLc').value, pts: num(pts), data: dt, obs: document.getElementById('v2ptLo').value.trim() }); });
-          c.salvar(); desenhar();
-        });
-      function calc() { var k = d.crit.filter(function (x) { return x.id === document.getElementById('v2ptLc').value; })[0], q = parseInt(document.getElementById('v2ptLq').value, 10) || 1; document.getElementById('v2ptLn').value = String(num(k && k.pts) * q).replace('.', ','); }
-      document.getElementById('v2ptLc').onchange = calc; document.getElementById('v2ptLq').oninput = calc; calc();
     }
     desenhar();
   }
