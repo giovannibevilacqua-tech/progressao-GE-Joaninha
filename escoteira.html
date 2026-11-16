@@ -706,11 +706,11 @@ mark.hl-esc{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 <div class="cabecalho-fixo" id="cabecalhoFixo">
 <nav class="tabs-linha" id="tabsLinha">
 <button class="tab-btn-linha active" id="tabTabela" onclick="mudarPagina('tabela')">⚡ Progressão</button>
+<button class="tab-btn-linha" id="tabPont" onclick="mudarPagina('pont')">🏆 Pontuação</button>
 <button class="tab-btn-linha" id="tabCalendario" onclick="mudarPagina('calendario')">📅 Calendário</button>
 <button class="tab-btn-linha" id="tabCiclo" onclick="mudarPagina('ciclo')">🔄 Ciclo</button>
 <button class="tab-btn-linha" id="tabJovens" onclick="mudarPagina('jovens')">👥 Escoteiros</button>
 <button class="tab-btn-linha" id="tabLis" onclick="mudarPagina('lis')">🏅 Lis de Ouro</button>
-<button class="tab-btn-linha" id="tabPont" onclick="mudarPagina('pont')">🏆 Pontuação</button>
 <button class="tab-btn-linha" id="tabAlmoxarifado" onclick="mudarPagina('almoxarifado')">📦 Almoxarifado</button>
 <button class="tab-btn-linha" id="tabFinanceiro" onclick="mudarPagina('financeiro')">💰 Financeiro</button>
 </nav>
@@ -3929,7 +3929,7 @@ function irParaBlocoEsc(eixoId, bid){
 })();
 </script>
 <script>
-V2_NAVG({ nav:'#tabsLinha', embrulhar:false, grupos:[{ rotulo:'👥 Seção', botoes:['#tabTabela','#tabLis','#tabJovens','#tabPont'] }, { rotulo:'📅 Calendário/Ciclo', botoes:['#tabCalendario','#tabCiclo'] }, { rotulo:'🧰 Gestão', botoes:['#tabAlmoxarifado','#tabFinanceiro'] }] });
+V2_NAVG({ nav:'#tabsLinha', embrulhar:false, grupos:[{ rotulo:'👥 Seção', botoes:['#tabTabela','#tabPont','#tabLis','#tabJovens'] }, { rotulo:'📅 Calendário/Ciclo', botoes:['#tabCalendario','#tabCiclo'] }, { rotulo:'🧰 Gestão', botoes:['#tabAlmoxarifado','#tabFinanceiro'] }] });
 </script>
 </body>
 </html>
