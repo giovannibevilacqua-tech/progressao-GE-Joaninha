@@ -2385,11 +2385,11 @@ window.V2_ALMOX = (function () {
   }
   function desenharCaixa(sec, c, edit, ctx) {
     var r = resumo(c, mes), h = cartoes(r), a = "V2_FIN._a('" + sec + "',";
-    h += '<div class="fin-box"><h3>Lançamentos de ' + esc(nomeMes(mes)) + (edit ? '<span><button class="fin-btn p s" onclick="' + a + "'entrada')\">➕ Entrada</button> <button class=\"fin-btn s\" onclick=\"" + a + "'saida')\">➖ Saída</button></span>" : '') + '</h3>';
+    h += '<div class="fin-box"><h3>Lançamentos de ' + esc(nomeMes(mes)) + (edit ? '<span><button class="fin-btn p s" onclick="' + a + "'entrada')\">➕ Entrada</button> <button class=\"fin-btn s\" onclick=\"" + a + "'saida')\">➖ Saída</button> <button class=\"fin-btn s\" onclick=\"" + a + "'transf')\">🔁 Transferir</button></span>" : '') + '</h3>';
     h += r.mesLanc.length ? r.mesLanc.map(function (l) {
       var ent = l.tipo === 'entrada';
-      return '<div class="fin-row"><div class="d">' + esc(l.desc) + (ent ? '' : '<span class="fin-tag">' + (l.natureza === 'fixa' ? 'fixa' : 'variável') + '</span>') + '<small>' + dataBR(l.data) + '</small></div><span class="v" style="color:' + (ent ? CORES.ent : CORES.sai) + '">' + (ent ? '+' : '−') + ' ' + brl(l.valor) + '</span>'
-        + (edit ? '<button class="fin-btn s" onclick="' + a + "'" + l.tipo + "','" + l.id + '\')">✏️</button><button class="fin-btn s r" onclick="' + a + "'del','" + l.id + '\')">🗑</button>' : '') + '</div>';
+      return '<div class="fin-row"><div class="d">' + esc(l.desc) + (l.transf ? '<span class="fin-tag">transferência</span>' : ent ? '' : '<span class="fin-tag">' + (l.natureza === 'fixa' ? 'fixa' : 'variável') + '</span>') + '<small>' + dataBR(l.data) + '</small></div><span class="v" style="color:' + (ent ? CORES.ent : CORES.sai) + '">' + (ent ? '+' : '−') + ' ' + brl(l.valor) + '</span>'
+        + (edit ? (l.transf ? (l.transf.para ? '<button class="fin-btn s r" onclick="' + a + "'del','" + l.id + '\')">🗑</button>' : '') : '<button class="fin-btn s" onclick="' + a + "'" + l.tipo + "','" + l.id + '\')">✏️</button><button class="fin-btn s r" onclick="' + a + "'del','" + l.id + '\')">🗑</button>') : '') + '</div>';
     }).join('') : '<div class="fin-vazio">Nenhum lançamento neste mês.</div>';
     h += '</div>';
     var fx = lista(c && c.fixas);
@@ -2476,10 +2476,43 @@ window.V2_ALMOX = (function () {
   }
   function redesenhar() { if (dir) { var abertos = Array.prototype.map.call(document.querySelectorAll('#' + dir.container + ' details[data-s][open]'), function (d) { return d.dataset.s; }); desenharDir(); abertos.forEach(function (s) { var d = document.querySelector('#' + dir.container + ' details[data-s="' + s + '"]'); if (d) d.open = true; }); } else desenhar(); }
 
+  // ---- transferência de fundos entre caixas: saída aqui, entrada lá ----
+  function formTransf(sec) {
+    var destinos = TODAS.concat(['grupo']).filter(function (x) { return x !== sec; });
+    var f = $('finOv'); if (f) f.remove();
+    var ov = document.createElement('div'); ov.id = 'finOv'; ov.className = 'fin-ov';
+    ov.innerHTML = '<div class="fin-md"><h4>Transferir fundos de ' + esc(NOMES[sec]) + '</h4><div class="mini" style="margin-bottom:6px">Aparece como <b>saída</b> aqui e como <b>entrada</b> no caixa de destino.</div>'
+      + '<select id="finDest" style="width:100%;padding:10px;border-radius:8px;margin-bottom:8px">' + destinos.map(function (x) { return '<option value="' + x + '">' + esc(NOMES[x]) + '</option>'; }).join('') + '</select>'
+      + '<input id="finVal" inputmode="decimal" placeholder="Valor (R$)"><input id="finDesc" placeholder="Motivo (opcional)"><input id="finData" type="date" value="' + hoje() + '">'
+      + '<div class="er" id="finEr"></div><div style="display:flex;gap:8px"><button class="fin-btn" style="flex:1" id="finNao">Cancelar</button><button class="fin-btn p" style="flex:1" id="finOk">Transferir</button></div></div>';
+    document.body.appendChild(ov); ov.addEventListener('click', function (e) { if (e.target === ov) ov.remove(); });
+    $('finNao').onclick = function () { ov.remove(); };
+    $('finOk').onclick = async function () {
+      var dest = $('finDest').value, val = num($('finVal').value), mot = $('finDesc').value.trim(), dt = $('finData').value || hoje();
+      if (isNaN(val) || val <= 0) return erro('Informe um valor válido.');
+      var btn = $('finOk'); btn.disabled = true; var id = 'tr_' + novoId(), ok1 = false;
+      try {
+        await gravar(dest, '/lanc/' + id, { tipo: 'entrada', desc: '🔁 Transferência de ' + NOMES[sec] + (mot ? ': ' + mot : ''), valor: val, data: dt, transf: { de: sec } }); ok1 = true;
+        await gravar(sec, '/lanc/' + id, { tipo: 'saida', natureza: 'variavel', desc: '🔁 Transferência para ' + NOMES[dest] + (mot ? ': ' + mot : ''), valor: val, data: dt, transf: { para: dest } });
+        ov.remove(); redesenhar();
+      } catch (e) {
+        if (ok1) { try { await gravar(dest, '/lanc/' + id, null); } catch (x) {} }
+        btn.disabled = false; erro('Não foi possível transferir (sem permissão ou sem conexão). Nada foi lançado.');
+      }
+    };
+  }
   async function acao(sec, tipo, id) {
     var c = dados[sec] || {}, sec_ = sec;
     try {
-      if (tipo === 'del') { if (!confirm('Excluir este lançamento?')) return; await gravar(sec, '/lanc/' + id, null); return redesenhar(); }
+      if (tipo === 'del') {
+        var lx = (c.lanc || {})[id];
+        if (lx && lx.transf && lx.transf.para) {
+          if (!confirm('Excluir esta transferência? A entrada correspondente em ' + (NOMES[lx.transf.para] || lx.transf.para) + ' também será apagada.')) return;
+          await gravar(lx.transf.para, '/lanc/' + id, null); await gravar(sec, '/lanc/' + id, null); return redesenhar();
+        }
+        if (!confirm('Excluir este lançamento?')) return; await gravar(sec, '/lanc/' + id, null); return redesenhar();
+      }
+      if (tipo === 'transf') return formTransf(sec);
       if (tipo === 'delfixa') { if (!confirm('Excluir esta conta fixa? Os lançamentos já feitos continuam.')) return; await gravar(sec, '/fixas/' + id, null); return redesenhar(); }
       if (tipo === 'delprev') { if (!confirm('Excluir este gasto previsto?')) return; await gravar(sec, '/prev/' + id, null); return redesenhar(); }
       if (tipo === 'pagar') {

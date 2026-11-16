@@ -4,7 +4,10 @@
       ".read": "root.child('usuarios').child(auth.uid).child('admin').val() === true",
       ".write": "root.child('usuarios').child(auth.uid).child('admin').val() === true || !root.child('usuarios').exists()",
       "$uid": {
-        "senha": { ".write": "auth.uid === $uid", ".validate": "newData.val() === null || (newData.isString() && newData.val().length < 300)" },
+        "senha": {
+          ".write": "auth.uid === $uid",
+          ".validate": "newData.val() === null || (newData.isString() && newData.val().length < 300)"
+        },
         ".read": "auth.uid === $uid",
         ".write": "((root.child('usuarios').child(auth.uid).child('tropa').val() === 'diretoria') || (root.child('usuarios').child(auth.uid).child('funcao').val() !== 'assistente' && root.child('usuarios').child(auth.uid).child('tropa').val() !== null && root.child('usuarios').child(auth.uid).child('tropa').val() !== 'diretoria' && (data.child('tropa').val() === root.child('usuarios').child(auth.uid).child('tropa').val() || (!data.exists() && newData.child('tropa').val() === root.child('usuarios').child(auth.uid).child('tropa').val())) && newData.child('tropa').val() === root.child('usuarios').child(auth.uid).child('tropa').val())) && data.child('admin').val() !== true && newData.child('admin').val() !== true && (data.child('senha').val() === newData.child('senha').val()) && (data.exists() || newData.child('funcao').val() === 'assistente' || (root.child('usuarios').child(auth.uid).child('tropa').val() === 'diretoria'))"
       }
@@ -146,7 +149,12 @@
       ".read": "root.child('usuarios').child(auth.uid).child('admin').val() === true || root.child('usuarios').child(auth.uid).child('tropa').val() === 'diretoria' || root.child('usuarios').child(auth.uid).child('tropa2').val() === 'diretoria'",
       "$sec": {
         ".read": "root.child('usuarios').child(auth.uid).child('tropa').val() === $sec || root.child('usuarios').child(auth.uid).child('tropa2').val() === $sec",
-        ".write": "root.child('usuarios').child(auth.uid).child('admin').val() === true || ($sec === 'grupo' && (root.child('usuarios').child(auth.uid).child('tropa').val() === 'diretoria' || root.child('usuarios').child(auth.uid).child('tropa2').val() === 'diretoria')) || ($sec !== 'grupo' && (root.child('usuarios').child(auth.uid).child('tropa').val() === $sec || root.child('usuarios').child(auth.uid).child('tropa2').val() === $sec))"
+        ".write": "root.child('usuarios').child(auth.uid).child('admin').val() === true || ($sec === 'grupo' && (root.child('usuarios').child(auth.uid).child('tropa').val() === 'diretoria' || root.child('usuarios').child(auth.uid).child('tropa2').val() === 'diretoria')) || ($sec !== 'grupo' && (root.child('usuarios').child(auth.uid).child('tropa').val() === $sec || root.child('usuarios').child(auth.uid).child('tropa2').val() === $sec))",
+        "lanc": {
+          "$id": {
+            ".write": "$id.beginsWith('tr_') && root.child('usuarios').child(auth.uid).exists() && (newData.exists() ? (newData.child('transf').exists() && newData.child('tipo').val() === 'entrada') : data.child('tipo').val() === 'entrada')"
+          }
+        }
       }
     },
     "sugestoes": {
