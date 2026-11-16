@@ -2356,9 +2356,11 @@ if (card) card.classList.toggle('open');
 let paginaAtiva = 'tabela';
 
 const PAGINAS_ESC = { tabela: ['pagina-tabela', 'tabTabela'], calendario: ['pagina-calendario', 'tabCalendario'], jovens: ['pagina-jovens', 'tabJovens'], ciclo: ['pagina-ciclo', 'tabCiclo'], lis: ['pagina-lis', 'tabLis'], pont: ['pagina-pont', 'tabPont'], almoxarifado: ['pagina-almoxarifado', 'tabAlmoxarifado'], financeiro: ['pagina-financeiro', 'tabFinanceiro'] };
-function membrosPontEsc(pid) {
-const passados = eventosPassadosOrdenados();
-return JOVENS.filter(j => PATRULHA_DE[j] === pid).map(j => ({ nome: JNOMES[j], total: passados.length, pres: passados.filter(e => (e.presentes || []).includes(j)).length }));
+function membrosPontEsc(pid, atvId) {
+const hoje = new Date().toISOString().slice(0, 10);
+const ev = atvId ? EVENTOS.find(e => String(e.id) === String(atvId)) : null;
+const registrada = !!(ev && ev.data && ev.data <= hoje);
+return JOVENS.filter(j => PATRULHA_DE[j] === pid).map(j => ({ nome: JNOMES[j], st: registrada ? ((ev.presentes || []).includes(j) ? 1 : 0) : null }));
 }
 function mudarPagina(p) {
 if (!PAGINAS_ESC[p]) p = 'tabela';

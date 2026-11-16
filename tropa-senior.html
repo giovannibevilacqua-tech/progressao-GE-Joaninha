@@ -2078,8 +2078,8 @@ function renderSemestres(){
 // ╔═══════════════════════════════════════════════════╗
 // ║                    TABS                          ║
 // ╚═══════════════════════════════════════════════════╝
-function membrosPontSr(pid) {
-  return actJ().filter(it => PATRULHA_DE_SR[it.yid] === pid).map(it => ({ nome: JNOMES[it.i], pres: Object.values(PRESENCA).filter(ev => ev[it.yid] === 1).length, total: Object.values(PRESENCA).filter(ev => ev[it.yid] !== undefined).length }));
+function membrosPontSr(pid, atvId) {
+  return actJ().filter(it => PATRULHA_DE_SR[it.yid] === pid).map(it => { const v = atvId && PRESENCA[atvId] ? PRESENCA[atvId][it.yid] : undefined; return { nome: JNOMES[it.i], st: v === 1 ? 1 : v === 0 ? 0 : null }; });
 }
 function montarPontSr() { V2_PONT.montar(document.getElementById('pontHostSr'), { patrulhas: () => PATRULHAS_SR, dados: () => PONTUACAO_SR, membros: membrosPontSr, atividades: () => (window.calSecaoEventos ? window.calSecaoEventos() : []), salvar: () => saveState(), podeEditar: !MODO_VISUALIZACAO_SR }); }
 function showTab(id,btn){

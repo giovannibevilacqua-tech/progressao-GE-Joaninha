@@ -4600,7 +4600,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
         + '<li><b>Acumulado:</b> a última linha soma todas as atividades e mostra a posição de cada patrulha.</li></ol></div>';
       // tabela geral: colunas = patrulhas, linhas = critérios; cada célula tem − valor + (começa no valor padrão do critério)
       var atvs = atividades();
-      if (sel.atv === null) { var hj0 = hoje(), pass = atvs.filter(function (a) { return a.ini <= hj0; })[0]; sel.atv = (pass || atvs[0] || { id: '*' }).id; }
+      if (sel.atv === null) { var hj0 = hoje(), pass = atvs.filter(function (a) { return String(a.ini).slice(0, 10) < hj0; })[0] || atvs.filter(function (a) { return String(a.ini).slice(0, 10) <= hj0; })[0]; sel.atv = (pass || atvs[0] || { id: '*' }).id; }
       if (!sel.data) sel.data = hoje();
       var atvAtual = atvs.filter(function (a) { return a.id === sel.atv; })[0];
       var chave = sel.atv === '*' ? 'd' + sel.data : String(sel.atv);
@@ -4614,7 +4614,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
       if (!ps.length) h += '<div class="v2pt-vz">Nenhuma patrulha cadastrada. Crie as patrulhas na aba de jovens para pontuar.</div>';
       else {
         var nc = linhas.length + 1;
-        function perc(m) { return m.total ? Math.round(m.pres / m.total * 100) : null; }
+        linhas.forEach(function (r) { r.mem = ((c.membros ? c.membros(r.p.id, sel.atv === '*' ? null : String(sel.atv)) : []) || []); });
         var totAtv = {}; linhas.forEach(function (r) { totAtv[r.p.id] = 0; crit.forEach(function (k) { var l = lancDe(r.p.id, k.id); if (l) totAtv[r.p.id] += num(l.pts); }); });
         h += '<div class="v2pt-sc"><table class="v2pt-pt"><thead><tr><th class="n"></th>'
           + linhas.map(function (r) { return '<th style="border-top:4px solid ' + esc(r.p.cor || '#888') + '"><div style="font-size:15px;text-transform:none;letter-spacing:0">' + esc((r.p.icone || '') + ' ' + r.p.nome) + '</div></th>'; }).join('') + '</tr></thead><tbody>'
@@ -4632,12 +4632,12 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
           + (orfaos ? '<tr><td class="n">Outros<small style="display:block;opacity:.65">critério removido</small></td>' + linhas.map(function (r) { return '<td>' + (r.por._o ? fmtTot(r.por._o) : '–') + '</td>'; }).join('') + '</tr>' : '')
           + '<tr class="v2pt-tot"><td class="n"><b>Total da atividade</b></td>' + linhas.map(function (r) { return '<td class="t">' + fmtTot(totAtv[r.p.id]) + '</td>'; }).join('') + '</tr>'
           + '<tr class="v2pt-tot"><td class="n"><b>TOTAL ACUMULADO</b></td>' + linhas.map(function (r) { return '<td class="t">' + fmtTot(r.tot) + '</td>'; }).join('') + '</tr>'
-          + '<tr class="v2pt-sub"><td colspan="' + nc + '">Presença dos membros</td></tr>'
-          + '<tr><td class="n"><b>Média da patrulha</b></td>' + linhas.map(function (r) {
-            var ps2 = r.mem.map(perc).filter(function (x) { return x !== null; }), m = ps2.length ? Math.round(ps2.reduce(function (x, y) { return x + y; }, 0) / ps2.length) : null;
-            return '<td class="t">' + (m === null ? '–' : '<span style="color:' + (m >= 75 ? '#2e9f5a' : m >= 50 ? '#e67e22' : '#b3261e') + '">' + m + '%</span>') + '</td>'; }).join('') + '</tr>'
+          + '<tr class="v2pt-sub"><td colspan="' + nc + '">Presença dos membros em: ' + esc(nomeAtv) + '</td></tr>'
+          + '<tr><td class="n"><b>Presentes na atividade</b></td>' + linhas.map(function (r) {
+            var reg = r.mem.filter(function (m) { return m.st === 0 || m.st === 1; }), pr = reg.filter(function (m) { return m.st === 1; }).length, pc = reg.length ? Math.round(pr / reg.length * 100) : null;
+            return '<td class="t">' + (pc === null ? '<span class="zero">sem registro</span>' : '<span style="color:' + (pc >= 75 ? '#2e9f5a' : pc >= 50 ? '#e67e22' : '#b3261e') + '">' + pr + '/' + reg.length + ' · ' + pc + '%</span>') + '</td>'; }).join('') + '</tr>'
           + '<tr><td class="n">Cada membro</td>' + linhas.map(function (r) {
-            return '<td style="text-align:left;vertical-align:top">' + (r.mem.length ? r.mem.map(function (m) { var pc = perc(m); return '<div class="v2pt-mm"><span>' + esc(m.nome) + '</span><b style="color:' + (pc === null ? 'inherit' : pc >= 75 ? '#2e9f5a' : pc >= 50 ? '#e67e22' : '#b3261e') + '">' + (pc === null ? '–' : m.pres + '/' + m.total + ' · ' + pc + '%') + '</b></div>'; }).join('') : '<span class="zero">sem membros</span>') + '</td>'; }).join('') + '</tr>'
+            return '<td style="text-align:left;vertical-align:top">' + (r.mem.length ? r.mem.map(function (m) { return '<div class="v2pt-mm"><span>' + esc(m.nome) + '</span><b style="color:' + (m.st === 1 ? '#2e9f5a' : m.st === 0 ? '#b3261e' : 'inherit') + '">' + (m.st === 1 ? '✓ presente' : m.st === 0 ? '✗ faltou' : '–') + '</b></div>'; }).join('') : '<span class="zero">sem membros</span>') + '</td>'; }).join('') + '</tr>'
           + '</tbody></table></div><div class="mini" style="font-size:11.5px;opacity:.7;margin-top:6px">Números em cinza ainda não foram lançados: usam o valor padrão do critério. Ao tocar em − ou +, o valor é lançado na atividade escolhida.</div>';
       }
       // critérios
