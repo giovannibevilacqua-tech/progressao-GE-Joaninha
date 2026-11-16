@@ -7,7 +7,7 @@
 <title>Diretoria — GE Joaninha</title>
 <link rel="stylesheet" href="Apoio/secao.css">
 <style>:root{--vinho:#1F5FBF;--vinho2:#2F74D6;}.cabecalho-fixo{position:sticky;top:0;z-index:310;background:var(--bg,#f0ede8);overflow-anchor:none}</style>
-<script src="Apoio/v2.js?v=20261116d"></script>
+<script src="Apoio/v2.js?v=20261116e"></script>
 <style>.sec-grid{display:grid;grid-template-columns:minmax(230px,1fr) minmax(0,2fr);gap:18px;margin-top:14px;align-items:start}@media(max-width:720px){.sec-grid{grid-template-columns:1fr}}
 .sec-box{background:rgba(127,127,127,.07);border-radius:10px;padding:10px 12px;min-width:0}.sec-box h4{margin:0 0 8px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
 .tb-sec{width:100%;border-collapse:collapse;font-size:12px}.tb-sec th{text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);padding:4px 8px;border-bottom:1px solid var(--border)}.tb-sec td{padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:middle}.tb-sec tr:last-child td{border-bottom:0}.tb-sec td.n{white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}
@@ -272,7 +272,7 @@ function carregarSecoes(forcar) {
   (async function fila() {
     for (const s of SECOES_DIR) {
       await new Promise(ok => {
-        const fr = document.createElement('iframe'); fr.src = s.pagina + '?resumo=1'; fr.setAttribute('aria-hidden', 'true'); fr.tabIndex = -1;
+        const fr = document.createElement('iframe'); fr.src = V2.pagina(s.pagina.replace(/\.html$/, ''), 'resumo=1'); fr.setAttribute('aria-hidden', 'true'); fr.tabIndex = -1;
         fr.style.cssText = 'width:900px;height:600px;border:0'; box.appendChild(fr);
         fr.addEventListener('load', () => lerSecao(s, fr, () => { try { fr.contentWindow.eval('try{__store.fechar()}catch(e){}'); } catch (e) {} fr.remove(); ok(); }));
       });
@@ -295,7 +295,7 @@ async function carregarAntigosSecoes() {
   try { V2_CAL._redesenhar(); } catch (e) {}
   for (const s of SECOES_DIR) {
     await new Promise(ok => {
-      const fr = document.createElement('iframe'); fr.src = s.pagina + '?resumo=1'; fr.setAttribute('aria-hidden', 'true'); fr.tabIndex = -1;
+      const fr = document.createElement('iframe'); fr.src = V2.pagina(s.pagina.replace(/\.html$/, ''), 'resumo=1'); fr.setAttribute('aria-hidden', 'true'); fr.tabIndex = -1;
       fr.style.cssText = 'position:absolute;left:-9999px;width:900px;height:600px;border:0'; document.body.appendChild(fr);
       const t0 = Date.now();
       const fim = () => { try { fr.contentWindow.eval('try{__store.fechar()}catch(e){}'); } catch (e) {} fr.remove(); try { V2_CAL._redesenhar(); } catch (e) {} ok(); };
