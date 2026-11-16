@@ -3687,6 +3687,8 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
       + '.v2c-jn{margin:8px 0;font-size:12px}.v2c-jb{position:relative;height:20px;background:rgba(0,0,0,.06);border-radius:6px;margin-top:3px;overflow:hidden}.v2c-jb span{position:absolute;top:0;bottom:0;border-radius:6px;opacity:.85;color:#fff;font-size:10px;line-height:20px;padding:0 5px;white-space:nowrap;background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.25) 0 6px,transparent 6px 12px)}'
       + '.v2c-sec{margin:14px 0 6px;font-weight:800;font-size:14px}.v2c-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100040;display:flex;align-items:center;justify-content:center;padding:12px}.v2c-box{background:var(--card,#fff);color:var(--text,#1a1a1a);border-radius:8px;padding:16px;width:100%;max-width:560px;max-height:90vh;overflow:auto;box-sizing:border-box}'
       + '.v2c-box select,.v2c-box option{background:#fff;color:#1a1a1a}.v2c-box select{cursor:pointer}.v2c-box label{display:block;font-size:11px;font-weight:700;margin:10px 0 3px;opacity:.75;text-transform:uppercase}.v2c-box input[type=text],.v2c-box input[type=date],.v2c-box select{width:100%;box-sizing:border-box;padding:9px;border:1px solid var(--border,#ccc);border-radius:8px;font-size:14px;background:var(--card,#fff);color:inherit}'
+      + 'body.v2c-sem-lista #cal-lista,body.v2c-sem-lista #listaEventos,body.v2c-sem-lista #cal-2s26,body.v2c-sem-lista #cal-1s27,body.v2c-sem-lista .cal-legend,.v2c-oculto{display:none!important}'
+      + '.v2c-cab{padding:14px 16px 8px;font-size:16px;font-weight:800}.v2c-corpo{padding:4px 16px 12px;overflow:auto;flex:1}.v2c-pe{position:sticky;bottom:0;padding:10px 16px;border-top:1px solid rgba(128,128,128,.25);display:flex;gap:8px;justify-content:flex-end;background:inherit}'
       + '.v2c-ck{display:flex;gap:6px;align-items:center;font-size:13px;margin:4px 0;text-transform:none!important;font-weight:600!important;opacity:1!important}.v2c-imp{border:1px solid var(--border,#ddd);border-radius:10px;padding:8px;margin-bottom:6px;font-size:12px}.v2c-imp input[type=text],.v2c-imp input[type=date]{padding:6px!important;font-size:12px!important}.v2c-imp .l{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:4px}';
     document.head.appendChild(st);
   }
@@ -3766,16 +3768,51 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
       });
     }
     var doMes = evs.filter(function (e) { return !e.janela && e.ini <= p1 && (e.fim || e.ini) >= p0; }).sort(function (a, b) { return a.ini < b.ini ? -1 : 1; });
-    h += '<div class="v2c-sec">Atividades do mês</div>' + (doMes.length ? doMes.map(item).join('') : '<div style="opacity:.7;font-size:13px">Nenhuma atividade do grupo neste mês.</div>');
+    h += '<div class="v2c-sec" id="v2cLista">Atividades do mês</div>' + (doMes.length ? doMes.map(item).join('') : '<div style="opacity:.7;font-size:13px">Nenhuma atividade do grupo neste mês.</div>');
     var mm = marc.filter(function (x) { return x.data >= p0 && x.data <= p1; }).sort(function (a, b) { return a.data < b.data ? -1 : 1; });
-    if (mm.length) h += '<div class="v2c-sec">Datas de pessoas</div>' + mm.map(function (x) { return '<div class="v2c-it" style="border-left-color:#f9a825"><div class="q">' + esc(x.titulo) + '<small>' + dBR(x.data) + '</small></div></div>'; }).join('');
-    h += '<div id="v2cDia"></div></div>';
+    if (mm.length) h += '<div class="v2c-sec">Datas de pessoas</div>' + mm.map(function (x) { return '<div class="v2c-it" data-ini="' + x.data + '" data-fim="' + x.data + '" style="border-left-color:#f9a825"><div class="q">' + esc(x.titulo) + '<small>' + dBR(x.data) + '</small></div></div>'; }).join('');
+    h += '</div>';
     box.innerHTML = h;
   }
   function item(e) {
     var o = ORIG[e.origem] || ORIG.grupo;
-    return '<div class="v2c-it" style="border-left-color:' + o[1] + (e._old ? ';cursor:pointer" title="Abrir a atividade na lista" onclick="V2_CAL._ir(\'' + String(e._eid || '').replace(/'/g, '') + '\')' : '') + '"><div class="q"><b>' + esc(e.nome) + '</b><small>' + dBR(e.ini) + (e.fim && e.fim !== e.ini ? ' a ' + dBR(e.fim) : '') + (e.local ? ' · ' + esc(e.local) : '') + '</small><small>' + o[0] + ' · ' + e._s.map(function (s) { return NOMES[s] || s; }).join(', ') + '</small></div>'
-      + (podeMexer(e) ? '<button class="v2c-bt" onclick="V2_CAL._ed(\'' + e.id + '\')">Editar</button>' : '') + '</div>';
+    return '<div class="v2c-it" data-ini="' + esc(e.ini) + '" data-fim="' + esc(e.fim || e.ini) + '" style="border-left-color:' + o[1] + ';cursor:pointer" title="Abrir a atividade" onclick="V2_CAL._abrir(\'' + String(e.id).replace(/'/g, '') + '\')"><div class="q"><b>' + esc(e.nome) + '</b><small>' + dBR(e.ini) + (e.fim && e.fim !== e.ini ? ' a ' + dBR(e.fim) : '') + (e.local ? ' · ' + esc(e.local) : '') + '</small><small>' + o[0] + ' · ' + e._s.map(function (s) { return NOMES[s] || s; }).join(', ') + '</small></div></div>';
+  }
+  // abre a atividade em pop-up: se a seção tem o card completo (presença, relato, editar), ele é mostrado aqui dentro; senão, um resumo
+  function abrirAtividade(id) {
+    var e = visiveis().filter(function (x) { return String(x.id) === String(id); })[0]; if (!e) return;
+    if (e._old && e._eid && document.getElementById('evcard-' + e._eid)) return abrirCard(e._eid, e);
+    var o = ORIG[e.origem] || ORIG.grupo;
+    overlay('<div class="v2c-cab">' + esc(e.nome) + '</div><div class="v2c-corpo"><div style="font-size:14px;line-height:1.7">📅 ' + dBR(e.ini) + (e.fim && e.fim !== e.ini ? ' a ' + dBR(e.fim) : '') + (e.local ? '<br>📍 ' + esc(e.local) : '') + '<br><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:' + o[1] + ';margin-right:6px"></span>' + o[0] + '<br>👥 ' + e._s.map(function (s) { return NOMES[s] || s; }).join(', ') + (e.janela ? '<br>▬ Janela de execução' : '') + (e.por ? '<br><span style="opacity:.7">Cadastrada por ' + esc(e.por) + '</span>' : '') + '</div></div>'
+      + '<div class="v2c-pe">' + (podeMexer(e) ? '<button class="v2c-bt p" onclick="V2_CAL._ed(\'' + e.id + '\')">Editar</button>' : '') + '<button class="v2c-bt" onclick="V2_CAL._fechar()">Fechar</button></div>');
+  }
+  var cardAberto = null;
+  function fecharCard() {
+    if (!cardAberto) return; clearInterval(cardAberto.t);
+    var el = cardAberto.el; if (cardAberto.home && cardAberto.home.isConnected && el) { el.style.margin = cardAberto.margem; cardAberto.home.appendChild(el); } else if (el && el.parentNode) el.parentNode.removeChild(el);
+    var o = $('v2cCard'); if (o) o.remove(); cardAberto = null;
+  }
+  function abrirCard(eid, e) {
+    fecharCard(); fechar();
+    var el = document.getElementById('evcard-' + eid); if (!el) return;
+    var o = document.createElement('div'); o.className = 'v2c-ov'; o.id = 'v2cCard'; o.style.zIndex = 100015;
+    o.innerHTML = '<div class="v2c-box" style="padding:0;display:flex;flex-direction:column;max-height:92vh;max-width:640px;width:100%"><div class="v2c-cab">' + esc(e.nome) + '</div><div class="v2c-corpo" id="v2cCardCorpo" style="padding:6px"></div><div class="v2c-pe"><button class="v2c-bt" id="v2cCardFecha">Fechar</button></div></div>';
+    document.body.appendChild(o);
+    var corpo = $('v2cCardCorpo');
+    cardAberto = { eid: eid, el: el, home: el.parentNode, margem: el.style.margin };
+    el.style.margin = '0'; corpo.appendChild(el);
+    $('v2cCardFecha').onclick = fecharCard; o.addEventListener('mousedown', function (ev) { if (ev.target === o) fecharCard(); });
+    // a seção redesenha a lista a cada marcação: troca o card antigo pelo novo, mantendo rolagem e partes abertas
+    cardAberto.t = setInterval(function () {
+      var todos = document.querySelectorAll('[id="evcard-' + eid + '"]'), novo = null;
+      for (var i = 0; i < todos.length; i++) if (!corpo.contains(todos[i])) novo = todos[i];
+      if (!novo) return;
+      var abertos = Array.prototype.map.call(cardAberto.el.querySelectorAll('details'), function (d) { return d.open; }), st = corpo.scrollTop;
+      cardAberto.home = novo.parentNode; cardAberto.margem = novo.style.margin; novo.style.margin = '0';
+      corpo.replaceChildren(novo); cardAberto.el = novo;
+      Array.prototype.forEach.call(novo.querySelectorAll('details'), function (d, k) { if (abertos[k]) d.open = true; });
+      corpo.scrollTop = st;
+    }, 250);
   }
   function fechar() { var o = $('v2cOv'); if (o) o.remove(); }
   function overlay(html) { fechar(); var o = document.createElement('div'); o.className = 'v2c-ov'; o.id = 'v2cOv'; o.innerHTML = '<div class="v2c-box">' + html + '</div>'; o.addEventListener('click', function (e) { if (e.target === o) fechar(); }); document.body.appendChild(o); }
@@ -3909,7 +3946,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
 
   root.V2_CAL = {
     // o: { container, secao (null = Diretoria vê todas), podeImportar }
-    montar: async function (o) { cfg = o; injetarCss(); var h = new Date(); mes = new Date(h.getFullYear(), h.getMonth(), 1); $(o.container).innerHTML = '<div class="v2c">Carregando calendário…</div>'; await carregar(); desenhar(); },
+    montar: async function (o) { cfg = o; injetarCss(); document.body.classList.add('v2c-sem-lista'); ['cal-2s26', 'cal-1s27'].forEach(function (i) { var l = $(i), hd = l && l.previousElementSibling; if (hd && /cal-section-hdr/.test(hd.className)) hd.classList.add('v2c-oculto'); }); var h = new Date(); mes = new Date(h.getFullYear(), h.getMonth(), 1); $(o.container).innerHTML = '<div class="v2c">Carregando calendário…</div>'; await carregar(); desenhar(); },
     atualizar: async function () { if (!cfg) return; await carregar(); desenhar(); },
     _m: function (d) { if (d === 0) { var h = new Date(); mes = new Date(h.getFullYear(), h.getMonth(), 1); } else mes = new Date(mes.getFullYear(), mes.getMonth() + d, 1); desenhar(); },
     _ir: function (eid) {
@@ -3922,11 +3959,17 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
     _fs: function (sc) { filtroSec = sc; desenhar(); }, _redesenhar: function () { if (cfg && !cfg.secao) desenhar(); },
     _novo: function () { formulario(null); }, _ed: function (id) { var e = eventos[id]; if (e) { e.id = id; visiveis(); formulario(e); } }, _imp: importar, _fechar: fechar,
     _dia: function (di) {
-      var evs = visiveis().filter(function (e) { return noDia(e, di); }), marc = (root.V2_PESSOAS ? root.V2_PESSOAS.eventosDoAno(marcas, +di.slice(0, 4)) : []).filter(function (x) { return x.data === di; });
-      var d = $('v2cDia'); if (!d) return;
-      d.innerHTML = '<div class="v2c-sec">' + dBR(di) + '</div>' + (evs.length || marc.length ? evs.map(item).join('') + marc.map(function (x) { return '<div class="v2c-it" style="border-left-color:#f9a825"><div class="q">' + esc(x.titulo) + '</div></div>'; }).join('') : '<div style="opacity:.7;font-size:13px">Nada neste dia.</div>');
-      d.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      if (iso(mes).slice(0, 7) !== di.slice(0, 7)) { mes = new Date(+di.slice(0, 4), +di.slice(5, 7) - 1, 1); desenhar(); }
+      var lista = $('v2cLista'); if (!lista) return;
+      var achou = [];
+      document.querySelectorAll('.v2c-it[data-ini]').forEach(function (el) {
+        var sim = el.getAttribute('data-ini') <= di && el.getAttribute('data-fim') >= di;
+        el.style.outline = sim ? '3px solid #f9a825' : ''; el.style.outlineOffset = sim ? '2px' : ''; if (sim) achou.push(el);
+      });
+      (achou[0] || lista).scrollIntoView({ behavior: 'smooth', block: achou[0] ? 'center' : 'start' });
+      setTimeout(function () { achou.forEach(function (el) { el.style.outline = ''; el.style.outlineOffset = ''; }); }, 2600);
     },
+    _abrir: abrirAtividade,
     abrirNaSecao: function (secao, container) { try { if (new URLSearchParams(location.search).get('view') === '1') return; } catch (e) {} if (cfg && cfg.container === container && cfg.secao === secao && $(container) && $(container).firstChild) return root.V2_CAL.atualizar(); return root.V2_CAL.montar({ container: container, secao: secao }); },
     _parse: parseDatas, _extrair: extrair
   };
