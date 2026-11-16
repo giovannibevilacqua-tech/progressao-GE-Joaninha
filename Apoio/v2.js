@@ -3993,13 +3993,27 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
       }
     } catch (e3) {}
   }
+  // formulário de atividade da própria seção (cada página tem o seu); abre como pop-up, igual à edição
+  function cabForm() { return document.getElementById('cabecalhoAddEvento') || document.getElementById('cabecalhoAddEventoSr'); }
+  function secaoTemForm() { var c = cabForm(); if (!c || c.style.display === 'none') return false; try { if (typeof root.MODO_VIEW !== 'undefined' && root.MODO_VIEW) return false; } catch (e) {} return true; }
+  function novaSecao() {
+    var c = cabForm(); if (!c) return; var sr = c.id === 'cabecalhoAddEventoSr', body = c.nextElementSibling;
+    if (document.getElementById('v2PopTtl')) return;
+    if (body && body.style.display === 'none') c.click();
+    var cancela = root[sr ? 'cancelarEdicaoEventoSr' : 'cancelarEdicaoEvento'];
+    var botoes = sr ? ['btnSalvarEventoSr', 'btnCancelarEdicaoEventoSr'] : ['btnSalvarEvento', 'btnCancelarEdicaoEvento', 'btnCancelarEvento'];
+    root.V2_POPUP.abrir(c.id, cancela, botoes);
+    var t = document.getElementById('v2PopTtl'); if (t) t.textContent = '➕ Nova atividade';
+    botoes.forEach(function (id) { var b = document.getElementById(id); if (b && /cancel/i.test(id)) b.style.display = ''; });
+    var n = document.getElementById(sr ? 'eventoNomeSr' : 'eventoNome'); if (n) try { n.focus(); } catch (e) {}
+  }
   function desenhar() {
     var box = $(cfg.container); if (!box) return;
     var evs = visiveis(), y = mes.getFullYear(), m = mes.getMonth(), hojeIso = iso(new Date());
     var prim = new Date(y, m, 1), ult = new Date(y, m + 1, 0), ini = new Date(prim); ini.setDate(1 - prim.getDay());
     var marc = root.V2_PESSOAS ? root.V2_PESSOAS.eventosDoAno(marcas, y) : [];
     var h = '<div class="v2c"><div class="v2c-top"><button class="v2c-bt" onclick="V2_CAL._m(-1)">‹</button><h3>' + MESES[m] + ' de ' + y + '</h3><button class="v2c-bt" onclick="V2_CAL._m(1)">›</button></div>';
-    h += '<div class="v2c-top">' + (ehDir() && !cfg.secao ? '<button class="v2c-bt p" onclick="V2_CAL._novo()">➕ Atividade do grupo</button>' : '') + (cfg.podeImportar !== false ? '<button class="v2c-bt" onclick="V2_CAL._imp()">📥 Importar calendário</button>' : '') + '<button class="v2c-bt" onclick="V2_CAL._m(0)">Hoje</button></div>';
+    h += '<div class="v2c-top">' + (ehDir() && !cfg.secao ? '<button class="v2c-bt p" onclick="V2_CAL._novo()">➕ Atividade do grupo</button>' : '') + (cfg.secao && secaoTemForm() ? '<button class="v2c-bt p" onclick="V2_CAL._novaSecao()">➕ Atividade da seção</button>' : '') + (cfg.podeImportar !== false ? '<button class="v2c-bt" onclick="V2_CAL._imp()">📥 Importar calendário</button>' : '') + '<button class="v2c-bt" onclick="V2_CAL._m(0)">Hoje</button></div>';
     if (!cfg.secao) {
       h += '<div class="v2c-top" style="flex-wrap:wrap;gap:6px">' + [['', 'Todas as seções']].concat(SECS.map(function (s2) { return [s2, NOMES[s2] || s2]; })).map(function (o) { return '<button class="v2c-bt' + (filtroSec === o[0] ? ' p' : '') + '" onclick="V2_CAL._fs(\'' + o[0] + '\')">' + esc(o[1]) + '</button>'; }).join('') + '</div>' + (root.calSecoesCarregando ? '<div style="font-size:12px;opacity:.7;margin:4px 0">⏳ Lendo o calendário de cada seção…</div>' : '');
     }
@@ -4012,7 +4026,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
         + es.slice(0, 5).map(function (e) { return '<span class="v2c-dot' + (e.janela ? ' j' : '') + '" style="background:' + cor(e) + '"></span>'; }).join('') + (es.length > 5 ? '+' : '')
         + ms.slice(0, 3).map(function (x) { return '<span class="v2c-em">' + (x.tipo === 'aniv' ? '🎂' : '⭐') + '</span>'; }).join('') + '</div></div>';
     }
-    h += '</div><div class="v2c-leg">' + Object.keys(ORIG).map(function (k) { return '<span><i style="background:' + ORIG[k][1] + '"></i>' + ORIG[k][0] + '</span>'; }).join('') + '<span>▬ janela de execução</span><span>🎂 aniversário</span><span>⭐ estrela de promessa</span></div><div id="v2cAddSlot"></div>';
+    h += '</div><div class="v2c-leg">' + Object.keys(ORIG).map(function (k) { return '<span><i style="background:' + ORIG[k][1] + '"></i>' + ORIG[k][0] + '</span>'; }).join('') + '<span>▬ janela de execução</span><span>🎂 aniversário</span><span>⭐ estrela de promessa</span></div>';
     var p0 = iso(prim), p1 = iso(ult);
     var jan = evs.filter(function (e) { return e.janela && e.ini <= p1 && (e.fim || e.ini) >= p0; });
     if (jan.length) {
@@ -4028,14 +4042,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
     var mm = marc.filter(function (x) { return x.data >= p0 && x.data <= p1; }).sort(function (a, b) { return a.data < b.data ? -1 : 1; });
     if (mm.length) h += '<div class="v2c-sec">Datas de pessoas</div>' + mm.map(function (x) { return '<div class="v2c-it" data-ini="' + x.data + '" data-fim="' + x.data + '" style="border-left-color:#f9a825"><div class="q">' + esc(x.titulo) + '<small>' + dBR(x.data) + '</small></div></div>'; }).join('');
     h += '</div>';
-    // o bloco "Adicionar atividade" da seção fica entre a legenda e a lista; é solto antes de redesenhar para não ser destruído
-    var cab = document.getElementById('cabecalhoAddEvento') || document.getElementById('cabecalhoAddEventoSr');
-    var addW = cab && cab.parentElement;
-    if (addW && box.contains(addW)) { document.body.appendChild(addW); addW.style.display = 'none'; }
     box.innerHTML = h;
-    var slot = document.getElementById('v2cAddSlot');
-    if (addW && slot && cab.style.display !== 'none') { addW.style.display = ''; addW.style.margin = '0 0 10px'; slot.appendChild(addW); }
-    else if (addW && !slot) addW.style.display = '';
   }
   function item(e) {
     var o = ORIG[e.origem] || ORIG.grupo;
@@ -4233,6 +4240,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
       setTimeout(function () { achou.forEach(function (el) { el.style.outline = ''; el.style.outlineOffset = ''; }); }, 2600);
     },
     _abrir: abrirAtividade, _fecharCard: fecharCard,
+    _novaSecao: novaSecao,
     abrirNaSecao: function (secao, container) { try { if (new URLSearchParams(location.search).get('view') === '1') return; } catch (e) {} if (cfg && cfg.container === container && cfg.secao === secao && $(container) && $(container).firstChild) return root.V2_CAL.atualizar(); return root.V2_CAL.montar({ container: container, secao: secao }); },
     _parse: parseDatas, _extrair: extrair
   };
@@ -4414,7 +4422,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
   function css() {
     if (document.getElementById('v2popCss')) return;
     var st = document.createElement('style'); st.id = 'v2popCss';
-    st.textContent = '#v2PopBk{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100020}.v2-popup{position:fixed!important;top:50%!important;left:50%!important;transform:translate(-50%,-50%)!important;width:min(580px,94vw)!important;max-height:90vh!important;overflow:auto!important;z-index:100030!important;margin:0!important;box-shadow:0 12px 40px rgba(0,0,0,.45)!important}.v2-popup > .cabecalho-secao{display:none!important}.v2-popup-ttl{padding:14px 14px 4px;font-size:15px;font-weight:800}';
+    st.textContent = '#v2PopBk{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100020}.v2-popup{position:fixed!important;top:50%!important;left:50%!important;transform:translate(-50%,-50%)!important;width:min(580px,94vw)!important;max-height:90vh!important;overflow:auto!important;z-index:100030!important;margin:0!important;box-shadow:0 12px 40px rgba(0,0,0,.45)!important}.v2-popup > .cabecalho-secao{display:none!important}*:has(>#cabecalhoAddEvento):not(.v2-popup),*:has(>#cabecalhoAddEventoSr):not(.v2-popup){display:none!important}.v2-popup-ttl{padding:14px 14px 4px;font-size:15px;font-weight:800}';
     document.head.appendChild(st);
   }
   root.V2_POPUP = {
