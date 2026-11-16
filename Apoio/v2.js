@@ -867,8 +867,16 @@ window.V2_CONFIG = {
     if (!resumo) return;
     try {
       var e = { em: new Date().toISOString(), por: String(por || ''), nome: nomeDaSessao() || nome || '', resumo: resumo, n: n || 0 };
-      // guarda os valores de antes para poder desfazer (só se a alteração for pequena)
-      if (d && d.antes && Object.keys(d.antes).length && Object.keys(d.antes).length <= 300) { var js = JSON.stringify(d.antes); if (js.length < 60000) e.desf = d.antes; }
+      // guarda os valores de antes (e de depois) para poder desfazer, como lista de pares: o Firebase não aceita chave com "/" nem guarda valor nulo
+      if (d && d.antes && Object.keys(d.antes).length && Object.keys(d.antes).length <= 300) {
+        var lista = Object.keys(d.antes).map(function (k) {
+          var it = { p: k }, a = d.antes[k], dp = (d.sets && k in d.sets) ? d.sets[k] : null;
+          if (a == null) it.xa = 1; else it.a = a;
+          if (dp == null) it.xd = 1; else it.d = dp;
+          return it;
+        });
+        if (JSON.stringify(lista).length < 60000) e.desf = lista;
+      }
       await fetch(urlV2('historico/' + tropa), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(e) });
     } catch (x) {}
   }
@@ -886,11 +894,23 @@ window.V2_CONFIG = {
     tudo.sort(function (a, b) { return a.em < b.em ? 1 : -1; });
     return tudo.slice(0, qtd || 60);
   }
+  function paresDesf(e) { var l = e && e.desf; if (!l) return []; if (!Array.isArray(l)) l = Object.keys(l).map(function (k) { return l[k]; }); return l.filter(function (x) { return x && x.p; }); }
+  // confere o que está salvo agora com o que aquela alteração gravou: devolve quantos itens foram mexidos de novo depois dela
+  async function verificarDesfazer(e) {
+    var pares = paresDesf(e), conflitos = 0, atual = {};
+    var r = await fetch(urlV2(e.tropa));
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    atual = flatten((await r.json()) || {});
+    pares.forEach(function (x) { var agora = x.p in atual ? atual[x.p] : null, dep = x.xd ? null : x.d; if (agora !== dep) conflitos++; });
+    return { total: pares.length, conflitos: conflitos };
+  }
   // desfaz uma alteração: devolve os valores de antes e registra quem desfez, quando
   async function desfazerHistorico(e, quemNome, quemReg) {
-    if (!e || !e.desf || e.desfeito) throw new Error('Esta alteração não pode ser desfeita.');
-    var r = await fetch(urlV2(e.tropa), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(e.desf) });
-    if (!r.ok) throw new Error('HTTP ' + r.status);
+    var pares = paresDesf(e);
+    if (!e || !pares.length || e.desfeito) throw new Error('Esta alteração não pode ser desfeita.');
+    var mapa = {}; pares.forEach(function (x) { mapa[x.p] = x.xa ? null : x.a; });
+    var r = await fetch(urlV2(e.tropa), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(mapa) });
+    if (!r.ok) throw new Error('o banco recusou (HTTP ' + r.status + ')');
     var quando = new Date().toISOString();
     await fetch(urlV2('historico/' + e.tropa + '/' + e.id), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ desfeito: { em: quando, nome: quemNome || '', por: String(quemReg || '') } }) });
     await registrarHistorico(e.tropa, quemReg, quemNome, 'Desfez a alteração: ' + e.resumo, 0);
@@ -1274,7 +1294,7 @@ window.V2_CONFIG = {
   root.V2 = {
     abrirRelatorio: abrirRelatorio, abrirRelatorioTropa: abrirRelatorioTropa, abrirRelatorioGrupo: abrirRelatorioGrupo,
     snapshot: snapshot, listarSnapshots: listarSnapshots, lerSnapshot: lerSnapshot, protegerAntes: protegerAntes,
-    resumirDiff: resumirDiff, registrarHistorico: registrarHistorico, lerHistorico: lerHistorico, desfazerHistorico: desfazerHistorico, podarHistorico: podarHistorico, limparCacheLocal: limparCacheLocal, temPendenciaLocal: temPendenciaLocal,
+    resumirDiff: resumirDiff, registrarHistorico: registrarHistorico, lerHistorico: lerHistorico, desfazerHistorico: desfazerHistorico, verificarDesfazer: verificarDesfazer, podarHistorico: podarHistorico, limparCacheLocal: limparCacheLocal, temPendenciaLocal: temPendenciaLocal,
     hashSenha: hashSenha, conferirSenha: conferirSenha, senhaComHash: senhaComHash,
     cicloBackup: cicloBackup, lembreteBackup: lembreteBackup, registrarBackup: registrarBackup,
     CFG: CFG, escKey: escKey, unescKey: unescKey, enc: enc, dec: dec, encDados: encDados, decDados: decDados, decCampo: decCampo,

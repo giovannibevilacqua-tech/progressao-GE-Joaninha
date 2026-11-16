@@ -1187,7 +1187,9 @@ async function abrirHistorico() {
 async function desfazerAlteracao(i) {
   const e = histCache[i]; if (!e || !e.desf || e.desfeito) return;
   if (!verTudo() && e.tropa !== tropaDoChefeLogado && e.tropa !== tropa2DoChefeLogado) { alert('Você só pode desfazer alterações da sua seção.'); return; }
-  if (!confirm('Desfazer esta alteração?\n\n' + e.resumo + '\n\nOs valores voltam ao que eram antes. Se algo foi mudado depois dela, essa mudança também é desfeita.')) return;
+  let aviso = '';
+  try { const v = await V2.verificarDesfazer(e); if (v.conflitos) aviso = '\n\n⚠️ ' + v.conflitos + ' de ' + v.total + ' item(ns) foram mexidos de novo depois dessa alteração. Desfazer vai sobrescrever essas mudanças mais recentes.'; } catch (x) { alert('Não consegui conferir o histórico agora: ' + x.message); return; }
+  if (!confirm('Desfazer esta alteração?\n\n' + e.resumo + '\n\nOs valores voltam ao que eram antes.' + aviso)) return;
   if (!(await pedirSenhaAcao('Para desfazer, confirme a sua senha. Fica registrado quem desfez, a data e a hora.'))) return;
   try { await V2.desfazerHistorico(e, nomeLogado || '', registroLogado); } catch (x) { alert('Não foi possível desfazer: ' + x.message); return; }
   alert('Alteração desfeita.'); abrirHistorico();
