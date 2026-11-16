@@ -3248,6 +3248,11 @@ function restaurarUltimaAba(){
   root.V2_PESSOAS = {
     montar: function (o) { cfg = o; dir = null; injetarCss(); },
     campos: camposJovem, salvarDe: salvarCampos, nomeParaChecar: nomeParaChecar,
+    importarFichas: async function () {
+      if (!cfg || !root.V2_FICHAMED) return;
+      var js = listaJovens().map(function (j) { return { id: j.id, nome: j.nome }; });
+      root.V2_FICHAMED.importarGeral(cfg.secao, js, NOMES_SEC[cfg.secao] || cfg.secao, function () { desenhar(); });
+    },
     exportarFichas: async function () {
       if (!cfg || !root.V2_FICHAMED) return;
       var d = await carregarSecao(cfg.secao);
@@ -3390,6 +3395,110 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
     $('v2mCancMao').onclick = aoCancelar;
     $('v2mOkMao').onclick = function () { var o = {}; host.querySelectorAll('[data-mc]').forEach(function (el) { o[MED_CAMPOS[+el.getAttribute('data-mc')][0]] = el.value.trim(); }); aoSalvar(camposParaMed(o)); };
   }
+  // ---- leitura automática: do texto da ficha (PDF/foto) para os campos do formulário ----
+  var SINON = [
+    ['Tipo sanguíneo', /tipo\s*sangu[ií]neo|grupo\s*sangu[ií]neo|fator\s*rh|sangue/i],
+    ['Alergias', /alergi/i],
+    ['Medicamentos de uso contínuo', /medicament|rem[eé]dios?|medica[cç][aã]o|uso\s*cont[ií]nuo/i],
+    ['Restrições alimentares', /restri[cç][aã]o\s*alimentar|restri[cç][oõ]es\s*alimentares|intoler[aâ]ncia|dieta/i],
+    ['Plano de saúde / carteirinha', /plano\s*de\s*sa[uú]de|conv[eê]nio|carteirinha|cart[aã]o\s*(do\s*)?sus|n[º°o.]?\s*do\s*cart[aã]o/i],
+    ['Médico ou hospital de referência', /m[eé]dico|hospital|pediatra|cl[ií]nica|pronto[\s-]*socorro/i],
+    ['Vacinação em dia (sim/não)', /vacin|caderneta/i],
+    ['Condições de saúde e cuidados', /condi[cç][aã]o|condi[cç][oõ]es|doen[cç]a|problemas?\s*de\s*sa[uú]de|cirurgia|tratamento|cuidados|asma|diabetes|epilep|cardi|defici[eê]ncia|restri[cç][aã]o\s*(f[ií]sica|m[eé]dica)/i]
+  ];
+  function rotuloDe(txt) { var t = String(txt || '').trim(); if (!t || t.length > 70) return -1; for (var i = 0; i < SINON.length; i++) if (SINON[i][1].test(t)) return i; return -1; }
+  function limparValor(v) { return String(v || '').replace(/\s+/g, ' ').replace(/^[\s:;\-–_.]+|[\s_]+$/g, '').trim(); }
+  function extrairCampos(texto) {
+    var out = {}, linhas = String(texto || '').split('\n').map(function (l) { return l.replace(/\s+/g, ' ').trim(); }).filter(Boolean), ult = -1;
+    function por(i, v) { v = limparValor(v); if (!v || /^(_+|\.+)$/.test(v)) return; var n = SINON[i][0]; out[n] = out[n] ? (out[n].indexOf(v) >= 0 ? out[n] : out[n] + '; ' + v) : v; }
+    linhas.forEach(function (l) {
+      // vários "rótulo: valor" na mesma linha (tabelas): corta em cada rótulo conhecido seguido de dois-pontos
+      var partes = [], re = /([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ \/().º°]{2,60}?)\s*:/g, m, ini = [];
+      while ((m = re.exec(l))) { if (rotuloDe(m[1]) >= 0) ini.push({ i: rotuloDe(m[1]), a: m.index, b: re.lastIndex }); }
+      if (ini.length) {
+        ini.forEach(function (x, k) { por(x.i, l.slice(x.b, k + 1 < ini.length ? ini[k + 1].a : l.length)); });
+        ult = ini[ini.length - 1].i; return;
+      }
+      // rótulo sozinho na linha: o valor vem nas linhas seguintes
+      var r = rotuloDe(l.replace(/[:\-–]\s*$/, ''));
+      if (r >= 0 && l.length < 70) { ult = r; return; }
+      // linha de continuação do último rótulo (até aparecer outro rótulo / título em maiúsculas)
+      if (ult >= 0 && !/^[A-ZÀ-Ý0-9 \/().-]{6,}$/.test(l)) por(ult, l); else ult = -1;
+    });
+    Object.keys(out).forEach(function (k) { out[k] = out[k].slice(0, 600); });
+    return out;
+  }
+  function textoEstruturado(texto) {
+    var ex = extrairCampos(texto), n = Object.keys(ex).length;
+    if (!n) return { texto: medParaTextoBruto(texto), n: 0 };
+    return { texto: camposParaMed(ex), n: n };
+  }
+  function medParaTextoBruto(texto) { return camposParaMed(medParaCampos(String(texto || '').split('\n').map(function (l) { return l.trim(); }).filter(Boolean).join('\n'))); }
+  function acharJovem(jovens, alvo) {
+    var A = norm(alvo), melhor = null, pts = 0, empate = false;
+    jovens.forEach(function (j) {
+      var tk = norm(j.nome).split(' ').filter(function (x) { return x.length > 2; }); if (!tk.length) return;
+      var c = tk.filter(function (x) { return A.indexOf(x) >= 0; }).length, sc = c / tk.length;
+      if (tk.length >= 2 && sc >= 0.67 || tk.length === 1 && sc === 1) { if (sc > pts) { pts = sc; melhor = j; empate = false; } else if (sc === pts) empate = true; }
+    });
+    return melhor && !empate ? { j: melhor, certo: pts === 1 } : { j: null, certo: false, cand: melhor };
+  }
+  // importação geral: vários arquivos de uma vez, cada um ligado a um jovem da seção; os campos já vêm preenchidos para conferir
+  async function importarGeral(sec, jovens, nomeSecao, aoFim) {
+    var ov = document.createElement('div'); ov.className = 'v2p-ov';
+    ov.innerHTML = '<div class="v2p-box" style="display:flex;flex-direction:column;max-height:90vh;padding:0">'
+      + '<div style="padding:14px 16px 6px;font-size:16px;font-weight:800">📥 Importar fichas médicas — ' + esc(nomeSecao) + '</div>'
+      + '<div id="v2iCorpo" style="padding:4px 16px;overflow:auto;flex:1"><div class="mini">Escolha as fichas (PDF ou foto), uma por jovem. O sistema lê o texto, tenta achar o jovem pelo nome e preencher os campos. <b>Você confere tudo antes de gravar.</b> Fichas escaneadas ou fotos dependem de leitura de imagem e erram mais.</div>'
+      + '<label class="paxtu-envio" style="display:block;margin-top:10px"><input type="file" id="v2iArq" accept="application/pdf,image/*" multiple><div><strong>Escolher fichas</strong></div></label><div id="v2iLista"></div></div>'
+      + '<div style="padding:10px 16px;border-top:1px solid rgba(0,0,0,.1);display:flex;gap:8px;position:sticky;bottom:0;background:inherit"><button type="button" class="v2p-bt" id="v2iFecha">Fechar</button><button type="button" class="v2p-bt p" id="v2iTodas" style="display:none">Gravar todas conferidas</button></div></div>';
+    document.body.appendChild(ov);
+    var itens = [], dadosSec = {};
+    $('v2iFecha').onclick = function () { ov.remove(); if (aoFim) aoFim(); };
+    var ordenados = jovens.slice().sort(function (a, b) { return a.nome.localeCompare(b.nome, 'pt'); });
+    function opcoes(sel) { return '<option value="">— escolher o jovem —</option>' + ordenados.map(function (j) { return '<option value="' + esc(j.id) + '"' + (sel === j.id ? ' selected' : '') + '>' + esc(j.nome) + '</option>'; }).join(''); }
+    function pintar() {
+      var algum = false;
+      $('v2iLista').innerHTML = itens.map(function (it, k) {
+        if (it.feito) return '<div class="v2p-aviso">✓ <b>' + esc(it.jovemNome) + '</b>: ficha gravada.</div>';
+        if (it.erro) return '<div class="v2p-aviso" style="border-color:#b3261e">' + esc(it.nome) + ': ' + esc(it.erro) + '</div>';
+        if (it.jovemId) algum = true;
+        var h = '<div class="v2p-aviso" data-k="' + k + '"><div class="mini">' + esc(it.nome) + (it.f.semTexto ? ' · <b>sem texto legível</b>: arquivo será guardado, preencha os campos à mão se quiser' : ' · ' + it.n + ' campo(s) preenchido(s) automaticamente') + '</div>'
+          + '<select data-sel="' + k + '" style="width:100%;margin:6px 0;padding:8px;border-radius:8px">' + opcoes(it.jovemId) + '</select>'
+          + (it.jovemId && !it.certo ? '<div class="mini" style="color:#b3261e">Associação por semelhança de nome: confirme se é este jovem.</div>' : '')
+          + (it.jovemId && it.anterior ? '<div class="mini" style="color:#b3261e">Este jovem já tem ficha: gravar substitui a anterior.</div>' : '');
+        MED_CAMPOS.forEach(function (c, i) { h += '<div class="v2p-mf"><label>' + esc(c[0]) + '</label>' + (c[1] === 'area' ? '<textarea data-k="' + k + '" data-mc="' + i + '" rows="2">' + esc(it.v[c[0]] || '') + '</textarea>' : '<input data-k="' + k + '" data-mc="' + i + '" value="' + esc(it.v[c[0]] || '') + '" autocomplete="off">') + '</div>'; });
+        if (it.f.texto) h += '<details style="margin-top:6px"><summary class="mini">Ver texto lido do arquivo</summary><pre style="white-space:pre-wrap;font-size:11px;max-height:160px;overflow:auto">' + esc(it.f.texto) + '</pre></details>';
+        return h + '<button type="button" class="v2p-bt p" data-gr="' + k + '" style="margin-top:8px"' + (it.jovemId ? '' : ' disabled') + '>Gravar esta ficha</button></div>';
+      }).join('');
+      $('v2iTodas').style.display = algum ? '' : 'none';
+      $('v2iLista').querySelectorAll('select[data-sel]').forEach(function (el) { el.onchange = function () { var it = itens[+el.getAttribute('data-sel')]; it.jovemId = el.value; it.certo = true; var j = ordenados.filter(function (x) { return x.id === el.value; })[0]; it.jovemNome = j ? j.nome : ''; it.anterior = !!(el.value && dadosSec[el.value] && dadosSec[el.value].med); pintar(); }; });
+      $('v2iLista').querySelectorAll('[data-mc]').forEach(function (el) { el.oninput = function () { itens[+el.getAttribute('data-k')].v[MED_CAMPOS[+el.getAttribute('data-mc')][0]] = el.value; }; });
+      $('v2iLista').querySelectorAll('[data-gr]').forEach(function (el) { el.onclick = function () { gravar(+el.getAttribute('data-gr')); }; });
+    }
+    async function gravar(k) {
+      var it = itens[k]; if (!it.jovemId) return;
+      try { await gravarFicha(sec, it.jovemId, it.jovemNome, { texto: camposParaMed(it.v), dataUrl: it.f.dataUrl, tipo: it.f.tipo, nomeArq: it.f.nomeArq, semTexto: false }); it.feito = true; } catch (e) { it.erro = e.message; }
+      pintar();
+    }
+    $('v2iTodas').onclick = async function () { for (var k = 0; k < itens.length; k++) if (!itens[k].feito && !itens[k].erro && itens[k].jovemId) await gravar(k); };
+    $('v2iArq').onchange = async function () {
+      var arqs = Array.prototype.slice.call(this.files || []); if (!arqs.length) return;
+      try { dadosSec = await root.V2_PESSOAS.carregar(sec) || {}; } catch (e) { dadosSec = {}; }
+      for (var i = 0; i < arqs.length; i++) {
+        var a = arqs[i], it = { nome: a.name, v: {}, n: 0 };
+        $('v2iLista').innerHTML = '<div class="mini">Lendo ' + esc(a.name) + ' (' + (i + 1) + ' de ' + arqs.length + ')…</div>' + $('v2iLista').innerHTML;
+        try {
+          it.f = await lerFicha(a, function (st) { var l = $('v2iLista'); if (l && l.firstChild) l.firstChild.textContent = a.name + ': ' + st; });
+          it.v = extrairCampos(it.f.texto); it.n = Object.keys(it.v).length;
+          if (!it.n && it.f.texto) { it.v = medParaCampos(it.f.texto); }
+          var ach = acharJovem(jovens, a.name + ' ' + it.f.texto);
+          if (ach.j) { it.jovemId = ach.j.id; it.jovemNome = ach.j.nome; it.certo = ach.certo; it.anterior = !!(dadosSec[ach.j.id] && dadosSec[ach.j.id].med); }
+        } catch (e) { it.erro = e.message; }
+        itens.push(it); pintar();
+      }
+    };
+  }
+
   // PDF de uma ficha (uma ou várias páginas)
   function desenharFichaPdf(P, st, it, nova) {
     var W = P.W, M = 40, L = W - 2 * M, y = 50, VINHO = '#6D1026';
@@ -3458,7 +3567,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
     var med = (o.p && o.p.med) || null, pend = null, mao = false;
     function desenhar(msg) {
       var h = '';
-      if (mao) { formularioMao(host, med && med.texto, function (texto) { pend = { f: { texto: texto, dataUrl: null, tipo: 'manual', nomeArq: 'Preenchida à mão', semTexto: !texto } }; mao = false; desenhar(); }, function () { mao = false; desenhar(); }); return; }
+      if (mao) { formularioMao(host, (pend && pend.f.texto) || (med && med.texto), function (texto) { pend = { f: { texto: texto, dataUrl: pend ? pend.f.dataUrl : null, tipo: pend ? pend.f.tipo : 'manual', nomeArq: pend ? pend.f.nomeArq : 'Preenchida à mão', semTexto: !texto } }; mao = false; desenhar(); }, function () { mao = false; desenhar(); }); return; }
       if (med) {
         h += '<div style="font-size:13px;margin-bottom:6px">Ficha de <b>' + new Date(med.em).toLocaleDateString('pt-BR') + '</b> · enviada por ' + esc(med.nomePor || ('Registro ' + med.por)) + '</div>'
           + '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px"><button type="button" class="v2p-bt" id="v2mBaixar">⬇ Baixar arquivo</button>' + (med.texto ? '<button type="button" class="v2p-bt" id="v2mTexto">📄 Ver texto</button>' : '') + '</div><div id="v2mTxt" style="display:none;max-height:220px;overflow:auto;font-size:12px;white-space:pre-wrap;border:1px solid var(--border,#ddd);border-radius:8px;padding:8px;margin-bottom:6px"></div>';
@@ -3479,7 +3588,11 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
       var t = $('v2mTexto'); if (t) t.onclick = function () { var x = $('v2mTxt'); x.style.display = x.style.display === 'none' ? '' : 'none'; x.textContent = med.texto; };
       var inp = $('v2mArq'); if (inp) inp.onchange = async function () {
         if (!inp.files[0]) return;
-        try { var f = await lerFicha(inp.files[0], function (s) { var m = $('v2mMsg'); if (m) m.textContent = s; }); pend = { f: f }; desenhar(); } catch (e) { desenhar(e.message); }
+        try {
+          var f = await lerFicha(inp.files[0], function (s) { var m = $('v2mMsg'); if (m) m.textContent = s; });
+          if (f.texto) { var ex = extrairCampos(f.texto); f.texto = Object.keys(ex).length ? camposParaMed(ex) : medParaTextoBruto(f.texto); mao = true; }
+          pend = { f: f }; desenhar();
+        } catch (e) { desenhar(e.message); }
       };
       var ef = $('v2mEf'); if (ef) ef.onclick = async function () {
         ef.disabled = true; try { med = await gravarFicha(o.sec, o.id, o.nome, pend.f); pend = null; if (o.recarregar) o.recarregar(); desenhar('Ficha gravada.'); } catch (e) { ef.disabled = false; $('v2mMsg').textContent = e.message; }
@@ -3515,7 +3628,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
     lote._it = itens; lote._pintar = pintar; lote._sec = sec; pintar();
   }
   root.V2_FICHAMED = {
-    montar: montar, exportarSecao: exportarSecao, lerFicha: lerFicha, comparar: comparar, campos: campos, lote: lote,
+    montar: montar, importarGeral: importarGeral, extrairCampos: extrairCampos, exportarSecao: exportarSecao, lerFicha: lerFicha, comparar: comparar, campos: campos, lote: lote,
     _ef: async function (k) { var it = lote._it[k]; try { await gravarFicha(lote._sec, it.jovem.id, it.jovem.nome, it.f); it.feito = true; } catch (e) { it.erro = e.message; } lote._pintar(); }
   };
 })(typeof window !== 'undefined' ? window : globalThis);
