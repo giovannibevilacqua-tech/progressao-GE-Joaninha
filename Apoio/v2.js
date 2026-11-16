@@ -4625,8 +4625,8 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
             var base = num(k.pts);
             return '<tr><td class="n">' + esc(k.nome) + '<small style="display:block;opacity:.65">padrão ' + esc(fmt(base)) + '</small></td>'
               + linhas.map(function (r) {
-                var l = lancDe(r.p.id, k.id), v = l ? num(l.pts) : base, ac = r.por[k.id] || 0;
-                return '<td><div class="v2pt-stp"><button type="button" class="v2pt-bt" data-c="' + esc(r.p.id + '|' + k.id + '|-1') + '">−</button><b class="' + (l ? '' : 'pad') + (v < 0 ? ' neg' : '') + '" title="' + (l ? 'lançado' : 'valor padrão, ainda não lançado') + '">' + fmtTot(v) + '</b><button type="button" class="v2pt-bt" data-c="' + esc(r.p.id + '|' + k.id + '|1') + '">+</button></div><small class="ac">acum. ' + fmtTot(ac) + '</small></td>';
+                var l = lancDe(r.p.id, k.id), v = l ? num(l.pts) : base;
+                return '<td><div class="v2pt-stp"><button type="button" class="v2pt-bt" data-c="' + esc(r.p.id + '|' + k.id + '|-1') + '">−</button><b class="' + (l ? '' : 'pad') + (v < 0 ? ' neg' : '') + '" title="' + (l ? 'lançado' : 'valor padrão, ainda não lançado') + '">' + fmtTot(v) + '</b><button type="button" class="v2pt-bt" data-c="' + esc(r.p.id + '|' + k.id + '|1') + '">+</button></div></td>';
               }).join('') + '</tr>';
           }).join('')
           + (orfaos ? '<tr><td class="n">Outros<small style="display:block;opacity:.65">critério removido</small></td>' + linhas.map(function (r) { return '<td>' + (r.por._o ? fmtTot(r.por._o) : '–') + '</td>'; }).join('') + '</tr>' : '')
@@ -4639,7 +4639,6 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
           + '<tr><td class="n">Cada membro</td>' + linhas.map(function (r) {
             return '<td style="text-align:left;vertical-align:top">' + (r.mem.length ? r.mem.map(function (m) { var pc = perc(m); return '<div class="v2pt-mm"><span>' + esc(m.nome) + '</span><b style="color:' + (pc === null ? 'inherit' : pc >= 75 ? '#2e9f5a' : pc >= 50 ? '#e67e22' : '#b3261e') + '">' + (pc === null ? '–' : m.pres + '/' + m.total + ' · ' + pc + '%') + '</b></div>'; }).join('') : '<span class="zero">sem membros</span>') + '</td>'; }).join('') + '</tr>'
           + '</tbody></table></div><div class="mini" style="font-size:11.5px;opacity:.7;margin-top:6px">Números em cinza ainda não foram lançados: usam o valor padrão do critério. Ao tocar em − ou +, o valor é lançado na atividade escolhida.</div>';
-        if (ed) h += '<div class="v2pt-add"><input id="v2ptQn" placeholder="Novo critério, ex.: Canto da patrulha" autocomplete="off"><input id="v2ptQp" inputmode="decimal" value="5" style="max-width:64px"><button type="button" class="v2pt-bt" id="v2ptQa">Adicionar critério</button></div>';
       }
       // critérios
       h += '<h3>📋 Critérios e pontos por ocorrência' + (ed ? '<button type="button" class="v2pt-bt" id="v2ptNovoC" style="margin-left:auto">➕ Novo critério</button>' : '') + '</h3>'
@@ -4676,11 +4675,6 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
       }; });
       on('v2ptPad', function () { ps.forEach(function (p) { crit.forEach(function (k) { if (!lancDe(p.id, k.id)) gravar(p.id, k.id, num(k.pts)); }); }); c.salvar(); desenhar(); });
       on('v2ptZera', function () { if (!confirm('Limpar todos os lançamentos desta atividade?')) return; d.lanc = d.lanc.filter(function (x) { return !(x.atv === chave && x.qtd == null); }); c.salvar(); desenhar(); });
-      on('v2ptQa', function () {
-        var n = document.getElementById('v2ptQn').value.trim(), pt = document.getElementById('v2ptQp').value.trim();
-        if (!n) { alert('Escreva o nome do critério.'); return; } if (pt === '' || isNaN(parseFloat(pt.replace(',', '.')))) { alert('Informe os pontos (número).'); return; }
-        d.crit.push({ id: uid(), nome: n, pts: num(pt), desc: '' }); c.salvar(); desenhar();
-      });
       host.querySelectorAll('[data-ec]').forEach(function (b) { b.onclick = function () { formCrit(b.getAttribute('data-ec')); }; });
       host.querySelectorAll('[data-dc]').forEach(function (b) { b.onclick = function () {
         var id = b.getAttribute('data-dc'), usos = d.lanc.filter(function (l) { return l.crit === id; }).length;
