@@ -4710,3 +4710,16 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ligar); else ligar();
 })(typeof window !== 'undefined' ? window : globalThis);
+
+/* ---------- botão "Progresso por jovem" mais visível (todas as seções) ---------- */
+(function () {
+  if (typeof document === 'undefined') return;
+  function ligar() {
+    if (document.getElementById('v2ProgBtnCss')) return;
+    var st = document.createElement('style'); st.id = 'v2ProgBtnCss';
+    st.textContent = 'details.progress-section>summary.section-label{background:linear-gradient(135deg,var(--vinho,#1A6B3C),var(--vinho2,#23884D));color:#fff!important;padding:14px 16px;border-radius:10px;font-size:14px!important;font-weight:800;letter-spacing:.6px;box-shadow:0 2px 8px rgba(0,0,0,.25);margin:-4px -4px 0!important;cursor:pointer}'
+      + 'details.progress-section>summary.section-label::before{content:"📊";margin-right:8px;font-size:16px}details.progress-section>summary.section-label>span{margin-left:auto;font-size:16px!important}details.progress-section[open]>summary.section-label>span{transform:rotate(180deg)}';
+    document.head.appendChild(st);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ligar); else ligar();
+})();
