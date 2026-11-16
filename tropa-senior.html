@@ -330,6 +330,7 @@ mark.hl{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
   <button class="tab-btn" data-tab="sem" onclick="showTab('sem',this)">🔄 Ciclo</button>
   <button class="tab-btn" data-tab="jovens" onclick="showTab('jovens',this)">👥 Seniores</button>
   <button class="tab-btn" data-tab="ep" onclick="showTab('ep',this);renderEP();">🏆 Ed. Pátria</button>
+  <button class="tab-btn" data-tab="pont" onclick="showTab('pont',this);montarPontSr();">🥇 Pontuação</button>
   <button class="tab-btn" data-tab="alm" onclick="showTab('alm',this);abrirAlmoSr();">📦 Almoxarifado</button>
   <button class="tab-btn" data-tab="fin" onclick="showTab('fin',this);V2_FIN.abrir();">💰 Financeiro</button>
 </nav>
@@ -707,7 +708,7 @@ async function renovarSessaoV2() {
   if (renovado) { firebaseAuthToken = renovado.idToken; firebaseRefreshToken = renovado.refreshToken; salvarSessao(); }
 }
 function montarDadosSr() {
-  return { S, JOVENS, JNOMES, JCORES, PRESENCA, YOUTH_DATA, EP_DATA, CAL_EXTRAS, CAL_2S26, CAL_1S27, JUSTIFICATIVAS_SR, METAS_SR, CICLO_BLOCOS_SR, PATRULHAS_SR, PATRULHA_DE_SR, SEMESTRES_SR, semAbertoSr };
+  return { S, JOVENS, JNOMES, JCORES, PRESENCA, YOUTH_DATA, EP_DATA, CAL_EXTRAS, CAL_2S26, CAL_1S27, JUSTIFICATIVAS_SR, METAS_SR, CICLO_BLOCOS_SR, PATRULHAS_SR, PATRULHA_DE_SR, PONTUACAO_SR, SEMESTRES_SR, semAbertoSr };
 }
 // A visualização pública lê só o calendário e os semestres; dados de jovens exigem login.
 const CAMPOS_PUBLICOS_SR = ['CAL_EXTRAS', 'CAL_2S26', 'CAL_1S27', 'CICLO_BLOCOS_SR', 'SEMESTRES_SR', 'semAbertoSr'];
@@ -774,6 +775,7 @@ function aplicarDadosSr(dados, primeira){
     if (dados.CICLO_BLOCOS_SR) CICLO_BLOCOS_SR = dados.CICLO_BLOCOS_SR;
     if (dados.PATRULHAS_SR) PATRULHAS_SR = dados.PATRULHAS_SR;
     if (dados.PATRULHA_DE_SR) PATRULHA_DE_SR = dados.PATRULHA_DE_SR;
+    if (dados.PONTUACAO_SR) PONTUACAO_SR = dados.PONTUACAO_SR;
     if (dados.SEMESTRES_SR) SEMESTRES_SR = dados.SEMESTRES_SR;
     if (dados.semAbertoSr) semAbertoSr = dados.semAbertoSr;
     // dados antigos guardavam progressão/presença pela posição do jovem: converte para ID (uma única vez)
@@ -1131,6 +1133,7 @@ let PRESENCA = {};
 let CAL_EXTRAS = {};
 let JUSTIFICATIVAS_SR = {};
 let PATRULHAS_SR = [];
+let PONTUACAO_SR = { crit: [], lanc: [] };
 let PATRULHA_DE_SR = {};
 let patrulhaEditandoIdSr = null;
 let patrulhaMenuAbertoIdSr = null;
@@ -2075,6 +2078,7 @@ function renderSemestres(){
 // ╔═══════════════════════════════════════════════════╗
 // ║                    TABS                          ║
 // ╚═══════════════════════════════════════════════════╝
+function montarPontSr() { V2_PONT.montar(document.getElementById('pontHostSr'), { patrulhas: () => PATRULHAS_SR, dados: () => PONTUACAO_SR, salvar: () => saveState(), podeEditar: !MODO_VISUALIZACAO_SR }); }
 function showTab(id,btn){
   document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
@@ -2090,6 +2094,7 @@ function restaurarUltimaAbaSr() {
   if (!btn) return;
   showTab(abaSalva, btn);
   if (abaSalva === 'ep') renderEP();
+  if (abaSalva === 'pont') montarPontSr();
 }
 
 // ╔═══════════════════════════════════════════════════╗
@@ -3109,7 +3114,7 @@ async function iniciarApp(){
 }
 
 function aplicarModoVisualizacaoSr() {
-document.querySelectorAll('.tab-btn[data-tab="prog"], .tab-btn[data-tab="jovens"], .tab-btn[data-tab="ep"], .tab-btn[data-tab="alm"], .tab-btn[data-tab="fin"]').forEach(el => el.style.display = 'none');
+document.querySelectorAll('.tab-btn[data-tab="prog"], .tab-btn[data-tab="jovens"], .tab-btn[data-tab="ep"], .tab-btn[data-tab="pont"], .tab-btn[data-tab="alm"], .tab-btn[data-tab="fin"]').forEach(el => el.style.display = 'none');
 const resumoPresenca = document.getElementById('presenca-summary'); if (resumoPresenca) { resumoPresenca.parentElement.style.display = 'none'; }
 document.querySelectorAll('#cabecalhoAddEventoSr').forEach(el => { el.style.display = 'none'; const body = el.nextElementSibling; if (body) body.style.display = 'none'; });
 const saveBar = document.getElementById('saveBarSr');
@@ -3280,6 +3285,8 @@ V2_PESSOAS.montar({ secao:'senior', container:'fichasBox_off', jovens:()=>paxtuE
   </div>
 </div>
 
+<div id="pont" class="tab-content"><div id="pontHostSr" style="padding:0 14px"></div></div>
+
 <div id="ep" class="tab-content">
   <div style="margin:12px 12px 0;background:var(--card);border-radius:var(--r);padding:10px 13px;
     box-shadow:var(--shadow);font-size:11px;color:var(--muted);line-height:1.5;">
@@ -3313,7 +3320,7 @@ V2_PESSOAS.montar({ secao:'senior', container:'fichasBox_off', jovens:()=>paxtuE
 </div>
 
 <script>
-V2_NAVG({ nav:'nav.tabs', embrulhar:true, grupos:[{ rotulo:'👥 Seção', botoes:['.tab-btn[data-tab="prog"]','.tab-btn[data-tab="ep"]','.tab-btn[data-tab="jovens"]'] }, { rotulo:'📅 Calendário/Ciclo', botoes:['.tab-btn[data-tab="cal"]','.tab-btn[data-tab="sem"]'] }, { rotulo:'🧰 Gestão', botoes:['.tab-btn[data-tab="alm"]','.tab-btn[data-tab="fin"]'] }] });
+V2_NAVG({ nav:'nav.tabs', embrulhar:true, grupos:[{ rotulo:'👥 Seção', botoes:['.tab-btn[data-tab="prog"]','.tab-btn[data-tab="ep"]','.tab-btn[data-tab="jovens"]','.tab-btn[data-tab="pont"]'] }, { rotulo:'📅 Calendário/Ciclo', botoes:['.tab-btn[data-tab="cal"]','.tab-btn[data-tab="sem"]'] }, { rotulo:'🧰 Gestão', botoes:['.tab-btn[data-tab="alm"]','.tab-btn[data-tab="fin"]'] }] });
 </script>
 </body>
 </html>

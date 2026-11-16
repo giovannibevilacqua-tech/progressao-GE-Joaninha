@@ -710,6 +710,7 @@ mark.hl-esc{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 <button class="tab-btn-linha" id="tabCiclo" onclick="mudarPagina('ciclo')">🔄 Ciclo</button>
 <button class="tab-btn-linha" id="tabJovens" onclick="mudarPagina('jovens')">👥 Escoteiros</button>
 <button class="tab-btn-linha" id="tabLis" onclick="mudarPagina('lis')">🏅 Lis de Ouro</button>
+<button class="tab-btn-linha" id="tabPont" onclick="mudarPagina('pont')">🏆 Pontuação</button>
 <button class="tab-btn-linha" id="tabAlmoxarifado" onclick="mudarPagina('almoxarifado')">📦 Almoxarifado</button>
 <button class="tab-btn-linha" id="tabFinanceiro" onclick="mudarPagina('financeiro')">💰 Financeiro</button>
 </nav>
@@ -800,6 +801,8 @@ Toque num jovem para abrir a ficha dele. A barra de cor mostra o tempo até a tr
 </div>
 
 </div>
+
+<div id="pagina-pont" style="display:none;"><div id="pontHost" style="padding:0 14px"></div></div>
 
 <div id="pagina-lis" style="display:none;">
 
@@ -1047,6 +1050,7 @@ let PATRULHA_DE = {};
 let CARGO_DE = {};
 let OBSERVACOES = {};
 let CONVERSAR_COM = {};
+let PONT = { crit: [], lanc: [] };
 let LIS_OURO_DATA = {};
 const JCOR = {};
 function corPara(i) { return `hsl(${Math.round(i*137.5)%360},45%,42%)`; }
@@ -1104,7 +1108,7 @@ function montarDadosEscoteira() {
   const extras = [...JOVENS, ...idsExtrasArquivados].filter(j => !JOVENS_BASE.includes(j)).map(id => ({id, nome: JNOMES[id]}));
   const nomesBase = {};
   JOVENS_BASE.forEach(id => { if (JNOMES[id] !== JNOMES_PADRAO[id]) nomesBase[id] = JNOMES[id]; });
-  return { S, extraJovens: extras, eventos: EVENTOS, ciclo: CICLO, nomesBase, datasNascimento: DATAS_NASC, excluidos: JOVENS_EXCLUIDOS, arquivados: JOVENS_ARQUIVADOS, justificativas: JUSTIFICATIVAS, patrulhas: PATRULHAS, patrulhaDe: PATRULHA_DE, cargoDe: CARGO_DE, observacoes: OBSERVACOES, lisOuroDe: LIS_OURO_DATA, cicloDestaque: CICLO_DESTAQUE, cicloInfo: CICLO_INFO, conversarCom: CONVERSAR_COM };
+  return { S, extraJovens: extras, eventos: EVENTOS, ciclo: CICLO, nomesBase, datasNascimento: DATAS_NASC, excluidos: JOVENS_EXCLUIDOS, arquivados: JOVENS_ARQUIVADOS, justificativas: JUSTIFICATIVAS, patrulhas: PATRULHAS, patrulhaDe: PATRULHA_DE, cargoDe: CARGO_DE, observacoes: OBSERVACOES, lisOuroDe: LIS_OURO_DATA, cicloDestaque: CICLO_DESTAQUE, cicloInfo: CICLO_INFO, conversarCom: CONVERSAR_COM, pontuacao: PONT };
 }
 function aplicarDadosEscoteira(dados, primeira) {
   if (dados) {
@@ -1128,6 +1132,7 @@ function aplicarDadosEscoteira(dados, primeira) {
     CARGO_DE = dados.cargoDe || {};
     OBSERVACOES = dados.observacoes || {};
     CONVERSAR_COM = dados.conversarCom || {};
+    PONT = dados.pontuacao || { crit: [], lanc: [] };
     LIS_OURO_DATA = dados.lisOuroDe || {};
     CICLO_DESTAQUE = dados.cicloDestaque || {};
     CICLO_INFO = dados.cicloInfo || {};
@@ -1349,7 +1354,7 @@ exportedBy: 'GE Joaninha — Tropa Escoteira',
 S, extraJovens: extras, eventos: EVENTOS, ciclo: CICLO, nomesBase,
 datasNascimento: DATAS_NASC, excluidos: JOVENS_EXCLUIDOS, arquivados: JOVENS_ARQUIVADOS,
 justificativas: JUSTIFICATIVAS, patrulhas: PATRULHAS, patrulhaDe: PATRULHA_DE,
-cargoDe: CARGO_DE, observacoes: OBSERVACOES, lisOuroDe: LIS_OURO_DATA, cicloDestaque: CICLO_DESTAQUE, cicloInfo: CICLO_INFO, conversarCom: CONVERSAR_COM
+cargoDe: CARGO_DE, observacoes: OBSERVACOES, lisOuroDe: LIS_OURO_DATA, cicloDestaque: CICLO_DESTAQUE, cicloInfo: CICLO_INFO, conversarCom: CONVERSAR_COM, pontuacao: PONT
 };
 const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
 const url = URL.createObjectURL(blob);
@@ -1413,6 +1418,7 @@ LIS_OURO_DATA = d.lisOuroDe || {};
 CICLO_DESTAQUE = d.cicloDestaque || {};
 CICLO_INFO = d.cicloInfo || {};
 CONVERSAR_COM = d.conversarCom || {};
+PONT = d.pontuacao || { crit: [], lanc: [] };
 
 JOVENS = JOVENS_BASE.filter(id => !JOVENS_EXCLUIDOS.includes(id));
 JNOMES = Object.assign({}, JNOMES_PADRAO);
@@ -2349,7 +2355,7 @@ if (card) card.classList.toggle('open');
 // ===== PÁGINA 2: TABELA POR BLOCO =====
 let paginaAtiva = 'tabela';
 
-const PAGINAS_ESC = { tabela: ['pagina-tabela', 'tabTabela'], calendario: ['pagina-calendario', 'tabCalendario'], jovens: ['pagina-jovens', 'tabJovens'], ciclo: ['pagina-ciclo', 'tabCiclo'], lis: ['pagina-lis', 'tabLis'], almoxarifado: ['pagina-almoxarifado', 'tabAlmoxarifado'], financeiro: ['pagina-financeiro', 'tabFinanceiro'] };
+const PAGINAS_ESC = { tabela: ['pagina-tabela', 'tabTabela'], calendario: ['pagina-calendario', 'tabCalendario'], jovens: ['pagina-jovens', 'tabJovens'], ciclo: ['pagina-ciclo', 'tabCiclo'], lis: ['pagina-lis', 'tabLis'], pont: ['pagina-pont', 'tabPont'], almoxarifado: ['pagina-almoxarifado', 'tabAlmoxarifado'], financeiro: ['pagina-financeiro', 'tabFinanceiro'] };
 function mudarPagina(p) {
 if (!PAGINAS_ESC[p]) p = 'tabela';
 paginaAtiva = p;
@@ -2364,6 +2370,7 @@ if (p === 'calendario') { renderPaginaCalendario(); V2_CAL.abrirNaSecao('escotei
 if (p === 'jovens') renderRoster();
 if (p === 'ciclo') renderPaginaCiclo();
 if (p === 'lis') renderPaginaLis();
+if (p === 'pont') V2_PONT.montar(document.getElementById('pontHost'), { patrulhas: () => PATRULHAS, dados: () => PONT, salvar: () => { temAlteracaoLocalPendente = true; saveState(); }, podeEditar: true });
 if (p === 'almoxarifado') V2_ALMOX.abrir();
 if (p === 'financeiro') V2_FIN.abrir();
 }
@@ -3922,7 +3929,7 @@ function irParaBlocoEsc(eixoId, bid){
 })();
 </script>
 <script>
-V2_NAVG({ nav:'#tabsLinha', embrulhar:false, grupos:[{ rotulo:'👥 Seção', botoes:['#tabTabela','#tabLis','#tabJovens'] }, { rotulo:'📅 Calendário/Ciclo', botoes:['#tabCalendario','#tabCiclo'] }, { rotulo:'🧰 Gestão', botoes:['#tabAlmoxarifado','#tabFinanceiro'] }] });
+V2_NAVG({ nav:'#tabsLinha', embrulhar:false, grupos:[{ rotulo:'👥 Seção', botoes:['#tabTabela','#tabLis','#tabJovens','#tabPont'] }, { rotulo:'📅 Calendário/Ciclo', botoes:['#tabCalendario','#tabCiclo'] }, { rotulo:'🧰 Gestão', botoes:['#tabAlmoxarifado','#tabFinanceiro'] }] });
 </script>
 </body>
 </html>

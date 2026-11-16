@@ -837,7 +837,7 @@ window.V2_CONFIG = {
     cicloDestaque: 'Ciclo de programa', patrulhas: 'Patrulhas', patrulhaDe: 'Patrulhas', cargoDe: 'Cargos', observacoes: 'Observações',
     datasNascimento: 'Datas de nascimento', justificativas: 'Justificativas', JUSTIFICATIVAS_SR: 'Justificativas', nomesBase: 'Nomes',
     extraJovens: 'Jovens', excluidos: 'Jovens', arquivados: 'Jovens', JOVENS: 'Jovens', JNOMES: 'Jovens', JCORES: 'Jovens', YOUTH_DATA: 'Jovens',
-    lisOuroDe: 'Lis de Ouro', conversarCom: 'Conversar com', EP_DATA: 'Especialidades', CAL_EXTRAS: 'Calendário', CAL_2S26: 'Calendário',
+    lisOuroDe: 'Lis de Ouro', conversarCom: 'Conversar com', pontuacao: 'Pontuação', PONTUACAO_SR: 'Pontuação', EP_DATA: 'Especialidades', CAL_EXTRAS: 'Calendário', CAL_2S26: 'Calendário',
     CAL_1S27: 'Calendário', METAS_SR: 'Metas', CICLO_BLOCOS_SR: 'Ciclo de programa', PATRULHAS_SR: 'Patrulhas', PATRULHA_DE_SR: 'Patrulhas',
     SEMESTRES_SR: 'Semestres', semAbertoSr: 'Semestres', CICLO_SEM: 'Ciclo', cicloAbertos: 'Ciclo'
   };
@@ -4504,3 +4504,158 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
     + '.v2-popup-foot{position:sticky;bottom:-14px;background:var(--card,#fff);padding:10px 14px 14px;margin:0 -14px -14px;display:flex;flex-direction:column;gap:8px;z-index:3;border-top:1px solid rgba(128,128,128,.25)}';
   document.head.appendChild(st);
 })();
+
+/* ============================================================
+   Pontuação das patrulhas — critérios definidos pela chefia, lançamentos por atividade e tabela com todas as patrulhas lado a lado.
+   Dados (guardados junto com o resto da seção): { crit: [{id, nome, pts, desc}], lanc: [{id, pat, crit, pts, data, obs}] }
+   ============================================================ */
+(function (root) {
+  function esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function num(v) { var n = parseFloat(String(v == null ? '' : v).replace(',', '.')); return isNaN(n) ? 0 : n; }
+  function fmt(n) { n = Math.round(n * 100) / 100; return (n > 0 ? '+' : '') + String(n).replace('.', ','); }
+  function fmtTot(n) { return String(Math.round(n * 100) / 100).replace('.', ','); }
+  function dBR(i) { return i ? i.slice(8, 10) + '/' + i.slice(5, 7) + '/' + i.slice(0, 4) : ''; }
+  function hoje() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  function uid() { return 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5); }
+  function estilo() {
+    if (document.getElementById('v2ptCss')) return;
+    var s = document.createElement('style'); s.id = 'v2ptCss';
+    s.textContent = '.v2pt{padding:4px 0 90px}.v2pt h2{margin:0 0 6px;font-size:18px}.v2pt h3{margin:22px 0 8px;font-size:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}'
+      + '.v2pt-leg{background:rgba(255,193,7,.14);border:1px solid rgba(255,193,7,.5);border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.55}.v2pt-leg b{font-weight:800}'
+      + '.v2pt-leg ol{margin:6px 0 0;padding-left:18px}.v2pt-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin:10px 0}.v2pt-bar label{font-size:11px;font-weight:700;text-transform:uppercase;opacity:.7;display:block;margin-bottom:3px}'
+      + '.v2pt-bar input{padding:8px;border:1px solid var(--border,#ccc);border-radius:8px;font:inherit;font-size:13px;background:var(--card,#fff);color:inherit}'
+      + '.v2pt-bt{padding:9px 13px;border:1px solid var(--border,#ccc);border-radius:8px;background:var(--card,#fff);color:inherit;font:inherit;font-size:13px;font-weight:700;cursor:pointer}.v2pt-bt.p{background:#1b6b3a;color:#fff;border-color:#1b6b3a}'
+      + '.v2pt-sc{overflow-x:auto;border:1px solid var(--border,#ddd);border-radius:10px;background:var(--card,#fff)}.v2pt table{border-collapse:collapse;width:100%;font-size:13px}'
+      + '.v2pt th,.v2pt td{padding:8px 10px;border-bottom:1px solid var(--border,#e5e5e5);text-align:center;white-space:nowrap}.v2pt th{font-size:11px;text-transform:uppercase;letter-spacing:.3px;background:rgba(128,128,128,.1);vertical-align:bottom}'
+      + '.v2pt th small{display:block;font-weight:600;opacity:.7;text-transform:none;letter-spacing:0}.v2pt td.n,.v2pt th.n{text-align:left;position:sticky;left:0;background:var(--card,#fff);z-index:1;min-width:130px}.v2pt th.n{background:#eee}'
+      + '.v2pt td.t{font-weight:800;font-size:14px}.v2pt td.pos{opacity:.7;font-weight:700}.v2pt .neg{color:#b3261e}.v2pt .zero{opacity:.35}.v2pt tr.top td{background:rgba(255,193,7,.1)}.v2pt tr.top td.n{background:#fdf6e0}'
+      + '.v2pt-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}'
+      + '.v2pt-cr{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border,#ddd);border-radius:10px;margin-bottom:6px;background:var(--card,#fff)}.v2pt-cr .pts{font-weight:800;font-size:15px;min-width:54px;text-align:center;border-radius:8px;padding:4px 6px;background:rgba(27,107,58,.14);color:#1b6b3a}'
+      + '.v2pt-cr .pts.neg{background:rgba(179,38,30,.12);color:#b3261e}.v2pt-cr .d{font-size:12px;opacity:.75;margin-top:2px}.v2pt-hi{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border,#e5e5e5);font-size:13px}.v2pt-hi .pts{font-weight:800;min-width:46px}'
+      + '.v2pt-vz{opacity:.7;font-size:13px;padding:8px 0}.v2pt-mf{margin-bottom:10px}.v2pt-mf label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;opacity:.75;margin-bottom:4px}'
+      + '.v2pt-mf input,.v2pt-mf select,.v2pt-mf textarea{display:block;width:100%;box-sizing:border-box;padding:9px 11px;border:1px solid var(--border,#ccc);border-radius:8px;font:inherit;font-size:14px;background:var(--card,#fff);color:inherit}.v2pt-mf .mini{font-size:11px;opacity:.7;margin-top:3px}';
+    document.head.appendChild(s);
+  }
+  function janela(titulo, corpo, okTxt, aoOk) {
+    var ov = document.createElement('div'); ov.className = 'v2p-ov';
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100040;display:flex;align-items:center;justify-content:center;padding:14px';
+    ov.innerHTML = '<div style="background:var(--card,#fff);color:var(--text,inherit);border-radius:8px;width:min(480px,100%);max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.45)">'
+      + '<div style="padding:14px 16px 6px;font-size:16px;font-weight:800">' + titulo + '</div><div id="v2ptCorpo" style="padding:6px 16px;overflow:auto;flex:1">' + corpo + '</div>'
+      + '<div id="v2ptErro" style="display:none;color:#b3261e;font-size:12.5px;padding:0 16px 6px"></div>'
+      + '<div style="padding:10px 16px;border-top:1px solid rgba(128,128,128,.25);display:flex;gap:8px"><button type="button" class="v2pt-bt" id="v2ptNao" style="flex:1">Cancelar</button><button type="button" class="v2pt-bt p" id="v2ptSim" style="flex:1">' + okTxt + '</button></div></div>';
+    document.body.appendChild(ov);
+    function fecha() { ov.remove(); }
+    document.getElementById('v2ptNao').onclick = fecha;
+    document.getElementById('v2ptSim').onclick = function () {
+      var er = document.getElementById('v2ptErro'); er.style.display = 'none';
+      var msg = aoOk(ov); if (msg) { er.textContent = msg; er.style.display = ''; return; } fecha();
+    };
+    return ov;
+  }
+
+  // c: { patrulhas: () => [{id,nome,cor,icone}], dados: () => {crit,lanc}, salvar: () => void, podeEditar: bool }
+  function montar(host, c) {
+    estilo();
+    var ini = '', fim = '', verTodos = false;
+    function D() { var d = c.dados(); if (!Array.isArray(d.crit)) d.crit = []; if (!Array.isArray(d.lanc)) d.lanc = []; return d; }
+    function pats() { return (c.patrulhas() || []).filter(function (p) { return p && p.id; }); }
+    function noPeriodo(l) { return (!ini || l.data >= ini) && (!fim || l.data <= fim); }
+    function desenhar() {
+      var d = D(), ps = pats(), crit = d.crit, ed = c.podeEditar !== false;
+      var ls = d.lanc.filter(noPeriodo);
+      var critIds = {}; crit.forEach(function (k) { critIds[k.id] = 1; });
+      var orfaos = ls.some(function (l) { return !critIds[l.crit]; });
+      var linhas = ps.map(function (p) {
+        var por = {}, tot = 0;
+        ls.forEach(function (l) { if (l.pat !== p.id) return; var k = critIds[l.crit] ? l.crit : '_o'; por[k] = (por[k] || 0) + num(l.pts); tot += num(l.pts); });
+        return { p: p, por: por, tot: tot };
+      }).sort(function (a, b) { return b.tot - a.tot; });
+      var pos = 0, ant = null; linhas.forEach(function (r, i) { if (ant === null || r.tot !== ant) pos = i + 1; ant = r.tot; r.pos = pos; });
+      var h = '<div class="v2pt"><h2>🏅 Pontuação das patrulhas</h2>'
+        + '<div class="v2pt-leg"><b>Como funciona</b><ol><li><b>Critérios:</b> a chefia define o que dá ponto e quanto cada coisa vale (por exemplo, “Uniforme completo = +5”; valores negativos descontam).</li>'
+        + '<li><b>Lançamentos:</b> depois de cada atividade, registre os pontos de cada patrulha em um critério.</li>'
+        + '<li><b>Tabela geral:</b> soma tudo e mostra todas as patrulhas lado a lado, com o total e a posição.</li></ol></div>';
+      // tabela geral
+      h += '<h3>📊 Tabela geral — todas as patrulhas</h3><div class="v2pt-bar"><div><label>De</label><input type="date" id="v2ptIni" value="' + esc(ini) + '"></div><div><label>Até</label><input type="date" id="v2ptFim" value="' + esc(fim) + '"></div>'
+        + '<button type="button" class="v2pt-bt" id="v2ptLimpa">Todo o período</button>' + (ed ? '<button type="button" class="v2pt-bt p" id="v2ptLanca" style="margin-left:auto">➕ Lançar pontos</button>' : '') + '</div>';
+      if (!ps.length) h += '<div class="v2pt-vz">Nenhuma patrulha cadastrada. Crie as patrulhas na aba de jovens para pontuar.</div>';
+      else {
+        h += '<div class="v2pt-sc"><table><thead><tr><th>#</th><th class="n">Patrulha</th>'
+          + crit.map(function (k) { return '<th>' + esc(k.nome) + '<small>vale ' + esc(fmt(num(k.pts))) + '</small></th>'; }).join('') + (orfaos ? '<th>Outros<small>critério removido</small></th>' : '') + '<th>Total</th></tr></thead><tbody>'
+          + linhas.map(function (r) {
+            var medal = r.tot > 0 && r.pos <= 3 ? ['🥇', '🥈', '🥉'][r.pos - 1] : r.pos + 'º';
+            return '<tr' + (r.tot > 0 && r.pos <= 3 ? ' class="top"' : '') + '><td class="pos">' + medal + '</td><td class="n"><span class="v2pt-dot" style="background:' + esc(r.p.cor || '#888') + '"></span>' + esc((r.p.icone || '') + ' ' + r.p.nome) + '</td>'
+              + crit.map(function (k) { var v = r.por[k.id] || 0; return '<td class="' + (v < 0 ? 'neg' : v === 0 ? 'zero' : '') + '">' + (v ? fmtTot(v) : '–') + '</td>'; }).join('')
+              + (orfaos ? '<td>' + (r.por._o ? fmtTot(r.por._o) : '–') + '</td>' : '') + '<td class="t">' + fmtTot(r.tot) + '</td></tr>';
+          }).join('') + '</tbody></table></div>';
+        if (!crit.length) h += '<div class="v2pt-vz">Ainda não há critérios. Cadastre-os abaixo para começar a pontuar.</div>';
+      }
+      // critérios
+      h += '<h3>📋 Critérios e pontos por ocorrência' + (ed ? '<button type="button" class="v2pt-bt" id="v2ptNovoC" style="margin-left:auto">➕ Novo critério</button>' : '') + '</h3>'
+        + '<div class="mini" style="font-size:12px;opacity:.75;margin-bottom:8px">Cada vez que a patrulha cumprir o critério, ganha (ou perde) os pontos indicados ao lado.</div>';
+      h += crit.length ? crit.map(function (k) {
+        var n = num(k.pts);
+        return '<div class="v2pt-cr"><span class="pts' + (n < 0 ? ' neg' : '') + '">' + esc(fmt(n)) + '</span><div style="flex:1;min-width:0"><b>' + esc(k.nome) + '</b>' + (k.desc ? '<div class="d">' + esc(k.desc) + '</div>' : '') + '</div>'
+          + (ed ? '<button type="button" class="v2pt-bt" data-ec="' + esc(k.id) + '">✏️</button><button type="button" class="v2pt-bt" data-dc="' + esc(k.id) + '" style="color:#b3261e">🗑️</button>' : '') + '</div>';
+      }).join('') : '<div class="v2pt-vz">Nenhum critério cadastrado.</div>';
+      // histórico
+      var hist = ls.slice().sort(function (a, b) { return (b.data || '').localeCompare(a.data || '') || (b.id || '').localeCompare(a.id || ''); });
+      var mostra = verTodos ? hist : hist.slice(0, 15);
+      h += '<h3>🧾 Últimos lançamentos</h3>' + (mostra.length ? mostra.map(function (l) {
+        var p = ps.filter(function (x) { return x.id === l.pat; })[0], k = crit.filter(function (x) { return x.id === l.crit; })[0], n = num(l.pts);
+        return '<div class="v2pt-hi"><span style="opacity:.7;min-width:78px">' + esc(dBR(l.data)) + '</span><span class="pts' + (n < 0 ? ' neg' : '') + '">' + esc(fmt(n)) + '</span><div style="flex:1;min-width:0"><b>' + esc(p ? p.nome : 'Patrulha removida') + '</b> · ' + esc(k ? k.nome : 'critério removido') + (l.obs ? '<div style="font-size:12px;opacity:.75">' + esc(l.obs) + '</div>' : '') + '</div>'
+          + (ed ? '<button type="button" class="v2pt-bt" data-dl="' + esc(l.id) + '" style="color:#b3261e">🗑️</button>' : '') + '</div>';
+      }).join('') + (hist.length > 15 ? '<button type="button" class="v2pt-bt" id="v2ptTodos" style="margin-top:8px">' + (verTodos ? 'Mostrar menos' : 'Ver todos (' + hist.length + ')') + '</button>' : '') : '<div class="v2pt-vz">Nenhum lançamento neste período.</div>');
+      host.innerHTML = h + '</div>';
+      function on(id, fn) { var e = document.getElementById(id); if (e) e.onclick = fn; }
+      var i1 = document.getElementById('v2ptIni'), i2 = document.getElementById('v2ptFim');
+      if (i1) i1.onchange = function () { ini = this.value; desenhar(); }; if (i2) i2.onchange = function () { fim = this.value; desenhar(); };
+      on('v2ptLimpa', function () { ini = ''; fim = ''; desenhar(); }); on('v2ptTodos', function () { verTodos = !verTodos; desenhar(); });
+      on('v2ptNovoC', function () { formCrit(null); }); on('v2ptLanca', function () { formLanc(); });
+      host.querySelectorAll('[data-ec]').forEach(function (b) { b.onclick = function () { formCrit(b.getAttribute('data-ec')); }; });
+      host.querySelectorAll('[data-dc]').forEach(function (b) { b.onclick = function () {
+        var id = b.getAttribute('data-dc'), usos = d.lanc.filter(function (l) { return l.crit === id; }).length;
+        if (!confirm('Remover este critério?' + (usos ? '\nHá ' + usos + ' lançamento(s) com ele; os pontos continuam somando na coluna “Outros”.' : ''))) return;
+        d.crit = d.crit.filter(function (k) { return k.id !== id; }); c.salvar(); desenhar();
+      }; });
+      host.querySelectorAll('[data-dl]').forEach(function (b) { b.onclick = function () {
+        if (!confirm('Apagar este lançamento?')) return; var id = b.getAttribute('data-dl'); d.lanc = d.lanc.filter(function (l) { return l.id !== id; }); c.salvar(); desenhar();
+      }; });
+    }
+    function formCrit(id) {
+      var d = D(), k = id ? d.crit.filter(function (x) { return x.id === id; })[0] : null;
+      janela(k ? '✏️ Editar critério' : '➕ Novo critério',
+        '<div class="v2pt-mf"><label>Nome do critério</label><input id="v2ptCn" value="' + esc(k ? k.nome : '') + '" placeholder="Ex.: Uniforme completo" autocomplete="off"></div>'
+        + '<div class="v2pt-mf"><label>Pontos por ocorrência</label><input id="v2ptCp" inputmode="decimal" value="' + esc(k ? String(k.pts).replace('.', ',') : '') + '" placeholder="Ex.: 5 (use -2 para descontar)"><div class="mini">Quanto a patrulha ganha (ou perde, se negativo) cada vez que cumprir o critério.</div></div>'
+        + '<div class="v2pt-mf"><label>Quando vale (opcional)</label><textarea id="v2ptCd" rows="2" placeholder="Ex.: todos os membros de uniforme completo na abertura">' + esc(k ? k.desc || '' : '') + '</textarea></div>',
+        'Salvar', function () {
+          var nome = document.getElementById('v2ptCn').value.trim(), pts = document.getElementById('v2ptCp').value.trim(), desc = document.getElementById('v2ptCd').value.trim();
+          if (!nome) return 'Dê um nome ao critério.'; if (pts === '' || isNaN(parseFloat(pts.replace(',', '.')))) return 'Informe os pontos (número).';
+          if (k) { k.nome = nome; k.pts = num(pts); k.desc = desc; } else d.crit.push({ id: uid(), nome: nome, pts: num(pts), desc: desc });
+          c.salvar(); desenhar();
+        });
+    }
+    function formLanc() {
+      var d = D(), ps = pats();
+      if (!ps.length || !d.crit.length) { alert(!ps.length ? 'Cadastre as patrulhas primeiro.' : 'Cadastre ao menos um critério primeiro.'); return; }
+      var ov = janela('➕ Lançar pontos',
+        '<div class="v2pt-mf"><label>Data da atividade</label><input type="date" id="v2ptLd" value="' + hoje() + '"></div>'
+        + '<div class="v2pt-mf"><label>Patrulha</label><select id="v2ptLp">' + ps.map(function (p) { return '<option value="' + esc(p.id) + '">' + esc((p.icone || '') + ' ' + p.nome) + '</option>'; }).join('') + '<option value="*">Todas as patrulhas (mesmos pontos)</option></select></div>'
+        + '<div class="v2pt-mf"><label>Critério</label><select id="v2ptLc">' + d.crit.map(function (k) { return '<option value="' + esc(k.id) + '">' + esc(k.nome) + ' (' + esc(fmt(num(k.pts))) + ')</option>'; }).join('') + '</select></div>'
+        + '<div class="v2pt-mf"><label>Quantas vezes</label><input id="v2ptLq" inputmode="numeric" value="1"></div>'
+        + '<div class="v2pt-mf"><label>Pontos (calculado, pode ajustar)</label><input id="v2ptLn" inputmode="decimal"></div>'
+        + '<div class="v2pt-mf"><label>Observação (opcional)</label><input id="v2ptLo" placeholder="Ex.: jogo de pioneirias" autocomplete="off"></div>',
+        'Lançar', function (o) {
+          var pts = document.getElementById('v2ptLn').value.trim(); if (pts === '' || isNaN(parseFloat(pts.replace(',', '.')))) return 'Informe os pontos.';
+          var dt = document.getElementById('v2ptLd').value; if (!dt) return 'Informe a data.';
+          var pid = document.getElementById('v2ptLp').value, alvo = pid === '*' ? ps.map(function (p) { return p.id; }) : [pid];
+          alvo.forEach(function (a) { d.lanc.push({ id: uid(), pat: a, crit: document.getElementById('v2ptLc').value, pts: num(pts), data: dt, obs: document.getElementById('v2ptLo').value.trim() }); });
+          c.salvar(); desenhar();
+        });
+      function calc() { var k = d.crit.filter(function (x) { return x.id === document.getElementById('v2ptLc').value; })[0], q = parseInt(document.getElementById('v2ptLq').value, 10) || 1; document.getElementById('v2ptLn').value = String(num(k && k.pts) * q).replace('.', ','); }
+      document.getElementById('v2ptLc').onchange = calc; document.getElementById('v2ptLq').oninput = calc; calc();
+    }
+    desenhar();
+  }
+  root.V2_PONT = { montar: montar };
+})(typeof window !== 'undefined' ? window : globalThis);
