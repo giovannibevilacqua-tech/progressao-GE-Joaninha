@@ -387,6 +387,21 @@ padding: 8px; background: var(--focus-y); border-radius: 8px;
 @media (max-width: 760px) { .conta-barra-registro { flex: 1 1 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } }
 .conta-barra-btn { border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 11px; font-weight: 700; padding: 6px 10px; border-radius: 8px; cursor: pointer; white-space: nowrap; }
 .conta-barra-btn:hover { background: #F5F2EE; }
+.conta-hamb { display: none; border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 18px; line-height: 1; width: 38px; height: 34px; border-radius: 8px; cursor: pointer; }
+.conta-menu-topo, .conta-menu-fundo { display: none; }
+.conta-menu { display: contents; }
+@media (max-width: 760px) {
+  .conta-barra { flex-wrap: nowrap; }
+  .conta-barra-registro { flex: 1 1 auto !important; }
+  .conta-hamb { display: block; }
+  .conta-menu-fundo.aberto { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 100010; }
+  .conta-menu { display: none; position: fixed; top: 0; right: 0; bottom: 0; width: min(280px, 82vw); background: var(--card); z-index: 100011; padding: 12px; flex-direction: column; gap: 8px; overflow-y: auto; box-shadow: -8px 0 30px rgba(0,0,0,.3); }
+  .conta-menu.aberto { display: flex; }
+  .conta-menu .conta-barra-btn { width: 100%; text-align: left; padding: 11px 12px; font-size: 13px; }
+  .conta-menu-topo { display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 15px; margin-bottom: 4px; }
+  .conta-menu-topo button { border: 0; background: none; font-size: 20px; cursor: pointer; color: var(--text); }
+}
+
 .ramo-btn {
 padding: 16px 10px; border-radius: 12px; border: 2px solid var(--text);
 background: #F5F3EF; color: var(--text); font-size: 13px; font-weight: 800; cursor: pointer;
@@ -753,6 +768,11 @@ REGISTRO ESCOTEIRO
 <div class="cabecalho-fixo" id="cabecalhoFixo">
 <div class="conta-barra">
 <span class="conta-barra-registro">👤 <strong id="contaRegistroTxt"></strong></span>
+<button class="conta-hamb" id="btnMenuLat" aria-label="Menu" onclick="menuLateral(true)">☰</button>
+<div class="conta-menu-fundo" id="contaMenuFundo" onclick="menuLateral(false)"></div>
+<div class="conta-menu" id="contaMenu" onclick="if(event.target.closest('button'))menuLateral(false)">
+<div class="conta-menu-topo"><span>Menu</span><button type="button" onclick="menuLateral(false)" aria-label="Fechar">✕</button></div>
+<button class="conta-barra-btn" id="btnTrocarSenha" onclick="abrirTrocarSenha()">🔒 Trocar minha senha</button>
 <button class="conta-barra-btn" id="btnMinhaFormacao" onclick="location.href=V2.pagina('formacao')">🎓 Minha formação</button>
 <button class="conta-barra-btn" id="btnSugestao" onclick="abrirSugestao()">💡 Sugestão</button>
 <button class="conta-barra-btn" id="btnVisaoPropriaTopo" style="display:none;" onclick="alternarVisaoPropria()">👁 Minha função</button>
@@ -763,6 +783,7 @@ REGISTRO ESCOTEIRO
 <button class="conta-barra-btn" id="btnHistorico" onclick="abrirHistorico()">📜 Histórico</button>
 <button class="conta-barra-btn admin-ou-dir" id="btnImportarPaxtu" onclick="ImportarPaxtu.abrir()">📥 Fichas 120</button>
 <button class="conta-barra-btn" onclick="if(confirm('Sair da sua conta neste navegador?'))fazerLogout()">🚪 Sair</button>
+</div>
 </div>
 
 <header class="header">
@@ -1572,6 +1593,33 @@ function guardarSenhaNoAparelho(registro, senha) {
   if (!senhaSalvaSuportada() || !navigator.credentials.store) return;
   try { navigator.credentials.store(new PasswordCredential({ id: registro, password: senha || registro, name: nomeLogado || registro })).catch(() => {}); } catch (e) {}
 }
+
+function menuLateral(abrir) { const m = document.getElementById('contaMenu'), f = document.getElementById('contaMenuFundo'); if (m) m.classList.toggle('aberto', !!abrir); if (f) f.classList.toggle('aberto', !!abrir); }
+function abrirTrocarSenha() {
+  const campo = 'width:100%;box-sizing:border-box;padding:10px;border:1px solid #bbb;border-radius:8px;font-size:15px;margin-bottom:8px;background:#fff;color:#1a1a1a;font-family:inherit;';
+  const m = modalSimples('modalTrocarSenha', '<div style="font-size:16px;font-weight:800;margin-bottom:10px;">🔒 Trocar minha senha</div>'
+    + '<input type="password" id="tsAtual" placeholder="Senha atual (se nunca trocou, é o seu registro)" autocomplete="current-password" style="' + campo + '">'
+    + '<input type="password" id="tsNova" placeholder="Nova senha (mín. 4 caracteres)" autocomplete="new-password" style="' + campo + '">'
+    + '<input type="password" id="tsNova2" placeholder="Repita a nova senha" autocomplete="new-password" style="' + campo + '">'
+    + '<div id="tsErro" style="display:none;color:#b3261e;font-size:12.5px;margin-bottom:8px;"></div>'
+    + '<div style="display:flex;gap:8px;position:sticky;bottom:0;background:#fff;padding-top:6px;"><button type="button" id="tsCancela" style="flex:1;padding:11px;border-radius:8px;border:1px solid #bbb;background:#fff;color:#1a1a1a;font-weight:700;cursor:pointer;">Cancelar</button><button type="button" id="tsSalva" style="flex:1;padding:11px;border-radius:8px;border:0;background:#1b6e3a;color:#fff;font-weight:700;cursor:pointer;">Salvar</button></div>');
+  const erro = t => { const e = m.querySelector('#tsErro'); e.textContent = t; e.style.display = 'block'; };
+  m.querySelector('#tsCancela').onclick = () => m.remove();
+  m.querySelector('#tsSalva').onclick = async () => {
+    const at = m.querySelector('#tsAtual').value.trim() || registroLogado, n = m.querySelector('#tsNova').value.trim(), n2 = m.querySelector('#tsNova2').value.trim();
+    if (n.length < 4) return erro('A nova senha precisa ter pelo menos 4 caracteres.');
+    if (n !== n2) return erro('As duas senhas novas não são iguais.');
+    const b = m.querySelector('#tsSalva'); b.disabled = true; b.textContent = 'Salvando…';
+    try {
+      const r = await fetch(urlComAuthFirebase(DB_URL + '/usuarios/' + firebaseUid + '/senha.json')); const guardada = await r.json();
+      if (!(await V2.conferirSenha(at, guardada, registroLogado))) { b.disabled = false; b.textContent = 'Salvar'; return erro('A senha atual não confere.'); }
+      const w = await fetch(urlComAuthFirebase(DB_URL + '/usuarios/' + firebaseUid + '/senha.json'), { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(await V2.hashSenha(n)) });
+      if (!w.ok) { b.disabled = false; b.textContent = 'Salvar'; return erro('O banco recusou a troca (as regras do Firebase precisam ser atualizadas pela administração).'); }
+      guardarSenhaNoAparelho(registroLogado, n);
+      m.remove(); alert('Senha alterada. Use a nova senha no próximo acesso.');
+    } catch (e) { b.disabled = false; b.textContent = 'Salvar'; erro('Sem conexão. Tente de novo.'); }
+  };
+}
 function prepararLoginBio() { const b = document.getElementById('loginSenhaSalvaBtn'); if (b && senhaSalvaSuportada()) b.style.display = ''; }
 // ═══ Celular: barra superior e banner somem ao rolar 1/3 da tela e voltam ao rolar de volta para cima ═══
 const MOBILE_MQ = window.matchMedia('(max-width: 760px)');
@@ -1756,6 +1804,7 @@ guardarSenhaNoAparelho(registro, senha);
 }
 
 async function iniciarComLogin() {
+prepararLoginBio();
 const restaurou = await tentarRestaurarSessao();
 if (restaurou) {
 document.getElementById('loginGateOv').style.display = 'none';
