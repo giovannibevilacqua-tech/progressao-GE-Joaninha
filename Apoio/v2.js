@@ -4594,7 +4594,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
       });
       // as colunas ficam sempre na mesma ordem (não pulam ao ajustar); a posição vem do total acumulado
       linhas.forEach(function (r) { r.pos = 1 + linhas.filter(function (o) { return o.tot > r.tot; }).length; });
-      var h = '<div class="v2pt"><h2>🏅 Pontuação das patrulhas</h2>'
+      var h = '<div class="v2pt"><h2>🏅 Pontuação das patrulhas <small style="font-size:10px;font-weight:600;opacity:.5">versão tabela − + · 16/11 19h</small></h2>'
         + '<div class="v2pt-leg"><b>Como funciona</b><ol><li><b>Critérios:</b> a chefia define o que dá ponto e quanto cada coisa vale (por exemplo, “Uniforme completo = +5”; valores negativos descontam).</li>'
         + '<li><b>Avaliação:</b> escolha a atividade do calendário. Na tabela, cada patrulha começa com o valor padrão do critério; use − e + para ajustar a pontuação dela naquela atividade.</li>'
         + '<li><b>Acumulado:</b> a última linha soma todas as atividades e mostra a posição de cada patrulha.</li></ol></div>';
