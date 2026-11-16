@@ -3396,14 +3396,14 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
 
   async function textoDoPdf(arq) {
     if (!root.pdfjsLib) { await carregarScript('Apoio/vendor/pdfjs/pdf.min.js'); root.pdfjsLib.GlobalWorkerOptions.workerSrc = 'Apoio/vendor/pdfjs/pdf.worker.min.js'; }
-    var doc = await root.pdfjsLib.getDocument({ data: await arq.arrayBuffer(), disableFontFace: true }).promise, linhas = [];
+    var doc = await root.pdfjsLib.getDocument({ data: await arq.arrayBuffer(), disableFontFace: true }).promise, linhas = [], bruto = [];
     for (var n = 1; n <= doc.numPages; n++) {
-      var c = await (await doc.getPage(n)).getTextContent(), por = {};
+      var c = await (await doc.getPage(n)).getTextContent(), por = {}; bruto.push(c.items.map(function (i) { return i.str; }).join(' '));
       c.items.forEach(function (i) { if (i.str && i.str.trim()) { var y = Math.round(i.transform[5] / 3); (por[y] = por[y] || []).push({ x: i.transform[4], s: i.str }); } });
       Object.keys(por).map(Number).sort(function (a, b) { return b - a; }).forEach(function (y) { linhas.push(por[y].sort(function (a, b) { return a.x - b.x; }).map(function (i) { return i.s; }).join(' ').replace(/\s+/g, ' ').trim()); });
     }
     await doc.destroy();
-    return linhas.filter(Boolean).join('\n');
+    var res = new String(linhas.filter(Boolean).join('\n')); res.bruto = bruto.join(' '); return res;
   }
   // foto ou PDF escaneado: leitura de imagem (OCR) carregada só quando preciso
   async function ocr(imgOuUrl, aoProgresso) {
@@ -3426,9 +3426,9 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
     if (ehPdf) {
       if (arq.size > LIM_PDF) throw new Error('PDF grande demais (' + Math.round(arq.size / 1024) + ' KB). O limite é ' + Math.round(LIM_PDF / 1024) + ' KB: salve o PDF em qualidade menor ou envie uma foto.');
       st('Lendo o PDF…');
-      var texto = ''; try { texto = await textoDoPdf(arq); } catch (e) { texto = ''; }
+      var texto = '', bruto = ''; try { var rr = await textoDoPdf(arq); texto = String(rr); bruto = rr.bruto || ''; } catch (e) { texto = ''; }
       if (texto.replace(/\s/g, '').length < 40) { st('PDF sem texto (escaneado): o arquivo será guardado sem leitura do texto. Para ler o texto, envie uma foto da ficha.'); texto = ''; }
-      return { texto: texto, dataUrl: await lerComoDataUrl(arq), tipo: 'application/pdf', nomeArq: arq.name, semTexto: !texto };
+      return { texto: texto, bruto: bruto, dataUrl: await lerComoDataUrl(arq), tipo: 'application/pdf', nomeArq: arq.name, semTexto: !texto };
     }
     st('Reduzindo a imagem…'); var du = await reduzirImagem(arq), texto2 = '';
     try { st('Lendo o texto da imagem (pode levar um minuto)…'); texto2 = await ocr(du, function (p) { st('Lendo o texto da imagem… ' + p + '%'); }); } catch (e) { texto2 = ''; }
@@ -3463,66 +3463,206 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
   }
 
   // ---- ficha preenchida à mão ----
-  var MED_CAMPOS = [['Tipo sanguíneo', 'linha'], ['Alergias', 'area'], ['Medicamentos de uso contínuo', 'area'], ['Condições de saúde e cuidados', 'area'], ['Restrições alimentares', 'area'], ['Plano de saúde / carteirinha', 'linha'], ['Médico ou hospital de referência', 'linha'], ['Vacinação em dia (sim/não)', 'linha'], ['Observações', 'area']];
+  // ---- modelo da ficha médica (segue a Ficha Médica do Paxtu) ----
+  // t: txt | area | sel | chk (marcado = "Sim") | chktxt (marcado + detalhe). px = rótulo no PDF do Paxtu, quando é diferente.
+  var MED_SECOES = [
+    { s: 'Informações básicas', h: 'INFORMAÇÕES BÁSICAS', c: [
+      { k: 'Sexo', t: 'sel', o: ['Masculino', 'Feminino'] }, { k: 'Altura', t: 'txt', ph: 'ex.: 1.40 m' }, { k: 'Peso', t: 'txt', ph: 'ex.: 40 kg' },
+      { k: 'Tipo sanguíneo', t: 'sel', o: ['A', 'B', 'AB', 'O'] }, { k: 'Fator RH', t: 'sel', o: ['+', '-'] }] },
+    { s: 'Emergências médicas', h: 'EMERGÊNCIAS MÉDICAS', c: [
+      { k: 'Em emergência, aguardar pais/responsáveis', t: 'chk', px: 'Aguardar Pais/Responsáveis' }, { k: 'Em emergência, aceita decisões médicas', t: 'chk', px: 'Aceita decisões médicas' },
+      { k: 'Avisar em emergência (pais)', t: 'chktxt', px: 'Pais\\s*[–-]\\s*Tel', ph: 'telefone' }, { k: 'Avisar em emergência (outro)', t: 'chktxt', px: 'Outro', ph: 'nome e telefone' }] },
+    { s: 'Plano de saúde', h: 'PLANO DE SAÚDE', c: [
+      { k: 'Plano de saúde', t: 'txt' }, { k: 'Número do documento', t: 'txt' }, { k: 'Médico de preferência', t: 'txt' }, { k: 'Telefone do médico', t: 'txt' }] },
+    { s: 'Informações gerais', h: 'INFORMAÇÕES GERAIS', c: [
+      { k: 'Impedimento físico', t: 'chktxt', px: 'Impedimento Físico' }, { k: 'Restrição alimentar', t: 'chktxt', px: 'Restrição Alimentar' },
+      { k: 'Sabe nadar', t: 'chk', px: 'Sabe nadar' }, { k: 'Sonâmbulo', t: 'chk', px: 'Sonâmbulo' }, { k: 'Vacinação em dia', t: 'txt', ph: 'sim / não' }] },
+    { s: 'Alergias', h: 'ALERGIAS', c: [
+      { k: 'Alergia a picada de inseto', t: 'chktxt', px: 'Picada de inseto', ph: 'intensidade' }, { k: 'Alergia a medicamento', t: 'chktxt', px: 'Medicamento', ph: 'qual' },
+      { k: 'Alergia a plantas', t: 'chktxt', px: 'Plantas' }, { k: 'Alergia a alimentos', t: 'chktxt', px: 'Alimentos', ph: 'qual e intensidade' },
+      { k: 'Alergia a ácaros', t: 'chktxt', px: 'Ácaros' }, { k: 'Alergia a fungos', t: 'chktxt', px: 'Fungos' }, { k: 'Outra alergia', t: 'chktxt', px: 'Outro' }] },
+    { s: 'Equipamentos de auxílio', h: 'EQUIPAMENTOS DE AUXÍLIO', c: [
+      { k: 'Usa óculos', t: 'chk', px: 'Óculos' }, { k: 'Usa lentes de contato', t: 'chk', px: 'Lentes de Contato' }, { k: 'Usa aparelho dentário', t: 'chk', px: 'Aparelho Dentário' }, { k: 'Usa sonda', t: 'chk', px: 'Sonda' },
+      { k: 'Usa marca-passo', t: 'chk', px: 'Marca-passo' }, { k: 'Usa aparelho de audição', t: 'chk', px: 'Aparelho de Audição' }, { k: 'Usa bomba de insulina', t: 'chk', px: 'Bomba de Insulina' }, { k: 'Outros equipamentos', t: 'chktxt', px: 'Outros' }] },
+    { s: 'Saúde física', h: 'SAÚDE FÍSICA', c: [
+      { k: 'Asma ou bronquite', t: 'chk', px: 'Asma ou Bronquite' }, { k: 'Rinite ou sinusite', t: 'chk', px: 'Rinite ou Sinusite' }, { k: 'Hipertensão', t: 'chk', px: 'Hipertensão' }, { k: 'Diabetes', t: 'chk', px: 'Diabetes' },
+      { k: 'Convulsões ou epilepsia', t: 'chk', px: 'Convulsões ou Epilepsia' }, { k: 'Problemas dermatológicos', t: 'chk', px: 'Problemas Dermatológicos' }, { k: 'Problemas cardíacos', t: 'chk', px: 'Problemas Cardíacos' },
+      { k: 'Problemas reumatológicos', t: 'chk', px: 'Problemas Reumatológicos' }, { k: 'Problemas hematológicos', t: 'chk', px: 'Problemas Hematológicos' }, { k: 'Outros problemas de saúde', t: 'chktxt', px: 'Outros Problemas' }] },
+    { s: 'Deficiências', h: 'DEFICIÊNCIAS', c: [
+      { k: 'Deficiência física', t: 'chktxt', px: 'Física' }, { k: 'Deficiência visual', t: 'chktxt', px: 'Visual' }, { k: 'Deficiência auditiva', t: 'chktxt', px: 'Auditiva' },
+      { k: 'Deficiência intelectual', t: 'chktxt', px: 'Intelectual' }, { k: 'Autismo', t: 'chktxt', px: 'Autismo\\*?' }] },
+    { s: 'Medicamentos', h: 'MEDICAMENTOS', meds: true, c: [] },
+    { s: 'Saúde mental', h: 'SAÚDE MENTAL', c: [
+      { k: 'Apresenta algum transtorno', t: 'chktxt', px: 'Apresenta algum transtorno' }, { k: 'Usa medicação para o transtorno', t: 'chktxt', px: 'Faz uso de medicação para este transtorno' },
+      { k: 'Acompanhamento com psicólogo', t: 'chktxt', px: 'Acompanhamento com psicólogo' }, { k: 'Acompanhamento com médico', t: 'chktxt', px: 'Acompanhamento com médico' }, { k: 'Acompanhamento com outro profissional', t: 'chktxt', px: 'Acompanhamento com outro profissional' }] },
+    { s: 'Dados comportamentais', h: 'DADOS COMPORTAMENTAIS', c: [
+      { k: 'Crises de explosão (agride a si mesmo)', t: 'chktxt', px: 'Crises de explosão em que agrida a si mesmo' }, { k: 'Crises de explosão (agride os outros)', t: 'chktxt', px: 'Crises de explosão em que agrida os outros' },
+      { k: 'Agitação psicomotora', t: 'chktxt', px: 'Agitação psicomotora que atrapalhe a concentração' }, { k: 'Dificuldade de obedecer instruções verbais', t: 'chktxt', px: 'Dificuldade de obedecer instruções verbais' },
+      { k: 'Tendência a fugas', t: 'chktxt', px: 'Tendência a fugas' }, { k: 'Comportamento autodestrutivo', t: 'chktxt', px: 'Comportamento auto-destrutivo' }, { k: 'Crises de ansiedade ou pânico', t: 'chktxt', px: 'Crises de ansiedade ou pânico' },
+      { k: 'Dificuldade de comunicação', t: 'chktxt', px: 'Dificuldade de comunicação com outras pessoas' }, { k: 'Dificuldades alimentares', t: 'chktxt', px: 'Dificuldades alimentares' }, { k: 'Dificuldades de sono', t: 'chktxt', px: 'Dificuldades de sono' }] },
+    { s: 'Observações', h: 'OBSERVAÇÕES', c: [{ k: 'Observações', t: 'area' }, { k: 'Ficha do Paxtu atualizada em', t: 'txt', ph: 'dd/mm/aaaa' }] }
+  ];
+  var MED_LEGADO = { 'Alergias': 'Outra alergia', 'Medicamentos de uso contínuo': 'Medicamento 1', 'Condições de saúde e cuidados': 'Outros problemas de saúde', 'Restrições alimentares': 'Restrição alimentar',
+    'Plano de saúde / carteirinha': 'Plano de saúde', 'Médico ou hospital de referência': 'Médico de preferência', 'Vacinação em dia (sim/não)': 'Vacinação em dia' };
+  var MED_TIPO = {}; MED_SECOES.forEach(function (s) { s.c.forEach(function (c) { MED_TIPO[c.k] = c; }); });
+  function medChaves(v) { var m = Object.keys(v).filter(function (k) { return /^Medicamento \d+$/.test(k) && v[k]; }); m.sort(function (a, b) { return +a.slice(12) - +b.slice(12); }); return m; }
   function medParaCampos(texto) {
     var v = {}, resto = [];
     String(texto || '').split('\n').forEach(function (l) {
-      var ok = false;
-      MED_CAMPOS.forEach(function (c) { var rot = c[0] + ':'; if (!ok && l.indexOf(rot) === 0) { v[c[0]] = l.slice(rot.length).trim(); ok = true; } });
-      if (!ok && l.trim()) resto.push(l.trim());
+      l = l.trim(); if (!l) return;
+      var i = l.indexOf(':'), k = i > 0 ? l.slice(0, i).trim() : '', val = i > 0 ? l.slice(i + 1).trim() : '';
+      if (MED_LEGADO[k]) { var nk = MED_LEGADO[k]; if (nk === 'Medicamento 1') { var n = 1; while (v['Medicamento ' + n]) n++; nk = 'Medicamento ' + n; } k = nk; }
+      if (k && (MED_TIPO[k] || /^Medicamento \d+$/.test(k))) { v[k] = v[k] ? v[k] + '; ' + val : val; } else resto.push(l);
     });
     if (resto.length) v['Observações'] = ((v['Observações'] ? v['Observações'] + '; ' : '') + resto.join('; ')).slice(0, 1500);
     return v;
   }
-  function camposParaMed(v) { return MED_CAMPOS.map(function (c) { return v[c[0]] ? c[0] + ': ' + String(v[c[0]]).replace(/\s*\n\s*/g, '; ').trim() : ''; }).filter(Boolean).join('\n'); }
+  function camposParaMed(v) {
+    var out = [];
+    MED_SECOES.forEach(function (s) {
+      if (s.meds) { medChaves(v).forEach(function (k) { out.push(k + ': ' + String(v[k]).replace(/\s*\n\s*/g, '; ').trim()); }); return; }
+      s.c.forEach(function (c) { var x = v[c.k]; if (x != null && String(x).trim()) out.push(c.k + ': ' + String(x).replace(/\s*\n\s*/g, '; ').trim()); });
+    });
+    return out.join('\n');
+  }
+  // desenha o formulário completo dentro de host e devolve { ler() } com os valores digitados
+  function montarForm(host, v) {
+    var h = '';
+    MED_SECOES.forEach(function (s, si) {
+      h += '<div class="v2p-sec" style="margin-top:14px">' + esc(s.s) + '</div>';
+      if (s.meds) { h += '<div data-meds="1"></div><button type="button" class="v2p-bt" data-medadd="1" style="margin-top:6px">➕ Medicamento</button>'; return; }
+      s.c.forEach(function (c, ci) {
+        var id = si + '_' + ci, val = v[c.k] || '';
+        if (c.t === 'chk') h += '<label style="display:flex;gap:8px;align-items:center;margin:6px 0;font-size:14px;text-transform:none;font-weight:600"><input type="checkbox" data-mk="' + id + '"' + (val ? ' checked' : '') + '> ' + esc(c.k) + '</label>';
+        else if (c.t === 'chktxt') { var txt = val && !/^sim$/i.test(val) ? val : ''; h += '<div class="v2p-mf"><label style="display:flex;gap:8px;align-items:center;text-transform:none;font-weight:600;font-size:14px"><input type="checkbox" data-mk="' + id + '" data-ck="1"' + (val ? ' checked' : '') + '> ' + esc(c.k) + '</label><input data-mt="' + id + '" placeholder="' + esc(c.ph || 'detalhes') + '" value="' + esc(txt) + '" autocomplete="off"></div>'; }
+        else if (c.t === 'sel') h += '<div class="v2p-mf"><label>' + esc(c.k) + '</label><select data-mk="' + id + '" style="width:100%;padding:9px;border-radius:8px"><option value="">—</option>' + c.o.map(function (o) { return '<option' + (o === val ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select></div>';
+        else if (c.t === 'area') h += '<div class="v2p-mf"><label>' + esc(c.k) + '</label><textarea data-mk="' + id + '" rows="3">' + esc(val) + '</textarea></div>';
+        else h += '<div class="v2p-mf"><label>' + esc(c.k) + '</label><input data-mk="' + id + '" value="' + esc(val) + '" placeholder="' + esc(c.ph || '') + '" autocomplete="off"></div>';
+      });
+    });
+    host.innerHTML = h;
+    var meds = host.querySelector('[data-meds]');
+    function linhaMed(txt) {
+      var p = String(txt || '').split('|').map(function (x) { return x.trim(); }), d = document.createElement('div');
+      d.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:6px 0;padding:8px;border:1px solid rgba(128,128,128,.3);border-radius:8px';
+      d.innerHTML = '<input data-mn="1" placeholder="Nome do medicamento" value="' + esc(p[0] || '') + '" style="flex:2;min-width:140px"><label style="display:flex;gap:4px;align-items:center;text-transform:none;font-weight:600;font-size:13px"><input type="checkbox" data-mc2="1"' + (/cont[ií]nuo|sim/i.test(p[1] || '') ? ' checked' : '') + '> uso contínuo</label><input data-mi="1" placeholder="Informações (dose, horário)" value="' + esc(p.slice(2).join(' | ')) + '" style="flex:3;min-width:140px"><button type="button" class="v2p-bt" data-medrm="1" aria-label="Remover">✕</button>';
+      d.querySelector('[data-medrm]').onclick = function () { d.remove(); };
+      meds.appendChild(d);
+    }
+    medChaves(v).forEach(function (k) { linhaMed(v[k]); });
+    host.querySelector('[data-medadd]').onclick = function () { linhaMed(''); };
+    return {
+      ler: function () {
+        var o = {};
+        MED_SECOES.forEach(function (s, si) {
+          s.c.forEach(function (c, ci) {
+            var id = si + '_' + ci, el = host.querySelector('[data-mk="' + id + '"]');
+            if (!el) return;
+            if (c.t === 'chk') { if (el.checked) o[c.k] = 'Sim'; }
+            else if (c.t === 'chktxt') { var t = (host.querySelector('[data-mt="' + id + '"]').value || '').trim(); if (el.checked || t) o[c.k] = t || 'Sim'; }
+            else { var x = String(el.value || '').trim(); if (x) o[c.k] = x; }
+          });
+        });
+        var n = 0; meds.querySelectorAll(':scope > div').forEach(function (d) {
+          var nome = d.querySelector('[data-mn]').value.trim(), info = d.querySelector('[data-mi]').value.trim(); if (!nome && !info) return;
+          o['Medicamento ' + (++n)] = [nome, d.querySelector('[data-mc2]').checked ? 'contínuo' : 'eventual', info].join(' | ').replace(/( \| )+$/, '');
+        });
+        return o;
+      }
+    };
+  }
+  // leitura (só ver): apenas o que está preenchido, por seção
+  function htmlLeitura(v) {
+    var h = '';
+    MED_SECOES.forEach(function (s) {
+      var l = s.meds ? medChaves(v).map(function (k) { return [k.replace('Medicamento ', 'Medicamento '), String(v[k]).replace(/ \| /g, ' · ')]; }) : s.c.filter(function (c) { return v[c.k]; }).map(function (c) { return [c.k, v[c.k]]; });
+      if (!l.length) return;
+      h += '<div class="v2p-sec" style="margin-top:12px">' + esc(s.s) + '</div>' + l.map(function (x) { return '<div style="font-size:14px;margin:3px 0"><b>' + esc(x[0]) + ':</b> ' + esc(x[1]) + '</div>'; }).join('');
+    });
+    return h;
+  }
   function formularioMao(host, texto, aoSalvar, aoCancelar) {
     var v = medParaCampos(texto);
-    host.innerHTML = '<div class="v2p-aviso"><b>Ficha médica preenchida à mão</b><div class="mini">Ao efetivar, esta passa a ser a ficha atual. Você confere as diferenças antes.</div></div>'
-      + MED_CAMPOS.map(function (c, i) {
-        var val = esc(v[c[0]] || '');
-        return '<div class="v2p-mf"><label>' + esc(c[0]) + '</label>' + (c[1] === 'area' ? '<textarea data-mc="' + i + '" rows="2">' + val + '</textarea>' : '<input data-mc="' + i + '" value="' + val + '" autocomplete="off">') + '</div>';
-      }).join('')
+    host.innerHTML = '<div class="v2p-aviso"><b>Ficha médica</b><div class="mini">Confira e corrija os campos. Ao efetivar, esta passa a ser a ficha atual; você vê as diferenças antes.</div></div><div id="v2mFormMao"></div>'
       + '<div style="display:flex;gap:8px;margin-top:10px"><button type="button" class="v2p-bt" id="v2mCancMao">Cancelar</button><button type="button" class="v2p-bt p" id="v2mOkMao">Revisar</button></div>';
+    var f = montarForm($('v2mFormMao'), v);
     $('v2mCancMao').onclick = aoCancelar;
-    $('v2mOkMao').onclick = function () { var o = {}; host.querySelectorAll('[data-mc]').forEach(function (el) { o[MED_CAMPOS[+el.getAttribute('data-mc')][0]] = el.value.trim(); }); aoSalvar(camposParaMed(o)); };
+    $('v2mOkMao').onclick = function () { aoSalvar(camposParaMed(f.ler())); };
   }
-  // ---- leitura automática: do texto da ficha (PDF/foto) para os campos do formulário ----
+  // ---- leitura automática: do texto da ficha (PDF/foto) para os campos ----
+  function limparValor(v) { return String(v || '').replace(/\s+/g, ' ').replace(/^[\s:;\-–_.]+|[\s_]+$/g, '').trim(); }
+  var HEADS = MED_SECOES.map(function (s) { return s.h; });
+  // Ficha Médica gerada pelo Paxtu: caixas "(X)" marcadas e valores ao lado
+  function ehPaxtu(T) { return /PAXTU|Ficha M[eé]dica/i.test(T) && /\(\s*[Xx ]?\s*\)\s*[A-Za-zÀ-ÿ]/.test(T) && /INFORMA[ÇC][OÕ]ES B[AÁ]SICAS|ALERGIAS|SA[UÚ]DE F[IÍ]SICA/.test(T); }
+  function extrairPaxtu(bruto) {
+    var T = String(bruto || '').replace(/P[aá]gina \d+ de \d+\s*-?/g, ' ').replace(/\s+/g, ' ');
+    var v = {}, pos = [];
+    HEADS.forEach(function (h) { var i = T.indexOf(h); if (i >= 0) pos.push({ h: h, i: i }); });
+    pos.sort(function (a, b) { return a.i - b.i; });
+    var seg = {}; pos.forEach(function (p, k) { seg[p.h] = T.slice(p.i + p.h.length, k + 1 < pos.length ? pos[k + 1].i : T.length); });
+    function g(rx) { var r = rx.exec(T); return r ? limparValor(r[1]) : ''; }
+    var x;
+    if ((x = g(/Sexo:\s*(Masculino|Feminino)/i))) v['Sexo'] = x.charAt(0).toUpperCase() + x.slice(1).toLowerCase();
+    if ((x = g(/Altura:\s*([\d.,]+\s*m)\b/i))) v['Altura'] = x;
+    if ((x = g(/Peso:\s*([\d.,]+\s*kg)/i))) v['Peso'] = x;
+    if ((x = g(/Tipo Sangu[ií]neo:\s*(AB|A|B|O)\b/i))) v['Tipo sanguíneo'] = x.toUpperCase();
+    if ((x = /Fator RH:\s*([+\-−–])/i.exec(T))) v['Fator RH'] = x[1] === '+' ? '+' : '-';
+    var FIM = '(?=\\(\\s*[Xx]?\\s*\\)\\s*[A-Za-zÀ-ÿ]|$)';
+    MED_SECOES.forEach(function (s) {
+      var S = seg[s.h]; if (S == null || s.meds) return;
+      s.c.forEach(function (c) {
+        if (!c.px || (c.t !== 'chk' && c.t !== 'chktxt')) return;
+        var m = new RegExp('\\(\\s*[Xx]\\s*\\)\\s*' + c.px.replace(/ /g, '\\s+') + '\\s*:?\\s*(.*?)' + FIM, 'i').exec(S);
+        if (!m) return;
+        var val = limparValor(m[1]); v[c.k] = c.t === 'chk' ? 'Sim' : (val || 'Sim');
+      });
+    });
+    // tabelas e campos livres
+    var pl = limparValor((seg['PLANO DE SAÚDE'] || '').replace(/PLANO DE SA[UÚ]DE|N[UÚ]MERO DO DOCUMENTO|M[EÉ]DICO DE PREFER[EÊ]NCIA|TELEFONE/g, ''));
+    if (pl && !/^n[aã]o informado$/i.test(pl)) v['Plano de saúde'] = pl;
+    var md = limparValor((seg['MEDICAMENTOS'] || '').replace(/NOME DO MEDICAMENTO|USO CONT[IÍ]NUO|INFORMA[ÇC][OÕ]ES|-{3,}/g, ''));
+    if (md) v['Medicamento 1'] = md;
+    var ob = (seg['OBSERVAÇÕES'] || ''), at = /Atualizado em:\s*(\d{2}\/\d{2}\/\d{4})/i.exec(ob);
+    if (at) v['Ficha do Paxtu atualizada em'] = at[1];
+    ob = limparValor(ob.replace(/Atualizado em:\s*[\d\/]*/i, '').replace(/Assinatura do Respons[aá]vel:?/i, '').replace(/_{3,}/g, '').replace(/Escoteiros do Brasil.*$/i, ''));
+    if (ob) v['Observações'] = ob;
+    return v;
+  }
+  // ficha em outro formato (foto, PDF de outro modelo): procura os rótulos mais comuns
   var SINON = [
     ['Tipo sanguíneo', /tipo\s*sangu[ií]neo|grupo\s*sangu[ií]neo|fator\s*rh|sangue/i],
-    ['Alergias', /alergi/i],
-    ['Medicamentos de uso contínuo', /medicament|rem[eé]dios?|medica[cç][aã]o|uso\s*cont[ií]nuo/i],
-    ['Restrições alimentares', /restri[cç][aã]o\s*alimentar|restri[cç][oõ]es\s*alimentares|intoler[aâ]ncia|dieta/i],
-    ['Plano de saúde / carteirinha', /plano\s*de\s*sa[uú]de|conv[eê]nio|carteirinha|cart[aã]o\s*(do\s*)?sus|n[º°o.]?\s*do\s*cart[aã]o/i],
-    ['Médico ou hospital de referência', /m[eé]dico|hospital|pediatra|cl[ií]nica|pronto[\s-]*socorro/i],
-    ['Vacinação em dia (sim/não)', /vacin|caderneta/i],
-    ['Condições de saúde e cuidados', /condi[cç][aã]o|condi[cç][oõ]es|doen[cç]a|problemas?\s*de\s*sa[uú]de|cirurgia|tratamento|cuidados|asma|diabetes|epilep|cardi|defici[eê]ncia|restri[cç][aã]o\s*(f[ií]sica|m[eé]dica)/i]
+    ['Outra alergia', /alergi/i],
+    ['Medicamento 1', /medicament|rem[eé]dios?|medica[cç][aã]o|uso\s*cont[ií]nuo/i],
+    ['Restrição alimentar', /restri[cç][aã]o\s*alimentar|restri[cç][oõ]es\s*alimentares|intoler[aâ]ncia|dieta/i],
+    ['Plano de saúde', /plano\s*de\s*sa[uú]de|conv[eê]nio|carteirinha|cart[aã]o\s*(do\s*)?sus|n[º°o.]?\s*do\s*cart[aã]o/i],
+    ['Médico de preferência', /m[eé]dico|hospital|pediatra|cl[ií]nica|pronto[\s-]*socorro/i],
+    ['Vacinação em dia', /vacin|caderneta/i],
+    ['Outros problemas de saúde', /condi[cç][aã]o|condi[cç][oõ]es|doen[cç]a|problemas?\s*de\s*sa[uú]de|cirurgia|tratamento|cuidados|restri[cç][aã]o\s*(f[ií]sica|m[eé]dica)/i]
   ];
   function rotuloDe(txt) { var t = String(txt || '').trim(); if (!t || t.length > 70) return -1; for (var i = 0; i < SINON.length; i++) if (SINON[i][1].test(t)) return i; return -1; }
-  function limparValor(v) { return String(v || '').replace(/\s+/g, ' ').replace(/^[\s:;\-–_.]+|[\s_]+$/g, '').trim(); }
-  function extrairCampos(texto) {
+  function extrairGenerico(texto) {
     var out = {}, linhas = String(texto || '').split('\n').map(function (l) { return l.replace(/\s+/g, ' ').trim(); }).filter(Boolean), ult = -1;
-    function por(i, v) { v = limparValor(v); if (!v || /^(_+|\.+)$/.test(v)) return; var n = SINON[i][0]; out[n] = out[n] ? (out[n].indexOf(v) >= 0 ? out[n] : out[n] + '; ' + v) : v; }
+    function por(i, val) {
+      val = limparValor(val); if (!val || /^(_+|\.+)$/.test(val)) return; var n = SINON[i][0];
+      if (n === 'Tipo sanguíneo') { var m = /\b(AB|A|B|O)\s*([+\-−])?/.exec(val.toUpperCase()); if (m) { out['Tipo sanguíneo'] = m[1]; if (m[2]) out['Fator RH'] = m[2] === '+' ? '+' : '-'; } return; }
+      if (n === 'Alergia' || n === 'Outra alergia') { out['Outra alergia'] = out['Outra alergia'] ? out['Outra alergia'] + '; ' + val : val; return; }
+      out[n] = out[n] ? (out[n].indexOf(val) >= 0 ? out[n] : out[n] + '; ' + val) : val;
+    }
     linhas.forEach(function (l) {
-      // vários "rótulo: valor" na mesma linha (tabelas): corta em cada rótulo conhecido seguido de dois-pontos
-      var partes = [], re = /([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ \/().º°]{2,60}?)\s*:/g, m, ini = [];
+      var re = /([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ \/().º°]{2,60}?)\s*:/g, m, ini = [];
       while ((m = re.exec(l))) { if (rotuloDe(m[1]) >= 0) ini.push({ i: rotuloDe(m[1]), a: m.index, b: re.lastIndex }); }
-      if (ini.length) {
-        ini.forEach(function (x, k) { por(x.i, l.slice(x.b, k + 1 < ini.length ? ini[k + 1].a : l.length)); });
-        ult = ini[ini.length - 1].i; return;
-      }
-      // rótulo sozinho na linha: o valor vem nas linhas seguintes
+      if (ini.length) { ini.forEach(function (x, k) { por(x.i, l.slice(x.b, k + 1 < ini.length ? ini[k + 1].a : l.length)); }); ult = ini[ini.length - 1].i; return; }
       var r = rotuloDe(l.replace(/[:\-–]\s*$/, ''));
       if (r >= 0 && l.length < 70) { ult = r; return; }
-      // linha de continuação do último rótulo (até aparecer outro rótulo / título em maiúsculas)
       if (ult >= 0 && !/^[A-ZÀ-Ý0-9 \/().-]{6,}$/.test(l)) por(ult, l); else ult = -1;
     });
-    Object.keys(out).forEach(function (k) { out[k] = out[k].slice(0, 600); });
     return out;
   }
-  function textoEstruturado(texto) {
-    var ex = extrairCampos(texto), n = Object.keys(ex).length;
-    if (!n) return { texto: medParaTextoBruto(texto), n: 0 };
-    return { texto: camposParaMed(ex), n: n };
+  // devolve { campo: valor }. "bruto" = texto na ordem do arquivo (melhor para o Paxtu)
+  function extrairCampos(texto, bruto) {
+    var base = bruto || texto;
+    if (ehPaxtu(base)) return extrairPaxtu(base);
+    return extrairGenerico(texto);
   }
   function medParaTextoBruto(texto) { return camposParaMed(medParaCampos(String(texto || '').split('\n').map(function (l) { return l.trim(); }).filter(Boolean).join('\n'))); }
   function acharJovem(jovens, alvo) {
@@ -3549,6 +3689,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
     function opcoes(sel) { return '<option value="">— escolher o jovem —</option>' + ordenados.map(function (j) { return '<option value="' + esc(j.id) + '"' + (sel === j.id ? ' selected' : '') + '>' + esc(j.nome) + '</option>'; }).join(''); }
     function pintar() {
       var algum = false;
+      itens.forEach(function (it) { if (it.get) { try { it.v = it.get(); } catch (e) {} } });
       $('v2iLista').innerHTML = itens.map(function (it, k) {
         if (it.feito) return '<div class="v2p-aviso">✓ <b>' + esc(it.jovemNome) + '</b>: ficha gravada.</div>';
         if (it.erro) return '<div class="v2p-aviso" style="border-color:#b3261e">' + esc(it.nome) + ': ' + esc(it.erro) + '</div>';
@@ -3557,17 +3698,18 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
           + '<select data-sel="' + k + '" style="width:100%;margin:6px 0;padding:8px;border-radius:8px">' + opcoes(it.jovemId) + '</select>'
           + (it.jovemId && !it.certo ? '<div class="mini" style="color:#b3261e">Associação por semelhança de nome: confirme se é este jovem.</div>' : '')
           + (it.jovemId && it.anterior ? '<div class="mini" style="color:#b3261e">Este jovem já tem ficha: gravar substitui a anterior.</div>' : '');
-        MED_CAMPOS.forEach(function (c, i) { h += '<div class="v2p-mf"><label>' + esc(c[0]) + '</label>' + (c[1] === 'area' ? '<textarea data-k="' + k + '" data-mc="' + i + '" rows="2">' + esc(it.v[c[0]] || '') + '</textarea>' : '<input data-k="' + k + '" data-mc="' + i + '" value="' + esc(it.v[c[0]] || '') + '" autocomplete="off">') + '</div>'; });
+        h += '<div data-form="' + k + '"></div>';
         if (it.f.texto) h += '<details style="margin-top:6px"><summary class="mini">Ver texto lido do arquivo</summary><pre style="white-space:pre-wrap;font-size:11px;max-height:160px;overflow:auto">' + esc(it.f.texto) + '</pre></details>';
         return h + '<button type="button" class="v2p-bt p" data-gr="' + k + '" style="margin-top:8px"' + (it.jovemId ? '' : ' disabled') + '>Gravar esta ficha</button></div>';
       }).join('');
       $('v2iTodas').style.display = algum ? '' : 'none';
       $('v2iLista').querySelectorAll('select[data-sel]').forEach(function (el) { el.onchange = function () { var it = itens[+el.getAttribute('data-sel')]; it.jovemId = el.value; it.certo = true; var j = ordenados.filter(function (x) { return x.id === el.value; })[0]; it.jovemNome = j ? j.nome : ''; it.anterior = !!(el.value && dadosSec[el.value] && dadosSec[el.value].med); pintar(); }; });
-      $('v2iLista').querySelectorAll('[data-mc]').forEach(function (el) { el.oninput = function () { itens[+el.getAttribute('data-k')].v[MED_CAMPOS[+el.getAttribute('data-mc')][0]] = el.value; }; });
+      itens.forEach(function (it, k) { var hd = $('v2iLista').querySelector('[data-form="' + k + '"]'); if (hd) it.get = montarForm(hd, it.v).ler; });
       $('v2iLista').querySelectorAll('[data-gr]').forEach(function (el) { el.onclick = function () { gravar(+el.getAttribute('data-gr')); }; });
     }
     async function gravar(k) {
       var it = itens[k]; if (!it.jovemId) return;
+      if (it.get) { try { it.v = it.get(); } catch (e) {} }
       try { await gravarFicha(sec, it.jovemId, it.jovemNome, { texto: camposParaMed(it.v), dataUrl: it.f.dataUrl, tipo: it.f.tipo, nomeArq: it.f.nomeArq, semTexto: false }); it.feito = true; } catch (e) { it.erro = e.message; }
       pintar();
     }
@@ -3580,7 +3722,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
         $('v2iLista').innerHTML = '<div class="mini">Lendo ' + esc(a.name) + ' (' + (i + 1) + ' de ' + arqs.length + ')…</div>' + $('v2iLista').innerHTML;
         try {
           it.f = await lerFicha(a, function (st) { var l = $('v2iLista'); if (l && l.firstChild) l.firstChild.textContent = a.name + ': ' + st; });
-          it.v = extrairCampos(it.f.texto); it.n = Object.keys(it.v).length;
+          it.v = extrairCampos(it.f.texto, it.f.bruto); it.n = Object.keys(it.v).length;
           if (!it.n && it.f.texto) { it.v = medParaCampos(it.f.texto); }
           var ach = acharJovem(jovens, a.name + ' ' + it.f.texto);
           if (ach.j) { it.jovemId = ach.j.id; it.jovemNome = ach.j.nome; it.certo = ach.certo; it.anterior = !!(dadosSec[ach.j.id] && dadosSec[ach.j.id].med); }
@@ -3601,7 +3743,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
     try { var d = await root.V2_PESSOAS.carregar(sec); med = d && d[id] && d[id].med; } catch (e) {}
     if (!med) { $('v2vCorpo').innerHTML = '<div class="mini">Este jovem ainda não tem ficha médica. Envie pela aba Fichas ou use “Importar fichas médicas”.</div>'; return; }
     var v = medParaCampos(med.texto), h = '<div class="mini" style="margin-bottom:8px">Ficha de <b>' + new Date(med.em).toLocaleDateString('pt-BR') + '</b> · por ' + esc(med.nomePor || ('Registro ' + med.por)) + '</div>', algum = false;
-    MED_CAMPOS.forEach(function (c) { if (v[c[0]]) { algum = true; h += '<div class="v2p-mf"><label>' + esc(c[0]) + '</label><div style="white-space:pre-wrap;font-size:14px">' + esc(v[c[0]]) + '</div></div>'; } });
+    h += htmlLeitura(v); algum = !!camposParaMed(v);
     if (!algum) h += '<div class="mini">' + (med.semTexto ? 'O texto desta ficha não foi lido; baixe o arquivo para ver.' : 'Sem campos preenchidos.') + '</div>';
     $('v2vCorpo').innerHTML = h;
     if (!med.manual) { var b = $('v2vBaixa'); b.style.display = ''; b.onclick = function () { baixar(sec, id, nome); }; }
@@ -3698,7 +3840,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
         if (!inp.files[0]) return;
         try {
           var f = await lerFicha(inp.files[0], function (s) { var m = $('v2mMsg'); if (m) m.textContent = s; });
-          if (f.texto) { var ex = extrairCampos(f.texto); f.texto = Object.keys(ex).length ? camposParaMed(ex) : medParaTextoBruto(f.texto); mao = true; }
+          if (f.texto) { var ex = extrairCampos(f.texto, f.bruto); f.texto = Object.keys(ex).length ? camposParaMed(ex) : medParaTextoBruto(f.texto); mao = true; }
           pend = { f: f }; desenhar();
         } catch (e) { desenhar(e.message); }
       };
