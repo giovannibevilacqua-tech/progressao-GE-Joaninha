@@ -174,7 +174,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-11-16j"
+  VERSAO: "2026-11-16k"
 };
 
 /* ============================================================
@@ -4790,7 +4790,7 @@ window.V2_DOCS = (function () {
   function naDiretoria() { return cfg.secao === 'diretoria'; }
   // Diretoria vê e edita tudo; cada seção vê os seus e os de grupo, e edita só os seus
   function podeVer(it) { return naDiretoria() || escopoDe(it) === 'grupo' || escopoDe(it) === cfg.secao; }
-  function podeMexer(it) { return naDiretoria() ? true : escopoDe(it) === cfg.secao; }
+  function podeMexer(it) { return naDiretoria() || ehDir() || escopoDe(it) === cfg.secao; }
   var NOMES_SEC = { grupo: 'Grupo', alcateia: 'Alcateia', escoteira: 'Escoteira', senior: 'Sênior', cla: 'Clã Pioneiro', diretoria: 'Diretoria' };
   function nomeEscopo(e) { return NOMES_SEC[e] || e; }
   function cat(id) { for (var i = 0; i < CATS.length; i++) if (CATS[i][0] === id) return CATS[i]; return CATS[3]; }
