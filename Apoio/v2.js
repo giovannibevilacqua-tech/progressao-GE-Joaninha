@@ -174,7 +174,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-11-16g"
+  VERSAO: "2026-11-16h"
 };
 
 /* ============================================================
@@ -4745,14 +4745,21 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
 window.V2_DOCS = (function () {
   var BASE = (window.V2_CONFIG || {}).DB_URL + '/documentos';
   var CATS = [['cerimonias', 'Cerimônias', '🕯️'], ['atas', 'Atas e reuniões', '📝'], ['modelos', 'Modelos e formulários', '📋'], ['outros', 'Outros', '📁']];
+  var CATS_DOC = CATS.slice(1);
   var MODELO = "CERIMÔNIA DE DESPEDIDA\nRamo Escoteiro, para o jovem que deixa a tropa ou o grupo\n\nOs documentos do movimento pedem que as cerimônias escoteiras sejam simples, breves e significativas. Esta tem cerca de 10 a 15 minutos e funciona de dia ou de noite, com pequenas trocas indicadas em cada etapa.\n\nQUANDO FAZER\nNo fim de uma reunião, atividade ou acampamento, ou numa reunião própria. Em acampamento, o fim da tarde e a noite costumam dar o clima ideal.\n\nQUEM PARTICIPA\nToda a tropa, o jovem que parte e os escotistas. Se o jovem quiser, a família pode ser convidada e assistir de fora da formação. Combine tudo antes com ele, para não ser surpresa desconfortável.\n\nMATERIAL\nDiurno: bandeira do Brasil e bandeira do grupo no mastro.\nNoturno: uma lanterna ou vela em copo para cada pessoa e uma luz maior no centro, que pode ser o fogo de conselho ou uma lanterna grande.\nNos dois casos: a lembrança da despedida, como uma carta escrita pela patrulha, uma foto da tropa e um distintivo ou objeto simbólico escolhido pela patrulha.\n\nPREPARAÇÃO\n1. O chefe conversa com o jovem e pergunta se aceita a cerimônia e se quer falar.\n2. O monitor reúne a patrulha, e cada um escolhe uma frase curta sobre o que aprendeu ou viveu com o colega.\n3. O chefe prepara um resumo curto da trajetória do jovem: quando entrou, etapas, especialidades, atividades marcantes e o que ficou como exemplo.\n4. Escolha um lugar calmo, sem barulho de fundo.\n\nROTEIRO\n\n1. Formação\nDiurno: a tropa forma em ferradura diante do mastro, com os monitores à frente de suas patrulhas. O jovem fica com a sua patrulha.\nNoturno: a tropa forma uma roda ao redor da luz central apagada. Cada pessoa segura sua lanterna ou vela apagada. O jovem fica com a sua patrulha.\n\n2. Silêncio e abertura\nO chefe pede silêncio e Alerta. Diurno: saudação à bandeira com o grito de Alerta da tropa. Noturno: o monitor da patrulha do jovem acende a luz central, e o chefe diz: \"Esta luz representa o caminho que andamos juntos. Cada um de nós leva um pouco dela.\"\n\n3. Chamado\nO chefe chama o jovem pelo nome. Ele vai à frente da formação, diante do chefe. À noite, fica ao lado da luz central.\n\n4. Palavras do chefe\nO chefe fala pouco, de forma sincera e com fatos reais. Modelo: \"Hoje nos despedimos de (nome). Ele entrou na tropa em (ano), fez (etapas e conquistas) e deixou marcas em cada patrulha e em cada atividade. O que ele viveu aqui vai com ele para onde for.\"\n\n5. Palavras da patrulha\nO monitor fala primeiro e depois cada membro diz uma frase curta, olhando para o jovem. Quem preferir pode apenas dar um passo à frente e fazer a saudação escoteira.\n\n6. Palavras do jovem\nOpcional. Se quiser, ele diz algumas palavras. Se não quiser, basta um obrigado e o chefe segue.\n\n7. Renovação da Promessa\nO chefe chama todos para a saudação escoteira. O jovem e toda a tropa repetem juntos a Promessa: \"Prometo pela minha honra fazer o melhor possível para cumprir meus deveres para com Deus e minha Pátria, ajudar o próximo em toda e qualquer ocasião e obedecer à Lei Escoteira.\" Isso mostra que o compromisso continua depois da saída da tropa.\n\n8. Mensagem de Baden-Powell\nO chefe lê a última mensagem do fundador, que pedia, em essência: \"Tente deixar este mundo um pouco melhor do que você encontrou.\" E completa: \"Você já deixou a nossa tropa um pouco melhor, e agora o mundo espera o mesmo de você.\"\n\n9. Entrega da lembrança\nO monitor entrega a lembrança preparada pela patrulha. O chefe entrega o que for do grupo, como certificado, distintivo ou foto. Noturno: cada pessoa acende a sua lanterna ou vela na luz central, e o jovem recebe a sua por último, acesa por toda a tropa.\n\n10. Aperto de mão esquerda\nO jovem passa diante de toda a tropa, e cada um o cumprimenta com a mão esquerda, o aperto tradicional escoteiro, a mão que fica mais perto do coração. Pode haver uma palavra curta de cada um. Enquanto isso, a tropa pode cantar baixinho a Canção da Despedida, que lembra que a despedida escoteira é um até logo.\n\n11. Encerramento\nO chefe diz: \"Uma vez escoteiro, sempre escoteiro. A porta da tropa fica aberta para você.\" Todos fazem a saudação e dizem juntos \"Sempre Alerta!\". Diurno: arria-se a bandeira e a tropa é dispensada. Noturno: a luz central é apagada em silêncio por quem a acendeu, e as lanternas individuais ficam acesas até o fim da dispersão.\n\nADAPTAÇÕES\nChuva ou vento: faça dentro da sede, mantendo a mesma formação, e use a lanterna central no lugar da bandeira ou do fogo.\nTropa pequena: o próprio chefe pode ler as frases de cada patrulha.\nPassagem para o Ramo Sênior: use a cerimônia de passagem e inclua um momento de despedida da tropa antes dela.\nJovem tímido: combine antes que ele não precisa falar e que o momento de maior atenção é o da patrulha.\n\nCUIDADOS\nMantenha os textos curtos. Evite piadas ou histórias que exponham o jovem. Se usar fogo ou vela, deixe um adulto responsável pela segurança e tenha água por perto.";
-  var cfg = null, itens = {}, filtro = '', busca = '', carregado = false, erroCarga = '', ocupado = false, pdfCache = {};
+  var cfgs = {}, cfg = null, itens = {}, carregado = false, erroCarga = '', ocupado = false, pdfCache = {};
   function esc(x) { return String(x == null ? '' : x).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
   function $(id) { return document.getElementById(id); }
   function url(sub) { return urlComAuthFirebase(BASE + (sub || '') + '.json'); }
   function sessao() { try { return JSON.parse(localStorage.getItem('chefeSessao') || 'null') || {}; } catch (e) { return {}; } }
   function ehDir() { var s = sessao(); return s.admin === true || s.tropa === 'diretoria' || s.tropa2 === 'diretoria'; }
-  function podeMexer(it) { var s = sessao(); return ehDir() || (it && it.registro && String(it.registro) === String(s.registro)); }
+  function escopoDe(it) { return (it && it.escopo) || 'grupo'; }
+  function naDiretoria() { return cfg.secao === 'diretoria'; }
+  // Diretoria vê e edita tudo; cada seção vê os seus e os de grupo, e edita só os seus
+  function podeVer(it) { return naDiretoria() || escopoDe(it) === 'grupo' || escopoDe(it) === cfg.secao; }
+  function podeMexer(it) { return naDiretoria() ? true : escopoDe(it) === cfg.secao; }
+  var NOMES_SEC = { grupo: 'Grupo', alcateia: 'Alcateia', escoteira: 'Escoteira', senior: 'Sênior', cla: 'Clã Pioneiro', diretoria: 'Diretoria' };
+  function nomeEscopo(e) { return NOMES_SEC[e] || e; }
   function cat(id) { for (var i = 0; i < CATS.length; i++) if (CATS[i][0] === id) return CATS[i]; return CATS[3]; }
   function tipoDe(it) {
     var a = it.anexo; if (!a) return 'texto';
@@ -4861,9 +4868,8 @@ window.V2_DOCS = (function () {
         atual.partes.push({ x: i.transform[4], s: i.str });
       });
       var linhas = por.map(function (l) { l.partes.sort(function (a, b) { return a.x - b.x; }); return { y: l.y, t: l.partes.map(function (p) { return p.s; }).join(' ').replace(/\s+/g, ' ').trim() }; }).filter(function (l) { return l.t; });
-      var gaps = []; for (var q = 1; q < linhas.length; q++) gaps.push(Math.abs(linhas[q - 1].y - linhas[q].y));
-      gaps.sort(function (m, o) { return m - o; }); var med = gaps.length ? gaps[Math.floor(gaps.length / 4)] : 0, txt = '';
-      linhas.forEach(function (l, q) { if (q) txt += (med && Math.abs(linhas[q - 1].y - l.y) > med * 1.45) ? '\n\n' : '\n'; txt += l.t; });
+      var txt = '', ant = null, alt = 0;
+      linhas.forEach(function (l) { if (ant !== null) { var gap = Math.abs(ant - l.y); txt += (gap > alt * 1.6 && alt) ? '\n\n' : '\n'; alt = alt ? Math.min(alt, gap || alt) : gap; if (!alt) alt = gap; } txt += l.t; ant = l.y; });
       out.push(txt);
     }
     return out.join('\n\n').slice(0, 60000);
@@ -4920,12 +4926,14 @@ window.V2_DOCS = (function () {
   }
 
   /* ---------- formulário ---------- */
-  function formulario(id) {
+  function formulario(id, modo) {
+    cfg = cfgs[modo]; var C = cfg, ehCer = modo === 'cerimonias';
     var it = id ? itens[id] : null, arq = null, tirar = false;
     var ov = document.createElement('div'); ov.className = 'dc-ov';
     ov.innerHTML = '<div class="dc-box"><h3>' + (it ? 'Editar documento' : 'Novo documento') + '</h3><div class="dc-corpo">' +
       '<label class="dc-lbl">Título</label><input class="dc-in" id="dcT" maxlength="120" value="' + esc(it ? it.titulo : '') + '">' +
-      '<label class="dc-lbl">Categoria</label><select class="dc-in" id="dcC">' + CATS.map(function (c) { return '<option value="' + c[0] + '"' + ((it ? it.cat : (filtro || 'cerimonias')) === c[0] ? ' selected' : '') + '>' + c[2] + ' ' + c[1] + '</option>'; }).join('') + '</select>' +
+      (ehCer ? '' : '<label class="dc-lbl">Categoria</label><select class="dc-in" id="dcC">' + CATS_DOC.map(function (c) { return '<option value="' + c[0] + '"' + ((it ? it.cat : (C.filtro || 'atas')) === c[0] ? ' selected' : '') + '>' + c[2] + ' ' + c[1] + '</option>'; }).join('') + '</select>') +
+      (naDiretoria() ? '<label class="dc-lbl">Quem vê e edita</label><select class="dc-in" id="dcEsc">' + ['grupo', 'alcateia', 'escoteira', 'senior', 'cla', 'diretoria'].map(function (e) { return '<option value="' + e + '"' + ((it ? escopoDe(it) : 'grupo') === e ? ' selected' : '') + '>' + (e === 'grupo' ? 'Grupo todo (todas as seções veem, só a Diretoria edita)' : 'Só ' + nomeEscopo(e) + (e === 'diretoria' ? '' : ' (e a Diretoria)')) + '</option>'; }).join('') + '</select>' : '') +
       '<label class="dc-lbl">Descrição (opcional)</label><input class="dc-in" id="dcD" maxlength="240" value="' + esc(it ? it.desc : '') + '">' +
       '<label class="dc-lbl">Arquivo (PDF, foto ou outro, até 3 MB)</label>' +
       (it && it.anexo ? '<div class="dc-aviso" id="dcAtual">Arquivo atual: ' + esc(it.anexo.name) + ' <button class="dc-btn s r" type="button" id="dcTirar">Remover arquivo</button></div>' : '') +
@@ -4954,65 +4962,73 @@ window.V2_DOCS = (function () {
             if (texto.length < 40) texto = '';
           }
         }
-        var obj = { titulo: titulo, cat: $('dcC').value, desc: $('dcD').value.trim(), texto: texto, registro: it ? it.registro : (s.registro || ''), autor: it ? it.autor : (s.nome || ''), secao: it ? it.secao : cfg.secao, ts: it ? it.ts : Date.now(), alteradoEm: Date.now() };
+        var obj = { titulo: titulo, cat: ehCer ? 'cerimonias' : $('dcC').value, escopo: it ? escopoDe(it) : (naDiretoria() ? $('dcEsc').value : C.secao), desc: $('dcD').value.trim(), texto: texto, registro: it ? it.registro : (s.registro || ''), autor: it ? it.autor : (s.nome || ''), secao: it ? it.secao : C.secao, ts: it ? it.ts : Date.now(), alteradoEm: Date.now() };
+        if (naDiretoria() && it && $('dcEsc')) obj.escopo = $('dcEsc').value;
         if (anexo) obj.anexo = anexo;
         await gravar(id || ('d' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5)), obj);
         if (velho && (!anexo || anexo.ref !== velho.ref)) V2.removerAnexo(velho);
-        fechar(); desenhar();
+        fechar(); desenharTodos();
       } catch (e) { er.textContent = e.message; btn.textContent = 'Salvar'; btn.disabled = false; }
       ocupado = false;
     };
   }
 
-  async function incluirModelo() {
-    var s = sessao();
+  function idModelo() { return naDiretoria() ? 'modelo_despedida' : 'modelo_despedida_' + cfg.secao; }
+  async function incluirModelo(modo) {
+    cfg = cfgs[modo]; var s = sessao();
     try {
-      await gravar('modelo_despedida', { titulo: 'Cerimônia de despedida (modelo)', cat: 'cerimonias', desc: 'Roteiro simples para o jovem que deixa a tropa, para dia ou noite.', texto: MODELO, registro: s.registro || '', autor: s.nome || '', secao: cfg.secao, ts: Date.now(), alteradoEm: Date.now() });
-      desenhar();
+      await gravar(idModelo(), { titulo: 'Cerimônia de despedida (modelo)', cat: 'cerimonias', escopo: naDiretoria() ? 'grupo' : cfg.secao, desc: 'Roteiro simples para o jovem que deixa a tropa, para dia ou noite.', texto: MODELO, registro: s.registro || '', autor: s.nome || '', secao: cfg.secao, ts: Date.now(), alteradoEm: Date.now() });
+      desenharTodos();
     } catch (e) { alert(e.message); }
   }
 
   /* ---------- lista ---------- */
-  function desenhar() {
-    var c = $(cfg.container); if (!c) return; css();
-    var ids = Object.keys(itens).filter(function (k) { return itens[k] && itens[k].titulo; });
-    var b = busca.toLowerCase();
-    var vis = ids.filter(function (k) { var it = itens[k]; return (!filtro || it.cat === filtro) && (!b || (it.titulo + ' ' + (it.desc || '') + ' ' + (it.texto || '')).toLowerCase().indexOf(b) >= 0); })
+  function desenharTodos() { Object.keys(cfgs).forEach(desenhar); }
+  function desenhar(modo) {
+    cfg = cfgs[modo]; var C = cfg; if (!C) return; var c = $(C.container); if (!c) return; css();
+    var ehCer = modo === 'cerimonias', CT = ehCer ? [CATS[0]] : CATS_DOC;
+    var ids = Object.keys(itens).filter(function (k) { var it = itens[k]; return it && it.titulo && podeVer(it) && (ehCer ? it.cat === 'cerimonias' : it.cat !== 'cerimonias'); });
+    var b = (C.busca || '').toLowerCase();
+    var vis = ids.filter(function (k) { var it = itens[k]; return (!C.filtro || it.cat === C.filtro) && (!C.esc || escopoDe(it) === C.esc) && (!b || (it.titulo + ' ' + (it.desc || '') + ' ' + (it.texto || '')).toLowerCase().indexOf(b) >= 0); })
       .sort(function (a, z) { return (itens[z].alteradoEm || itens[z].ts || 0) - (itens[a].alteradoEm || itens[a].ts || 0); });
-    var h = '<div class="dc"><div class="dc-ttl">📄 Documentos</div><div class="dc-sub">Arquivos do grupo, iguais para todas as seções. Toque em Abrir para ler aqui mesmo, inclusive no celular.</div>';
-    h += '<div class="dc-topo"><button class="dc-btn p" id="dcNovo">+ Adicionar documento</button>' + (!itens.modelo_despedida ? '<button class="dc-btn" id="dcMod">🕯️ Incluir modelo de cerimônia de despedida</button>' : '') + '</div>';
-    h += '<div class="dc-chips"><button class="dc-chip' + (!filtro ? ' on' : '') + '" data-f="">Todos</button>' + CATS.map(function (k) { return '<button class="dc-chip' + (filtro === k[0] ? ' on' : '') + '" data-f="' + k[0] + '">' + k[2] + ' ' + k[1] + '</button>'; }).join('') + '</div>';
-    h += '<input class="dc-busca" id="dcB" placeholder="Buscar nos documentos…" value="' + esc(busca) + '">';
-    if (erroCarga) h += '<div class="dc-vazio">' + esc(erroCarga) + '<br><button class="dc-btn" id="dcRe" style="margin-top:8px">Tentar de novo</button></div>';
+    var h = '<div class="dc"><div class="dc-ttl">' + (ehCer ? '🕯️ Cerimônias' : '📄 Documentos') + '</div><div class="dc-sub">' + (naDiretoria() ? 'A Diretoria vê todos os documentos e cria os de grupo, que todas as seções enxergam.' : 'Você vê e edita os documentos da sua seção e vê os de grupo, criados pela Diretoria.') + ' Toque em Abrir para ler aqui mesmo, inclusive no celular.</div>';
+    var haModelo = ids.some(function (k) { return k === idModelo() || k === 'modelo_despedida'; });
+    h += '<div class="dc-topo"><button class="dc-btn p" id="dcNovo' + modo + '">+ ' + (ehCer ? 'Adicionar cerimônia' : 'Adicionar documento') + '</button>' + (ehCer && !haModelo ? '<button class="dc-btn" id="dcMod' + modo + '">Incluir modelo de cerimônia de despedida</button>' : '') + '</div>';
+    var escs = ['grupo'].concat(naDiretoria() ? ['alcateia', 'escoteira', 'senior', 'cla', 'diretoria'] : [C.secao]);
+    h += '<div class="dc-chips"><button class="dc-chip' + (!C.esc ? ' on' : '') + '" data-e="">Todos</button>' + escs.map(function (e) { return '<button class="dc-chip' + (C.esc === e ? ' on' : '') + '" data-e="' + e + '">' + (e === 'grupo' ? 'Do grupo' : (naDiretoria() ? nomeEscopo(e) : 'Da minha seção')) + '</button>'; }).join('') + '</div>';
+    if (!ehCer) h += '<div class="dc-chips"><button class="dc-chip' + (!C.filtro ? ' on' : '') + '" data-f="">Todas as categorias</button>' + CT.map(function (k) { return '<button class="dc-chip' + (C.filtro === k[0] ? ' on' : '') + '" data-f="' + k[0] + '">' + k[2] + ' ' + k[1] + '</button>'; }).join('') + '</div>';
+    h += '<input class="dc-busca" id="dcB' + modo + '" placeholder="Buscar…" value="' + esc(C.busca || '') + '">';
+    if (erroCarga) h += '<div class="dc-vazio">' + esc(erroCarga) + '<br><button class="dc-btn" id="dcRe' + modo + '" style="margin-top:8px">Tentar de novo</button></div>';
     else if (!carregado) h += '<div class="dc-vazio">Carregando…</div>';
-    else if (!vis.length) h += '<div class="dc-vazio">' + (ids.length ? 'Nenhum documento neste filtro.' : 'Ainda não há documentos. Adicione o primeiro ou inclua o modelo de cerimônia.') + '</div>';
+    else if (!vis.length) h += '<div class="dc-vazio">' + (ids.length ? 'Nada neste filtro.' : (ehCer ? 'Ainda não há cerimônias. Adicione a primeira ou inclua o modelo.' : 'Ainda não há documentos. Adicione o primeiro.')) + '</div>';
     vis.forEach(function (k) {
-      var it = itens[k], tp = tipoDe(it), ct = cat(it.cat);
-      h += '<div class="dc-card"><div class="dc-nome">' + esc(it.titulo) + '</div><div class="dc-meta"><span class="dc-tag">' + ct[2] + ' ' + ct[1] + '</span><span>' + (tp === 'pdf' ? 'PDF' : tp === 'img' ? 'Imagem' : tp === 'outro' ? esc(it.anexo.name) : 'Texto') + '</span>' + (it.autor ? '<span>por ' + esc(it.autor) + '</span>' : '') + '<span>' + dataBr(it.alteradoEm || it.ts) + '</span></div>' +
+      var it = itens[k], tp = tipoDe(it), ct = cat(it.cat), es = escopoDe(it);
+      h += '<div class="dc-card"><div class="dc-nome">' + esc(it.titulo) + '</div><div class="dc-meta">' + (ehCer ? '' : '<span class="dc-tag">' + ct[2] + ' ' + ct[1] + '</span>') + '<span class="dc-tag">' + (es === 'grupo' ? 'Grupo' : esc(nomeEscopo(es))) + '</span><span>' + (tp === 'pdf' ? 'PDF' : tp === 'img' ? 'Imagem' : tp === 'outro' ? esc(it.anexo.name) : 'Texto') + '</span>' + (it.autor ? '<span>por ' + esc(it.autor) + '</span>' : '') + '<span>' + dataBr(it.alteradoEm || it.ts) + '</span></div>' +
         (it.desc ? '<div class="dc-desc">' + esc(it.desc) + '</div>' : '') +
         '<div class="dc-acoes"><button class="dc-btn s p" data-a="ver" data-i="' + k + '">Abrir</button>' + (it.anexo ? '<button class="dc-btn s" data-a="bx" data-i="' + k + '">Baixar</button>' : '') +
         (podeMexer(it) ? '<button class="dc-btn s" data-a="ed" data-i="' + k + '">Editar</button><button class="dc-btn s r" data-a="del" data-i="' + k + '">Excluir</button>' : '') + '</div></div>';
     });
     c.innerHTML = h + '</div>';
-    $('dcNovo').onclick = function () { formulario(null); };
-    if ($('dcMod')) $('dcMod').onclick = incluirModelo;
-    if ($('dcRe')) $('dcRe').onclick = function () { abrirPag(true); };
-    $('dcB').oninput = function () { busca = this.value; var p = this.selectionStart; desenhar(); var n = $('dcB'); n.focus(); try { n.setSelectionRange(p, p); } catch (e) {} };
-    Array.prototype.forEach.call(c.querySelectorAll('.dc-chip'), function (x) { x.onclick = function () { filtro = this.dataset.f; desenhar(); }; });
+    $('dcNovo' + modo).onclick = function () { formulario(null, modo); };
+    if ($('dcMod' + modo)) $('dcMod' + modo).onclick = function () { incluirModelo(modo); };
+    if ($('dcRe' + modo)) $('dcRe' + modo).onclick = function () { abrirPag(modo, true); };
+    $('dcB' + modo).oninput = function () { C.busca = this.value; var p = this.selectionStart; desenhar(modo); var n = $('dcB' + modo); n.focus(); try { n.setSelectionRange(p, p); } catch (e) {} };
+    Array.prototype.forEach.call(c.querySelectorAll('.dc-chip[data-f]'), function (x) { x.onclick = function () { C.filtro = this.dataset.f; desenhar(modo); }; });
+    Array.prototype.forEach.call(c.querySelectorAll('.dc-chip[data-e]'), function (x) { x.onclick = function () { C.esc = this.dataset.e; desenhar(modo); }; });
     Array.prototype.forEach.call(c.querySelectorAll('[data-a]'), function (x) {
       x.onclick = async function () {
-        var i = this.dataset.i, a = this.dataset.a;
-        if (a === 'ver') abrir(i); else if (a === 'bx') V2.baixarAnexo(itens[i].anexo); else if (a === 'ed') formulario(i);
+        var i = this.dataset.i, a = this.dataset.a; cfg = C;
+        if (a === 'ver') abrir(i); else if (a === 'bx') V2.baixarAnexo(itens[i].anexo); else if (a === 'ed') formulario(i, modo);
         else if (a === 'del') {
           if (!confirm('Excluir "' + itens[i].titulo + '"? Não dá para desfazer.')) return;
-          var an = itens[i].anexo; try { await apagar(i); if (an) V2.removerAnexo(an); desenhar(); } catch (e) { alert(e.message); }
+          var an = itens[i].anexo; try { await apagar(i); if (an) V2.removerAnexo(an); desenharTodos(); } catch (e) { alert(e.message); }
         }
       };
     });
   }
-  async function abrirPag(forca) {
-    if (!cfg) return; if (!carregado || forca) { erroCarga = ''; desenhar(); await carregar(); }
-    desenhar();
+  async function abrirPag(modo, forca) {
+    if (!cfgs[modo]) return; if (!carregado || forca) { erroCarga = ''; desenharTodos(); await carregar(); }
+    desenharTodos();
   }
-  return { montar: function (c) { cfg = c; }, abrir: abrirPag, _estado: function () { return itens; } };
+  return { montar: function (c) { cfgs[c.modo || 'docs'] = c; }, abrir: function (modo) { return abrirPag(modo || 'docs'); }, _estado: function () { return itens; } };
 })();
