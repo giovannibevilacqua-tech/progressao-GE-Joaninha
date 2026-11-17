@@ -174,7 +174,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-11-16h"
+  VERSAO: "2026-11-16i"
 };
 
 /* ============================================================
@@ -3241,7 +3241,7 @@ function restaurarUltimaAba(){
     var med = !o.chefe && root.V2_FICHAMED ? '<div class="v2p-sec">🩺 Ficha médica</div><button type="button" class="v2p-bt" id="v2pMedBt" style="width:100%">🩺 Abrir ficha médica</button>' : '';
     ov.innerHTML = '<div class="v2p-box"><div style="font-size:16px;font-weight:800">' + (o.chefe ? '👤 ' : '🧒 ') + esc(nomeTela(p, o.nome)) + '</div>'
       + (p.nomeSocial ? '<div class="mini" style="font-size:11px;opacity:.7">Nome: ' + esc(p.nomeCompleto || o.nome) + '</div>' : '')
-      + '<label>Nome social (opcional — se preenchido, é o nome que aparece no sistema)</label><input id="v2pSocial" value="' + esc(p.nomeSocial || '') + '" autocomplete="off">'
+      + '<label>Nome social (opcional — se preenchido, é o nome que aparece no sistema)</label><input id="v2pSocial" value="' + esc(p.nomeSocial || '') + '" autocomplete="off"' + (o.semSocial ? ' disabled' : '') + '>' + (o.semSocial ? '<div class="mini" style="font-size:11px;opacity:.7">O nome social do jovem é alterado pela chefia da seção.</div>' : '')
       + '<label>Data de nascimento</label><input id="v2pNasc" type="date" value="' + esc(o.nasc || p.nasc || '') + '"' + (o.podeNasc === false ? ' disabled' : '') + '>'
       + '<label>Data de promessa</label><input id="v2pProm" type="date" value="' + esc(p.promessa || '') + '"><div class="mini" id="v2pTempo">' + (p.promessa ? 'Tempo de promessa: ' + tempoDesde(p.promessa) : '') + '</div>'
       + '<div class="v2p-sec">🚑 Contato de emergência</div><label>Nome</label><input id="v2pEN" value="' + esc(p.emergNome || '') + '" autocomplete="off"><label>Telefone</label><input id="v2pET" inputmode="tel" value="' + esc(p.emergTel || '') + '"><label>Parentesco</label><input id="v2pER" value="' + esc(p.emergRel || '') + '" autocomplete="off">'
@@ -3374,6 +3374,39 @@ function restaurarUltimaAba(){
     _edChefe: function (uid) {
       var u = chefesEq[uid]; if (!u) return;
       formulario({ sec: 'chefes', id: uid, nome: u.nome || ('Registro ' + u.registro), p: (dados.chefes || {})[uid], chefe: true, aoSalvar: function () { desenharDir(); } });
+    },
+    // ---- Diretoria: cartão ao passar o mouse e janela de edição, usados na aba Seções ----
+    dirPreparar: async function () { if (!dir) dir = { container: null }; await carregarDir(); },
+    dirAvisos: function () {
+      var todos = [], chefes = [];
+      SECS.forEach(function (s) { Object.keys(dados[s] || {}).forEach(function (id) { var p = dados[s][id]; if (p && (p.nome || p.tela)) todos.push({ nome: (p.tela || p.nome) + ' (' + (NOMES_SEC[s] || s).replace(/^\S+\s/, '') + ')', nasc: p.nasc, promessa: p.promessa }); }); });
+      Object.keys(chefesEq).forEach(function (uid) { var u = chefesEq[uid], p = (dados.chefes || {})[uid] || {}; if (u && (u.registro || u.nome)) chefes.push({ nome: p.nomeSocial || u.nome || ('Registro ' + u.registro), nasc: p.nasc, promessa: p.promessa }); });
+      return cardAvisos(avisos(chefes), 'Chefes, esta semana') + cardAvisos(avisos(todos), 'Jovens, esta semana');
+    },
+    _acha: function (t, sec, id, nome) {
+      if (t === 'c') { var u = chefesEq[id] || {}; return { p: (dados.chefes || {})[id] || {}, nome: u.nome || nome, u: u, id: id }; }
+      var d = dados[sec] || {}, k = id && d[id] ? id : null;
+      if (!k) Object.keys(d).forEach(function (x) { var q = d[x]; if (!k && q && (q.tela === nome || q.nome === nome)) k = x; });
+      var p = k ? d[k] : {}; return { p: p || {}, nome: (p && p.nome) || nome, id: k };
+    },
+    dirCartao: function (t, sec, id, nome) {
+      var a = root.V2_PESSOAS._acha(t, sec, id, nome), p = a.p, l = [];
+      var idade = p.nasc ? (function () { var h = new Date(), q = p.nasc.split('-'), n = h.getFullYear() - +q[0]; if (h.getMonth() + 1 < +q[1] || (h.getMonth() + 1 === +q[1] && h.getDate() < +q[2])) n--; return n; })() : null;
+      if (p.nomeSocial) l.push('<div><span class="mini">Nome civil:</span> ' + esc(p.nomeCompleto || a.nome) + '</div>');
+      l.push('<div>🎂 ' + (p.nasc ? esc(dataBR(p.nasc)) + ' · ' + idade + ' anos' : '<span class="mini">nascimento não informado</span>') + '</div>');
+      l.push('<div>⭐ ' + (p.promessa ? esc(dataBR(p.promessa)) + ' · ' + esc(tempoDesde(p.promessa)) : '<span class="mini">promessa não informada</span>') + '</div>');
+      l.push('<div>🚑 ' + (p.emergNome || p.emergTel ? esc([p.emergNome, p.emergRel ? '(' + p.emergRel + ')' : '', p.emergTel].filter(Boolean).join(' ')) : '<span class="mini">sem contato de emergência</span>') + '</div>');
+      if (t === 'j') l.push('<div>🩺 ' + (p.med && p.med.em ? 'ficha médica enviada em ' + esc(dataBR(String(p.med.em).slice(0, 10))) : '<span class="mini">ficha médica não enviada</span>') + '</div>');
+      if (t === 'c' && a.u && a.u.registro) l.push('<div><span class="mini">Registro:</span> ' + esc(a.u.registro) + '</div>');
+      if (t === 'j' && root.V2_CONV && a.id) { var mot = root.V2_CONV.motivos(((dir && dir.conv) || {})[sec] ? dir.conv[sec][a.id] : null) || []; if (mot.length) l.push('<div style="margin-top:4px;padding:4px 6px;border-radius:6px;background:rgba(249,168,37,.25)">💬 Conversar:<br>• ' + mot.map(esc).join('<br>• ') + '</div>'); }
+      l.push('<div class="mini" style="margin-top:4px">Clique para ver e editar</div>');
+      return '<b>' + esc(nomeTela(p, a.nome)) + '</b>' + l.join('');
+    },
+    dirEditar: function (t, sec, id, nome, depois) {
+      var a = root.V2_PESSOAS._acha(t, sec, id, nome);
+      if (t === 'c') return formulario({ sec: 'chefes', id: a.id, nome: a.nome, p: a.p, chefe: true, aoSalvar: depois });
+      if (!a.id) { alert('Ainda não há ficha deste jovem. Ela é criada quando a chefia da seção abre o sistema.'); return; }
+      formulario({ sec: sec, id: a.id, nome: a.nome, p: a.p, podeNasc: !a.p.nasc, semSocial: true, aoSalvar: depois });
     },
     avisos: avisos, cardAvisos: cardAvisos, tempoDesde: tempoDesde, temSobrenome: temSobrenome, semanaAtual: semanaAtual,
     // para o calendário: datas do ano de um conjunto de pessoas [{nome,nasc,promessa}]

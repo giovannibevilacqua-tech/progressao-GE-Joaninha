@@ -7,7 +7,7 @@
 <title>Diretoria — GE Joaninha</title>
 <link rel="stylesheet" href="Apoio/secao.css">
 <style>:root{--vinho:#1F5FBF;--vinho2:#2F74D6;}.cabecalho-fixo{position:sticky;top:0;z-index:310;background:var(--bg,#f0ede8);overflow-anchor:none}</style>
-<script src="Apoio/v2.js?v=20261116h"></script>
+<script src="Apoio/v2.js?v=20261116i"></script>
 <style>.sec-grid{display:grid;grid-template-columns:minmax(230px,1fr) minmax(0,2fr);gap:18px;margin-top:14px;align-items:start}@media(max-width:720px){.sec-grid{grid-template-columns:1fr}}
 .sec-box{background:rgba(127,127,127,.07);border-radius:10px;padding:10px 12px;min-width:0}.sec-box h4{margin:0 0 8px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
 .tb-sec{width:100%;border-collapse:collapse;font-size:12px}.tb-sec th{text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);padding:4px 8px;border-bottom:1px solid var(--border)}.tb-sec td{padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:middle}.tb-sec tr:last-child td{border-bottom:0}.tb-sec td.n{white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}
@@ -15,19 +15,17 @@
 .sec-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}</style>
 </head>
 <body>
-<div class="cabecalho-fixo"><nav class="tabs-linha"><button class="tab-btn-linha" data-aba="almox" onclick="mostrarAba('almox',this)">📦 Almoxarifado geral</button><button class="tab-btn-linha" data-aba="fin" onclick="mostrarAba('fin',this)">💰 Financeiro</button><button class="tab-btn-linha" data-aba="cal" onclick="mostrarAba('cal',this)">📅 Calendário do grupo</button><button class="tab-btn-linha" data-aba="fichas" onclick="mostrarAba('fichas',this)">📇 Fichas e datas</button><button class="tab-btn-linha" data-aba="secoes" onclick="mostrarAba('secoes',this)">🗂️ Seções</button><button class="tab-btn-linha" data-aba="cer" onclick="mostrarAba('cer',this)">🕯️ Cerimônias</button><button class="tab-btn-linha" data-aba="arq" onclick="mostrarAba('arq',this)">📄 Documentos</button><button class="tab-btn-linha" data-aba="docs" onclick="mostrarAba('docs',this)">📝 Documentação</button></nav></div>
+<div class="cabecalho-fixo"><nav class="tabs-linha"><button class="tab-btn-linha" data-aba="almox" onclick="mostrarAba('almox',this)">📦 Almoxarifado geral</button><button class="tab-btn-linha" data-aba="fin" onclick="mostrarAba('fin',this)">💰 Financeiro</button><button class="tab-btn-linha" data-aba="cal" onclick="mostrarAba('cal',this)">📅 Calendário do grupo</button><button class="tab-btn-linha" data-aba="secoes" onclick="mostrarAba('secoes',this)">🗂️ Seções</button><button class="tab-btn-linha" data-aba="cer" onclick="mostrarAba('cer',this)">🕯️ Cerimônias</button><button class="tab-btn-linha" data-aba="docs" onclick="mostrarAba('docs',this)">📄 Documentos</button></nav></div>
 <div class="pagina" id="pg-almox"><div id="almox-box"></div></div>
 <div class="pagina" id="pg-fin"><div id="fin-box"></div></div>
 <div class="pagina" id="pg-cal"><div id="cal-box"></div></div>
-<div class="pagina" id="pg-fichas"><div id="fichas-box"></div></div>
 <div class="pagina" id="pg-secoes"><div class="pagina-ttl">Seções</div><div class="pagina-sub">Resumo de progressão de cada seção. Toque no nome para abrir os detalhes.</div>
 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"><button type="button" class="btn-ic" id="btnRelGrupo" style="font-weight:700;padding:10px 14px" disabled onclick="relatorioGrupo()">📄 Relatório do grupo inteiro</button><button type="button" class="btn-ic" style="padding:10px 14px" onclick="carregarSecoes(true)">↻ Atualizar</button></div>
-<div id="secoes-lista"></div><div id="secoes-frames" style="position:absolute;width:0;height:0;overflow:hidden;visibility:hidden"></div></div>
+<div id="avisos-semana"></div><div id="secoes-lista"></div><div id="secoes-frames" style="position:absolute;width:0;height:0;overflow:hidden;visibility:hidden"></div></div>
 <div class="pagina" id="pg-cer"><div id="cer-box"></div></div>
-<div class="pagina" id="pg-arq"><div id="arq-box"></div></div>
-<div class="pagina" id="pg-docs"><div class="pagina-ttl">Documentação</div><div class="pagina-sub">Documentos de gestão do Grupo Escoteiro.</div>
+<div class="pagina" id="pg-docs">
 <div class="card"><div class="card-ttl">💡 Sugestões sobre o grupo</div><div id="sug-grupo-lista" class="card-txt">Carregando…</div></div>
-<div class="card"><div class="card-ttl">📝 Atas de reunião <span class="em-breve">em construção</span></div><div class="card-txt">Registro das reuniões da diretoria e dos chefes.</div></div>
+<div id="docs-box" style="margin:0 -14px"></div>
 <div class="card"><div class="card-ttl">✅ Pendências da gestão <span class="em-breve">em construção</span></div><div class="card-txt">Renovações, prazos e tarefas do grupo.</div></div></div>
 <script>
 const DB_URL = "https://joaninha-progressao-default-rtdb.firebaseio.com";
@@ -103,8 +101,8 @@ async function iniciarSecao() {
 </script>
 <script>
 V2_FIN.montarDiretoria({ container:'fin-box' });
-V2_PESSOAS.montarDiretoria({ container:'fichas-box' });
-V2_DOCS.montar({ secao:'diretoria', modo:'docs', container:'arq-box', padX:14 }); V2_DOCS.montar({ secao:'diretoria', modo:'cerimonias', container:'cer-box', padX:14 });
+V2_PESSOAS.montarDiretoria({ container:null });
+V2_DOCS.montar({ secao:'diretoria', modo:'docs', container:'docs-box', padX:14 }); V2_DOCS.montar({ secao:'diretoria', modo:'cerimonias', container:'cer-box', padX:14 });
 V2_ALMOX.montar({ secao:'diretoria', nomeTropa:'Diretoria', outraTropa:'', verTudo:true, subTitulo:'Visão geral do material de todas as seções. A Diretoria pode editar qualquer item; cada seção edita só os seus.', container:'almox-box', padX:14 });
 const ROTULOS = { admin:'⭐ Administrador', escoteira: icoRamo('escoteira') + ' Tropa Escoteira', senior: icoRamo('senior') + ' Tropa Sênior', alcateia:'🐺 Alcateia', cla: icoRamo('cla') + ' Clã Pioneiro', diretoria: icoRamo('diretoria') + ' Diretoria', sem:'❔ Seção não definida (defina em Gerenciar Chefes)' };
 function escH(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -221,7 +219,7 @@ function formacaoDe(u) {
 }
 function listaChefes(gente) {
   if (!gente || !gente.length) return '<div class="card-txt">Nenhum chefe ou assistente cadastrado.</div>';
-  return '<table class="tb-sec"><thead><tr><th>Nome</th><th>Cargo</th><th>Registro</th><th>Formação</th></tr></thead><tbody>' + gente.map(u => '<tr><td><b>' + escH(u.nome || ('Registro ' + u.registro)) + '</b></td><td>' + seletorCargo(u) + '</td><td>' + escH(u.registro || '') + '</td><td style="font-size:11px;line-height:1.5">' + formacaoDe(u) + '</td></tr>').join('') + '</tbody></table>';
+  return '<table class="tb-sec"><thead><tr><th>Nome</th><th>Cargo</th><th>Registro</th><th>Formação</th></tr></thead><tbody>' + gente.map(u => '<tr><td><b class="pess-h" data-t="c" data-s="" data-i="' + escH(u._uid || '') + '" data-n="' + escH(u.nome || ('Registro ' + u.registro)) + '">' + escH(u.nome || ('Registro ' + u.registro)) + '</b></td><td>' + seletorCargo(u) + '</td><td>' + escH(u.registro || '') + '</td><td style="font-size:11px;line-height:1.5">' + formacaoDe(u) + '</td></tr>').join('') + '</tbody></table>';
 }
 function secoesQuadro() {
   const grupos = EQUIPE ? agruparEquipe(EQUIPE) : {};
@@ -235,7 +233,7 @@ function secoesQuadro() {
     }
     const r = SEC_DADOS[id];
     if (!r) return '<div class="card"><div class="card-ttl">' + ico[id] + ' ' + escH(NOMES[id] || id) + '</div><div class="card-txt">Carregando…</div></div>';
-    const linhas = (r.linhas || []).map(l => '<tr><td><b>' + escH(l.nome) + '</b></td><td style="min-width:110px">' + l.n + '/' + l.total + '<span class="mini"><i style="width:' + (l.total ? Math.round(l.n / l.total * 100) : 0) + '%"></i></span></td><td>' + escH(l.etapa) + '</td></tr>').join('');
+    const linhas = (r.linhas || []).map(l => '<tr><td><b class="pess-h" data-t="j" data-s="' + id + '" data-i="' + escH(l.id || '') + '" data-n="' + escH(l.nome) + '">' + escH(l.nome) + '</b></td><td style="min-width:110px">' + l.n + '/' + l.total + '<span class="mini"><i style="width:' + (l.total ? Math.round(l.n / l.total * 100) : 0) + '%"></i></span></td><td>' + escH(l.etapa) + '</td></tr>').join('');
     return '<details class="card sec-det"><summary style="cursor:pointer;list-style:none;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="flex:1;min-width:150px"><b>' + ico[id] + ' ' + escH(r.tropa) + '</b><br><span class="card-txt">' + r.resumo.jovens + ' jovens · média de ' + escH(r.resumo.media) + ' blocos (de ' + r.resumo.total + ')' + (nChefes ? ' · ' + nChefes : '') + '</span></span>' +
       '<button type="button" class="btn-ic" style="font-size:12px;padding:6px 10px" onclick="event.preventDefault();event.stopPropagation();relatorioSecaoDir(\'' + id + '\')">📄 Relatório</button></summary>' +
       '<div class="sec-box" style="margin-top:14px"><h4>Ciclo em andamento' + (r.ciclo ? ' · ' + escH(r.ciclo.titulo) : '') + '</h4>' + (r.ciclo && r.ciclo.blocos.length ? '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:8px;margin-top:6px">' + r.ciclo.blocos.map(b => '<div style="display:flex;flex-direction:column;gap:6px;justify-content:space-between;padding:9px 11px;border:1px solid ' + escH(b.cor) + '66;border-left:5px solid ' + escH(b.cor) + ';border-radius:10px;background:' + escH(b.cor) + '14"><b style="font-size:12px;line-height:1.3">' + escH(b.nome) + '</b><span style="font-size:11px;font-weight:700;opacity:.85">' + b.feitos + '/' + b.total + ' concluíram</span></div>').join('') + '</div>' : '<div class="card-txt">Nenhum bloco definido no ciclo.</div>') + '</div>' +
@@ -281,14 +279,32 @@ function carregarSecoes(forcar) {
     }
   })();
 }
+/* nome de jovem ou chefe: passar o mouse mostra o cartão; clicar abre a ficha para ver e editar */
+(function () {
+  const st = document.createElement('style');
+  st.textContent = '.pess-h{cursor:pointer;border-bottom:1px dotted currentColor}.pess-h:hover{color:var(--vinho)}#pessTip{position:fixed;z-index:100040;max-width:min(300px,86vw);background:var(--card,#fff);color:var(--text,#1a1a1a);border:1px solid var(--border,#ddd);border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.28);padding:10px 12px;font-size:12.5px;line-height:1.55;pointer-events:none;display:none}#pessTip .mini{font-size:11px;opacity:.7}';
+  document.head.appendChild(st);
+  const tip = document.createElement('div'); tip.id = 'pessTip'; document.body.appendChild(tip);
+  const alvo = e => e.target.closest && e.target.closest('.pess-h');
+  document.addEventListener('mouseover', e => {
+    const el = alvo(e); if (!el) return;
+    tip.innerHTML = V2_PESSOAS.dirCartao(el.dataset.t, el.dataset.s, el.dataset.i, el.dataset.n); tip.style.display = 'block';
+    const r = el.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
+    tip.style.left = Math.max(6, Math.min(r.left, innerWidth - w - 6)) + 'px';
+    tip.style.top = (r.bottom + h + 8 < innerHeight ? r.bottom + 6 : Math.max(6, r.top - h - 6)) + 'px';
+  });
+  document.addEventListener('mouseout', e => { if (alvo(e)) tip.style.display = 'none'; });
+  document.addEventListener('click', e => {
+    const el = alvo(e); if (!el) return; tip.style.display = 'none';
+    V2_PESSOAS.dirEditar(el.dataset.t, el.dataset.s, el.dataset.i, el.dataset.n, () => {});
+  });
+})();
 function relatorioSecaoDir(id) { if (SEC_DADOS[id]) V2.abrirRelatorioTropa(SEC_DADOS[id]); }
 function relatorioGrupo() { if (SECOES_DIR.every(s => SEC_DADOS[s.id])) V2.abrirRelatorioGrupo(SECOES_DIR.map(s => SEC_DADOS[s.id])); }
 async function aoAbrirAba(id) {
-  if (id === 'secoes') { carregarFormCache(); return carregarSecoes(); }
+  if (id === 'secoes') { carregarFormCache(); V2_PESSOAS.dirPreparar().then(() => { const b = document.getElementById('avisos-semana'); if (b) b.innerHTML = '<div class="v2p">' + V2_PESSOAS.dirAvisos() + '</div>'; }).catch(() => {}); return carregarSecoes(); }
   if (id === 'cer') return V2_DOCS.abrir('cerimonias');
-  if (id === 'arq') return V2_DOCS.abrir('docs');
-  if (id === 'docs') return carregarSugestoesGrupo();
-  if (id === 'fichas') return V2_PESSOAS.abrirDiretoria();
+  if (id === 'docs') { V2_DOCS.abrir('docs'); return carregarSugestoesGrupo(); }
   if (id === 'cal') { const r = V2_CAL.abrirNaSecao(null, 'cal-box'); carregarAntigosSecoes(); return r; }
 }
 

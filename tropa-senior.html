@@ -318,7 +318,7 @@ body{padding-bottom:50px;}
 mark.hl{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 
 </style>
-<script src="Apoio/v2.js?v=20261116h"></script>
+<script src="Apoio/v2.js?v=20261116i"></script>
 </head>
 <body>
 
@@ -2651,7 +2651,7 @@ function dadosRelatorioTropa(){
     const n = BLOCKS.filter(b => feito(S[b.id], yid)).length;
     const pat = (PATRULHAS_SR || []).find(p => p.id === (PATRULHA_DE_SR || {})[yid]);
     return {
-      nome: y.name || JNOMES[it.i], patrulha: pat ? pat.nome : '', cargo: y.role || '', n, total: BLOCKS.length,
+      id: yid, nome: y.name || JNOMES[it.i], patrulha: pat ? pat.nome : '', cargo: y.role || '', n, total: BLOCKS.length,
       etapa: etapa(n).l.replace(/\s*⭐/, ''),
       porEixo: chaves.map(k => EIXOS[k].blockIds.filter(id => feito(S[id], yid)).length),
       presenca: marcadas.length ? Math.round(marcadas.filter(ev => ev[yid] === 1).length / marcadas.length * 100) + '%' : ''

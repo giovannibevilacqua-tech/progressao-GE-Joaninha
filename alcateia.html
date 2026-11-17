@@ -396,7 +396,7 @@ body.modo-view .save-bar{display:none !important;}
 body.modo-view #cal > div > *:not(#cal-lista){display:none !important;}
 body.modo-view{padding-bottom:12px;}
 </style>
-<script src="Apoio/v2.js?v=20261116h"></script>
+<script src="Apoio/v2.js?v=20261116i"></script>
 </head>
 <body>
 
@@ -2551,7 +2551,7 @@ function dadosRelatorioTropa() {
   const linhas = YOUTH_DATA.filter(y => y && !y.archived).map(y => {
     const n = BLOCKS.filter(b => feito(S[b.id], y.id)).length;
     return {
-      nome: y.name, patrulha: (matilhaDe(y.id) || {}).nome || '', cargo: '', n, total: BLOCKS.length,
+      id: y.id, nome: y.name, patrulha: (matilhaDe(y.id) || {}).nome || '', cargo: '', n, total: BLOCKS.length,
       etapa: etapaAtual(n).l.replace(/\s*[\u{1F3C6}]/u, ''),
       porEixo: chaves.map(k => EIXOS[k].blockIds.filter(id => feito(S[id], y.id)).length),
       presenca: marcadas.length ? Math.round(marcadas.filter(ev => ev[y.id] === 1).length / marcadas.length * 100) + '%' : ''
