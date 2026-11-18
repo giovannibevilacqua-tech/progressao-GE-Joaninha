@@ -318,7 +318,7 @@ body{padding-bottom:50px;}
 mark.hl{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 
 </style>
-<script src="Apoio/v2.js?v=20261118f"></script>
+<script src="Apoio/v2.js?v=20261118g"></script>
 </head>
 <body>
 
@@ -3125,6 +3125,8 @@ const resumoPresenca = document.getElementById('presenca-summary'); if (resumoPr
 document.querySelectorAll('#cabecalhoAddEventoSr').forEach(el => { el.style.display = 'none'; const body = el.nextElementSibling; if (body) body.style.display = 'none'; });
 const saveBar = document.getElementById('saveBarSr');
 if (saveBar) saveBar.style.display = 'none';
+if (typeof window.calSecaoEventos !== 'function') window.calSecaoEventos = () => CAL_2S26.concat(CAL_1S27).filter(Boolean).map(e => ({ id: e.id, nome: e.nome, ini: e.dataISO, local: e.local, pres: 0 }));
+try { V2_CAL.montarPublico({ container: 'calGrupoBox', secao: 'senior' }); } catch (e) { console.error(e); }
 const abaAtiva = document.querySelector('.tab-btn.active');
 if (!abaAtiva || abaAtiva.style.display === 'none') showTab('cal', document.querySelector('.tab-btn[data-tab="cal"]'));
 }

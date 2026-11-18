@@ -204,7 +204,7 @@
       }
     },
     "grupoCal": {
-      ".read": "root.child('usuarios').child(auth.uid).exists()",
+      ".read": true,
       "$id": {
         ".write": "root.child('usuarios').child(auth.uid).child('admin').val() === true || root.child('usuarios').child(auth.uid).child('tropa').val() === 'diretoria' || (root.child('usuarios').child(auth.uid).child('tropa').val() !== null && (!newData.exists() || (newData.child('secoes').child('0').val() === root.child('usuarios').child(auth.uid).child('tropa').val() && !newData.child('secoes').child('1').exists())) && (!data.exists() || (data.child('secoes').child('0').val() === root.child('usuarios').child(auth.uid).child('tropa').val() && !data.child('secoes').child('1').exists())))"
       }

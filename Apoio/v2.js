@@ -174,7 +174,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-11-18f"
+  VERSAO: "2026-11-18g"
 };
 
 /* ============================================================
@@ -2838,6 +2838,8 @@ async function iniciarVisualizacao() {
   YOUTH_DATA = []; syncJovens();
   aplicarDados(dados || {});
   __store = { salvar: () => Promise.reject(new Error('Visualização somente leitura.')), offline: false };
+  window.calSecaoEventos = () => Object.values(eventos).filter(Boolean).map(e => ({ id: e.id, nome: e.nome, ini: e.dataISO, local: e.local, pres: 0 }));
+  try { V2_CAL.montarPublico({ container: 'calGrupoBox', secao: V2_NODE }); } catch (e) { console.error(e); }
   renderCalView(); renderCiclo();
   if (falhou) { const l = $('cal-lista'); if (l) l.innerHTML = '<div class="cla-vazio">Não foi possível carregar os dados agora. Tente atualizar a página em instantes.</div>'; }
   const btn = document.querySelector('.tab-btn[data-tab="cal"]'); showTab('cal', btn);
@@ -3992,7 +3994,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
   function iso(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
   function dBR(s) { var p = String(s || '').split('-'); return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : ''; }
   function sessao() { try { return JSON.parse(localStorage.getItem('chefeSessao') || 'null') || {}; } catch (e) { return {}; } }
-  function url(p) { return root.urlComAuthFirebase(root.V2_CONFIG.DB_URL + p + '.json'); }
+  function url(p) { return cfg && cfg.publico ? root.V2_CONFIG.DB_URL + p + '.json' : root.urlComAuthFirebase(root.V2_CONFIG.DB_URL + p + '.json'); }
   function norm(t) { return String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
   function ehDir() { return !!(root.ehDiretoriaSessao && root.ehDiretoriaSessao()); }
   function escolheSecoes() { return ehDir() && !(cfg && cfg.secao); }
@@ -4042,12 +4044,14 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
   function noDia(e, d) { return e.ini <= d && (e.fim || e.ini) >= d; }
   function cor(e) { return (ORIG[e.origem] || ORIG.grupo)[1]; }
   function podeMexer(e) {
+    if (cfg && cfg.publico) return false;
     if (e._old) return false;
     if (ehDir() && !cfg.secao) return true;
     return e.criadoTropa && e.criadoTropa === minhaSecao() && e._s.length === 1;
   }
   async function carregar() {
     try { var r = await fetch(url('/grupoCal')); var d = await r.json(); eventos = d && !d.error ? d : {}; } catch (e) { eventos = eventos || {}; }
+    if (cfg.publico) { marcas = []; return; }
     try { var r2 = await fetch(url('/equipe')); var q = await r2.json(); equipe = q && !q.error ? q : {}; } catch (e2) {}
     marcas = [];
     try {
@@ -4078,9 +4082,9 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
     var box = $(cfg.container); if (!box) return;
     var evs = visiveis(), y = mes.getFullYear(), m = mes.getMonth(), hojeIso = iso(new Date());
     var prim = new Date(y, m, 1), ult = new Date(y, m + 1, 0), ini = new Date(prim); ini.setDate(1 - prim.getDay());
-    var marc = root.V2_PESSOAS ? root.V2_PESSOAS.eventosDoAno(marcas, y) : [];
+    var marc = root.V2_PESSOAS && !cfg.publico ? root.V2_PESSOAS.eventosDoAno(marcas, y) : [];
     var h = '<div class="v2c"><div class="v2c-top"><button class="v2c-bt" onclick="V2_CAL._m(-1)">‹</button><h3>' + MESES[m] + ' de ' + y + '</h3><button class="v2c-bt" onclick="V2_CAL._m(1)">›</button></div>';
-    h += '<div class="v2c-top">' + (ehDir() && !cfg.secao ? '<button class="v2c-bt p" onclick="V2_CAL._novo()">➕ Atividade do grupo</button>' : '') + (cfg.secao && secaoTemForm() ? '<button class="v2c-bt p" onclick="V2_CAL._novaSecao()">➕ Atividade da seção</button>' : '') + (cfg.podeImportar !== false ? '<button class="v2c-bt" onclick="V2_CAL._imp()">📥 Importar calendário</button>' : '') + '<button class="v2c-bt" onclick="V2_CAL._m(0)">Hoje</button></div>';
+    h += '<div class="v2c-top">' + (!cfg.publico && ehDir() && !cfg.secao ? '<button class="v2c-bt p" onclick="V2_CAL._novo()">➕ Atividade do grupo</button>' : '') + (!cfg.publico && cfg.secao && secaoTemForm() ? '<button class="v2c-bt p" onclick="V2_CAL._novaSecao()">➕ Atividade da seção</button>' : '') + (!cfg.publico && cfg.podeImportar !== false ? '<button class="v2c-bt" onclick="V2_CAL._imp()">📥 Importar calendário</button>' : '') + '<button class="v2c-bt" onclick="V2_CAL._m(0)">Hoje</button></div>';
     if (!cfg.secao) {
       h += '<div class="v2c-top" style="flex-wrap:wrap;gap:6px">' + [['', 'Todas as seções']].concat(SECS.map(function (s2) { return [s2, NOMES[s2] || s2]; })).map(function (o) { return '<button class="v2c-bt' + (filtroSec === o[0] ? ' p' : '') + '" onclick="V2_CAL._fs(\'' + o[0] + '\')">' + esc(o[1]) + '</button>'; }).join('') + '</div>' + (root.calSecoesCarregando ? '<div style="font-size:12px;opacity:.7;margin:4px 0">⏳ Lendo o calendário de cada seção…</div>' : '');
     }
@@ -4093,7 +4097,7 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
         + es.slice(0, 5).map(function (e) { return '<span class="v2c-dot' + (e.janela ? ' j' : '') + '" style="background:' + cor(e) + '"></span>'; }).join('') + (es.length > 5 ? '+' : '')
         + ms.slice(0, 3).map(function (x) { return '<span class="v2c-em">' + (x.tipo === 'aniv' ? '🎂' : '⭐') + '</span>'; }).join('') + '</div></div>';
     }
-    h += '</div><div class="v2c-leg">' + Object.keys(ORIG).map(function (k) { return '<span><i style="background:' + ORIG[k][1] + '"></i>' + ORIG[k][0] + '</span>'; }).join('') + '<span>▬ janela de execução</span><span>🎂 aniversário</span><span>⭐ estrela de promessa</span></div>';
+    h += '</div><div class="v2c-leg">' + Object.keys(ORIG).map(function (k) { return '<span><i style="background:' + ORIG[k][1] + '"></i>' + ORIG[k][0] + '</span>'; }).join('') + '<span>▬ janela de execução</span>' + (cfg.publico ? '' : '<span>🎂 aniversário</span><span>⭐ estrela de promessa</span>') + '</div>';
     var p0 = iso(prim), p1 = iso(ult);
     var jan = evs.filter(function (e) { return e.janela && e.ini <= p1 && (e.fim || e.ini) >= p0; });
     if (jan.length) {
@@ -4285,6 +4289,8 @@ window.ehDiretoriaSessao = function () { try { var o = JSON.parse(localStorage.g
     // o: { container, secao (null = Diretoria vê todas), podeImportar }
     montar: async function (o) { cfg = o; injetarCss(); document.body.classList.add('v2c-sem-lista'); ['cal-2s26', 'cal-1s27'].forEach(function (i) { var l = $(i), hd = l && l.previousElementSibling; if (hd && /cal-section-hdr/.test(hd.className)) hd.classList.add('v2c-oculto'); }); var h = new Date(); mes = new Date(h.getFullYear(), h.getMonth(), 1); $(o.container).innerHTML = '<div class="v2c">Carregando calendário…</div>'; await carregar(); desenhar(); },
     atualizar: async function () { if (!cfg) return; await carregar(); desenhar(); },
+    // visão pública (pais, sem login): só leitura, sem datas de pessoas nem presença
+    montarPublico: function (o) { o = o || {}; o.publico = true; return root.V2_CAL.montar(o); },
     _m: function (d) { if (d === 0) { var h = new Date(); mes = new Date(h.getFullYear(), h.getMonth(), 1); } else mes = new Date(mes.getFullYear(), mes.getMonth() + d, 1); desenhar(); },
     _ir: function (eid) {
       var el = eid ? document.getElementById('evcard-' + eid) : null;

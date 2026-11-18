@@ -152,7 +152,7 @@ background: #FAFAF8; cursor: pointer; font-size: 12px; font-weight: 800; color: 
 .ramo-switch { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
 .ramo-btn.trocar { background: transparent; border-style: dashed; font-size: 12px; }
 </style>
-<script src="Apoio/v2.js?v=20261118f"></script>
+<script src="Apoio/v2.js?v=20261118g"></script>
 <script>const { EIXOS, BLOCOS, BLOCO_IDS } = window.V2_BLOCOS;</script>
 </head>
 <body>
@@ -237,7 +237,8 @@ document.getElementById('listaEventosView').innerHTML = '<div class="hint-vazio"
 document.getElementById('listaCicloView').innerHTML = '<div class="hint-vazio">Não foi possível carregar os dados agora. Tente atualizar a página em instantes.</div>';
 return;
 }
-renderCalendarioVisualizacao();
+window.calSecaoEventos = () => EVENTOS.filter(Boolean).map(e => ({ id: e.id, nome: e.nome, ini: e.data, local: e.local, pres: 0 }));
+try { V2_CAL.montarPublico({ container: 'listaEventosView', secao: 'escoteira' }); } catch (e) { console.error(e); renderCalendarioVisualizacao(); }
 renderCicloVisualizacao();
 }
 
