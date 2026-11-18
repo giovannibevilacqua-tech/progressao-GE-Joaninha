@@ -22,7 +22,16 @@
     "almoxarifado": {
       ".read": "auth != null",
       "$id": {
-        ".write": "root.child('usuarios').child(auth.uid).exists() && ($id === '_config' || root.child('usuarios').child(auth.uid).child('admin').val() === true || root.child('usuarios').child(auth.uid).child('tropa').val() === 'diretoria' || (data.exists() ? (data.child('tropa').val() === null || data.child('tropa').val() === root.child('usuarios').child(auth.uid).child('tropa').val() || data.child('tropa').val() === root.child('usuarios').child(auth.uid).child('tropa2').val()) : (newData.child('tropa').val() === null || newData.child('tropa').val() === root.child('usuarios').child(auth.uid).child('tropa').val() || newData.child('tropa').val() === root.child('usuarios').child(auth.uid).child('tropa2').val())))"
+        ".write": "root.child('usuarios').child(auth.uid).exists() && ($id === '_config' || root.child('usuarios').child(auth.uid).child('admin').val() === true || root.child('usuarios').child(auth.uid).child('tropa').val() === 'diretoria' || (data.exists() ? (data.child('tropa').val() === null || data.child('tropa').val() === root.child('usuarios').child(auth.uid).child('tropa').val() || data.child('tropa').val() === root.child('usuarios').child(auth.uid).child('tropa2').val()) : (newData.child('tropa').val() === null || newData.child('tropa').val() === root.child('usuarios').child(auth.uid).child('tropa').val() || newData.child('tropa').val() === root.child('usuarios').child(auth.uid).child('tropa2').val())))",
+        "quantidade": {
+          ".write": "root.child('usuarios').child(auth.uid).exists()"
+        }
+      }
+    },
+    "distintivos": {
+      ".read": "auth != null",
+      "$id": {
+        ".write": "root.child('usuarios').child(auth.uid).exists()"
       }
     },
     "documentos": {

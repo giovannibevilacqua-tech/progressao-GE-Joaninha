@@ -699,7 +699,7 @@ mark.hl-esc{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 .card-acoes .btn-ic{padding:4px 7px;font-size:10.5px;font-weight:600;}
 .patrulha-drop-zone{align-items:stretch !important;}
 </style>
-<script src="Apoio/v2.js?v=20261116l"></script>
+<script src="Apoio/v2.js?v=20261118a"></script>
 <script>const { EIXOS, BLOCOS, BLOCO_IDS } = window.V2_BLOCOS;</script>
 </head>
 <body>
@@ -713,6 +713,7 @@ mark.hl-esc{background:#FFF176;color:inherit;border-radius:2px;padding:0 1px;}
 <button class="tab-btn-linha" id="tabLis" onclick="mudarPagina('lis')">🏅 Lis de Ouro</button>
 <button class="tab-btn-linha" id="tabAlmoxarifado" onclick="mudarPagina('almoxarifado')">📦 Almoxarifado</button>
 <button class="tab-btn-linha" id="tabFinanceiro" onclick="mudarPagina('financeiro')">💰 Financeiro</button>
+<button class="tab-btn-linha" id="tabDistintivos" onclick="mudarPagina('distintivos')">🏅 Distintivos</button>
 <button class="tab-btn-linha" id="tabCerimonias" onclick="mudarPagina('cerimonias')">🕯️ Cerimônias</button>
 <button class="tab-btn-linha" id="tabDocumentos" onclick="mudarPagina('documentos')">📄 Documentos</button>
 </nav>
@@ -906,6 +907,7 @@ Toque num jovem para abrir a ficha dele. A barra de cor mostra o tempo até a tr
 
 <div id="pagina-almoxarifado" style="display:none;padding-bottom:32px;"></div>
 <div id="pagina-financeiro" style="display:none;padding-bottom:32px;"></div>
+<div id="pagina-distintivos" style="display:none;padding-bottom:32px;"></div>
 <div id="pagina-cerimonias" style="display:none;padding-bottom:32px;"></div>
 <div id="pagina-documentos" style="display:none;padding-bottom:32px;"></div>
 
@@ -2359,7 +2361,7 @@ if (card) card.classList.toggle('open');
 // ===== PÁGINA 2: TABELA POR BLOCO =====
 let paginaAtiva = 'tabela';
 
-const PAGINAS_ESC = { tabela: ['pagina-tabela', 'tabTabela'], calendario: ['pagina-calendario', 'tabCalendario'], jovens: ['pagina-jovens', 'tabJovens'], ciclo: ['pagina-ciclo', 'tabCiclo'], lis: ['pagina-lis', 'tabLis'], pont: ['pagina-pont', 'tabPont'], almoxarifado: ['pagina-almoxarifado', 'tabAlmoxarifado'], financeiro: ['pagina-financeiro', 'tabFinanceiro'], cerimonias: ['pagina-cerimonias', 'tabCerimonias'], documentos: ['pagina-documentos', 'tabDocumentos'] };
+const PAGINAS_ESC = { tabela: ['pagina-tabela', 'tabTabela'], calendario: ['pagina-calendario', 'tabCalendario'], jovens: ['pagina-jovens', 'tabJovens'], ciclo: ['pagina-ciclo', 'tabCiclo'], lis: ['pagina-lis', 'tabLis'], pont: ['pagina-pont', 'tabPont'], almoxarifado: ['pagina-almoxarifado', 'tabAlmoxarifado'], financeiro: ['pagina-financeiro', 'tabFinanceiro'], distintivos: ['pagina-distintivos', 'tabDistintivos'], cerimonias: ['pagina-cerimonias', 'tabCerimonias'], documentos: ['pagina-documentos', 'tabDocumentos'] };
 function membrosPontEsc(pid, atvId) {
 const hoje = new Date().toISOString().slice(0, 10);
 const ev = atvId ? EVENTOS.find(e => String(e.id) === String(atvId)) : null;
@@ -2385,6 +2387,7 @@ if (p === 'almoxarifado') V2_ALMOX.abrir();
 if (p === 'financeiro') V2_FIN.abrir();
 if (p === 'documentos') V2_DOCS.abrir('docs');
 if (p === 'cerimonias') V2_DOCS.abrir('cerimonias');
+if (p === 'distintivos') V2_DIST.abrir();
 }
 
 let blocosAbertosTabela = {};
@@ -3840,6 +3843,7 @@ window.addEventListener('online', () => { if (temAlteracaoLocalPendente && !(__s
 
 // ===== ALMOXARIFADO — módulo compartilhado (v2.js) =====
 V2_FIN.montar({ secao:'escoteira', container:'pagina-financeiro' });
+V2_DIST.montar({ secao:'escoteira', container:'pagina-distintivos', padX:14, jovens:()=>paxtuEstado().jovens });
 V2_DOCS.montar({ secao:'escoteira', modo:'docs', container:'pagina-documentos', padX:14 });
 V2_DOCS.montar({ secao:'escoteira', modo:'cerimonias', container:'pagina-cerimonias', padX:14 });
 V2_CONV.init({ base: '/conversar/escoteira',
@@ -3943,7 +3947,7 @@ function irParaBlocoEsc(eixoId, bid){
 })();
 </script>
 <script>
-V2_NAVG({ nav:'#tabsLinha', embrulhar:false, grupos:[{ rotulo:'👥 Seção', botoes:['#tabTabela','#tabPont','#tabLis','#tabJovens'] }, { rotulo:'📅 Calendário/Ciclo', botoes:['#tabCalendario','#tabCiclo'] }, { rotulo:'🧰 Gestão', botoes:['#tabAlmoxarifado','#tabFinanceiro','#tabCerimonias','#tabDocumentos'] }] });
+V2_NAVG({ nav:'#tabsLinha', embrulhar:false, grupos:[{ rotulo:'👥 Seção', botoes:['#tabTabela','#tabPont','#tabLis','#tabJovens'] }, { rotulo:'📅 Calendário/Ciclo', botoes:['#tabCalendario','#tabCiclo'] }, { rotulo:'🧰 Gestão', botoes:['#tabAlmoxarifado','#tabFinanceiro','#tabDistintivos','#tabCerimonias','#tabDocumentos'] }] });
 </script>
 </body>
 </html>

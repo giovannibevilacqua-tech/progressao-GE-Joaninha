@@ -174,7 +174,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-11-16l"
+  VERSAO: "2026-11-18a"
 };
 
 /* ============================================================
@@ -1755,7 +1755,7 @@ window.V2_ALMOX = (function () {
         '<div class="almo-form-titulo" id="almoFormHead" onclick="V2_ALMOX.h.toggleForm()" style="cursor:pointer;display:flex;align-items:center;gap:6px;user-select:none;"><span id="almoFormTitulo">➕ Adicionar item</span><span id="almoFormChev" style="margin-left:auto;color:var(--muted);">▾</span></div>' +
         '<div id="almoFormCorpo">' +
           '<label class="almo-campo-label">Nome do item</label>' +
-          '<input type="text" id="almoNome" class="almo-input" placeholder="Ex: Barraca Alpine, Jogo da memória…" autocomplete="off">' +
+          '<input type="text" id="almoNome" class="almo-input" placeholder="Ex: Barraca Alpine, Jogo da memória…" autocomplete="off" list="v2DistLista">' +
           '<div class="almo-form-grid"><div>' +
             '<label class="almo-campo-label">Tipo</label>' +
             '<select id="almoTipo" class="almo-select" style="display:none;"></select>' +
@@ -1980,7 +1980,7 @@ window.V2_ALMOX = (function () {
       ov.innerHTML = '<div class="almo-cat-box">' +
         '<div class="almo-form-titulo">✏️ Editar ' + (des ? 'item da lista de desejos' : 'item do almoxarifado') + '</div>' +
         '<label class="almo-campo-label">Nome do item</label>' +
-        '<input type="text" class="almo-input" id="almoEditNome" maxlength="80" value="' + esc(it.nome || '') + '">' +
+        '<input type="text" class="almo-input" id="almoEditNome" maxlength="80" list="v2DistLista" value="' + esc(it.nome || '') + '">' +
         '<label class="almo-campo-label" style="margin-top:10px;">Tipo</label>' +
         '<div class="almo-opt-grupo" id="almoEditTipo">' + Object.keys(TIPOS).map(function (k) { return '<button type="button" class="almo-opt ' + (k === tipoAtual ? 'ativo' : '') + '" data-valor="' + k + '">' + esc(TIPOS[k].emoji) + ' ' + esc(TIPOS[k].label) + '</button>'; }).join('') + '</div>' +
         '<label class="almo-campo-label" style="margin-top:10px;">' + (des ? 'Qtd. desejada' : 'Qtd.') + '</label>' +
@@ -3245,8 +3245,9 @@ function restaurarUltimaAba(){
       + '<label>Data de nascimento</label><input id="v2pNasc" type="date" value="' + esc(o.nasc || p.nasc || '') + '"' + (o.podeNasc === false ? ' disabled' : '') + '>'
       + '<label>Data de promessa</label><input id="v2pProm" type="date" value="' + esc(p.promessa || '') + '"><div class="mini" id="v2pTempo">' + (p.promessa ? 'Tempo de promessa: ' + tempoDesde(p.promessa) : '') + '</div>'
       + '<div class="v2p-sec">🚑 Contato de emergência</div><label>Nome</label><input id="v2pEN" value="' + esc(p.emergNome || '') + '" autocomplete="off"><label>Telefone</label><input id="v2pET" inputmode="tel" value="' + esc(p.emergTel || '') + '"><label>Parentesco</label><input id="v2pER" value="' + esc(p.emergRel || '') + '" autocomplete="off">'
-      + med + '<div id="v2pErro" style="display:none;color:#b3261e;font-size:12.5px;margin-top:8px"></div><div style="display:flex;gap:8px;margin-top:16px"><button type="button" class="v2p-bt" id="v2pNao" style="flex:1">Cancelar</button><button type="button" class="v2p-bt p" id="v2pSim" style="flex:1">Salvar</button></div></div>';
+      + med + (root.V2_DIST ? '<div class="v2p-sec">🏅 Distintivos recebidos</div><div id="v2pDist"><div class="mini">Carregando…</div></div>' : '') + '<div id="v2pErro" style="display:none;color:#b3261e;font-size:12.5px;margin-top:8px"></div><div style="display:flex;gap:8px;margin-top:16px"><button type="button" class="v2p-bt" id="v2pNao" style="flex:1">Cancelar</button><button type="button" class="v2p-bt p" id="v2pSim" style="flex:1">Salvar</button></div></div>';
     document.body.appendChild(ov);
+    if (root.V2_DIST) root.V2_DIST.historicoHtml(o.chefe ? 'a' : 'j', o.id).then(function (h) { var el = $('v2pDist'); if (el) el.innerHTML = h; });
     $('v2pProm').addEventListener('input', function () { $('v2pTempo').textContent = this.value ? 'Tempo de promessa: ' + tempoDesde(this.value) : ''; });
     $('v2pNao').onclick = function () { ov.remove(); };
     if (med && root.V2_FICHAMED) $('v2pMedBt').onclick = function () { root.V2_FICHAMED.ver(o.sec, o.id, o.nome); };
@@ -3308,7 +3309,9 @@ function restaurarUltimaAba(){
       + '<label style="font-size:11px;font-weight:700;opacity:.75;text-transform:uppercase;display:block;margin:8px 0 3px">Data de promessa</label><input id="v2pcProm" type="date" value="' + esc(p.promessa || '') + '" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--border,#ccc);border-radius:8px;font-size:14px"><div class="mini" id="v2pcTempo" style="font-size:11px;opacity:.7">' + (p.promessa ? 'Tempo de promessa: ' + tempoDesde(p.promessa) : '') + '</div>'
       + '<div class="v2p-sec">🚑 Contato de emergência</div>'
       + ['EN|Nome|emergNome|text', 'ET|Telefone|emergTel|tel', 'ER|Parentesco|emergRel|text'].map(function (c) { var q = c.split('|'); return '<label style="font-size:11px;font-weight:700;opacity:.75;text-transform:uppercase;display:block;margin:8px 0 3px">' + q[1] + '</label><input id="v2pc' + q[0] + '" type="' + q[3] + '" value="' + esc(p[q[2]] || '') + '" autocomplete="off" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--border,#ccc);border-radius:8px;font-size:14px">'; }).join('')
+      + (root.V2_DIST ? '<div class="v2p-sec">🏅 Distintivos recebidos</div><div id="v2pcDist"><div class="mini">Carregando…</div></div>' : '')
       + (temMed ? '<button type="button" id="v2pcMedBt" class="v2p-bt" style="margin-top:14px;width:100%">🩺 Abrir ficha médica ' + (p.med && p.med.em ? '<span class="mini">(enviada em ' + esc(dataBR(String(p.med.em).slice(0, 10))) + ')</span>' : '<span class="mini">(não enviada)</span>') + '</button>' : '');
+    if (root.V2_DIST) root.V2_DIST.historicoHtml('j', id).then(function (h) { var el = $('v2pcDist'); if (el) el.innerHTML = h; });
     $('v2pcProm').addEventListener('input', function () { $('v2pcTempo').textContent = this.value ? 'Tempo de promessa: ' + tempoDesde(this.value) : ''; });
     $('v2pcSocial').addEventListener('input', function () { var ni = $(ctxC.nomeInput); if (ni) ni.value = this.value.trim() || ctxC.legal; });
     if (temMed) $('v2pcMedBt').onclick = function () { root.V2_FICHAMED.ver(sec, id, legal); };
@@ -5065,4 +5068,243 @@ window.V2_DOCS = (function () {
     desenharTodos();
   }
   return { montar: function (c) { cfgs[c.modo || 'docs'] = c; }, abrir: function (modo) { return abrirPag(modo || 'docs'); }, _estado: function () { return itens; } };
+})();
+
+/* =====================================================================
+   V2_DIST: entrega de distintivos. O chefe (ou a Diretoria) lança o jovem ou escotista e a conquista;
+   o sistema confere o estoque do almoxarifado: tem, fica "Entrega pendente" (1 unidade separada);
+   não tem, fica "Aguardando compra", entra na lista de desejos do almoxarifado e a Diretoria é avisada.
+   Dados em /distintivos/<id>. Histórico aparece na ficha do jovem ou do escotista.
+   ===================================================================== */
+window.V2_DIST = (function () {
+  var DB = (window.V2_CONFIG || {}).DB_URL;
+  var SECS = ['alcateia', 'escoteira', 'senior', 'cla'];
+  var NOMES_SEC = { alcateia: 'Alcateia', escoteira: 'Tropa Escoteira', senior: 'Tropa Sênior', cla: 'Clã Pioneiro', diretoria: 'Diretoria' };
+  var ST = { pendente: ['Entrega pendente', 'ok'], aguardando: ['Aguardando compra', 'no'], entregue: ['Entregue', 'dn'], cancelado: ['Cancelado', 'dn'] };
+  // categoria | público (j jovem, a adulto, ja ambos) | nome | pede detalhe (1)
+  var CAT = [
+    'Progressão|j|Lobo Pata-Tenra (Lobinho)', 'Progressão|j|Lobo Saltador (Lobinho)', 'Progressão|j|Lobo Rastreador (Lobinho)', 'Progressão|j|Lobo Caçador (Lobinho)',
+    'Progressão|j|Pistas (Escoteiro)', 'Progressão|j|Trilha (Escoteiro)', 'Progressão|j|Rumo (Escoteiro)', 'Progressão|j|Travessia (Escoteiro)',
+    'Progressão|j|Escalada (Sênior)', 'Progressão|j|Conquista (Sênior)', 'Progressão|j|Azimute (Sênior)', 'Progressão|j|Caminho (Pioneiro), informar qual|1',
+    'Reconhecimentos especiais|j|Cruzeiro do Sul (Lobinho)', 'Reconhecimentos especiais|j|Lis de Ouro (Escoteiro)', 'Reconhecimentos especiais|j|Escoteiro da Pátria (Sênior)', 'Reconhecimentos especiais|j|Insígnia de B-P (Pioneiro)', 'Reconhecimentos especiais|j|Símbolo da Partida (Pioneiro)',
+    'Promessa e acolhida|j|Distintivo de Promessa (Lobinho)', 'Promessa e acolhida|j|Distintivo de Promessa (Escoteiro)', 'Promessa e acolhida|j|Distintivo de Promessa (Sênior)', 'Promessa e acolhida|j|Distintivo de Promessa (Pioneiro)', 'Promessa e acolhida|ja|Estrela de promessa, informar os anos|1', 'Promessa e acolhida|j|Certificado de Acolhida',
+    'Nomeações|j|Seiseiro (Lobinho)', 'Nomeações|j|Subseiro (Lobinho)', 'Nomeações|j|Monitor', 'Nomeações|j|Submonitor', 'Nomeações|j|Distintivo de patrulha ou matilha, informar qual|1',
+    'Insígnias|j|Insígnia do Aprender (Lobinho)', 'Insígnias|j|Insígnia do Aprender (Escoteiro)', 'Insígnias|j|Insígnia do Aprender (Sênior)', 'Insígnias|j|Insígnia do Aprender (Pioneiro)',
+    'Insígnias|j|Insígnia de Interesse Especial Cone Sul', 'Insígnias|j|Insígnia de Interesse Especial Mundial do Meio Ambiente', 'Insígnias|j|Insígnia de Interesse Especial da Lusofonia', 'Insígnias|j|Insígnia de Interesse Especial da Ação Comunitária', 'Insígnias|ja|Insígnia de Interesse Especial, outra, informar qual|1', 'Insígnias|ja|Insígnia mundial (OMME), informar qual|1',
+    'Modalidades|j|Insígnia da Modalidade do Ar: Aviador (Escoteiro)', 'Modalidades|j|Insígnia da Modalidade do Mar: Grumete (Escoteiro)', 'Modalidades|j|Insígnia da Modalidade Explorador (Escoteiro)', 'Modalidades|j|Insígnia da Modalidade do Ar: Aeronauta (Sênior)', 'Modalidades|j|Insígnia da Modalidade do Mar: Naval (Sênior)', 'Modalidades|j|Insígnia de modalidade (Pioneiro), informar qual|1',
+    'Cordões|j|Cordão Vermelho e Branco (Escoteiro)', 'Cordões|j|Cordão de eficiência, outro, informar qual|1',
+    'Especialidades|j|Especialidade (Lobinho e Escoteiro), informar qual|1', 'Especialidades|j|Especialidade (Sênior e Pioneiro), informar qual|1',
+    'Especialidades|j|Especialidade Agricultura Sustentável', 'Especialidades|j|Especialidade Animais Peçonhentos', 'Especialidades|j|Especialidade Arqueologia', 'Especialidades|j|Especialidade Astronáutica', 'Especialidades|j|Especialidade Canoagem', 'Especialidades|j|Especialidade Esportes de Aventura', 'Especialidades|j|Especialidade Habilidades Escoteiras', 'Especialidades|j|Especialidade Liderança e Gestão', 'Especialidades|j|Especialidade Tecnologia', 'Especialidades|j|Especialidade Viagens',
+    'Formação de adultos|a|Distintivo do Nível Preliminar', 'Formação de adultos|a|Distintivo do Nível Intermediário', 'Formação de adultos|a|Distintivo do Nível Avançado', 'Formação de adultos|a|Insígnia de Madeira (colar de 2 contas)', 'Formação de adultos|a|Insígnia de Madeira (colar de 3 contas, IM3)', 'Formação de adultos|a|Insígnia de Madeira (colar de 4 contas, IM4)', 'Formação de adultos|a|Lenço de Gilwell', 'Formação de adultos|a|Distintivo de função de adulto, informar qual|1', 'Formação de adultos|a|Distintivo de curso ou capacitação, informar qual|1',
+    'Arganéis|ja|Arganel do lenço do Grupo', 'Arganéis|a|Arganel do lenço de Gilwell', 'Arganéis|ja|Arganel, outro, informar qual|1',
+    'Outros|ja|Distintivo do Grupo Escoteiro', 'Outros|ja|Outro distintivo, informar qual|1'
+  ].map(function (s, i) { var p = s.split('|'); var det = p[3] === '1', nome = p[2]; return { id: 'c' + i, cat: p[0], pub: p[1], nome: det ? nome.split(', ')[0] : nome, pergunta: det ? (nome.split(', ')[1] || 'informar qual') : '', det: det }; });
+  var cfg = null, ent = {}, alm = {}, equipe = {}, pessoasDir = {}, carregado = false, erroCarga = '', filtroSt = '', filtroSec = '', msg = null;
+
+  function esc(x) { return String(x == null ? '' : x).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
+  function $(id) { return document.getElementById(id); }
+  function sessao() { try { return JSON.parse(localStorage.getItem('chefeSessao') || 'null') || {}; } catch (e) { return {}; } }
+  function naDiretoria() { return cfg && cfg.secao === 'diretoria'; }
+  function u(path) { return urlComAuthFirebase(DB + path + '.json'); }
+  function chave(s) { return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\bdistintivos?\b/g, ' ').replace(/[^a-z0-9]+/g, ' ').trim(); }
+  // o nome do estoque casa com o do catálogo se for igual, ou se for o mesmo nome sem o ramo entre parênteses (ex.: "Distintivo Trilha" casa com "Trilha (Escoteiro)")
+  function iguala(estoque, nome) { var a = chave(estoque), b = chave(nome); if (a === b) return true; return String(estoque).indexOf('(') < 0 && chave(String(nome).replace(/\([^)]*\)/g, '')) === a; }
+  function dataBr(iso) { if (!iso) return ''; var d = new Date(iso); return ('0' + d.getDate()).slice(-2) + '/' + ('0' + (d.getMonth() + 1)).slice(-2) + '/' + d.getFullYear(); }
+  function nomeFinal(c, detalhe) { return c.det ? c.nome + ': ' + detalhe : c.nome; }
+  function achaCat(id) { for (var i = 0; i < CAT.length; i++) if (CAT[i].id === id) return CAT[i]; return null; }
+
+  /* ---------- dados ---------- */
+  async function get(path) { var r = await fetch(u(path)); if (!r.ok) throw new Error('HTTP ' + r.status); var d = await r.json(); return d && !d.error ? d : {}; }
+  async function carregar() {
+    try {
+      var rs = await Promise.all([get('/distintivos'), get('/almoxarifado'), get('/equipe')]);
+      ent = rs[0]; alm = rs[1]; equipe = rs[2]; carregado = true; erroCarga = '';
+      if (naDiretoria()) { await Promise.all(SECS.map(async function (s) { try { pessoasDir[s] = await get('/pessoas/' + s); } catch (e) { pessoasDir[s] = pessoasDir[s] || {}; } })); }
+    } catch (e) { erroCarga = 'Não consegui carregar (' + e.message + ').'; }
+  }
+  async function put(path, obj) {
+    var r = await fetch(u(path), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(obj) });
+    if (!r.ok) throw new Error(r.status === 401 || r.status === 403 ? 'O banco recusou (HTTP ' + r.status + '). Publique as regras novas do Firebase (regras-firebase.json).' : 'Falha ao gravar (HTTP ' + r.status + ')');
+  }
+  async function post(path, obj) {
+    var r = await fetch(u(path), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(obj) });
+    if (!r.ok) throw new Error('Falha ao gravar (HTTP ' + r.status + ')'); return (await r.json()).name;
+  }
+  async function del(path) { var r = await fetch(u(path), { method: 'DELETE' }); if (!r.ok) throw new Error('Falha ao excluir (HTTP ' + r.status + ')'); }
+
+  /* ---------- estoque ---------- */
+  function veItem(it, sec) {
+    if (!it || it.tipo !== 'distintivos') return false;
+    if (sec === 'diretoria') return true;
+    var dono = it.tropa; if (!dono || dono === sec) return true;
+    if (Array.isArray(it.compartilhadoCom)) return it.compartilhadoCom.indexOf(sec) >= 0;
+    return it.compartilhado === true;
+  }
+  function itensEstoque(nome, sec) { return Object.keys(alm).filter(function (k) { var it = alm[k]; return veItem(it, sec) && it.desejo !== true && iguala(it.nome, nome); }); }
+  function itensDesejo(nome) { return Object.keys(alm).filter(function (k) { var it = alm[k]; return it && it.tipo === 'distintivos' && it.desejo === true && iguala(it.nome, nome); }); }
+  function estoqueTotal(nome, sec) { return itensEstoque(nome, sec).reduce(function (t, k) { return t + (Number(alm[k].quantidade) || 0); }, 0); }
+  function reservados(nome, sec) { return Object.keys(ent).filter(function (k) { var e = ent[k]; return e && e.status === 'pendente' && chave(e.nome) === chave(nome) && (sec === 'diretoria' || e.secao === sec); }).length; }
+
+  /* ---------- ações ---------- */
+  async function solicitar(d) {
+    var s = sessao(), sec = cfg.secao === 'diretoria' ? d.secao : cfg.secao, nome = nomeFinal(d.cat, d.detalhe);
+    var disp = estoqueTotal(nome, cfg.secao) - reservados(nome, cfg.secao);
+    var tem = disp > 0, id = 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+    var obj = { catId: d.cat.id, nome: nome, destTipo: d.destTipo, destId: d.destId, destNome: d.destNome, secao: sec, status: tem ? 'pendente' : 'aguardando', pedidoEm: new Date().toISOString(), pedidoPor: s.registro || '', pedidoPorNome: s.nome || '' };
+    await put('/distintivos/' + id, obj); ent[id] = obj;
+    if (!tem) { try { await addDesejo(nome, naDiretoria() ? 'diretoria' : cfg.secao); } catch (e) { return { ok: true, tem: false, nome: nome, aviso: 'Pedido registrado, mas não consegui incluir na lista de desejos: ' + e.message }; } }
+    return { ok: true, tem: tem, nome: nome, disp: disp };
+  }
+  async function addDesejo(nome, tropa) {
+    var ex = itensDesejo(nome)[0];
+    if (ex) { var q = (Number(alm[ex].quantidade) || 0) + 1; await put('/almoxarifado/' + ex + '/quantidade', q); alm[ex].quantidade = q; return; }
+    var it = { nome: nome, quantidade: 1, tipo: 'distintivos', compartilhado: false, compartilhadoCom: [], tropa: tropa, desejo: true, criadoEm: new Date().toISOString() };
+    var id = await post('/almoxarifado', it); alm[id] = it;
+  }
+  async function tiraDesejo(nome, n) {
+    var ex = itensDesejo(nome)[0]; if (!ex) return;
+    var q = (Number(alm[ex].quantidade) || 0) - n;
+    if (q <= 0) { try { await del('/almoxarifado/' + ex); delete alm[ex]; } catch (e) {} } else { try { await put('/almoxarifado/' + ex + '/quantidade', q); alm[ex].quantidade = q; } catch (e) {} }
+  }
+  async function entregar(id) {
+    var e = ent[id], s = sessao(), aviso = '';
+    if (!e || e.status !== 'pendente') return;
+    var itens = itensEstoque(e.nome, cfg.secao).filter(function (k) { return (Number(alm[k].quantidade) || 0) > 0; });
+    itens.sort(function (a, b) { return (alm[a].tropa === e.secao ? 0 : 1) - (alm[b].tropa === e.secao ? 0 : 1); });
+    var mudou = { status: 'entregue', entregueEm: new Date().toISOString(), entreguePorNome: s.nome || '', entreguePor: s.registro || '' };
+    await put('/distintivos/' + id, Object.assign({}, e, mudou)); Object.assign(e, mudou);
+    if (itens[0]) { try { var q = Math.max(0, (Number(alm[itens[0]].quantidade) || 0) - 1); await put('/almoxarifado/' + itens[0] + '/quantidade', q); alm[itens[0]].quantidade = q; } catch (er) { aviso = 'Entrega registrada, mas não consegui baixar o estoque. Ajuste no almoxarifado.'; } }
+    else aviso = 'Entrega registrada. Não achei o item no estoque para baixar, confira o almoxarifado.';
+    return aviso;
+  }
+  async function cancelar(id) {
+    var e = ent[id]; if (!e || (e.status !== 'pendente' && e.status !== 'aguardando')) return;
+    var antes = e.status; await put('/distintivos/' + id, Object.assign({}, e, { status: 'cancelado', canceladoEm: new Date().toISOString() })); e.status = 'cancelado';
+    if (antes === 'aguardando') await tiraDesejo(e.nome, 1);
+  }
+  // Diretoria: registra a compra de N unidades, soma no estoque e libera os pedidos mais antigos
+  async function registrarCompra(nome, n) {
+    var ex = itensEstoque(nome, 'diretoria')[0];
+    if (ex) { var q = (Number(alm[ex].quantidade) || 0) + n; await put('/almoxarifado/' + ex + '/quantidade', q); alm[ex].quantidade = q; }
+    else { var it = { nome: nome, quantidade: n, tipo: 'distintivos', compartilhado: true, compartilhadoCom: SECS.slice(), tropa: 'diretoria', criadoEm: new Date().toISOString() }; var id = await post('/almoxarifado', it); alm[id] = it; }
+    var fila = Object.keys(ent).filter(function (k) { return ent[k].status === 'aguardando' && chave(ent[k].nome) === chave(nome); }).sort(function (a, b) { return String(ent[a].pedidoEm).localeCompare(String(ent[b].pedidoEm)); }).slice(0, n);
+    for (var i = 0; i < fila.length; i++) { await put('/distintivos/' + fila[i], Object.assign({}, ent[fila[i]], { status: 'pendente', compradoEm: new Date().toISOString() })); ent[fila[i]].status = 'pendente'; }
+    await tiraDesejo(nome, n);
+    return fila.length;
+  }
+
+  /* ---------- destinatários ---------- */
+  function jovensDe(sec) {
+    if (sec === cfg.secao && cfg.jovens) { try { return (cfg.jovens() || []).filter(function (j) { return !j.arquivado; }).map(function (j) { return { id: j.id, nome: j.nome }; }); } catch (e) { return []; } }
+    var d = pessoasDir[sec] || {}; return Object.keys(d).filter(function (k) { return d[k] && (d[k].tela || d[k].nome); }).map(function (k) { return { id: k, nome: d[k].tela || d[k].nome }; });
+  }
+  function adultosDe(sec) {
+    return Object.keys(equipe).filter(function (k) { var x = equipe[k]; return x && (x.nome || x.registro) && (x.tropa === sec || x.tropa2 === sec); }).map(function (k) { return { id: k, nome: equipe[k].nome || ('Registro ' + equipe[k].registro) }; });
+  }
+  function todosAdultos() { return Object.keys(equipe).filter(function (k) { var x = equipe[k]; return x && (x.nome || x.registro); }).map(function (k) { return { id: k, nome: equipe[k].nome || ('Registro ' + equipe[k].registro), sec: equipe[k].tropa || '' }; }); }
+
+  /* ---------- tela ---------- */
+  function css() {
+    if ($('v2DistCss')) return;
+    var st = document.createElement('style'); st.id = 'v2DistCss';
+    st.textContent = '.dd{padding:12px ' + (cfg.padX || 14) + 'px 90px}.dd-ttl{font-size:16px;font-weight:800;color:var(--vinho)}.dd-sub{font-size:11px;color:var(--muted);margin:2px 0 10px}' +
+      '.dd-c{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px}.dd-h{font-weight:800;font-size:14px;margin:0 0 8px}' +
+      '.dd-r{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.dd-in{box-sizing:border-box;padding:9px 10px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;background:var(--card);color:var(--text);font-family:inherit;flex:1;min-width:150px}' +
+      '.dd-b{padding:9px 13px;border-radius:10px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit}.dd-b.p{background:var(--vinho);border-color:var(--vinho);color:#fff}.dd-b.s{padding:6px 10px;font-size:12px}.dd-b.r{color:#b42318}' +
+      '.dd-p{font-size:11.5px;padding:2px 10px;border-radius:8px;font-weight:700;white-space:nowrap}.dd-p.ok{background:rgba(46,125,50,.18);color:#2e7d32}.dd-p.no{background:rgba(237,137,0,.2);color:#b26a00}.dd-p.dn{background:rgba(128,128,128,.15);color:var(--muted)}' +
+      '.dd-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 0;border-top:1px solid var(--border);font-size:13px;flex-wrap:wrap}.dd-row small{display:block;color:var(--muted);font-size:11px}' +
+      '.dd-m{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:10px}.dd-m div{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:9px 11px}.dd-m span{display:block;font-size:11px;color:var(--muted)}.dd-m b{font-size:20px}' +
+      '.dd-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}.dd-chip{padding:6px 11px;border-radius:20px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}.dd-chip.on{border-color:var(--vinho);color:var(--vinho)}' +
+      '.dd-msg{border-radius:12px;padding:11px 13px;margin-bottom:10px;font-size:13px;border:1px solid}.dd-msg.ok{border-color:#2e7d32;background:rgba(46,125,50,.1)}.dd-msg.no{border-color:#b26a00;background:rgba(237,137,0,.12)}.dd-msg.er{border-color:#b42318;background:rgba(180,35,24,.1)}.dd-vazio{text-align:center;color:var(--muted);font-size:13px;padding:18px}';
+    document.head.appendChild(st);
+  }
+  function opcoesCat(pub) {
+    var grupos = {}, ordem = []; CAT.forEach(function (c) { if (pub && c.pub !== 'ja' && c.pub !== pub) return; if (!grupos[c.cat]) { grupos[c.cat] = []; ordem.push(c.cat); } grupos[c.cat].push(c); });
+    return ordem.map(function (g) { return '<optgroup label="' + esc(g) + '">' + grupos[g].map(function (c) { return '<option value="' + c.id + '">' + esc(c.nome) + '</option>'; }).join('') + '</optgroup>'; }).join('');
+  }
+  function opcoesDest(sec) {
+    var js = jovensDe(sec).sort(function (a, b) { return a.nome.localeCompare(b.nome, 'pt'); }), as = (sec ? adultosDe(sec) : todosAdultos()).sort(function (a, b) { return a.nome.localeCompare(b.nome, 'pt'); });
+    return '<optgroup label="Jovens">' + js.map(function (j) { return '<option value="j|' + esc(j.id) + '">' + esc(j.nome) + '</option>'; }).join('') + '</optgroup>' +
+      '<optgroup label="Escotistas">' + as.map(function (a) { return '<option value="a|' + esc(a.id) + '">' + esc(a.nome) + '</option>'; }).join('') + '</optgroup>';
+  }
+  function chipSt(e) { var s = ST[e.status] || ['', 'dn']; return '<span class="dd-p ' + s[1] + '">' + s[0] + (e.status === 'entregue' ? ' em ' + dataBr(e.entregueEm) : '') + '</span>'; }
+  function linha(k, mostraSec) {
+    var e = ent[k], acao = '';
+    if (e.status === 'pendente') acao = '<button class="dd-b s p" data-a="ent" data-i="' + k + '">Marcar como entregue</button><button class="dd-b s r" data-a="can" data-i="' + k + '">Cancelar</button>';
+    else if (e.status === 'aguardando') acao = '<button class="dd-b s r" data-a="can" data-i="' + k + '">Cancelar</button>';
+    return '<div class="dd-row"><span>' + esc(e.destNome) + ' · ' + esc(e.nome) + '<small>' + (mostraSec ? esc(NOMES_SEC[e.secao] || e.secao) + ' · ' : '') + (e.destTipo === 'a' ? 'Escotista · ' : '') + 'pedido por ' + esc(e.pedidoPorNome || '?') + ' em ' + dataBr(e.pedidoEm) + (e.entreguePorNome ? ' · entregue por ' + esc(e.entreguePorNome) : '') + '</small></span><span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">' + chipSt(e) + acao + '</span></div>';
+  }
+  function desenhar() {
+    if (!cfg) return; var c = $(cfg.container); if (!c) return; css();
+    var dir = naDiretoria(), sec = cfg.secao;
+    var ks = Object.keys(ent).filter(function (k) { var e = ent[k]; return e && (dir || e.secao === sec); });
+    var conta = function (s) { return ks.filter(function (k) { return ent[k].status === s; }).length; };
+    var mes = new Date().toISOString().slice(0, 7);
+    var h = '<div class="dd"><div class="dd-ttl">🏅 Entrega de distintivos</div><div class="dd-sub">' + (dir ? 'A Diretoria vê os pedidos de todas as seções e pode lançar para jovens e escotistas.' : 'Lance a conquista do jovem ou do escotista. O sistema confere o estoque do almoxarifado.') + '</div>';
+    if (msg) h += '<div class="dd-msg ' + msg.t + '">' + msg.h + '</div>';
+    if (dir) h += '<div class="dd-m"><div><span>Entregas pendentes</span><b>' + conta('pendente') + '</b></div><div><span>Aguardando compra</span><b>' + conta('aguardando') + '</b></div><div><span>Entregues no mês</span><b>' + ks.filter(function (k) { return ent[k].status === 'entregue' && String(ent[k].entregueEm).slice(0, 7) === mes; }).length + '</b></div></div>';
+    if (dir) {
+      var grp = {}; ks.forEach(function (k) { var e = ent[k]; if (e.status !== 'aguardando') return; var g = grp[chave(e.nome)] = grp[chave(e.nome)] || { nome: e.nome, n: 0, secs: {} }; g.n++; g.secs[e.secao] = (g.secs[e.secao] || 0) + 1; });
+      var gl = Object.keys(grp);
+      h += '<div class="dd-c"><div class="dd-r" style="justify-content:space-between"><p class="dd-h" style="margin:0">Lista de compras</p>' + (gl.length ? '<span class="dd-p no">' + gl.length + (gl.length === 1 ? ' item' : ' itens') + '</span>' : '') + '</div>' +
+        (gl.length ? gl.map(function (g, i) { var G = grp[g]; return '<div class="dd-row"><span>' + esc(G.nome) + '<small>' + Object.keys(G.secs).map(function (s) { return esc(NOMES_SEC[s] || s) + ' ' + G.secs[s]; }).join(' · ') + '</small></span><span style="display:flex;gap:6px;align-items:center"><input class="dd-in" type="number" min="1" value="' + G.n + '" id="ddQ' + i + '" style="max-width:80px;min-width:60px;flex:none;text-align:center"><button class="dd-b s p" data-a="comp" data-n="' + esc(G.nome) + '" data-q="ddQ' + i + '">Registrar compra</button></span></div>'; }).join('') : '<div class="dd-vazio">Nenhum distintivo aguardando compra.</div>') + '</div>';
+    }
+    h += '<div class="dd-c"><p class="dd-h">Lançar conquista</p><div class="dd-r">' +
+      (dir ? '<select class="dd-in" id="ddSec"><option value="">Escotistas de todas as seções</option>' + SECS.map(function (s) { return '<option value="' + s + '">' + esc(NOMES_SEC[s]) + '</option>'; }).join('') + '</select>' : '') +
+      '<select class="dd-in" id="ddDest">' + opcoesDest(dir ? '' : sec) + '</select><select class="dd-in" id="ddCat"></select><input class="dd-in" id="ddDet" style="display:none" maxlength="60"><button class="dd-b p" id="ddSol">Solicitar</button></div></div>';
+    h += '<div class="dd-c"><p class="dd-h">' + (dir ? 'Todos os pedidos' : 'Pedidos da seção') + '</p><div class="dd-chips">' + [['', 'Todos'], ['pendente', 'Entrega pendente'], ['aguardando', 'Aguardando compra'], ['entregue', 'Entregues']].map(function (x) { return '<button class="dd-chip' + (filtroSt === x[0] ? ' on' : '') + '" data-f="' + x[0] + '">' + x[1] + '</button>'; }).join('') + '</div>';
+    if (dir) h += '<div class="dd-chips">' + [['', 'Todas as seções']].concat(SECS.map(function (s) { return [s, NOMES_SEC[s]]; })).map(function (x) { return '<button class="dd-chip' + (filtroSec === x[0] ? ' on' : '') + '" data-s="' + x[0] + '">' + x[1] + '</button>'; }).join('') + '</div>';
+    var vis = ks.filter(function (k) { return (!filtroSt || ent[k].status === filtroSt) && (!filtroSec || ent[k].secao === filtroSec) && ent[k].status !== 'cancelado'; }).sort(function (a, b) { return String(ent[b].pedidoEm).localeCompare(String(ent[a].pedidoEm)); });
+    h += erroCarga ? '<div class="dd-vazio">' + esc(erroCarga) + '</div>' : !carregado ? '<div class="dd-vazio">Carregando…</div>' : vis.length ? vis.map(function (k) { return linha(k, dir); }).join('') : '<div class="dd-vazio">Nenhum pedido por aqui.</div>';
+    c.innerHTML = h + '</div></div>';
+    ligar();
+  }
+  function ligar() {
+    var c = $(cfg.container), dir = naDiretoria();
+    function trocaCat() { var d = $('ddDest').value.split('|')[0]; var ant = $('ddCat').value; $('ddCat').innerHTML = opcoesCat(d); if (ant && $('ddCat').querySelector('option[value="' + ant + '"]')) $('ddCat').value = ant; det(); }
+    function det() { var cat = achaCat($('ddCat').value); $('ddDet').style.display = cat && cat.det ? '' : 'none'; $('ddDet').placeholder = cat ? cat.pergunta : ''; }
+    $('ddDest').onchange = trocaCat; $('ddCat').onchange = det;
+    if (dir) $('ddSec').onchange = function () { $('ddDest').innerHTML = opcoesDest(this.value); trocaCat(); };
+    trocaCat();
+    $('ddSol').onclick = async function () {
+      var b = this, cat = achaCat($('ddCat').value), dst = $('ddDest').value.split('|'), det = $('ddDet').value.trim();
+      if (!dst[1]) { msg = { t: 'er', h: 'Escolha quem recebe o distintivo.' }; return desenhar(); }
+      if (cat.det && !det) { msg = { t: 'er', h: 'Informe: ' + esc(cat.pergunta) + '.' }; return desenhar(); }
+      var opt = $('ddDest').selectedOptions[0], secDest = cfg.secao;
+      if (dir) { secDest = $('ddSec').value; if (!secDest) secDest = (equipe[dst[1]] || {}).tropa || 'diretoria'; }
+      b.disabled = true; b.textContent = 'Verificando…';
+      try {
+        var r = await solicitar({ cat: cat, detalhe: det, destTipo: dst[0], destId: dst[1], destNome: opt.textContent, secao: secDest });
+        msg = r.tem ? { t: 'ok', h: '<b>' + esc(r.nome) + '</b> para ' + esc(opt.textContent) + ': tem ' + r.disp + ' no estoque. Já separei 1. <b>Entrega pendente.</b>' } : { t: 'no', h: '<b>' + esc(r.nome) + '</b> para ' + esc(opt.textContent) + ': sem estoque. Entrou na lista de compras e a Diretoria foi avisada. <b>Aguardando compra.</b>' + (r.aviso ? '<br>' + esc(r.aviso) : '') };
+      } catch (e) { msg = { t: 'er', h: esc(e.message) }; }
+      desenhar();
+    };
+    Array.prototype.forEach.call(c.querySelectorAll('[data-f]'), function (x) { x.onclick = function () { filtroSt = this.dataset.f; desenhar(); }; });
+    Array.prototype.forEach.call(c.querySelectorAll('[data-s]'), function (x) { x.onclick = function () { filtroSec = this.dataset.s; desenhar(); }; });
+    Array.prototype.forEach.call(c.querySelectorAll('[data-a]'), function (x) {
+      x.onclick = async function () {
+        var a = this.dataset.a, i = this.dataset.i; this.disabled = true;
+        try {
+          if (a === 'ent') { var av = await entregar(i); msg = av ? { t: 'no', h: esc(av) } : { t: 'ok', h: 'Entrega registrada.' }; }
+          else if (a === 'can') { if (!confirm('Cancelar este pedido?')) { this.disabled = false; return; } await cancelar(i); msg = { t: 'ok', h: 'Pedido cancelado.' }; }
+          else if (a === 'comp') { var n = Math.max(1, parseInt($(this.dataset.q).value) || 1), lib = await registrarCompra(this.dataset.n, n); msg = { t: 'ok', h: 'Compra registrada: ' + n + ' un. de ' + esc(this.dataset.n) + ' no estoque. ' + lib + (lib === 1 ? ' pedido virou' : ' pedidos viraram') + ' entrega pendente.' }; }
+        } catch (e) { msg = { t: 'er', h: esc(e.message) }; }
+        desenhar(); if (cfg.aoMudar) cfg.aoMudar();
+      };
+    });
+  }
+  async function abrir(forca) { if (!cfg) return; if (!carregado || forca) { msg = null; desenhar(); await carregar(); } else await carregar(); desenhar(); if (cfg.aoMudar) cfg.aoMudar(); }
+
+  /* ---------- histórico na ficha + aviso para a Diretoria ---------- */
+  async function historicoHtml(tipo, id) {
+    var d; try { d = await get('/distintivos'); } catch (e) { return '<div class="mini">Não consegui carregar o histórico de distintivos.</div>'; }
+    var ks = Object.keys(d).filter(function (k) { var e = d[k]; return e && e.destTipo === tipo && e.destId === id && e.status !== 'cancelado'; }).sort(function (a, b) { return String(d[b].pedidoEm).localeCompare(String(d[a].pedidoEm)); });
+    if (!ks.length) return '<div class="mini" style="opacity:.7">Nenhum distintivo lançado ainda.</div>';
+    return ks.map(function (k) { var e = d[k], s = ST[e.status] || ['', 'dn']; return '<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid var(--border,#ddd);font-size:12.5px"><span>' + esc(e.nome) + '<br><span class="mini" style="font-size:11px;opacity:.7">' + (e.status === 'entregue' ? 'Entregue em ' + dataBr(e.entregueEm) + (e.entreguePorNome ? ' por ' + esc(e.entreguePorNome) : '') : 'Pedido em ' + dataBr(e.pedidoEm)) + '</span></span><b style="white-space:nowrap;font-size:11.5px">' + s[0] + '</b></div>'; }).join('');
+  }
+  async function contarAguardando() { try { var d = await get('/distintivos'); return Object.keys(d).filter(function (k) { return d[k] && d[k].status === 'aguardando'; }).length; } catch (e) { return 0; } }
+  function sugestoesDatalist() { return '<datalist id="v2DistLista">' + CAT.filter(function (c) { return !c.det; }).map(function (c) { return '<option value="' + esc(c.nome) + '">'; }).join('') + '</datalist>'; }
+
+  if (typeof document !== 'undefined') { var injeta = function () { if (!$('v2DistLista')) document.body.insertAdjacentHTML('beforeend', sugestoesDatalist()); }; if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', injeta); else injeta(); }
+  return { montar: function (c) { cfg = c; }, abrir: abrir, historicoHtml: historicoHtml, contarAguardando: contarAguardando, sugestoesDatalist: sugestoesDatalist, catalogo: CAT, _estado: function () { return { ent: ent, alm: alm }; } };
 })();

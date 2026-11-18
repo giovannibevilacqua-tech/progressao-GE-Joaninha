@@ -7,7 +7,7 @@
 <title>Diretoria — GE Joaninha</title>
 <link rel="stylesheet" href="Apoio/secao.css">
 <style>:root{--vinho:#1F5FBF;--vinho2:#2F74D6;}.cabecalho-fixo{position:sticky;top:0;z-index:310;background:var(--bg,#f0ede8);overflow-anchor:none}</style>
-<script src="Apoio/v2.js?v=20261116l"></script>
+<script src="Apoio/v2.js?v=20261118a"></script>
 <style>.sec-grid{display:grid;grid-template-columns:minmax(230px,1fr) minmax(0,2fr);gap:18px;margin-top:14px;align-items:start}@media(max-width:720px){.sec-grid{grid-template-columns:1fr}}
 .sec-box{background:rgba(127,127,127,.07);border-radius:10px;padding:10px 12px;min-width:0}.sec-box h4{margin:0 0 8px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
 .tb-sec{width:100%;border-collapse:collapse;font-size:12px}.tb-sec th{text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);padding:4px 8px;border-bottom:1px solid var(--border)}.tb-sec td{padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:middle}.tb-sec tr:last-child td{border-bottom:0}.tb-sec td.n{white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}
@@ -15,13 +15,14 @@
 .sec-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}</style>
 </head>
 <body>
-<div class="cabecalho-fixo"><nav class="tabs-linha"><button class="tab-btn-linha" data-aba="almox" onclick="mostrarAba('almox',this)">📦 Almoxarifado geral</button><button class="tab-btn-linha" data-aba="fin" onclick="mostrarAba('fin',this)">💰 Financeiro</button><button class="tab-btn-linha" data-aba="cal" onclick="mostrarAba('cal',this)">📅 Calendário do grupo</button><button class="tab-btn-linha" data-aba="secoes" onclick="mostrarAba('secoes',this)">🗂️ Seções</button><button class="tab-btn-linha" data-aba="cer" onclick="mostrarAba('cer',this)">🕯️ Cerimônias</button><button class="tab-btn-linha" data-aba="docs" onclick="mostrarAba('docs',this)">📄 Documentos</button></nav></div>
+<div class="cabecalho-fixo"><nav class="tabs-linha"><button class="tab-btn-linha" data-aba="almox" onclick="mostrarAba('almox',this)">📦 Almoxarifado geral</button><button class="tab-btn-linha" data-aba="fin" onclick="mostrarAba('fin',this)">💰 Financeiro</button><button class="tab-btn-linha" data-aba="cal" onclick="mostrarAba('cal',this)">📅 Calendário do grupo</button><button class="tab-btn-linha" data-aba="secoes" onclick="mostrarAba('secoes',this)">🗂️ Seções</button><button class="tab-btn-linha" data-aba="dist" onclick="mostrarAba('dist',this)">🏅 Distintivos<span id="distBadge"></span></button><button class="tab-btn-linha" data-aba="cer" onclick="mostrarAba('cer',this)">🕯️ Cerimônias</button><button class="tab-btn-linha" data-aba="docs" onclick="mostrarAba('docs',this)">📄 Documentos</button></nav></div>
 <div class="pagina" id="pg-almox"><div id="almox-box"></div></div>
 <div class="pagina" id="pg-fin"><div id="fin-box"></div></div>
 <div class="pagina" id="pg-cal"><div id="cal-box"></div></div>
 <div class="pagina" id="pg-secoes"><div class="pagina-ttl">Seções</div><div class="pagina-sub">Resumo de progressão de cada seção. Toque no nome para abrir os detalhes.</div>
 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"><button type="button" class="btn-ic" id="btnRelGrupo" style="font-weight:700;padding:10px 14px" disabled onclick="relatorioGrupo()">📄 Relatório do grupo inteiro</button><button type="button" class="btn-ic" style="padding:10px 14px" onclick="carregarSecoes(true)">↻ Atualizar</button></div>
 <div id="avisos-semana"></div><div id="secoes-lista"></div><div id="secoes-frames" style="position:absolute;width:0;height:0;overflow:hidden;visibility:hidden"></div></div>
+<div class="pagina" id="pg-dist"><div id="dist-box"></div></div>
 <div class="pagina" id="pg-cer"><div id="cer-box"></div></div>
 <div class="pagina" id="pg-docs">
 <div class="card"><div class="card-ttl">💡 Sugestões sobre o grupo</div><div id="sug-grupo-lista" class="card-txt">Carregando…</div></div>
@@ -102,6 +103,7 @@ async function iniciarSecao() {
 <script>
 V2_FIN.montarDiretoria({ container:'fin-box' });
 V2_PESSOAS.montarDiretoria({ container:null });
+V2_DIST.montar({ secao:'diretoria', container:'dist-box', padX:14, aoMudar: distBadge });
 V2_DOCS.montar({ secao:'diretoria', modo:'docs', container:'docs-box', padX:14 }); V2_DOCS.montar({ secao:'diretoria', modo:'cerimonias', container:'cer-box', padX:14 });
 V2_ALMOX.montar({ secao:'diretoria', nomeTropa:'Diretoria', outraTropa:'', verTudo:true, subTitulo:'Visão geral do material de todas as seções. A Diretoria pode editar qualquer item; cada seção edita só os seus.', container:'almox-box', padX:14 });
 const ROTULOS = { admin:'⭐ Administrador', escoteira: icoRamo('escoteira') + ' Tropa Escoteira', senior: icoRamo('senior') + ' Tropa Sênior', alcateia:'🐺 Alcateia', cla: icoRamo('cla') + ' Clã Pioneiro', diretoria: icoRamo('diretoria') + ' Diretoria', sem:'❔ Seção não definida (defina em Gerenciar Chefes)' };
@@ -301,8 +303,11 @@ function carregarSecoes(forcar) {
 })();
 function relatorioSecaoDir(id) { if (SEC_DADOS[id]) V2.abrirRelatorioTropa(SEC_DADOS[id]); }
 function relatorioGrupo() { if (SECOES_DIR.every(s => SEC_DADOS[s.id])) V2.abrirRelatorioGrupo(SECOES_DIR.map(s => SEC_DADOS[s.id])); }
+function distBadge() { V2_DIST.contarAguardando().then(n => { const b = document.getElementById('distBadge'); if (b) b.innerHTML = n ? ' <span style="background:#c62828;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;margin-left:3px">' + n + '</span>' : ''; }); }
+setTimeout(distBadge, 1500);
 async function aoAbrirAba(id) {
   if (id === 'secoes') { carregarFormCache(); V2_PESSOAS.dirPreparar().then(() => { const b = document.getElementById('avisos-semana'); if (b) b.innerHTML = '<div class="v2p">' + V2_PESSOAS.dirAvisos() + '</div>'; }).catch(() => {}); return carregarSecoes(); }
+  if (id === 'dist') return V2_DIST.abrir();
   if (id === 'cer') return V2_DOCS.abrir('cerimonias');
   if (id === 'docs') { V2_DOCS.abrir('docs'); return carregarSugestoesGrupo(); }
   if (id === 'cal') { const r = V2_CAL.abrirNaSecao(null, 'cal-box'); carregarAntigosSecoes(); return r; }
