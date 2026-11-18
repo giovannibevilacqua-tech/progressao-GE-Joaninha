@@ -174,7 +174,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-11-18a"
+  VERSAO: "2026-11-18b"
 };
 
 /* ============================================================
@@ -5081,24 +5081,31 @@ window.V2_DIST = (function () {
   var SECS = ['alcateia', 'escoteira', 'senior', 'cla'];
   var NOMES_SEC = { alcateia: 'Alcateia', escoteira: 'Tropa Escoteira', senior: 'Tropa Sênior', cla: 'Clã Pioneiro', diretoria: 'Diretoria' };
   var ST = { pendente: ['Entrega pendente', 'ok'], aguardando: ['Aguardando compra', 'no'], entregue: ['Entregue', 'dn'], cancelado: ['Cancelado', 'dn'] };
-  // categoria | público (j jovem, a adulto, ja ambos) | nome | pede detalhe (1)
+  // Catálogo simples. R = ramos que enxergam (alcateia, escoteira, senior, cla); a Diretoria vê todos.
+  // pre + detalhe = nome do item (ex.: "Insígnia" + "do Aprender"); sug = sugestões de autocompletar.
+  var TODOS = ['alcateia', 'escoteira', 'senior', 'cla'];
+  var ESPEC = ['Agricultura Sustentável', 'Animais Peçonhentos', 'Arqueologia', 'Astronáutica', 'Canoagem', 'Esportes de Aventura', 'Habilidades Escoteiras', 'Liderança e Gestão', 'Tecnologia', 'Viagens'];
+  var INSIG = ['do Aprender', 'de Interesse Especial Cone Sul', 'de Interesse Especial Mundial do Meio Ambiente', 'de Interesse Especial da Lusofonia', 'de Interesse Especial da Ação Comunitária', 'da Modalidade do Ar: Aviador', 'da Modalidade do Mar: Grumete', 'da Modalidade Explorador', 'da Modalidade do Ar: Aeronauta', 'da Modalidade do Mar: Naval'];
   var CAT = [
-    'Progressão|j|Lobo Pata-Tenra (Lobinho)', 'Progressão|j|Lobo Saltador (Lobinho)', 'Progressão|j|Lobo Rastreador (Lobinho)', 'Progressão|j|Lobo Caçador (Lobinho)',
-    'Progressão|j|Pistas (Escoteiro)', 'Progressão|j|Trilha (Escoteiro)', 'Progressão|j|Rumo (Escoteiro)', 'Progressão|j|Travessia (Escoteiro)',
-    'Progressão|j|Escalada (Sênior)', 'Progressão|j|Conquista (Sênior)', 'Progressão|j|Azimute (Sênior)', 'Progressão|j|Caminho (Pioneiro), informar qual|1',
-    'Reconhecimentos especiais|j|Cruzeiro do Sul (Lobinho)', 'Reconhecimentos especiais|j|Lis de Ouro (Escoteiro)', 'Reconhecimentos especiais|j|Escoteiro da Pátria (Sênior)', 'Reconhecimentos especiais|j|Insígnia de B-P (Pioneiro)', 'Reconhecimentos especiais|j|Símbolo da Partida (Pioneiro)',
-    'Promessa e acolhida|j|Distintivo de Promessa (Lobinho)', 'Promessa e acolhida|j|Distintivo de Promessa (Escoteiro)', 'Promessa e acolhida|j|Distintivo de Promessa (Sênior)', 'Promessa e acolhida|j|Distintivo de Promessa (Pioneiro)', 'Promessa e acolhida|ja|Estrela de promessa, informar os anos|1', 'Promessa e acolhida|j|Certificado de Acolhida',
-    'Nomeações|j|Seiseiro (Lobinho)', 'Nomeações|j|Subseiro (Lobinho)', 'Nomeações|j|Monitor', 'Nomeações|j|Submonitor', 'Nomeações|j|Distintivo de patrulha ou matilha, informar qual|1',
-    'Insígnias|j|Insígnia do Aprender (Lobinho)', 'Insígnias|j|Insígnia do Aprender (Escoteiro)', 'Insígnias|j|Insígnia do Aprender (Sênior)', 'Insígnias|j|Insígnia do Aprender (Pioneiro)',
-    'Insígnias|j|Insígnia de Interesse Especial Cone Sul', 'Insígnias|j|Insígnia de Interesse Especial Mundial do Meio Ambiente', 'Insígnias|j|Insígnia de Interesse Especial da Lusofonia', 'Insígnias|j|Insígnia de Interesse Especial da Ação Comunitária', 'Insígnias|ja|Insígnia de Interesse Especial, outra, informar qual|1', 'Insígnias|ja|Insígnia mundial (OMME), informar qual|1',
-    'Modalidades|j|Insígnia da Modalidade do Ar: Aviador (Escoteiro)', 'Modalidades|j|Insígnia da Modalidade do Mar: Grumete (Escoteiro)', 'Modalidades|j|Insígnia da Modalidade Explorador (Escoteiro)', 'Modalidades|j|Insígnia da Modalidade do Ar: Aeronauta (Sênior)', 'Modalidades|j|Insígnia da Modalidade do Mar: Naval (Sênior)', 'Modalidades|j|Insígnia de modalidade (Pioneiro), informar qual|1',
-    'Cordões|j|Cordão Vermelho e Branco (Escoteiro)', 'Cordões|j|Cordão de eficiência, outro, informar qual|1',
-    'Especialidades|j|Especialidade (Lobinho e Escoteiro), informar qual|1', 'Especialidades|j|Especialidade (Sênior e Pioneiro), informar qual|1',
-    'Especialidades|j|Especialidade Agricultura Sustentável', 'Especialidades|j|Especialidade Animais Peçonhentos', 'Especialidades|j|Especialidade Arqueologia', 'Especialidades|j|Especialidade Astronáutica', 'Especialidades|j|Especialidade Canoagem', 'Especialidades|j|Especialidade Esportes de Aventura', 'Especialidades|j|Especialidade Habilidades Escoteiras', 'Especialidades|j|Especialidade Liderança e Gestão', 'Especialidades|j|Especialidade Tecnologia', 'Especialidades|j|Especialidade Viagens',
-    'Formação de adultos|a|Distintivo do Nível Preliminar', 'Formação de adultos|a|Distintivo do Nível Intermediário', 'Formação de adultos|a|Distintivo do Nível Avançado', 'Formação de adultos|a|Insígnia de Madeira (colar de 2 contas)', 'Formação de adultos|a|Insígnia de Madeira (colar de 3 contas, IM3)', 'Formação de adultos|a|Insígnia de Madeira (colar de 4 contas, IM4)', 'Formação de adultos|a|Lenço de Gilwell', 'Formação de adultos|a|Distintivo de função de adulto, informar qual|1', 'Formação de adultos|a|Distintivo de curso ou capacitação, informar qual|1',
-    'Arganéis|ja|Arganel do lenço do Grupo', 'Arganéis|a|Arganel do lenço de Gilwell', 'Arganéis|ja|Arganel, outro, informar qual|1',
-    'Outros|ja|Distintivo do Grupo Escoteiro', 'Outros|ja|Outro distintivo, informar qual|1'
-  ].map(function (s, i) { var p = s.split('|'); var det = p[3] === '1', nome = p[2]; return { id: 'c' + i, cat: p[0], pub: p[1], nome: det ? nome.split(', ')[0] : nome, pergunta: det ? (nome.split(', ')[1] || 'informar qual') : '', det: det }; });
+    ['Progressão', 'j', ['alcateia'], 'Lobo Pata-Tenra'], ['Progressão', 'j', ['alcateia'], 'Lobo Saltador'], ['Progressão', 'j', ['alcateia'], 'Lobo Rastreador'], ['Progressão', 'j', ['alcateia'], 'Lobo Caçador'],
+    ['Progressão', 'j', ['escoteira'], 'Pistas'], ['Progressão', 'j', ['escoteira'], 'Trilha'], ['Progressão', 'j', ['escoteira'], 'Rumo'], ['Progressão', 'j', ['escoteira'], 'Travessia'],
+    ['Progressão', 'j', ['senior'], 'Escalada'], ['Progressão', 'j', ['senior'], 'Conquista'], ['Progressão', 'j', ['senior'], 'Azimute'],
+    ['Progressão', 'j', ['cla'], 'Caminho', { pre: 'Caminho', ask: 'Qual caminho?', sug: [] }],
+    ['Reconhecimentos', 'j', ['alcateia'], 'Cruzeiro do Sul'], ['Reconhecimentos', 'j', ['escoteira'], 'Lis de Ouro'], ['Reconhecimentos', 'j', ['senior'], 'Escoteiro da Pátria'], ['Reconhecimentos', 'j', ['cla'], 'Insígnia de B-P'], ['Reconhecimentos', 'j', ['cla'], 'Símbolo da Partida'],
+    ['Promessa e acolhida', 'j', ['alcateia'], 'Distintivo de Promessa (Lobinho)'], ['Promessa e acolhida', 'j', ['escoteira'], 'Distintivo de Promessa (Escoteiro)'], ['Promessa e acolhida', 'j', ['senior'], 'Distintivo de Promessa (Sênior)'], ['Promessa e acolhida', 'j', ['cla'], 'Distintivo de Promessa (Pioneiro)'],
+    ['Promessa e acolhida', 'ja', TODOS, 'Estrela de promessa', { pre: 'Estrela de promessa', ask: 'De quantos anos?', sug: ['1 ano', '2 anos', '3 anos', '4 anos', '5 anos'] }],
+    ['Promessa e acolhida', 'j', ['alcateia'], 'Certificado de Acolhida'],
+    ['Nomeações', 'j', ['alcateia'], 'Primo'], ['Nomeações', 'j', ['alcateia'], 'Segundo'],
+    ['Nomeações', 'j', ['escoteira', 'senior'], 'Monitor'], ['Nomeações', 'j', ['escoteira', 'senior'], 'Submonitor'],
+    ['Insígnias', 'j', TODOS, 'Insígnia', { pre: 'Insígnia', ask: 'Qual insígnia? Comece a digitar', sug: INSIG }],
+    ['Cordões', 'j', ['escoteira', 'senior'], 'Cordão', { pre: 'Cordão', ask: 'Qual cordão? Comece a digitar', sug: ['Vermelho e Branco'] }],
+    ['Especialidades', 'j', TODOS, 'Especialidade', { pre: 'Especialidade', ask: 'Qual especialidade? Comece a digitar', sug: ESPEC }],
+    ['Formação de adultos', 'a', null, 'Distintivo do Nível Preliminar'], ['Formação de adultos', 'a', null, 'Distintivo do Nível Intermediário'], ['Formação de adultos', 'a', null, 'Distintivo do Nível Avançado'],
+    ['Formação de adultos', 'a', null, 'Insígnia de Madeira (2 contas)'], ['Formação de adultos', 'a', null, 'Insígnia de Madeira (3 contas, IM3)'], ['Formação de adultos', 'a', null, 'Insígnia de Madeira (4 contas, IM4)'], ['Formação de adultos', 'a', null, 'Lenço de Gilwell'],
+    ['Formação de adultos', 'a', null, 'Distintivo de função', { pre: 'Distintivo de função', ask: 'Qual função?', sug: ['Chefe de Seção', 'Assistente', 'Chefe de Grupo', 'Diretor'] }],
+    ['Arganéis', 'ja', null, 'Arganel', { pre: 'Arganel', ask: 'Qual arganel? Comece a digitar', sug: ['do lenço do Grupo', 'do lenço de Gilwell'] }],
+    ['Outros', 'ja', null, 'Outro distintivo', { pre: 'Distintivo', ask: 'Qual distintivo?', sug: ['do Grupo Escoteiro'] }]
+  ].map(function (x, i) { var o = x[4] || {}; return { id: 'c' + i, cat: x[0], pub: x[1], ramos: x[2], nome: x[3], det: !!x[4], pre: o.pre || '', pergunta: o.ask || '', sug: o.sug || [] }; });
   var cfg = null, ent = {}, alm = {}, equipe = {}, pessoasDir = {}, carregado = false, erroCarga = '', filtroSt = '', filtroSec = '', msg = null;
 
   function esc(x) { return String(x == null ? '' : x).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
@@ -5110,7 +5117,7 @@ window.V2_DIST = (function () {
   // o nome do estoque casa com o do catálogo se for igual, ou se for o mesmo nome sem o ramo entre parênteses (ex.: "Distintivo Trilha" casa com "Trilha (Escoteiro)")
   function iguala(estoque, nome) { var a = chave(estoque), b = chave(nome); if (a === b) return true; return String(estoque).indexOf('(') < 0 && chave(String(nome).replace(/\([^)]*\)/g, '')) === a; }
   function dataBr(iso) { if (!iso) return ''; var d = new Date(iso); return ('0' + d.getDate()).slice(-2) + '/' + ('0' + (d.getMonth() + 1)).slice(-2) + '/' + d.getFullYear(); }
-  function nomeFinal(c, detalhe) { return c.det ? c.nome + ': ' + detalhe : c.nome; }
+  function nomeFinal(c, detalhe) { return c.det ? (c.pre + ' ' + detalhe).replace(/\s+/g, ' ').trim() : c.nome; }
   function achaCat(id) { for (var i = 0; i < CAT.length; i++) if (CAT[i].id === id) return CAT[i]; return null; }
 
   /* ---------- dados ---------- */
@@ -5218,9 +5225,9 @@ window.V2_DIST = (function () {
       '.dd-msg{border-radius:12px;padding:11px 13px;margin-bottom:10px;font-size:13px;border:1px solid}.dd-msg.ok{border-color:#2e7d32;background:rgba(46,125,50,.1)}.dd-msg.no{border-color:#b26a00;background:rgba(237,137,0,.12)}.dd-msg.er{border-color:#b42318;background:rgba(180,35,24,.1)}.dd-vazio{text-align:center;color:var(--muted);font-size:13px;padding:18px}';
     document.head.appendChild(st);
   }
-  function opcoesCat(pub) {
-    var grupos = {}, ordem = []; CAT.forEach(function (c) { if (pub && c.pub !== 'ja' && c.pub !== pub) return; if (!grupos[c.cat]) { grupos[c.cat] = []; ordem.push(c.cat); } grupos[c.cat].push(c); });
-    return ordem.map(function (g) { return '<optgroup label="' + esc(g) + '">' + grupos[g].map(function (c) { return '<option value="' + c.id + '">' + esc(c.nome) + '</option>'; }).join('') + '</optgroup>'; }).join('');
+  function opcoesCat(pub, sec) {
+    var grupos = {}, ordem = []; CAT.forEach(function (c) { if (pub && c.pub !== 'ja' && c.pub !== pub) return; if (sec && c.ramos && c.ramos.indexOf(sec) < 0) return; if (!grupos[c.cat]) { grupos[c.cat] = []; ordem.push(c.cat); } grupos[c.cat].push(c); });
+    return ordem.map(function (g) { return '<optgroup label="' + esc(g) + '">' + grupos[g].map(function (c) { return '<option value="' + c.id + '">' + esc(c.det ? c.nome + ' (especificar)' : c.nome) + '</option>'; }).join('') + '</optgroup>'; }).join('');
   }
   function opcoesDest(sec) {
     var js = jovensDe(sec).sort(function (a, b) { return a.nome.localeCompare(b.nome, 'pt'); }), as = (sec ? adultosDe(sec) : todosAdultos()).sort(function (a, b) { return a.nome.localeCompare(b.nome, 'pt'); });
@@ -5251,7 +5258,7 @@ window.V2_DIST = (function () {
     }
     h += '<div class="dd-c"><p class="dd-h">Lançar conquista</p><div class="dd-r">' +
       (dir ? '<select class="dd-in" id="ddSec"><option value="">Escotistas de todas as seções</option>' + SECS.map(function (s) { return '<option value="' + s + '">' + esc(NOMES_SEC[s]) + '</option>'; }).join('') + '</select>' : '') +
-      '<select class="dd-in" id="ddDest">' + opcoesDest(dir ? '' : sec) + '</select><select class="dd-in" id="ddCat"></select><input class="dd-in" id="ddDet" style="display:none" maxlength="60"><button class="dd-b p" id="ddSol">Solicitar</button></div></div>';
+      '<select class="dd-in" id="ddDest">' + opcoesDest(dir ? '' : sec) + '</select><select class="dd-in" id="ddCat"></select><input class="dd-in" id="ddDet" style="display:none" maxlength="60" autocomplete="off"><datalist id="ddSug"></datalist><button class="dd-b p" id="ddSol">Solicitar</button></div></div>';
     h += '<div class="dd-c"><p class="dd-h">' + (dir ? 'Todos os pedidos' : 'Pedidos da seção') + '</p><div class="dd-chips">' + [['', 'Todos'], ['pendente', 'Entrega pendente'], ['aguardando', 'Aguardando compra'], ['entregue', 'Entregues']].map(function (x) { return '<button class="dd-chip' + (filtroSt === x[0] ? ' on' : '') + '" data-f="' + x[0] + '">' + x[1] + '</button>'; }).join('') + '</div>';
     if (dir) h += '<div class="dd-chips">' + [['', 'Todas as seções']].concat(SECS.map(function (s) { return [s, NOMES_SEC[s]]; })).map(function (x) { return '<button class="dd-chip' + (filtroSec === x[0] ? ' on' : '') + '" data-s="' + x[0] + '">' + x[1] + '</button>'; }).join('') + '</div>';
     var vis = ks.filter(function (k) { return (!filtroSt || ent[k].status === filtroSt) && (!filtroSec || ent[k].secao === filtroSec) && ent[k].status !== 'cancelado'; }).sort(function (a, b) { return String(ent[b].pedidoEm).localeCompare(String(ent[a].pedidoEm)); });
@@ -5261,8 +5268,8 @@ window.V2_DIST = (function () {
   }
   function ligar() {
     var c = $(cfg.container), dir = naDiretoria();
-    function trocaCat() { var d = $('ddDest').value.split('|')[0]; var ant = $('ddCat').value; $('ddCat').innerHTML = opcoesCat(d); if (ant && $('ddCat').querySelector('option[value="' + ant + '"]')) $('ddCat').value = ant; det(); }
-    function det() { var cat = achaCat($('ddCat').value); $('ddDet').style.display = cat && cat.det ? '' : 'none'; $('ddDet').placeholder = cat ? cat.pergunta : ''; }
+    function trocaCat() { var d = $('ddDest').value.split('|')[0]; var ant = $('ddCat').value; $('ddCat').innerHTML = opcoesCat(d, dir ? ($('ddSec').value || '') : cfg.secao); if (ant && $('ddCat').querySelector('option[value="' + ant + '"]')) $('ddCat').value = ant; det(); }
+    function det() { var cat = achaCat($('ddCat').value); $('ddDet').style.display = cat && cat.det ? '' : 'none'; $('ddDet').placeholder = cat ? cat.pergunta : ''; $('ddDet').value = ''; if (cat && cat.det) { $('ddSug').innerHTML = cat.sug.map(function (x) { return '<option value="' + esc(x) + '">'; }).join(''); $('ddDet').setAttribute('list', 'ddSug'); } }
     $('ddDest').onchange = trocaCat; $('ddCat').onchange = det;
     if (dir) $('ddSec').onchange = function () { $('ddDest').innerHTML = opcoesDest(this.value); trocaCat(); };
     trocaCat();
@@ -5303,7 +5310,7 @@ window.V2_DIST = (function () {
     return ks.map(function (k) { var e = d[k], s = ST[e.status] || ['', 'dn']; return '<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid var(--border,#ddd);font-size:12.5px"><span>' + esc(e.nome) + '<br><span class="mini" style="font-size:11px;opacity:.7">' + (e.status === 'entregue' ? 'Entregue em ' + dataBr(e.entregueEm) + (e.entreguePorNome ? ' por ' + esc(e.entreguePorNome) : '') : 'Pedido em ' + dataBr(e.pedidoEm)) + '</span></span><b style="white-space:nowrap;font-size:11.5px">' + s[0] + '</b></div>'; }).join('');
   }
   async function contarAguardando() { try { var d = await get('/distintivos'); return Object.keys(d).filter(function (k) { return d[k] && d[k].status === 'aguardando'; }).length; } catch (e) { return 0; } }
-  function sugestoesDatalist() { return '<datalist id="v2DistLista">' + CAT.filter(function (c) { return !c.det; }).map(function (c) { return '<option value="' + esc(c.nome) + '">'; }).join('') + '</datalist>'; }
+  function sugestoesDatalist() { var nomes = []; CAT.forEach(function (c) { if (c.det) c.sug.forEach(function (x) { nomes.push(c.pre + ' ' + x); }); else nomes.push(c.nome); }); return '<datalist id="v2DistLista">' + nomes.map(function (n) { return '<option value="' + esc(n) + '">'; }).join('') + '</datalist>'; }
 
   if (typeof document !== 'undefined') { var injeta = function () { if (!$('v2DistLista')) document.body.insertAdjacentHTML('beforeend', sugestoesDatalist()); }; if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', injeta); else injeta(); }
   return { montar: function (c) { cfg = c; }, abrir: abrir, historicoHtml: historicoHtml, contarAguardando: contarAguardando, sugestoesDatalist: sugestoesDatalist, catalogo: CAT, _estado: function () { return { ent: ent, alm: alm }; } };
