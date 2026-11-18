@@ -174,7 +174,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-11-18c"
+  VERSAO: "2026-11-18d"
 };
 
 /* ============================================================
@@ -5093,7 +5093,7 @@ window.V2_DIST = (function () {
     ['Progressão', 'j', ['cla'], 'Descoberta'], ['Progressão', 'j', ['cla'], 'Destino'], ['Progressão', 'j', ['cla'], 'Horizonte'],
     ['Reconhecimentos', 'j', ['alcateia'], 'Cruzeiro do Sul'], ['Reconhecimentos', 'j', ['escoteira'], 'Lis de Ouro'], ['Reconhecimentos', 'j', ['senior'], 'Escoteiro da Pátria'], ['Reconhecimentos', 'j', ['cla'], 'Insígnia de B-P'], ['Reconhecimentos', 'j', ['cla'], 'Símbolo da Partida'],
     ['Promessa e acolhida', 'j', ['alcateia'], 'Distintivo de Promessa (Lobinho)'], ['Promessa e acolhida', 'j', ['escoteira'], 'Distintivo de Promessa (Escoteiro)'], ['Promessa e acolhida', 'j', ['senior'], 'Distintivo de Promessa (Sênior)'], ['Promessa e acolhida', 'j', ['cla'], 'Distintivo de Promessa (Pioneiro)'],
-    ['Promessa e acolhida', 'ja', TODOS, 'Estrela de promessa', { pre: 'Estrela de promessa', ask: 'De quantos anos?', sug: ['1 ano', '2 anos', '3 anos', '4 anos', '5 anos'] }],
+    ['Promessa e acolhida', 'ja', TODOS, 'Estrela de Ano', { pre: 'Estrela de Ano', ask: 'De quantos anos?', sug: ['1 ano', '2 anos', '3 anos', '4 anos', '5 anos'] }],
     ['Promessa e acolhida', 'j', ['alcateia'], 'Certificado de Acolhida'],
     ['Nomeações', 'j', ['alcateia'], 'Primo'], ['Nomeações', 'j', ['alcateia'], 'Segundo'],
     ['Nomeações', 'j', ['escoteira', 'senior'], 'Monitor'], ['Nomeações', 'j', ['escoteira', 'senior'], 'Submonitor'],
