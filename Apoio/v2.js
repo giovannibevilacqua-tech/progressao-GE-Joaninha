@@ -174,7 +174,7 @@ window.V2_CONFIG = {
   LIMITE_ANEXO_MB: 3,
 
   // Mude este texto quando publicar uma versão nova: força o navegador a baixar de novo a página da Sênior.
-  VERSAO: "2026-11-18g"
+  VERSAO: "2026-11-19a"
 };
 
 /* ============================================================
@@ -1453,6 +1453,38 @@ function urlComAuthFirebase(url) {
   if (typeof firebaseAuthToken === 'undefined' || !firebaseAuthToken) return url;
   return url + (url.indexOf('?') !== -1 ? '&' : '?') + 'auth=' + firebaseAuthToken;
 }
+// Se o Firebase recusar (401) por token vencido, renova o token e repete o pedido uma vez.
+// Antes, só alguns caminhos faziam isso; os demais mostravam lista vazia como se os dados tivessem sumido.
+(function () {
+  if (typeof window === 'undefined' || window.__v2FetchAuth || !window.fetch) return; window.__v2FetchAuth = true;
+  var orig = window.fetch.bind(window), emCurso = null;
+  function lerSes() { try { return JSON.parse(localStorage.getItem('chefeSessao') || 'null') || {}; } catch (e) { return {}; } }
+  function tokenAtual() { try { return typeof firebaseAuthToken !== 'undefined' ? firebaseAuthToken : null; } catch (e) { return null; } }
+  function defineToken(t) { try { firebaseAuthToken = t; } catch (e) {} }
+  function renovar(velho) {
+    var s = lerSes();
+    if (s.idToken && s.idToken !== velho && s.expiraEm > Date.now() + 60000) return Promise.resolve(s.idToken); // outra seção já renovou
+    if (emCurso) return emCurso;
+    emCurso = (async function () {
+      try {
+        var rt = (function () { try { return typeof firebaseRefreshToken !== 'undefined' ? firebaseRefreshToken : null; } catch (e) { return null; } })() || s.refreshToken;
+        if (!rt) return null; var r = await renovarTokenSessao(rt); if (!r) return null;
+        try { localStorage.setItem('chefeSessao', JSON.stringify(Object.assign({}, lerSes(), { idToken: r.idToken, refreshToken: r.refreshToken, expiraEm: Date.now() + 55 * 60 * 1000 }))); } catch (e) {}
+        try { if (typeof firebaseRefreshToken !== 'undefined') firebaseRefreshToken = r.refreshToken; } catch (e) {}
+        return r.idToken;
+      } finally { setTimeout(function () { emCurso = null; }, 0); }
+    })();
+    return emCurso;
+  }
+  window.fetch = async function (u, opc) {
+    var r = await orig(u, opc);
+    if (r.status !== 401 || typeof u !== 'string' || u.indexOf('firebaseio.com/') < 0 || !/[?&]auth=/.test(u)) return r;
+    var velho = (u.match(/[?&]auth=([^&]*)/) || [])[1], novo = await renovar(velho);
+    if (!novo || novo === velho) return r;
+    defineToken(novo);
+    return orig(u.replace(/([?&]auth=)[^&]*/, '$1' + novo), opc);
+  };
+})();
 async function renovarTokenSessao(refreshToken) {
   let resp;
   try { resp = await fetch('https://securetoken.googleapis.com/v1/token?key=' + window.V2_CONFIG.API_KEY, {
@@ -1865,6 +1897,7 @@ window.V2_ALMOX = (function () {
 
   function render() {
     aplicarEstadoForm();
+    if ($('almoNome') && !$('almoNome')._v2esp && window.V2_ESPEC) V2_ESPEC.anexar($('almoNome'), { prefixo: true, listaPadrao: 'v2DistLista', ramo: function () { return cfg.secao; } });
     var des = modo === 'desejos';
     var w = $('almoFormWrap'); if (w) w.style.display = soLeitura() ? 'none' : '';
     if ($('almoChartCard')) $('almoChartCard').style.display = des ? 'none' : '';
@@ -1936,6 +1969,7 @@ window.V2_ALMOX = (function () {
     adicionar: async function () {
       if (soLeitura()) return;
       var nome = ($('almoNome').value || '').trim();
+      if ($('almoNome')._v2esp) { var fe = $('almoNome')._v2esp.final(); if (fe.erro) { alert(fe.erro); return; } nome = fe.nome; }
       var tipo = $('almoTipo').value;
       var qtd = Math.max(0, parseInt($('almoQtd').value) || 0);
       var comp = lerChips('almoCompChips');
@@ -1947,7 +1981,7 @@ window.V2_ALMOX = (function () {
         var res = await r.json();
         if (!res || !res.name) { alert('Erro ao salvar no Firebase: ' + (res && res.error ? res.error : 'permissão negada. Verifique as regras do banco de dados.')); return; }
         itens[res.name] = item;
-        $('almoNome').value = ''; $('almoQtd').value = '1'; Array.prototype.forEach.call(document.querySelectorAll('#almoCompChips .almo-opt'), function (b) { b.classList.remove('ativo'); });
+        $('almoNome').value = ''; if ($('almoNome')._v2esp) $('almoNome')._v2esp.atualizar(); $('almoQtd').value = '1'; Array.prototype.forEach.call(document.querySelectorAll('#almoCompChips .almo-opt'), function (b) { b.classList.remove('ativo'); });
         render();
       } catch (e) { alert('Erro ao salvar. Verifique a conexão.'); }
     },
@@ -1990,12 +2024,16 @@ window.V2_ALMOX = (function () {
       document.body.appendChild(ov);
       var grupo = ov.querySelector('#almoEditTipo');
       grupo.querySelectorAll('.almo-opt').forEach(function (b) { b.onclick = function () { grupo.querySelectorAll('.almo-opt').forEach(function (x) { x.classList.toggle('ativo', x === b); }); }; });
+      var inEd = ov.querySelector('#almoEditNome'), lido = window.V2_ESPEC ? V2_ESPEC.ler(it.nome) : null;
+      if (window.V2_ESPEC && /^especialidade\b/i.test(String(it.nome || ''))) { inEd.value = lido.base; V2_ESPEC.anexar(inEd, { prefixo: true, listaPadrao: 'v2DistLista', vazio: !lido.prog, ramo: function () { return donoDe(it); }, inicial: lido.prog ? { prog: lido.prog, nivel: lido.nivel } : null }); }
+      else if (window.V2_ESPEC) V2_ESPEC.anexar(inEd, { prefixo: true, listaPadrao: 'v2DistLista', vazio: true, ramo: function () { return donoDe(it); } });
       var fechar = function () { ov.remove(); };
       ov.querySelector('#almoEditCancelar').onclick = fechar;
       ov.addEventListener('click', function (e) { if (e.target === ov) fechar(); });
       ov.querySelector('#almoEditSalvar').onclick = async function () {
         var nome = ov.querySelector('#almoEditNome').value.trim();
         if (!nome) { ov.querySelector('#almoEditNome').focus(); return; }
+        if (inEd._v2esp) { var fe = inEd._v2esp.final(); if (fe.erro) { alert(fe.erro); return; } nome = fe.nome; }
         var ativo = grupo.querySelector('.almo-opt.ativo');
         var tipo = ativo ? ativo.dataset.valor : (it.tipo || Object.keys(TIPOS)[0]);
         var quantidade = Math.max(0, parseInt(ov.querySelector('#almoEditQtd').value) || 0);
@@ -5082,6 +5120,75 @@ window.V2_DOCS = (function () {
    não tem, fica "Aguardando compra", entra na lista de desejos do almoxarifado e a Diretoria é avisada.
    Dados em /distintivos/<id>. Histórico aparece na ficha do jovem ou do escotista.
    ===================================================================== */
+window.V2_ESPEC = (function () {
+  // Especialidades do guia (Especialidades Lobinho e Escoteiro), por área
+  var G = {
+    'Habilidades para a Vida': ['Aeronáutica', 'Administração', 'Arquitetura e Urbanismo', 'Arte Digital', 'Artes Visuais', 'Artesanato', 'Astronomia', 'Biblioteconomia', 'Cartografia', 'Comédia', 'Comunicações', 'Confeitaria', 'Construção Civil', 'Costura e Estilismo', 'Criptografia', 'Culinária', 'Design de Interiores', 'E-sports', 'Educação Financeira', 'Empreendedorismo', 'Encadernação', 'Etiqueta', 'Fiscalização de Pátio de Aeródromo', 'Fotografia', 'GPS', 'Grafite', 'HQ', 'Informática', 'Jornalismo', 'Manicure', 'Manutenção Elétrica', 'Maquete', 'Marcenaria', 'Marinharia', 'Matemática', 'Mecânica de Automóveis', 'Oratória', 'Pintura', 'Planador', 'Plastimodelismo', 'Prevenção de Incêndio', 'Produção Gráfica', 'Programação', 'Propaganda e Marketing', 'Química', 'Radioamadorismo', 'Radioescuta', 'Redes de Computadores', 'Reparos Domésticos', 'Robótica', 'Segurança no Trânsito', 'Simulação Aérea', 'Sinalização', 'Vendas', 'Videomaker', 'Web Design'],
+    'Meio Ambiente': ['Acampamento', 'Agricultura', 'Animais Peçonhentos e Venenosos', 'Aquarismo', 'Aquicultura', 'Biologia', 'Botânica', 'Corrida de Orientação', 'Cuidados com Animais de Estimação', 'Culinária Mateira', 'Energia', 'Entomologia', 'Escalada', 'Espeleoturismo', 'Excursões', 'Ferramentas de Corte', 'Geologia', 'Horticultura', 'Jardinagem e Paisagismo', 'Meliponicultura', 'Meteorologia', 'Microbiologia', 'Montanhismo', 'Mountain Bike', 'Oceanologia', 'Pesca', 'Pioneiria', 'Rastreamento', 'Sobrevivência', 'Zoologia'],
+    'Paz e Desenvolvimento': ['Anime', 'Arqueologia', 'Arte da Marinharia', 'Artes Cênicas', 'Brasilidades', 'Capoeira', 'Civilizações da Antiguidade', 'Cosplay', 'Culinária Típica', 'Danças Folclóricas', 'Defesa Civil', 'Escotismo Mundial', 'Fogo de Conselho', 'Genealogia', 'Geografia', 'História Aeroespacial', 'História da Aviação', 'História Brasileira', 'História da Arte', 'História do Escotismo', 'História Local', 'História Marítima', 'História Mundial', 'Inclusão', 'Informações Turísticas', 'Libras', 'Línguas', 'Literatura', 'Mitologias', 'Museologia', 'Origami', 'Paleontologia', 'Paz e Justiça', 'Poesia', 'Prevenção de Fake News', 'Tradições dos Povos Originários'],
+    'Saúde e Bem-estar': ['Aeromodelismo', 'Anatomia Humana', 'Artes Marciais', 'Babá', 'Canoagem', 'Canto', 'Ciclismo', 'Coleções', 'Corrida de Rua', 'Cubo Mágico', 'Cuidados Bucais', 'Cuidados com Idosos', 'Culinária Vegetariana', 'Dança', 'Desportos Inclusivos', 'Esportes de Quadra', 'Expressão Musical', 'Futebol', 'Ginásticas', 'Hipismo', 'Ioiô', 'Jogos de Cartas Colecionáveis', 'Jogos de Tabuleiro', 'Mágica e Ilusionismo', 'Maquiagem', 'Mergulho', 'Natação', 'Nutrição', 'Patinação', 'Pipas', 'Plantas Medicinais', 'Prevenção ao Bullying', 'Prevenção aos Vícios', 'Prevenção em Saúde', 'Primeiros Socorros', 'Quebra-cabeças', 'Remo', 'RPG', 'Salvamento', 'Segurança', 'Segurança e Emergência Náutica', 'Skateboard', 'Slackline', 'Técnicas Verticais', 'Tênis', 'Tênis de Mesa', 'Tiro com Arco', 'Triatlo', 'Vela', 'Vigilância Epidemiológica', 'Xadrez', 'Yoga']
+  };
+  // Lista do programa anterior (sugestões antigas)
+  var ANT = ['Agricultura Sustentável', 'Animais Peçonhentos', 'Arqueologia', 'Astronáutica', 'Canoagem', 'Esportes de Aventura', 'Habilidades Escoteiras', 'Liderança e Gestão', 'Tecnologia', 'Viagens'];
+  var TODAS = []; Object.keys(G).forEach(function (a) { G[a].forEach(function (n) { TODAS.push({ n: n, a: a }); }); });
+  TODAS.sort(function (x, y) { return x.n.localeCompare(y.n, 'pt'); });
+  var RAMOS = ['alcateia', 'escoteira', 'senior', 'cla'];
+  function esc(x) { return String(x == null ? '' : x).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
+  function norm(x) { return String(x || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
+  function ramoDe(r) { return RAMOS.indexOf(r) >= 0 ? r : ''; }
+  // Pioneiro não tem especialidade no programa anterior
+  function programas(r) { return r === 'cla' ? ['novo'] : ['novo', 'anterior']; }
+  // Novo: Lobinho/Escoteiro 1 e 2; Sênior/Pioneiro sem nível. Anterior: 1, 2 e 3.
+  function niveis(r, p) { if (p === 'anterior') return ['1', '2', '3']; if (r === 'senior' || r === 'cla') return []; return ['1', '2']; }
+  function sugestoes(r, p) { if (p === 'anterior') return ANT; if (r === 'senior' || r === 'cla') return []; return TODAS.map(function (x) { return x.n; }); }
+  function ler(s) {
+    s = String(s || '').trim(); var prog = '', nivel = '', m = s.match(/\s*\(programa (novo|anterior)\)\s*$/i);
+    if (m) { prog = m[1].toLowerCase(); s = s.slice(0, m.index); }
+    m = s.match(/,?\s*n[ií]vel\s*(\d)\s*$/i); if (m) { nivel = m[1]; s = s.slice(0, m.index); }
+    return { base: s.trim(), nivel: nivel, prog: prog };
+  }
+  function compor(base, nivel, prog) { return ler(base).base + (nivel ? ', Nível ' + nivel : '') + ' (programa ' + (prog === 'anterior' ? 'anterior' : 'novo') + ')'; }
+  function noGuia(nome) { var k = norm(nome); for (var i = 0; i < TODAS.length; i++) if (norm(TODAS[i].n) === k) return TODAS[i]; return null; }
+  function garanteLista(id, arr, prefixo) {
+    if (document.getElementById(id)) return;
+    document.body.insertAdjacentHTML('beforeend', '<datalist id="' + id + '">' + arr.map(function (n) { return '<option value="' + esc((prefixo ? 'Especialidade ' : '') + n) + '">'; }).join('') + '</datalist>');
+  }
+  // Acrescenta Programa/Nível logo abaixo de um campo de nome. o: {ramo:fn, prefixo:bool, ativo:fn, vazio:bool, inicial:{prog,nivel}}
+  function anexar(input, o) {
+    if (!input) return null; if (input._v2esp) return input._v2esp; o = o || {};
+    var w = document.createElement('div'); w.style.cssText = 'display:none;gap:8px;flex:1 1 100%;flex-wrap:wrap;align-items:center;margin:6px 0 2px;width:100%';
+    w.innerHTML = '<select data-p class="almo-select dd-in" style="flex:1;min-width:130px"></select><select data-n class="almo-select dd-in" style="flex:1;min-width:110px"></select>';
+    input.insertAdjacentElement('afterend', w);
+    var P = w.querySelector('[data-p]'), N = w.querySelector('[data-n]');
+    function ramo() { return ramoDe(o.ramo ? o.ramo() : ''); }
+    function ativo() { return o.ativo ? !!o.ativo() : /^especialidade\b/i.test(input.value.trim()); }
+    function atualizar() {
+      var eh = ativo(); w.style.display = eh ? 'flex' : 'none'; if (!eh) { if (o.listaPadrao) input.setAttribute('list', o.listaPadrao); return; }
+      var r = ramo(), pa = P.value, na = N.value, ps = programas(r);
+      P.innerHTML = (o.vazio ? '<option value="">Programa…</option>' : '') + ps.map(function (x) { return '<option value="' + x + '">' + (x === 'novo' ? 'Programa novo' : 'Programa anterior') + '</option>'; }).join('');
+      P.value = ps.indexOf(pa) >= 0 || (o.vazio && !pa) ? pa : (o.vazio ? '' : 'novo'); if (!P.value && !o.vazio) P.value = 'novo';
+      var ns = P.value ? niveis(r, P.value) : [];
+      N.style.display = ns.length ? '' : 'none';
+      N.innerHTML = '<option value="">' + (r ? 'Nível…' : 'Sem nível') + '</option>' + ns.map(function (x) { return '<option value="' + x + '">Nível ' + x + '</option>'; }).join('');
+      N.value = ns.indexOf(na) >= 0 ? na : '';
+      var pp = P.value || 'novo', sg = sugestoes(r, pp), id = 'v2Esp' + (pp === 'anterior' ? 'Ant' : sg.length ? 'Novo' : 'Livre') + (o.prefixo ? 'P' : 'S');
+      garanteLista(id, sg, !!o.prefixo); input.setAttribute('list', id);
+    }
+    function final() {
+      var v = input.value.trim(); if (!ativo() || !P.value) return { nome: v };
+      var r = ramo(), ns = niveis(r, P.value);
+      if (ns.length && r && !N.value) return { erro: 'Escolha o nível da especialidade.' };
+      return { nome: compor(v, ns.length ? N.value : '', P.value) };
+    }
+    input.addEventListener('input', atualizar); P.addEventListener('change', atualizar);
+    var api = { atualizar: atualizar, final: final, definir: function (prog, nivel) { atualizar(); P.value = prog || P.value; atualizar(); N.value = nivel || ''; } };
+    input._v2esp = api;
+    if (o.inicial) api.definir(o.inicial.prog, o.inicial.nivel); else atualizar();
+    return api;
+  }
+  return { nomes: function () { return TODAS.map(function (x) { return x.n; }); }, guia: TODAS, anterior: ANT, programas: programas, niveis: niveis, ler: ler, compor: compor, noGuia: noGuia, anexar: anexar, ramoDe: ramoDe };
+})();
+
 window.V2_DIST = (function () {
   var DB = (window.V2_CONFIG || {}).DB_URL;
   var SECS = ['alcateia', 'escoteira', 'senior', 'cla'];
@@ -5090,7 +5197,7 @@ window.V2_DIST = (function () {
   // Catálogo simples. R = ramos que enxergam (alcateia, escoteira, senior, cla); a Diretoria vê todos.
   // pre + detalhe = nome do item (ex.: "Insígnia" + "do Aprender"); sug = sugestões de autocompletar.
   var TODOS = ['alcateia', 'escoteira', 'senior', 'cla'];
-  var ESPEC = ['Agricultura Sustentável', 'Animais Peçonhentos', 'Arqueologia', 'Astronáutica', 'Canoagem', 'Esportes de Aventura', 'Habilidades Escoteiras', 'Liderança e Gestão', 'Tecnologia', 'Viagens'];
+  var ESPEC = V2_ESPEC.nomes();
   var INSIG = ['do Aprender', 'de Interesse Especial Cone Sul', 'de Interesse Especial Mundial do Meio Ambiente', 'de Interesse Especial da Lusofonia', 'de Interesse Especial da Ação Comunitária', 'da Modalidade do Ar: Aviador', 'da Modalidade do Mar: Grumete', 'da Modalidade Explorador', 'da Modalidade do Ar: Aeronauta', 'da Modalidade do Mar: Naval'];
   var CAT = [
     ['Progressão', 'j', ['alcateia'], 'Lobo Pata-Tenra'], ['Progressão', 'j', ['alcateia'], 'Lobo Saltador'], ['Progressão', 'j', ['alcateia'], 'Lobo Rastreador'], ['Progressão', 'j', ['alcateia'], 'Lobo Caçador'],
@@ -5262,6 +5369,7 @@ window.V2_DIST = (function () {
       h += '<div class="dd-c"><div class="dd-r" style="justify-content:space-between"><p class="dd-h" style="margin:0">Lista de compras</p>' + (gl.length ? '<span class="dd-p no">' + gl.length + (gl.length === 1 ? ' item' : ' itens') + '</span>' : '') + '</div>' +
         (gl.length ? gl.map(function (g, i) { var G = grp[g]; return '<div class="dd-row"><span>' + esc(G.nome) + '<small>' + Object.keys(G.secs).map(function (s) { return esc(NOMES_SEC[s] || s) + ' ' + G.secs[s]; }).join(' · ') + '</small></span><span style="display:flex;gap:6px;align-items:center"><input class="dd-in" type="number" min="1" value="' + G.n + '" id="ddQ' + i + '" style="max-width:80px;min-width:60px;flex:none;text-align:center"><button class="dd-b s p" data-a="comp" data-n="' + esc(G.nome) + '" data-q="ddQ' + i + '">Registrar compra</button></span></div>'; }).join('') : '<div class="dd-vazio">Nenhum distintivo aguardando compra.</div>') + '</div>';
     }
+    h += painelConf();
     h += '<div class="dd-c"><p class="dd-h">Lançar conquista</p><div class="dd-r">' +
       (dir ? '<select class="dd-in" id="ddSec"><option value="">Escotistas de todas as seções</option>' + SECS.map(function (s) { return '<option value="' + s + '">' + esc(NOMES_SEC[s]) + '</option>'; }).join('') + '</select>' : '') +
       '<select class="dd-in" id="ddDest">' + opcoesDest(dir ? '' : sec) + '</select><select class="dd-in" id="ddCat"></select><input class="dd-in" id="ddDet" style="display:none" maxlength="60" autocomplete="off"><datalist id="ddSug"></datalist><button class="dd-b p" id="ddSol">Solicitar</button></div></div>';
@@ -5272,10 +5380,70 @@ window.V2_DIST = (function () {
     c.innerHTML = h + '</div></div>';
     ligar();
   }
+
+  /* ---------- conferência das especialidades já declaradas (formato antigo → programa novo/anterior) ---------- */
+  var confAberto = false, confGrupos = [];
+  function ramoItem(tipo, o) { return V2_ESPEC.ramoDe(tipo === 'ent' ? o.secao : o.tropa); }
+  function levantaConf() {
+    var dir = naDiretoria(), sec = cfg.secao, mapa = {};
+    function add(tipo, id, o) {
+      var nome = String(o && o.nome || ''); if (!/^especialidade\b/i.test(nome)) return; if (V2_ESPEC.ler(nome).prog) return;
+      if (tipo === 'ent' && o.status === 'cancelado') return;
+      var r = ramoItem(tipo, o); if (!dir && r !== sec) return;
+      var k = r + '|' + nome, g = mapa[k] = mapa[k] || { nome: nome, ramo: r, itens: [] }; g.itens.push({ tipo: tipo, id: id });
+    }
+    Object.keys(ent).forEach(function (k) { add('ent', k, ent[k]); });
+    Object.keys(alm).forEach(function (k) { add('alm', k, alm[k]); });
+    confGrupos = Object.keys(mapa).map(function (k) { return mapa[k]; }).sort(function (a, b) { return a.nome.localeCompare(b.nome, 'pt'); });
+    return confGrupos;
+  }
+  function painelConf() {
+    if (!carregado) return '';
+    var gs = levantaConf(); if (!gs.length) return '';
+    var h = '<div class="dd-c"><div class="dd-r" style="justify-content:space-between"><p class="dd-h" style="margin:0">🔄 Especialidades já declaradas no formato antigo</p><button class="dd-b s" id="ddConfBtn">' + (confAberto ? 'Fechar' : 'Conferir (' + gs.length + ')') + '</button></div>';
+    if (confAberto) {
+      h += '<div class="dd-sub" style="margin:6px 0">Escolha o programa (e o nível, quando houver) de cada uma e toque em Aplicar. O nome muda no estoque, na lista de desejos e nos pedidos. Se o nome está no guia, já sugiro Programa novo; se não está, Programa anterior.</div>';
+      gs.forEach(function (g, i) {
+        var base = V2_ESPEC.ler(g.nome).base.replace(/^especialidade\s*/i, ''), bate = !!V2_ESPEC.noGuia(base), ps = V2_ESPEC.programas(g.ramo), pre = (bate || ps.length < 2) ? 'novo' : 'anterior';
+        h += '<div class="dd-row"><span>' + esc(g.nome) + '<small>' + esc(NOMES_SEC[g.ramo] || 'Diretoria') + ' · ' + g.itens.length + (g.itens.length === 1 ? ' registro' : ' registros') + (bate ? ' · está no guia' : ' · não está no guia') + (g.ramo === 'cla' ? ' · Pioneiro não tem programa anterior' : '') + '</small></span>' +
+          '<span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><select class="dd-in" id="cfP' + i + '" data-i="' + i + '" style="min-width:130px;flex:none">' + ps.map(function (x) { return '<option value="' + x + '"' + (x === pre ? ' selected' : '') + '>' + (x === 'novo' ? 'Programa novo' : 'Programa anterior') + '</option>'; }).join('') + '</select>' +
+          '<select class="dd-in" id="cfN' + i + '" style="min-width:100px;flex:none"></select><button class="dd-b s p" data-cf="' + i + '">Aplicar</button></span></div>';
+      });
+    }
+    return h + '</div>';
+  }
+  function ligarConf() {
+    var c = $(cfg.container); if (!c) return;
+    var btn = $('ddConfBtn'); if (btn) btn.onclick = function () { confAberto = !confAberto; desenhar(); };
+    if (!confAberto) return;
+    confGrupos.forEach(function (g, i) {
+      var P = $('cfP' + i), N = $('cfN' + i); if (!P || !N) return;
+      var pinta = function () { var ns = V2_ESPEC.niveis(g.ramo, P.value); N.style.display = ns.length ? '' : 'none'; N.innerHTML = '<option value="">' + (g.ramo ? 'Nível…' : 'Sem nível') + '</option>' + ns.map(function (x) { return '<option value="' + x + '">Nível ' + x + '</option>'; }).join(''); };
+      P.onchange = pinta; pinta();
+    });
+    Array.prototype.forEach.call(c.querySelectorAll('[data-cf]'), function (b) {
+      b.onclick = async function () {
+        var i = +this.dataset.cf, g = confGrupos[i], P = $('cfP' + i), N = $('cfN' + i), ns = V2_ESPEC.niveis(g.ramo, P.value);
+        if (ns.length && g.ramo && !N.value) { msg = { t: 'er', h: 'Escolha o nível de ' + esc(g.nome) + '.' }; return desenhar(); }
+        var novo = V2_ESPEC.compor(g.nome, ns.length ? N.value : '', P.value); this.disabled = true;
+        try {
+          for (var j = 0; j < g.itens.length; j++) {
+            var it = g.itens[j];
+            if (it.tipo === 'ent') { await put('/distintivos/' + it.id + '/nome', novo); ent[it.id].nome = novo; }
+            else { await put('/almoxarifado/' + it.id + '/nome', novo); alm[it.id].nome = novo; }
+          }
+          msg = { t: 'ok', h: '<b>' + esc(g.nome) + '</b> virou <b>' + esc(novo) + '</b>.' };
+        } catch (e) { msg = { t: 'er', h: 'Não consegui alterar tudo: ' + esc(e.message) + '. Confira e tente de novo.' }; }
+        desenhar(); if (cfg.aoMudar) cfg.aoMudar();
+      };
+    });
+  }
   function ligar() {
     var c = $(cfg.container), dir = naDiretoria();
+    ligarConf();
     function trocaCat() { var d = $('ddDest').value.split('|')[0]; var ant = $('ddCat').value; $('ddCat').innerHTML = opcoesCat(d, dir ? ($('ddSec').value || '') : cfg.secao); if (ant && $('ddCat').querySelector('option[value="' + ant + '"]')) $('ddCat').value = ant; det(); }
-    function det() { var cat = achaCat($('ddCat').value); $('ddDet').style.display = cat && cat.det ? '' : 'none'; $('ddDet').placeholder = cat ? cat.pergunta : ''; $('ddDet').value = ''; if (cat && cat.det) { $('ddSug').innerHTML = cat.sug.map(function (x) { return '<option value="' + esc(x) + '">'; }).join(''); $('ddDet').setAttribute('list', 'ddSug'); } }
+    function det() { var cat = achaCat($('ddCat').value); $('ddDet').style.display = cat && cat.det ? '' : 'none'; $('ddDet').placeholder = cat ? cat.pergunta : ''; $('ddDet').value = ''; if (cat && cat.det) { $('ddSug').innerHTML = cat.sug.map(function (x) { return '<option value="' + esc(x) + '">'; }).join(''); $('ddDet').setAttribute('list', 'ddSug'); } if ($('ddDet')._v2esp) $('ddDet')._v2esp.atualizar(); }
+    V2_ESPEC.anexar($('ddDet'), { prefixo: false, ramo: function () { return dir ? ($('ddSec').value || '') : cfg.secao; }, ativo: function () { var c = achaCat($('ddCat').value); return !!(c && c.pre === 'Especialidade'); } });
     $('ddDest').onchange = trocaCat; $('ddCat').onchange = det;
     if (dir) $('ddSec').onchange = function () { $('ddDest').innerHTML = opcoesDest(this.value); trocaCat(); };
     trocaCat();
@@ -5283,6 +5451,7 @@ window.V2_DIST = (function () {
       var b = this, cat = achaCat($('ddCat').value), dst = $('ddDest').value.split('|'), det = $('ddDet').value.trim();
       if (!dst[1]) { msg = { t: 'er', h: 'Escolha quem recebe o distintivo.' }; return desenhar(); }
       if (cat.det && !det) { msg = { t: 'er', h: 'Informe: ' + esc(cat.pergunta) + '.' }; return desenhar(); }
+      if (cat.pre === 'Especialidade' && $('ddDet')._v2esp) { var fe = $('ddDet')._v2esp.final(); if (fe.erro) { msg = { t: 'er', h: esc(fe.erro) }; return desenhar(); } det = fe.nome; }
       var opt = $('ddDest').selectedOptions[0], secDest = cfg.secao;
       if (dir) { secDest = $('ddSec').value; if (!secDest) secDest = (equipe[dst[1]] || {}).tropa || 'diretoria'; }
       b.disabled = true; b.textContent = 'Verificando…';
